@@ -1,4 +1,10 @@
 MetaPathways
 ============
 
-a modular metagenomic analytical pipeline for the creation of Pathway/Genome databases
+Background: A central challenge to understanding the ecological and biogeochemical roles of microorganisms in natural and human engineered ecosystems is the reconstruction of metabolic interaction networks from environmental sequence information. The dominant paradigm in metabolic reconstruction is to assign functional annotations using BLAST. Functional annotations are then projected onto symbolic representations of metabolism in the form of KEGG pathways or SEED subsystems. 
+
+Results: Here we present MetaPathways, an open source pipeline for pathway inference that uses the PathoLogic algorithm to construct environmental Pathway/Genome Databases (ePGDBs) compatible with the editing and navigation features of Pathway Tools. The pipeline accepts assembled or unassembled nucleotide sequences, performs quality assessment and control, predicts and annotates noncoding genes and open reading frames, and produces inputs to PathoLogic. In addition to constructing ePGDBs, MetaPathways uses MLTreeMap to build phylogenetic trees for selected taxonomic anchor and functional gene markers, converts General Feature Format (GFF) files into concatenated GenBank files for ePGDB construction based on third-party annotations and generates useful file formats including Sequin files for direct GenBank submission and gene feature tables summarizing annotations, MLTreeMaps and ePGDB pathway coverage summaries for statistical comparisons. 
+
+Conclusions: Metapathways provides users with a modular annotation and analysis pipeline for predicting metabolic interaction networks from environmental sequence information using an alternative to KEGG pathways and SEED subsystems mapping. It is extensible to genomic and transcriptomic datasets from a wide range of sequencing platforms, and generates useful data products for microbial community structure and function analysis. The MetaPathways software package, installation instructions, and example data can be obtained from http://hallam.microbiology.ubc.ca/MetaPathways
+
+Keywords: Environmental Pathway/Genome Database (ePGDB), metagenome, Pathway Tools, PathoLogic, MetaCyc, microbial community, metabolism, metabolic interaction networks 
