@@ -1,0 +1,55 @@
+##V.1   do not remove this line
+
+INPUT:format fasta
+
+# Quality Control  parameters 
+quality_control:min_length  180
+quality_control:delete_replicates  yes
+
+# ORF prediction parameters 
+orf_prediction:algorithm	prodigal
+orf_prediction:min_length	60
+
+# ORF annotation parameters
+annotation:dbs 	metacyc,kegg,cog,refseq
+annotation:min_bsr  0.4
+annotation:max_evalue 0.000001
+annotation:min_score 20
+annotation:min_length 60
+annotation:max_hits 10
+
+
+# rRNA annotation parameters
+16s_rRNA:refdbs GreenGenes,Silva-SSU,Silva-LSU
+16s_rRNA:max_evalue 0.000001
+16s_rRNA:min_identity 20
+16s_rRNA:min_bitscore 50
+
+# pathway tools parameters
+ptools_settings:taxonomic_pruning no
+
+#grid settings
+grid_engine:batch_size 200
+grid_engine:max_concurrent_batches 400
+grid_engine:user username
+grid_engine:server server.address.com
+
+#pipeline execution flags
+metapaths_steps:PREPROCESS_FASTA	yes
+metapaths_steps:ORF_PREDICTION	yes
+metapaths_steps:GFF_TO_AMINO	yes
+metapaths_steps:FILTERED_FASTA	yes
+metapaths_steps:COMPUTE_REFSCORE	yes
+metapaths_steps:BLAST_REFDB	 grid
+metapaths_steps:PARSE_BLAST	yes
+metapaths_steps:SCAN_rRNA	yes
+metapaths_steps:STATS_rRNA	yes
+metapaths_steps:SCAN_tRNA	yes
+metapaths_steps:ANNOTATE	yes
+metapaths_steps:PATHOLOGIC_INPUT	yes
+metapaths_steps:GENBANK_FILE	yes
+metapaths_steps:CREATE_SEQUIN_FILE	yes
+metapaths_steps:CREATE_REPORT_FILES	yes
+metapaths_steps:MLTREEMAP_CALCULATION	yes
+metapaths_steps:MLTREEMAP_IMAGEMAKER	yes
+metapaths_steps:PATHOLOGIC	yes

@@ -1,0 +1,14 @@
+DEFINITION  San Juan Basin - coalbed methane well A metagenome
+ACCESSION   .
+VERSION     1         GI:.
+KEYWORDS    .
+SOURCE      San Juan Basin - coalbed methane well A metagenome
+  ORGANISM  Environmental Sample 
+REFERENCE   1  (bases 1 to XXXXX)
+  AUTHORS   Page,A.P., Song,Y.C., Hanson,N.W, Howes,C.G., Kuatsjah,E., Sukdeo,N., Huizinga,B., Strapoc,D., Hallam,S.J.
+  TITLE     A Metagenomic Blueprint for Coal Biomethanation in the San Juan Basin
+  JOURNAL   .
+   PUBMED   .
+  REMARK    .
+COMMENT     .
+
