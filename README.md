@@ -1,4 +1,4 @@
-MetaPathways
+MetaPathways: A modular pipeline for constructing Pathway/Genome Databases from environmental sequence information
 ============
 
 Background: A central challenge to understanding the ecological and biogeochemical roles of microorganisms in natural and human engineered ecosystems is the reconstruction of metabolic interaction networks from environmental sequence information. The dominant paradigm in metabolic reconstruction is to assign functional annotations using BLAST. Functional annotations are then projected onto symbolic representations of metabolism in the form of KEGG pathways or SEED subsystems. 
