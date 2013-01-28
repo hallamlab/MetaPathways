@@ -6,8 +6,8 @@
 # Paths for the Python, Perl and Pathway Tools
 # Please run: source MetaPathwaysrc before continuing
 
-PYTHON_EXECUTABLE   /usr/local/bin/python 
-PERL_EXECUTABLE   /usr/bin/perl 
+PYTHON_EXECUTABLE   /Path/To/python 
+PERL_EXECUTABLE   /Path/To/perl
 METAPATHWAYS_PATH /Path/To/MetaPathways
 
 PATHOLOGIC_EXECUTABLE   /Path/To/PathoLogic 

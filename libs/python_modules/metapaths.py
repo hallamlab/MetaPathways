@@ -470,7 +470,7 @@ def check_config_settings(config_settings, file):
       if key in ['METAPATHWAYS_PATH' ]:
          if not path.isdir(config_settings[key]) :
             print "ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"" %(key, file)  
-            print "ERROR: Currently it is set to  c \"%s\"\n" %( config_settings[key] )  
+            print "ERROR: Currently it is set to \"%s\"\n" %( config_settings[key] )  
             missingItems.append(key) 
          continue
 
@@ -479,7 +479,7 @@ def check_config_settings(config_settings, file):
       if key in [ 'REFDBS', 'EXECUTABLES_DIR']:
          if not path.isdir( config_settings['METAPATHWAYS_PATH'] + "/" + config_settings[key]) :
             print "ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"" %(key, file)  
-            print "ERROR: Currently it is set to  c \"%s\"\n" %( config_settings[key] )  
+            print "ERROR: Currently it is set to \"%s\"\n" %( config_settings[key] )  
             missingItems.append(key) 
          continue
 
@@ -487,7 +487,7 @@ def check_config_settings(config_settings, file):
       if key in ['PERL_EXECUTABLE',  'PYTHON_EXECUTABLE' , 'PATHOLOGIC_EXECUTABLE' ]:
          if not path.isfile( config_settings[key]) :
             print "ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"" %(key, file)  
-            print "ERROR: Currently it is set to b  \"%s\"\n" %( config_settings[key] )  
+            print "ERROR: Currently it is set to \"%s\"\n" %( config_settings[key] )  
             missingItems.append(key) 
          continue
 
@@ -496,7 +496,7 @@ def check_config_settings(config_settings, file):
       if not path.isfile( config_settings['METAPATHWAYS_PATH'] +  value ) :
           if not path.isfile( value ) :
               print "ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"" %(key, file)  
-              print "ERROR: Currently it is set to  \"%s\"\n" %( config_settings['METAPATHWAYS_PATH'] + value ) 
+              print "ERROR: Currently it is set to \"%s\"\n" %( config_settings['METAPATHWAYS_PATH'] + value ) 
               missingItems.append(key) 
           continue
      
@@ -1113,7 +1113,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     refseqblastoutput = blast_results_dir + "/" + sample_name + "." + 'refseq' + ".blastout"
     if not  path.exists(refseqblastoutput) :
         print "WARNING: Refseq BLAST output " + refseqblastoutput + " not found!"
-        print "         Will have to Skip taxonomic information in annotation table :("
+        print "         Will have to Skip taxonomic information in annotation table"
     #################################
 
 

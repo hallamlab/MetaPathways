@@ -130,6 +130,7 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
         print "Cannot read file " + gff_file_name + " !"
 
      sample_name= re.sub('annotated.gff', '', gff_file_name)
+     sample_name= re.sub('annot.gff', '', gff_file_name) # Niels: somewhere we changed the file name?
      sample_name= re.sub('.*/', '', sample_name)
 
      gff_lines = gfffile.readlines()
@@ -252,9 +253,13 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
      zerofastafile.close()
      zeropffile.close()
 
-
+     # Niels: removing annotated.gff from sample_name
+     sample_name= re.sub(".annot.gff", '', sample_name)
+     sample_name= re.sub('.*/', '', sample_name)
+     sample_name= re.sub("\\.", '', sample_name)
+     
      fprintf(organism_paramsfile,"ID\t%s\n",sample_name)
-     fprintf(organism_paramsfile,"STORAGE FILE\t%s\n",sample_name)
+     fprintf(organism_paramsfile,"STORAGE\tFILE\n")
      fprintf(organism_paramsfile,"NAME\t%s\n",sample_name)
      fprintf(organism_paramsfile,"ABBREV-NAME\t%s\n",sample_name)
      fprintf(organism_paramsfile,"STRAIN\t1\n")
