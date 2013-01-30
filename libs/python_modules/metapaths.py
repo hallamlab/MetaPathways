@@ -707,7 +707,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     
     ####################  IMPORTANT VARIABLES ########################
     commands = []
-
+    
     checkMetapaths_Steps(config_params)
 
     preprocessed_dir = output_dir + "/preprocessed/"
@@ -758,11 +758,13 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     #sys.exit(0)
     # Here the sample name variable has the sample name
 
+    
     sample_name = re.sub(r'[.][a-zA-Z]*$','',input_fp)
     sample_name = path.basename(sample_name)
     sample_name = re.sub('[.]','_',sample_name)
 
     # IF the format is gff then copy the gff, fna and faa to the orf_prediction folder
+    
     if config_params['INPUT']['format'] in ['gff-annotated', 'gff-unannotated' ]:
        input_gff = re.sub('[.][a-zA-Z]*$','',input_fp) + ".gff"
        input_fasta = re.sub('[.][a-zA-Z]*$','',input_fp) + ".fasta"
@@ -789,7 +791,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
 
     #################################
-
+    
     # IF the format is gbk then convert them  to gff faa and fna files
     if config_params['INPUT']['format'] in ['gbk-annotated', 'gbk-unannotated' ]:
        input_gbk = re.sub('[.][a-zA-Z]*$','',input_fp) + ".gbk"
@@ -828,10 +830,9 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
          command_Status =  get_parameter( config_params,'metapaths_steps','PREPROCESS_FASTA')
          removeFileOnRedo(command_Status, output_fas)
          removeFileOnRedo(command_Status, nuc_stats_file)
-
-         enable_flag = shouldRunStep1(run_type,  preprocessed_dir, [output_fas]) or\
-                         shouldRunStep1(run_type,  output_run_statistics_dir, [ nuc_stats_file] ) 
-     
+         # Niels - changed from shouldRunStep1() to shouldRunStep()
+         enable_flag = shouldRunStep(run_type, output_fas) or shouldRunStep(run_type, nuc_stats_file )
+         
          commands.append( ["\n1. Running Quality Check ....", quality_check_cmd, 'PREPROCESS_FASTA', command_Status, enable_flag])
      
          #################################
@@ -865,7 +866,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
          commands.append(["\n3. Creating the Amino Acid sequences ....", create_aa_sequences_cmd, 'GFF_TO_AMINO',command_Status, enable_flag])
     #################################
 
-
+    
     #------ COMPUTE THE STATISTICS OF THE AMINO ACID SEQUENCES
     output_faa = orf_prediction_dir + '/' +  sample_name + ".faa"   
 
@@ -901,7 +902,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
        commands.append( ["\n5. Computing refscores for the ORFs ....", refscores_compute_cmd,'COMPUTE_REFSCORE', command_Status, enable_flag])
     #################################
 
-
+    
     # BLAST THE ORFs AGAINST THE REFERENCE DATABASES  FOR FUNCTIONAL ANNOTATION
     dbstring = get_parameter(config_params, 'annotation', 'dbs', default=None)
     dbs= dbstring.split(",")
@@ -955,7 +956,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     #################################
 
 
-
+    
     # BLAST AGAINST rRNA REFERENCE DATABASES
     input_fasta = preprocessed_dir + "/" + sample_name + ".fasta" 
 
@@ -1053,7 +1054,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
         commands.append( ["\n11. Annotate gff files    ....", annotate_gbk_cmd,'ANNOTATE',command_Status, enable_flag])
     #################################
  
-
+    
     # CREATE A GENBANK FILE, PTOOLS INPUT and SEQUIN FILE
     input_annot_gff =  output_annotated_gff
     input_nucleotide_fasta = preprocessed_dir + "/" + sample_name + ".fasta" 
@@ -1073,10 +1074,10 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     removeDirOnRedo(ptinput_command_Status, output_fasta_pf_dir)
     enable_ptinput_flag=shouldRunStep1(run_type, output_fasta_pf_dir, files)
 
-    print str(enable_gbk_flag) + ' ' + str(enable_ptinput_flag)
-
+    # Niels - Issue #12 removed some strange output appearing to standard out
+    
     if enable_ptinput_flag:
-       outputs['ptinput'] = output_fasta_pf_dir
+        outputs['ptinput'] = output_fasta_pf_dir
 
     if enable_ptinput_flag or enable_gbk_flag:
        enable_flag = True
@@ -1094,7 +1095,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     commands.append( ["\n12. Create genbank/sequin/ptools input command    ....", genbank_annotation_table_cmd,'GENBANK_FILE', command_Status, enable_flag])
     #################################
  
-
+    
     # CREATE A REPORT TABLES WITH FUNCTION AND TAXONOMY
     input_annotated_gff = output_annotated_gff
     output_annot_table = output_results_annotation_table_dir + '/functional_and_taxonomic_table.txt'
@@ -1109,13 +1110,17 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
     #################################
 
-    # IS REFSEQ BLAST OUTPUT PRESENT? 
-    refseqblastoutput = blast_results_dir + "/" + sample_name + "." + 'refseq' + ".blastout"
-    if not  path.exists(refseqblastoutput) :
-        print "WARNING: Refseq BLAST output " + refseqblastoutput + " not found!"
-        print "         Will have to Skip taxonomic information in annotation table"
+    # IS REFSEQ BLAST OUTPUT PRESENT?
+    # Niels - Issue #12: change this to detect if RefSeq is scheduled or not rather than just 
+    # having the results here.
+    # refseqblastoutput = blast_results_dir + "/" + sample_name + "." + 'refseq' + ".blastout"
+    blast_dbs = (get_parameter( config_params,'annotation','dbs'))
+    
+    # if not  (path.exists(refseqblastoutput) :
+    if not (re.search(".*refseq.*",blast_dbs, re.IGNORECASE)):
+        print "WARNING: Refseq annotation is not scheduled!"
+        print "         Taxonomic information will not be found in the annotation table."
     #################################
-
 
     # CREATE THE SEQUIN FILE
     input_annot_gbk= genbank_dir + '/' + sample_name +  '.gbk'
@@ -1171,7 +1176,6 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
  #   print taxonomic_pruning_flag
     commands.append( ["\n18. Create PGDB  ....", create_pgdb_cmd, 'PATHOLOGIC', command_Status, enable_flag])
     #################################
-
 
 
 

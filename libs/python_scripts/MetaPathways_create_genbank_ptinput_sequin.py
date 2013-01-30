@@ -254,9 +254,15 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
      zeropffile.close()
 
      # Niels: removing annotated.gff from sample_name
-     sample_name= re.sub(".annot.gff", '', sample_name)
-     sample_name= re.sub('.*/', '', sample_name)
-     sample_name= re.sub("\\.", '', sample_name)
+     sample_name = re.sub(".annot.gff", '', sample_name)
+     sample_name = re.sub('.*/', '', sample_name)
+     sample_name = re.sub("\\.", '', sample_name)
+     
+     # Niels: trim sample_name to less than 35 characters 
+     # as it causes PGDB creation to fail
+     if (len(sample_name) > 35):
+         sample_name = sample_name[0:35]
+     
      
      fprintf(organism_paramsfile,"ID\t%s\n",sample_name)
      fprintf(organism_paramsfile,"STORAGE\tFILE\n")

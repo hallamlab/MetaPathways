@@ -129,7 +129,7 @@ def main(argv):
     run_type = opts.run_type.strip()
 
     if run_type == 'overwrite':
-       force_remove_dir= True
+       force_remove_dir=True
     else:
        force_remove_dir=None
 
