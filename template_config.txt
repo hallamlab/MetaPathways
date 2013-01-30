@@ -10,7 +10,7 @@ PYTHON_EXECUTABLE   /Path/To/python
 PERL_EXECUTABLE   /Path/To/perl
 METAPATHWAYS_PATH /Path/To/MetaPathways
 
-PATHOLOGIC_EXECUTABLE   /Path/To/PathoLogic 
+PATHOLOGIC_EXECUTABLE   /Path/To/PathwayTools 
 
 REFDBS   'blastDB'
 FORMATDB_EXECUTABLE  'executables/formatdb.v2.2.20'

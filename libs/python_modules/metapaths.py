@@ -453,10 +453,10 @@ def write_run_parameters_file(fileName, parameters):
     paramFile.write("\n\nPathway Tools parameters\n")
     paramFile.write( "  taxonomic pruning " + "\t" + str(parameters['ptools_settings']['taxonomic_pruning']) + "\n")
 
-    paramFile.write("\n\n16s_rRNA search/match parameters\n")
-    paramFile.write( "  min identity" + "\t" + str(parameters['16s_rRNA']['min_identity']) + "\n")
-    paramFile.write( "  max evalue" + "\t" + str(parameters['16s_rRNA']['max_evalue']) + "\n")
-    paramFile.write( "  16s reference dbs" + "\t" + str(parameters['16s_rRNA']['refdbs']) + "\n")
+    paramFile.write("\n\nrRNA search/match parameters\n")
+    paramFile.write( "  min identity" + "\t" + str(parameters['rRNA']['min_identity']) + "\n")
+    paramFile.write( "  max evalue" + "\t" + str(parameters['rRNA']['max_evalue']) + "\n")
+    paramFile.write( "  rRNA reference dbs" + "\t" + str(parameters['rRNA']['refdbs']) + "\n")
 
     paramFile.close()
 
@@ -960,7 +960,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     # BLAST AGAINST rRNA REFERENCE DATABASES
     input_fasta = preprocessed_dir + "/" + sample_name + ".fasta" 
 
-    refdbstring = get_parameter(config_params, '16s_rRNA', 'refdbs', default=None)
+    refdbstring = get_parameter(config_params, 'rRNA', 'refdbs', default=None)
     refdbnames=refdbstring.split(',')
 
 
@@ -981,9 +981,9 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
     
     # COMPUTE rRNA STATISTICS 
-    bscore_cutoff = get_parameter(config_params,'16s_rRNA', 'min_bitscore', default=27)
-    eval_cutoff = get_parameter(config_params, '16s_rRNA', 'max_evalue', default=6)
-    identity_cutoff = get_parameter(config_params, '16s_rRNA', 'min_identity', default=40)
+    bscore_cutoff = get_parameter(config_params,'rRNA', 'min_bitscore', default=27)
+    eval_cutoff = get_parameter(config_params, 'rRNA', 'max_evalue', default=6)
+    identity_cutoff = get_parameter(config_params, 'rRNA', 'min_identity', default=40)
 
     message = "\n9. Gathering rRNA stats .... "
     for refdbname in refdbnames:
@@ -1029,7 +1029,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
             parse_blasts.append( get_refdb_name(db) );
          
     
-        rRNArefdbstring = get_parameter(config_params, '16s_rRNA', 'refdbs', default=None)
+        rRNArefdbstring = get_parameter(config_params, 'rRNA', 'refdbs', default=None)
         rRNArefdbs=rRNArefdbstring.split(',')
         for rRNArefdb in rRNArefdbs:
             rRNA_stat_results= output_results_rRNA_dir + sample_name + '.' + get_refdb_name(rRNArefdb) + '.rRNA.stats.txt' 

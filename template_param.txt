@@ -18,12 +18,11 @@ annotation:min_score 20
 annotation:min_length 60
 annotation:max_hits 10
 
-
 # rRNA annotation parameters
-16s_rRNA:refdbs GreenGenes,Silva-SSU,Silva-LSU
-16s_rRNA:max_evalue 0.000001
-16s_rRNA:min_identity 20
-16s_rRNA:min_bitscore 50
+rRNA:refdbs GreenGenes,Silva-SSU,Silva-LSU
+rRNA:max_evalue 0.000001
+rRNA:min_identity 20
+rRNA:min_bitscore 50
 
 # pathway tools parameters
 ptools_settings:taxonomic_pruning no
