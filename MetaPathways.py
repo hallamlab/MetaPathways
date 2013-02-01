@@ -52,7 +52,8 @@ script_info['script_description'] = """ takes a sequence file and performs all p
              REQUIRED: You must have a fas and an yaml file  and  a custom parameters file:"""
 script_info['script_usage'] = []
 
-usage= """./run_pgdb_pipeline.py  -i input_file -o outdir  -p parameters.txt """
+usage= """./MetaPathways.py  -i input_file -o outdir  -p parameters.txt 
+For more options:  ./MetaPathways.py -h"""
 parser = OptionParser(usage)
 parser.add_option("-i", "--input_file", dest="input_fp",
                   help='the input fasta file/input dir [REQUIRED]')
@@ -86,7 +87,19 @@ def check_arguments(opts, args):
        return False
 
 
-def create_input_fasta_yaml_pairs(input_dir, output_dir):
+#creates an input output pair if input is just an input file
+def create_an_input_output_pair(input_file, output_dir):
+    input_output = {}
+    shortname = re.sub('[.](fasta|fas|fna|faa)','',input_file) 
+    shortname = re.sub('.*/','',shortname) 
+    if re.search('.(fasta|fas|fna|faa)',input_file):
+       input_output[input_file] = output_dir +'/' + shortname
+
+    return input_output
+
+
+#creates a list of  input output pairs if input is  an input dir
+def create_input_output_pairs(input_dir, output_dir):
     fileslist =  listdir(input_dir)
     input_files = {}
     for file in fileslist:
@@ -194,15 +207,17 @@ def main(argv):
 
     input_output_list = {}
     if path.isfile(input_fp):   # check if it is a file
-       input_output_list[input_fp] = output_dir
+       input_output_list = create_an_input_output_pair(input_fp, output_dir)
     else:
        if path.exists(input_fp):   # check if dir exists
-          input_output_list = create_input_fasta_yaml_pairs(input_fp, output_dir)
+          input_output_list = create_input_output_pairs(input_fp, output_dir)
        else:   # must be an error
           print "No valid input sample file or directory containing samples exists .!"
           print "As provided as arguments in the -in option.!"
           sys.exit(1)
    
+    #print input_output_list
+    #sys.exit(1)
 
     config_params=parse_metapaths_parameters(parameter_f)
 

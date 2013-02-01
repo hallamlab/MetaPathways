@@ -65,9 +65,14 @@ def get_refdb_name( dbstring ):
         dbname = "innatemus"
         return dbname
 
-    if re.search("silva",dbstring):
-        dbname = "silva"
+    if re.search("SSU",dbstring):
+        dbname = "silvaSSU"
         return dbname
+   
+    if re.search("LSU",dbstring):
+        dbname = "silvaLSU"
+        return dbname
+
     if re.search("greengenes",dbstring):
         dbname="greengenes"
         return dbname
@@ -741,7 +746,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     checkOrCreateFolder( output_results_mltreemap_dir) 
 
     mltreemap_image_output = output_results_mltreemap_dir  +"/tables_and_figures/" 
-    checkOrCreateFolder(mltreemap_image_output) 
+    #checkOrCreateFolder(mltreemap_image_output) 
 
     output_fasta_pf_dir=  output_dir + "/ptools/"
     checkOrCreateFolder(output_fasta_pf_dir) 
@@ -961,11 +966,13 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     input_fasta = preprocessed_dir + "/" + sample_name + ".fasta" 
 
     refdbstring = get_parameter(config_params, 'rRNA', 'refdbs', default=None)
-    refdbnames=refdbstring.split(',')
+    refdbnames= [ x.strip() for x in refdbstring.split(',') ]
 
 
     message = "\n8. Scan for rRNA sequences in reference database - "
     for refdbname in refdbnames:
+       print '----------'
+       print refdbname
        rRNA_blastout= blast_results_dir + "/" + sample_name + ".rRNA." + get_refdb_name(refdbname) + ".blastout"
 
        command_Status=  get_parameter( config_params,'metapaths_steps','SCAN_rRNA')
