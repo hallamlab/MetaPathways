@@ -3,7 +3,7 @@
 from __future__ import division
 
 __author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2012, The metapaths Project"
+__copyright__ = "Copyright 2013, MetaPathways"
 __credits__ = [""]
 __version__ = "1.0"
 __maintainer__ = "Kishori M Konwar"

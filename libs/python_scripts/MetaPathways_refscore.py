@@ -3,7 +3,7 @@
 from __future__ import division
 
 __author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2010, The metapaths Project"
+__copyright__ = "Copyright 2013, MetaPathways"
 __credits__ = ["r"]
 __version__ = "1.0"
 __maintainer__ = "Kishori M Konwar"
@@ -18,7 +18,7 @@ try:
      from python_modules.sysutil import getstatusoutput
 except:
      print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwayrc\""""
+     print """ Make sure your typed \"source MetaPathwaysrc\""""
      print """ """
      sys.exit(3)
 
