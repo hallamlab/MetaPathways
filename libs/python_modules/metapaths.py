@@ -970,8 +970,8 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
     message = "\n8. Scan for rRNA sequences in reference database - "
     for refdbname in refdbnames:
-       print '----------'
-       print refdbname
+       # print '----------'
+       # print refdbname
        rRNA_blastout= blast_results_dir + "/" + sample_name + ".rRNA." + get_refdb_name(refdbname) + ".blastout"
 
        command_Status=  get_parameter( config_params,'metapaths_steps','SCAN_rRNA')
@@ -1187,7 +1187,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
     print """  """
     print """  ********************************************************** """
-    print """  ********************   Running  metapaths ******************* """
+    print """  **************** Running  MetaPathways ******************* """
     print """  ********************************************************** """
     print """              """  +  input_fp + """                       """
     print """  ********************************************************** """
