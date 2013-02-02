@@ -516,7 +516,8 @@ def parse_metapaths_parameters(lines):
             fields = line.split()
             script_id, parameter_id = fields[0].split(':')
             try:
-                value = fields[1]
+                value = ','.join([ x.strip() for x in fields[1:] ])
+                value = re.sub(',,',',',value)
             except IndexError:
                 continue
                 
