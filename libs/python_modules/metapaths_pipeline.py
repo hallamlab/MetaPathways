@@ -159,10 +159,13 @@ def call_commands_serially(commands, status_update_callback, logger, stepslogger
         if result[0] == 0 :
             logger.write('Success!:\n%s\n' %( result[1]))
         else:
-            print result[1]
+            #print result[1]
+            try:
+               printf('Error! : %s\n' %(result[1]))
+               logger.write('Error!:\n%s\n' %( result[1]))
+            except:
+               pass
 
-            printf('Error! : %s\n' %( result[1]))
-            logger.write('Error!:\n%s\n' %( result[1]))
             break 
 
         timestamp_pattern='%Y-%m-%d %H:%M:%S'

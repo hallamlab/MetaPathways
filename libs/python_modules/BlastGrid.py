@@ -9,15 +9,28 @@ __version__ = "1.0"
 __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
-import subprocess
-import sys
-from os import makedirs, sys, listdir, environ, path
-import re 
-import inspect
-import time
-from optparse import OptionParser
-import shutil 
-from metapaths_utils import printf, eprintf, fprintf
+try:
+   import subprocess
+   import sys
+   from os import makedirs, sys, listdir, environ, path
+   import re 
+   import inspect
+   import time
+   from optparse import OptionParser
+   import shutil 
+   from metapaths_utils import printf, eprintf, fprintf
+   from sysutil import getstatusoutput, pathDelim
+except:
+   print """ Could not load some user defined  module functions"""
+   print """ Make sure your typed \"source MetaPathwaysrc\""""
+   print """ """
+   sys.exit(3)
+
+SSH = ''
+SCP = ''
+PATHDELIM = pathDelim()
+WIN_RSA_KEY_ARGS = ["-i", 'executables' + PATHDELIM + 'win' + PATHDELIM + 'bit64' + PATHDELIM + 'win_rsa.ppk', '-batch']
+
 
 cmd_folder = path.abspath(path.split(inspect.getfile( inspect.currentframe() ))[0])
 
@@ -43,6 +56,10 @@ parser.add_option("--run-type", dest="run_type",  default=['overlay'], choices=[
 
 parser.add_option("--batch-size", dest="batch_size", default=500,  type='int', help='number of sequences in a batch (in a file)')
 parser.add_option("--max-parallel-jobs", dest="max_parallel_jobs", default= 300, type='int',  help='maximum number of parallel jobs')
+ 
+parser.add_option( "--algorithm", dest="algorithm", choices = ['BLAST', 'LAST'], default = "BLAST",
+                  help='the algorithm used for computing homology [DEFAULT: BLAST]')
+
 
 #database_files = ['metacyc-v4-2011-07-03', 'cog-2007-10-30','refseq_protein', 'kegg-pep-2011-06-18' ]  
 
@@ -86,8 +103,11 @@ def  getUserServer():
 def  check_if_server_is_up(user, server):
     user, server = getUserServer()
 
-    args = ['ssh', user+'@'+server, 'echo','hello']
-
+    args = [SSH, user+'@'+server]  
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args += ['echo','hello']
+   # print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()
 
@@ -98,8 +118,11 @@ def  check_if_server_is_up(user, server):
 
 def  remove_sample_dir(sample_name):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--remove-sample-dir', sample_name]
-    print ' '.join(args)
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--remove-sample-dir', sample_name]
+    #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()
     #p.stdin.write('lovlee81')
@@ -111,8 +134,14 @@ def  remove_sample_dir(sample_name):
 
 def check_if_sample_folder_exists(sample_name ):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--does-sample-dir-exist', sample_name]
+   # args = [SSH, user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--does-sample-dir-exist', sample_name]
     #print ' '.join(args)
+    
+    args = [SSH, user+'@'+server]  
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args += ['python', 'daemon.py','--home-dir', '\'\'', '--does-sample-dir-exist', sample_name]
+    
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
     if result=='yes':
@@ -122,7 +151,10 @@ def check_if_sample_folder_exists(sample_name ):
 
 def is_complete(sample_name,dbname):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--is-complete',\
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--is-complete',\
               sample_name, '--dbname', dbname ]
     #print ' '.join(args)
     p = create_a_process(args)  
@@ -135,7 +167,11 @@ def is_complete(sample_name,dbname):
 
 def consolidate(sample_name, dbname):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--consolidate',\
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--consolidate',\
               sample_name, '--dbname', dbname ]
     #print ' '.join(args)
     p = create_a_process(args)  
@@ -150,7 +186,10 @@ def consolidate(sample_name, dbname):
 def create_sample_folder(sample_name ):
     user, server = getUserServer()
 
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--create-sample-dir', sample_name]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--create-sample-dir', sample_name]
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
     if result=='yes':
@@ -160,9 +199,12 @@ def create_sample_folder(sample_name ):
 
 def does_file_exist(file):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--does-file-exist', file]
+    args = [SSH, user+'@'+server] 
     #print ' '.join(args)
-   
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--does-file-exist', file]
+    
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
     if result=='yes':
@@ -172,7 +214,10 @@ def does_file_exist(file):
 
 def does_file_patt_exist(file):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--does-file-patt-exist', file]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--does-file-patt-exist', file]
     #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
@@ -181,10 +226,12 @@ def does_file_patt_exist(file):
     else:
        return False
 
-def format_database(database):
+def format_database(database, algorithm):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--format-database', database]
-    #print ' '.join(args)
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--format-database', database, '--algorithm', algorithm]
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
     if result=='yes':
@@ -194,7 +241,10 @@ def format_database(database):
 
 def number_of_completed(sample):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py',  '--get-number-of-completed',  sample]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py',  '--get-number-of-completed',  sample]
     #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()
@@ -210,7 +260,10 @@ def number_of_completed(sample):
 
 def number_of_samples(sample):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py',  '--get-number-of-samples',  sample]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py',  '--get-number-of-samples',  sample]
     #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()
@@ -244,7 +297,10 @@ def printResponse(result):
 
 def split_into_batches(file, database_files,  dbnames, size):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--split-into-batches', file, '--batch-size', str(size)]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--split-into-batches', file, '--batch-size', str(size)]
 
     for database_file,dbname  in zip(database_files, dbnames):
        args.append('--dbnames')
@@ -264,7 +320,10 @@ def split_into_batches(file, database_files,  dbnames, size):
 
 def number_of_sequences_in_file(file):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--number-of-sequences-in-file', file]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--number-of-sequences-in-file', file]
     p = create_a_process(args)  
     result = p.communicate()
     if result[1].strip()!='':
@@ -274,7 +333,11 @@ def number_of_sequences_in_file(file):
 
 def copy_file(source, target):
     user, server = getUserServer()
-    args = ['scp', source , user+'@'+server+':~/'+ target]
+    if PATHDELIM=='\\':
+        args = [SCP] + WIN_RSA_KEY_ARGS + [source, user+'@'+server+':'+ target]
+    else:
+        args = [SCP, source , user+'@'+server+':~/'+ target]
+        
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
     if result=='':
@@ -284,7 +347,11 @@ def copy_file(source, target):
      
 def copy_file_back(source, target):
     user, server = getUserServer()
-    args = ['scp', user+'@'+server+':~/'+ source, target]
+    if PATHDELIM=='\\':
+       args = [SCP] + WIN_RSA_KEY_ARGS + [user+'@'+server+':'+ source, target]
+    else: 
+       args = [SCP, user+'@'+server+':~/'+ source, target]
+
     #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()[0].strip()
@@ -295,7 +362,12 @@ def copy_file_back(source, target):
 
 def copy_daemon_script():
     user, server = getUserServer()
-    args = ['scp','daemon.py',  user+'@'+server+':~/']
+    
+    if PATHDELIM=='\\':
+        args = [SCP] + WIN_RSA_KEY_ARGS + ['daemon.py', user+'@'+server+':']
+    else:
+        args = [SCP,'daemon.py',  user+'@'+server+':~/']
+    
     p = create_a_process(args)  
     result = p.communicate()[1].strip()
     if result=='':
@@ -303,9 +375,13 @@ def copy_daemon_script():
     else:
        return False
      
-def submit_job(sample_name):
+def submit_job(sample_name, memory, walltime, algorithm):
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--submit-job', sample_name ]
+    args = [SSH, user+'@'+server]
+    if PATHDELIM =='\\':
+        args = args + WIN_RSA_KEY_ARGS
+    args = args + ['python', 'daemon.py','--home-dir', '\'\'', '--submit-job',\
+           sample_name, '--memory',  memory, '--walltime', walltime,  '--algorithm', algorithm ]
     #print ' '.join(args)
     p = create_a_process(args)  
     result = p.communicate()
@@ -317,8 +393,7 @@ def submit_job(sample_name):
 
 def get_number_of_running_jobs():
     user, server = getUserServer()
-    args = ['ssh', user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--get-number-of-running-jobs', user]
-    #print ' '.join(args)
+    args = [SSH, user+'@'+server, 'python', 'daemon.py','--home-dir', '\'\'', '--get-number-of-running-jobs', user]
     p = create_a_process(args)  
     result = p.communicate()
     if result[1].strip()=='':
@@ -349,6 +424,15 @@ def blastgrid(argv):
     if not isValid(opts):
        print usage
        sys.exit(0)
+
+    global SSH
+    global SCP
+    if PATHDELIM=='/':
+       SSH = 'ssh'
+       SCP = 'scp'
+    else:
+       SSH = 'executables' + PATHDELIM + 'win' + PATHDELIM + 'bit64' + PATHDELIM + 'plink'
+       SCP = 'executables' + PATHDELIM + 'win' + PATHDELIM + 'bit64' + PATHDELIM + 'pscp'
 
     setUserServer(opts.user, opts.server)
  
@@ -404,29 +488,37 @@ def blastgrid(argv):
 
 
     MetaPathways='MetaPathways/'
-    #Make sure BLASP is installed
-    target = MetaPathways + 'executables/blastp' 
+    #Make sure B/LASP is installed
+    if opts.algorithm == 'LAST': 
+       target = MetaPathways + 'executables/lastal' 
+       source = 'executables' + PATHDELIM + 'linux' + PATHDELIM + 'bit64' + PATHDELIM + 'lastal'
+    if opts.algorithm == 'BLAST': 
+       target = MetaPathways + 'executables/blastp' 
+       source = 'executables' + PATHDELIM + 'linux' + PATHDELIM + 'bit64' +PATHDELIM + 'blastp'
     print '     ' + target
     if does_file_exist(target):
         print "                 found"
     else:
        print "                 NOT found"
        #detect architecture code 
-       source = 'executables/qsub/linux/64/blastp'
        if  copy_file(source, target ):
            print "                 just copied"
        else:
            print "                 couldn't copy!"
 
     #Make sure FORMATDB is installed
-    target = MetaPathways + 'executables/formatdb' 
+    if opts.algorithm == 'LAST': 
+       target = MetaPathways + 'executables/lastdb' 
+       source = 'executables' + PATHDELIM + 'linux' + PATHDELIM + 'bit64' + PATHDELIM + 'lastdb'
+    if opts.algorithm == 'BLAST': 
+       target = MetaPathways + 'executables/formatdb' 
+       source = 'executables' + PATHDELIM + 'linux' + PATHDELIM + 'bit64' + PATHDELIM + 'formatdb'
     print '     ' + target
     if does_file_exist(target):
         print "                 found"
     else:
        print "                 NOT found"
        #detect architecture code 
-       source = 'executables/qsub/linux/64/formatdb'
        if  copy_file(source, target ):
            print "                 just copied"
        else:
@@ -435,37 +527,44 @@ def blastgrid(argv):
     #for each database upload and format if necessary
     for database_file, dbname, in zip(opts.database_files, opts.dbnames):
        #Make sure DATABASESES are installed
-       target = MetaPathways + 'databases/' + database_file 
+       target = MetaPathways + 'databases' + '/' + database_file 
        print '     ' + target
        if does_file_exist(target):
           print "                 found"
        else:
           print "                 NOT found"
-          source = 'blastDB/' + database_file
+          source = 'blastDB' +  PATHDELIM + database_file
           if  copy_file(source, target ):
              print "                 just copied "
           else:
              print "                 couldn't copy!"
 
        #Make sure DATABASESES are formatted
-       target1 = target+ '*psq' 
+       if opts.algorithm == 'LAST': 
+          target1 = target+ '*ssp' 
+       if opts.algorithm == 'BLAST': 
+          target1 = target+ '*psq' 
+     
        if does_file_patt_exist(target1):
           print "                 already formatted"
        else:
           print "                 NOT formatted"
-          if  format_database(target):
+          if  format_database(target, opts.algorithm):
              print "                 just formatted"
           else:
              print "                 couldn't format!"
    
 
     sample_name = re.sub(r'^.*/', '', opts.sample_name)
+    sample_name = re.sub(r'^.*[\\]', '', sample_name)
+    #sample_name = re.sub(r'^.*[\\]', '', opts.sample_name)
+
     if opts.run_type=='overwrite':
        print "Removing old sample folder"
        remove_sample_dir(MetaPathways + sample_name)
    
     #create the sample folder MetaPathways/sample
-    print "     Sample  folder " + sample_name
+    print "     Sample Folder " + sample_name
     if  check_if_sample_folder_exists(MetaPathways + sample_name):
        print "                 found"
     else:
@@ -477,7 +576,7 @@ def blastgrid(argv):
        
 
     # create MetaPathways/sample/.qstatdir
-    folder = MetaPathways + sample_name + '/' + '.qstatdir'
+    folder = MetaPathways + sample_name + PATHDELIM + '.qstatdir'
     print '     ' + folder
     if check_if_sample_folder_exists(folder):
        print "                 found"
@@ -491,7 +590,7 @@ def blastgrid(argv):
 
 
     # copy the faa file to remote head
-    source = opts.sample_name + '/orf_prediction/' + sample_name + '.qced.faa'
+    source = opts.sample_name + PATHDELIM + 'orf_prediction' + PATHDELIM + sample_name + '.qced.faa'
     target = MetaPathways + sample_name + '/' + sample_name + '.qced.faa'
     print '     ' + target
     if does_file_exist(target):
@@ -515,45 +614,56 @@ def blastgrid(argv):
     
     print "\n"
 # setup toolbar
-    toolbar_width = 100
-    sys.stdout.write("[%s]" % (" " * toolbar_width))
-    sys.stdout.flush()
-    sys.stdout.write("\b"*(toolbar_width)) # return to start of line, after '['
-    start=0
+    #toolbar_width = 100
+
+    #sys.stdout.flush()
+    #sys.stdout.write("\b"*(toolbar_width)) # return to start of line, after '['
+    prevLen = 0 
+
+
     completed_dictionary ={}
 
-    for i in xrange(10000):
+    LIMIT = 100000
+    iter = 0
+    for i in xrange(LIMIT):
 #       time.sleep(3) # do real work here
+       iter = i
        completedsamples = number_of_completed(sample_name)
        current = int((completedsamples*100)/numsamples)
        number_running_jobs=get_number_of_running_jobs()
-       #print "total number of samples " + str(numsamples)
-       #print "number of running jobs " + str(get_number_of_running_jobs())
-       #print "completed samples "  + str(completedsamples)
-       if number_running_jobs < opts.max_parallel_jobs:
+
+       if int(number_running_jobs) < int(opts.max_parallel_jobs):
           for database_file, dbname in zip(opts.database_files, opts.dbnames):
-             submit_job(sample_name)
+            # print "submitting "
+             submit_job(sample_name, opts.mem, opts.walltime, opts.algorithm)
       
        # check if it is complete
        completed_count = 0
        for database_file, dbname in zip(opts.database_files, opts.dbnames):
             if not dbname in completed_dictionary and  is_complete(sample_name, dbname):
-              completed_dictionary[dbname] = True 
               if not consolidate(sample_name, dbname):
                    print "Consolidation failed! for database " + dbname
+              else: # successful consolidation 
+                   completed_dictionary[dbname] = True 
+                   print "Consolidated results for search against database : " + dbname
 
-       for i in range(current-start):
-          sys.stdout.write("-")
-          sys.stdout.flush()
-          start = current
+
+       statString=  str(completedsamples) + '/' + str(numsamples) + '  (' + str(current) + '%)'
+       sys.stdout.write("\b"*(prevLen)) # return to start of line, after '['
+       sys.stdout.write(statString) # return to start of line, after '['
+       sys.stdout.flush()
+       prevLen = len(statString)
 
        if len(opts.database_files) == len(completed_dictionary):
           break
     sys.stdout.write("\n")
 
+    if iter==LIMIT-1:
+       print "WARNING: Max Time Exceeded \n Please restart the script to monitor/submit  jobs"
+
 
     for dbname in opts.dbnames: 
-       target = opts.sample_name + '/blast_results/'
+       target = opts.sample_name +  PATHDELIM + 'blast_results' + PATHDELIM 
        source = MetaPathways + sample_name + '/' + sample_name + '.' + dbname +'.blastout'
        copy_file_back(source, target)
 

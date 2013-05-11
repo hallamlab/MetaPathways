@@ -9,6 +9,7 @@
 use strict;
 use warnings;
 use File::Basename;
+#use Data::Dumper;
 
 print "Start MLTreeMap v2.061\n";
 my $mltreemap                           = mltreemap->new();
@@ -36,9 +37,63 @@ $small_subroutines->undef_hashes($genewise_summary_files,$hmmalign_singlehit_fil
 my $raxml_outfiles                      = $mltreemap->start_RAxML($small_subroutines,$user_options,$phy_files,$cog_list,$models_to_be_used);
 my $final_RAxML_output_files            = $mltreemap->parse_RAxML_output($user_options,$tree_rerooter,$tree_numbers_translation,$raxml_outfiles,$text_of_analysis_type);
 $mltreemap->concatenate_RAxML_output_files($user_options,$final_RAxML_output_files,$text_of_analysis_type);
+
+my $final_RAxML_files  = BFile->new( 'file'=>$user_options->{-o}.'/final_RAxML_outputs.xml', 'permission' => 'w');
+$final_RAxML_files->addFolder( $user_options->{-o}.'/final_RAxML_outputs/');
+$final_RAxML_files->Close();
+
+sub remove_dir;
+sub create_consolidated_xml_file;
+
+exit(0);
+if( !exists $user_options->{-x} ) {
+    print "Done\n";
+    exit(0);
+}
+
+create_mltreemap_sequence_hits($user_options->{-o}.'/various_outputs/');
+create_consolidated_xml_file($user_options->{-o}.'/various_outputs/', $user_options->{-o}.'/various_outputs.xml');
+#remove_dir($user_options->{-o}.'/various_outputs/');
+
+create_consolidated_xml_file($user_options->{-o}.'/final_RAxML_outputs/', $user_options->{-o}.'/final_RAxML_outputs.xml');
+#remove_dir($user_options->{-o}.'/final_RAxML_outputs/');
+
 print "Done.\n";
 
 #attention: the identifiers of the COGs must be exactly 7 characters long.
+
+sub create_consolidated_xml_file {
+    my $foldername = shift;
+    my $xmlname = shift;
+    my $bfile  = BFile->new( 'file'=>$xmlname, 'permission' => 'w');
+    $bfile->addFolder($foldername);
+    $bfile->Close();
+}
+
+sub create_mltreemap_sequence_hits {
+    my $foldername = shift;
+    opendir(VDIR, $foldername) or croak('cannot open the folder'. $foldername);
+    my @files = readdir(VDIR);
+    foreach my $file (@files) {
+       if( $file =~/'.*COG[0-9]*.*\.fa$/gi) {
+          my (@matches) = ($file=~/[a-zA-Z]*_(.*)__[0-9]*__*(COG[0-9]*).*.fa$/);
+       }
+    }
+    close(VDIR);
+}
+
+
+sub remove_dir { 
+    my $foldername = shift;
+    opendir(VDIR, $foldername) or croak('cannot open the folder'. $foldername);
+    my @files_to_delete = readdir(VDIR);
+    foreach my $file (@files_to_delete) {
+       unlink($foldername.$file);
+    }
+    rmdir($foldername);
+    close(VDIR);
+}
+
 
 #####################################################
 #####################################################
@@ -48,8 +103,8 @@ print "Done.\n";
 #####################################################
 #####################################################
 
-package mltreemap;
-
+package mltreemap; {
+#use Data::Dumper;
 #####################################################
 # new
 #####################################################
@@ -69,8 +124,8 @@ sub read_user_input {
     my $package = shift;
     my $argv = shift;
     
-    my $error_message = "\nERROR: incorrect input.\nexample input:\n./mltreemap.pl -i example_input/test.txt\n\n";
-    $error_message .= "mandatory input option:\n-i: your sequence input file.\n\n";
+    my $error_message = "\nERROR: incorrect input.\nexample input:\n./mltreemap.pl -i example_input/test.txt -e binaries_folder\n\n";
+    $error_message .= "mandatory input option:\n-i: your sequence input file. -e folder  containing blastp, blastx, hmmalign, genewise, gblocks and raxaml\n\n";
     $error_message .= "optional input options:\n-b: number of Bootstrap replicates (Default 0 i.e. no Bootstrapping).\n";
     $error_message .= "-c: usage a computer cluster (0 = no cluster (default), s = sun grid).\n";
     $error_message .= "-f: RAxML algorithm (v = Maximum likelihood (default), p = Maximum Parsimony).\n";
@@ -83,7 +138,7 @@ sub read_user_input {
     $error_message .= "-r: reference selection (a = all reference data, s = selection file).\n";
     $error_message .= "\n";
         
-    my %mandatory_options = (-i => 0);
+    my %mandatory_options = (-i => 0,  -e =>"");
     my %option_defaults = (-b => 0, -f => "v", -o => "output/", -m => 0, -t => "p", -s => 60, -g => 50, -c => 0, -l => 2000, -r => "a");
     
     my %user_options = %option_defaults;
@@ -219,7 +274,7 @@ sub read_user_input {
     ############ If Users decide to select subset of BLAST databases,   ###############
     ############ notify the users of such decision.                     ###############
     if ($user_options{-r} eq "a") {
-        print "We will be using entire set of reference data.\n";
+       ;
     }else{
         my $dirname = dirname(__FILE__);
         print "We will use the set of reference data as mentioned in $dirname/$ref_select_file.\n";
@@ -474,7 +529,13 @@ sub read_species_translation_files {
 # blast
 #####################################################
 
+
+#####################################################
+# blast
+#####################################################
+
 sub blast {
+#    use Data::Dumper;
     my $package = shift;
     my $small_subroutines = shift;
     my $user_options = shift;
@@ -494,108 +555,116 @@ sub blast {
     
     print "run BLAST\n";
     my $dirname = dirname(__FILE__);
+    my $binaries_dirname = $user_options->{-e};
     
     my $alignment_data_dir = "$dirname/data/$reference_data_prefix"."alignment_data/";
     
-    opendir (PATH, "$alignment_data_dir") or die "Error, this directory \"$alignment_data_dir\" does not exist!\n";
-    my @files = readdir PATH;
-    closedir (PATH);
-    
-    my @blast_types = ("blastx","blastn");
-    
-    foreach my $blast_input_file (sort {$a cmp $b} keys %$blast_input_files) {      
-        foreach my $blast_type (@blast_types) {
+
+    my @allfiles;
+    if ($$user_options{-r} eq "a") {
+        opendir (PATH, "$alignment_data_dir") or die "Error, this directory \"$alignment_data_dir\" does not exist!\n";
+        @allfiles =  readdir PATH;
+        closedir (PATH);
+    } 
+    else{
+        open (SELECTION, "$ref_select_file") or die "Can't open $ref_select_file\n";
+        while (<SELECTION>) {
+            chomp $_;
+            my $line = $_;
             
+             if ($line =~ /(\S+)\t(\S+)\t(\S+(\s+\S+)*)$/){
+                $ref_selected = $1;
+                my $ref_selected_file = $ref_selected.".fa";
+                $ref_select_hash{$ref_selected_file} = "1";
+                #print $ref_selected_file."****\n";
+              }#end if
+         }#end while
+         close(SELECTION);
+         @allfiles = keys %ref_select_hash;
+
+     }
+    my @files ;
+
+    my %file_info = ();
+    for my $file (@allfiles) {
+       if(! ($file =~ /\.fa\Z/) ){ next; }
+
+       if( $file =~ /rRNA/i){  
+          $file_info{$file} = { 'prog'=>'blastn', 'marker'=>'rRNA_'};
+       }
+       else {
+          $file_info{$file} = { 'prog'=>'blastx', 'marker'=>''};
+       }
+       $file_info{$file}{'dbfile'} = "$alignment_data_dir"."$file";
+    }
+    
+#    print Dumper(\%file_info);
+#    print Dumper($blast_input_files);
+
+
+    foreach my $blast_input_file (sort {$a cmp $b} keys %$blast_input_files) {      
             my $blast_input_file_name = "";
             if ($blast_input_file =~ /\A.+\/(.+)\.txt\Z/) {
                 $blast_input_file_name = $1; 
             } else {
                 die "ERROR something is wrong with the directory of the BLAST input file!\n";    
             }
-            my $rRNA_blast_marker = "";
-            $rRNA_blast_marker = "rRNA_" if ($blast_type eq "blastn");
-            
-            my $blast_result_raw_file = "$output_directory_var/$blast_input_file_name.$rRNA_blast_marker"."BLAST_results_raw.txt";
+
+
+            my $blast_result_raw_file = "$output_directory_var/$blast_input_file_name"."rRNA_"."BLAST_results_raw.txt";
             $blast_results_raw_files_raw{$blast_result_raw_file} = $blast_input_file;
         
             my $blast_command = "";
-            my $database = "";
-            
-            ############ Edited by Young C. Song:  added block of if statements ###############
-            ############ If Users decide to select subset of BLAST databases,   ###############
-            ############ MLTreeMap uses those databases only.                   ###############
-            if ($$user_options{-r} eq "a") {
-                
-                $database = "-d \"";
-                foreach my $file (@files) {
-                    next if ($file =~ /\A\._/);
-                    if ($blast_type eq "blastn") {
-                        next unless $file =~ /rRNA\.fa\Z/;
-                        my $fa_file = "$alignment_data_dir"."$file";
-                        $database .= "$fa_file ";
-                    } elsif ($blast_type eq "blastx") {
-                        next unless (( $file =~ /.\.fa\Z/) && !($file =~ /rRNA/));
-                        my $fa_file = "$alignment_data_dir"."$file";
-                        $database .= "$fa_file ";
-                    }
+            my $databases = "";
+            foreach my $file (keys %file_info) {
+                if($file_info{$file}{'prog'} eq 'blastn' ) {
+                    $databases = $file_info{$file}{'dbfile'};
                 }
-                
-                $database .= "\"";
-                my $dirname = dirname(__FILE__);
-                $blast_command = "$dirname/sub_binaries/blastall -p $blast_type -i $blast_input_file -M BLOSUM62 ";
-                $blast_command .= "$database -e 0.01 -v 20000 -b 20000 -z 1000000 -m 8 > $blast_result_raw_file";
-            }else {
-                open (SELECTION, "$ref_select_file") or die "Can't open $ref_select_file\n";
-        
-                while (<SELECTION>) {
-                    chomp $_;
-                    my $line = $_;
-            
-                    if ($line =~ /(\S+)\t(\S+)\t(\S+(\s+\S+)*)$/){
-                        $ref_selected = $1;
-                        my $ref_selected_file = $ref_selected.".fa";
-                        $ref_select_hash{$ref_selected_file} = "1";
-                        #print $ref_selected_file."****\n";
-                    }#end if
-                }#end while
-                
-                $database = "-d \"";
-                foreach my $file (@files) {
-                    next if ($file =~ /\A\._/);
-                    if ($blast_type eq "blastn") {
-                        next unless $file =~ /rRNA\.fa\Z/;
-                        
-                        if (exists $ref_select_hash{$file}) {
-                            my $fa_file = "$alignment_data_dir"."$file";
-                            $database .= "$fa_file ";
-                        }#end if
-                    } elsif ($blast_type eq "blastx") {
-                        next unless (( $file =~ /.\.fa\Z/) && !($file =~ /rRNA/));
-                        
-                        if (exists $ref_select_hash{$file}) {
-                            my $fa_file = "$alignment_data_dir"."$file";
-                            $database .= "$fa_file ";
-                        }#end if
-                    }
+                else {
+                     next;
                 }
-           #     print $database."\n";
-                
-                $database .= "\"";
-                my $dirname = dirname(__FILE__);
-                $blast_command = "$dirname/sub_binaries/blastall -p $blast_type -i $blast_input_file -M BLOSUM62 ";
-                $blast_command .= "$database -e 0.01 -v 20000 -b 20000 -z 1000000 -m 8 > $blast_result_raw_file";
-            
-               close(SELECTION);
-            }#end if/else
+
+                $blast_command = $binaries_dirname."/blastn"." -query ".$blast_input_file;
+                $blast_command .= " -db ".$databases." -evalue 0.01";
+                $blast_command .= " -max_target_seqs 20000"." -dbsize 1000000"." -outfmt 6";
+                $blast_command .= " >> ".$blast_result_raw_file;
+    
+                if ($$user_options{-c} eq "s") {
+                       my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$blast_input_file_name,$blast_command);
+                       $sun_grid_jobs{$qsub_id} = 1;
+                } 
+                else {
+                    system($blast_command);  
+                }  
+            }
+
+
+            $blast_result_raw_file = "$output_directory_var/$blast_input_file_name"."BLAST_results_raw.txt";
+            $blast_results_raw_files_raw{$blast_result_raw_file} = $blast_input_file;
+            $blast_command = "";
+            $databases = "";
+            foreach my $file (keys %file_info) {
+                if($file_info{$file}{'prog'} eq 'blastx') {
+                    $databases = " ".$file_info{$file}{dbfile};
+                }
+                else {
+                    next;
+                }
+
+                $blast_command = $binaries_dirname."/blastx". " -query ".$blast_input_file;
+                $blast_command .= " -db ".$databases." -matrix BLOSUM62"." -evalue 0.01";
+                $blast_command .= " -max_target_seqs 20000"." -dbsize 1000000"." -outfmt 6";
+                $blast_command .= " >> ".$blast_result_raw_file;
+
+                 if ($$user_options{-c} eq "s") {
+                    my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$blast_input_file_name,$blast_command);
+                    $sun_grid_jobs{$qsub_id} = 1;
+                 } 
+                 else {
+                    system($blast_command);  
+                 }  
+            }
         
-            if ($$user_options{-c} eq "s") {
-                my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$blast_input_file_name,$blast_command);
-                $sun_grid_jobs{$qsub_id} = 1;
-            } else {
-           #     print $blast_command."\n";
-                system ($blast_command);  
-            }  
-        }
     }
     
     if ($$user_options{-c} eq "s") {
@@ -625,6 +694,7 @@ sub blast {
     return (\%blast_results_raw_files);                  
 }
 
+
 #####################################################
 # read_blast_file
 #####################################################
@@ -643,7 +713,7 @@ sub read_blast_file {
         my %blast_hits_raw = ();
         my $blast_result_raw_identifier = 0;
         
-        print "opening "."$blast_results_raw_file"."\n";
+#print "opening "."$blast_results_raw_file"."\n";
         open (IN, "$blast_results_raw_file") or die "ERROR: $blast_results_raw_file does not exist!!\n";   
         while (<IN>) {
             chomp $_;
@@ -941,6 +1011,7 @@ sub start_genewise {
     my %sun_grid_jobs = ();
     
     print "run Genewise\n";
+    my $binaries_dirname = $user_options->{-e};
     
     foreach my $shortened_sequence_file (sort {$a cmp $b} keys %$shortened_sequence_files) {
         my $contig = $$shortened_sequence_files{$shortened_sequence_file};
@@ -954,10 +1025,11 @@ sub start_genewise {
             $genewise_outputfiles{$contig}{$genewise_outputfile} = 1;
             $genewise_outputfiles_for_sun_grid_control{$genewise_outputfile} = 1;
             my $dirname = dirname(__FILE__);
-            my $genewise_command = "$dirname/sub_binaries/genewise $dirname/data/$reference_data_prefix"."hmm_data/$cog.hmm $shortened_sequence_file ";
+            my $genewise_command = "$binaries_dirname/genewise $dirname/data/$reference_data_prefix"."hmm_data/$cog.hmm $shortened_sequence_file ";
             $genewise_command .= " -init local -quiet -gene $dirname/data/genewise_support_files/human.gf -matrix $dirname/data/genewise_support_files/blosum62.bla";
             $genewise_command .= " -codon $dirname/data/genewise_support_files/codon.table -hmmer -subs 0.01 -indel 0.01 -gap 11 -ext 1 -both -pep -sum > ";
             $genewise_command .= "$genewise_outputfile";
+#          print "Genewise....".$genewise_command."\n";
             
             if ($$user_options{-c} eq "s") {
                 my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$shortened_sequence_file,$genewise_command);
@@ -1284,6 +1356,7 @@ sub prepare_and_run_hmmalign {
     my %hmmalign_singlehit_files_for_sun_grid_control = ();
     my %sun_grid_jobs = ();
     
+    my $binaries_dirname = $user_options->{-e};
     print "run hmmalign\n";
     
     foreach my $contig (sort {$a cmp $b} keys %$genewise_summary_files) {
@@ -1305,10 +1378,11 @@ sub prepare_and_run_hmmalign {
                 my $hmmalign_command = "";
                   
                 my $dirname = dirname(__FILE__);
-                $hmmalign_command = "$dirname/sub_binaries/hmmalign -m --mapali $dirname/data/$reference_data_prefix"."alignment_data/$cog.fa ";
+                $hmmalign_command = "$binaries_dirname/hmmalign -m --mapali $dirname/data/$reference_data_prefix"."alignment_data/$cog.fa ";
                 $hmmalign_command .= "--outformat Clustal $dirname/data/$reference_data_prefix"."hmm_data/$cog.hmm ";
                 $hmmalign_command .= "$genewise_singlehit_file_fa > $genewise_singlehit_file.mfa";
                 
+#print "HMMALIGN ..".$hmmalign_command."\n";
                 
                 if ($$user_options{-c} eq "s") {
                     my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$genewise_singlehit_file_fa,$hmmalign_command);
@@ -1431,6 +1505,7 @@ sub start_gblocks {
     my %sun_grid_jobs = ();
     
     print "run Gblocks\n";
+    my $binaries_dirname = $user_options->{-e};
     
     foreach my $f_contig (sort {$a cmp $b} keys %$concatenated_mfa_files) {
         my $concatenated_mfa_file = $$concatenated_mfa_files{$f_contig};
@@ -1440,13 +1515,14 @@ sub start_gblocks {
         $gblocks_files{$f_contig} = $gblocks_file;
         $gblocks_files_for_sun_grid_control{$gblocks_file} = 1;
         my $dirname = dirname(__FILE__);
-        my $gblocks_command = "$dirname/sub_binaries/Gblocks ";
+        my $gblocks_command = "$binaries_dirname/Gblocks ";
         $gblocks_command .= "$concatenated_mfa_file ";
         $gblocks_command .= "-t=p -s=y -u=n -p=t -b3=15 -b4=3 -b5=h -b2=$min_flank_pos  > /dev/null";
         if ($$user_options{-c} eq "s") {
             my $qsub_id = $small_subroutines->do_sun_grid_computing($user_options,$gblocks_file,$gblocks_command);
             $sun_grid_jobs{$qsub_id} = 1;
         } else {
+#print "Gblocks ...".$gblocks_command."\n";
             system ($gblocks_command);  
         }        
     }
@@ -1577,6 +1653,7 @@ sub start_RAxML {
     my %raxml_outfiles = ();
     
     print "run RAxML\n";
+    my $binaries_dirname = $user_options->{-e};
     
     my $bootstrap_replicates = $$user_options{"-b"};
     if (($bootstrap_replicates > 1) && ($raxml_option eq "p")) {
@@ -1611,6 +1688,7 @@ sub start_RAxML {
         
         foreach my $raxml_file (@raxml_files) {
             my $remove_command = "rm $raxml_file";
+#   print $remove_command."\n";
             system ($remove_command) if (-e $raxml_file);    
         }
         
@@ -1618,7 +1696,7 @@ sub start_RAxML {
         die "ERROR: no best aa model could be detected for the ML step!\n" unless $model_to_be_used;
 
         my $dirname = dirname(__FILE__);
-        my $raxml_command = "$dirname/sub_binaries/raxmlHPC -m $model_to_be_used ";
+        my $raxml_command = "$binaries_dirname/raxmlHPC -m $model_to_be_used ";
         $raxml_command .= "-x 12345 -# $bootstrap_replicates " if ($bootstrap_replicates > 1);
         $raxml_command .= "-s $phy_file -t $reference_tree_file -f $raxml_option -n $f_contig "; 
         $raxml_command .= "-w $output_directory_var > $output_directory_var$f_contig"."_RAxML.txt";
@@ -1633,6 +1711,10 @@ sub start_RAxML {
         #print OUT "denominator: $denominator\n$raxml_command\n";
         #close OUT;
         #print "RAxML call: $raxml_command\n";
+#        print $raxml_command."\n";
+
+
+
         if ($$user_options{-c} eq "s") {
             my $phy_file_name = "";
             if ($phy_file =~ /.+\/(.+)/) {
@@ -1644,7 +1726,6 @@ sub start_RAxML {
             $expected_raxml_outfiles{"$output_directory_var"."RAxML_parsimonyTree.$f_contig"} = 1 if ($raxml_option eq "p");
             $sun_grid_jobs{$qsub_id} = 1;
         } else {
-            print $raxml_command."\n";
             system($raxml_command);
         }
         
@@ -1715,6 +1796,8 @@ sub parse_RAxML_output {
         my $description_text = "# $$text_of_analysis_type{$denominator}\n";
         my $reference_tree_file = $$user_options{"reference_tree_file_of_denominator"}{$denominator};
         my $terminal_children_strings_of_reference = $tree_rerooter->read_and_understand_the_reference_tree($reference_tree_file);
+
+
         my $content_of_previous_labelled_tree_file = "";
         my $rooted_labelled_trees = "";
         my $insertion_point_node_hash = "";
@@ -1753,7 +1836,7 @@ sub parse_RAxML_output {
                 open (IN, "$classification_file") or die "ERROR: Can't open $classification_file!\n";
                 while (<IN>) {
                     chomp $_;
-                    my ($query, $insertion_point_l, $weight) = split / /;
+                    my ($query, $insertion_point_l, $weight, $dummy) = split / /;
                     my $assignment = "";
                     if ($insertion_point_l =~ /I(\d+)/) {
                         $assignment = $1;
@@ -1797,7 +1880,7 @@ sub parse_RAxML_output {
             $final_RAxML_output_files{$denominator}{$final_RAxML_filename} = 1;
             
             
-            print "generating "."$final_RAxML_filename"."\n";
+#            print "generating "."$final_RAxML_filename"."\n";
             
             open (OUT, "> $final_RAxML_filename") or die "ERROR: Can't create $final_RAxML_filename!\n";
             
@@ -1883,13 +1966,12 @@ sub concatenate_RAxML_output_files {
         }
         
         open (OUT, "> $final_output_file_name") or die "Can't create $final_output_file_name!\n";
-        print "$denominator"."_ results concatenated:\n";
         print OUT "$description_text\n";
         my $sum_of_relative_weights = 0;
         foreach my $relative_weight (sort {$b <=> $a} keys %assignments_with_relative_weights) {
             foreach my $assignment (sort {$b cmp $a} keys %{$assignments_with_relative_weights{$relative_weight}}) {
                 $sum_of_relative_weights += $relative_weight;
-                print "Placement weight $relative_weight\%: $assignment\n";
+#        print "Placement weight $relative_weight\%: $assignment\n";
                 print OUT "Placement weight $relative_weight\%: $assignment\n";
             }
         }
@@ -2142,6 +2224,7 @@ sub read_and_understand_the_reference_tree {
     my $reference_tree_elements                             = &read_the_reference_tree($reference_tree_file);
     my $reference_tree_info                                 = &create_tree_info_hash;
     &get_node_subtrees($reference_tree_elements,$reference_tree_info);
+
     &assign_parents_and_children($reference_tree_info);
     
     #build the terminal children strings of the reference tree
@@ -2161,6 +2244,8 @@ sub read_understand_and_reroot_the_labelled_tree {
     
     my ($labelled_tree_elements,$insertion_point_node_hash) = &read_the_raxml_out_tree($labelled_tree_file);
     my $labelled_tree_info                                  = &create_tree_info_hash;
+
+#print Dumper($labelled_tree_elements);
     &get_node_subtrees($labelled_tree_elements,$labelled_tree_info);
     &assign_parents_and_children($labelled_tree_info);
     &build_tree_info_quartets($labelled_tree_info);
@@ -2501,9 +2586,10 @@ sub get_node_subtrees {
 #####################################################
 # assign_parents_and_children
 #####################################################
-
+my $visit_count = 0;
 sub assign_parents_and_children {
     my $tree_info = shift;
+
     
     foreach my $node (sort {$a <=> $b} keys %{$$tree_info{"subtree_of_node"}}) {
         
@@ -2732,6 +2818,231 @@ sub compare_terminal_children_strings {
     return(\%real_terminal_children_strings_of_assignments);
 }
 
+}
+
 #####################################################
 #####################################################
+1;
+
+
+package  BFile;
+
+use strict;
+use warnings;
+use Carp;
+#use Data::Dumper;
+
+{
+   my $count = 0;   
+   my %files;
+   my $dataAvail = 0;
+   my $maxSize = 100000000;
+   my $size = 0;
+
+
+
+sub getContent {
+   return \%files;
+}
+
+
+
+# Perl trim function to remove whitespace from the start and end of the string
+sub trim($)
+{
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
+}
+
+
+
+sub ReadFile {
+
+   my ($self, $filename) = @_;
+
+   if( $dataAvail == 0)  {
+       _readContent($self->{'_name'});
+       $dataAvail = 1; 
+   } 
+
+   if( $self->{'_permission'} eq 'w' ) {
+      croak( "Cannot read from a write only file " );
+   }
+
+   if( ! defined $filename) {
+      croak( "File name to read is missing" );
+   }
+
+   if( !defined $files{$filename}) {
+      return undef;
+   }
+
+   return $files{$filename}{'data'};
+}
+
+
+
+sub addFile {
+   my ($self, $name, $data ) = @_;
+   if( $self->{'_permission'} eq 'r' ) {
+      croak( "Cannot add content to a read only file" );
+   }
+
+   if( ! defined $name) {
+      croak( "File name missing" );
+   }
+
+   if( ! defined $data) {
+      croak( "File datamissing" );
+   }
+   
+   $files{$name} = {'data' => $data}; 
+   $size +=  length($name);
+   $size +=  length($data);
+   $size += 2;
+}
+
+
+sub addFolder{
+   my ($self, $foldername) = @_;
+   opendir( DIR, $foldername) or croak("cannot open the folder $foldername");
+   my $count = 0;
+   while( my $file = readdir(DIR) ) {
+       my $data = getData($foldername ."/". $file);
+       addFile($self, $file, $data);
+       if( $size > $maxSize ) {
+           swapToDisk($self);
+       }
+       $count++;
+   }
+}
+
+sub _readContent {
+   my $filename = shift; 
+   my %openers = ( "<file>"=> 0, "<name>" => 0, "<data>" => 0);
+
+   my %closures=( "</file>"=>0, "</name>"=>0, "</data>"=>0);
+   my %maps=( "</file>"=>"<file>", "</name>"=>"<name>", "</data>"=><"data"> );
+
+   open  FILEHANDLE, "<", $filename  || croak('Cannot open file to write');
+
+   my $nameStr="";
+   my $dataStr="";
+   my $lastop;
+   while( <FILEHANDLE> ) {
+     my $line =  trim($_);
+     if ( ($line eq  "<file>" ) or ($line eq "<name>") or ($line eq  "<data>") or 
+          ($line eq  "<\/file>" ) or ($line eq "</name>") or ($line eq  "</data>") ) {
+
+         if ( ($line eq  "<file>" ) or ($line eq "<name>") or ($line eq  "<data>") ) {
+          $openers{$line}++;
+          $lastop = $line;
+         }
+         else {
+           $openers{$maps{$line}}--;
+           $lastop = "";
+           if( $line eq "</file>") {
+               $nameStr = trim($nameStr);
+               $files{$nameStr} = {'data' => $dataStr}; 
+               $nameStr = "";
+               $dataStr = "";
+           }
+         }
+     }
+     elsif( $lastop eq "<name>" ) {
+         $nameStr .= $_;
+     }
+     elsif( $lastop eq "<data>" ) {
+         $dataStr .= $_;
+     }
+
+   }
+   #print Dumper(\%files);
+
+
+   close(FILEHANDLE)
+}
+
+sub Close{
+   my $self = shift;
+   open my $filehandle, '>', $self->{_name}  || croak('Cannot open file to write');
+   for my $file (keys %files)  {
+       print $filehandle "<file>\n";
+       print $filehandle "  <name>\n";
+       print $filehandle $file .  "\n";
+       print $filehandle "  </name>\n";
+       print $filehandle "  <data>\n";
+       print $filehandle $files{$file}{'data'} ;
+       print $filehandle "  </data>\n";
+       print $filehandle "</file>\n";
+   }
+   close( $filehandle);
+   %files = ();
+   undef %files;
+
+}
+
+sub swapToDisk{
+   my $self = shift;
+   open my $filehandle, '>>', $self->{_name}  || croak('Cannot open file to write');
+   for my $file (keys %files)  {
+       print $filehandle "<file>\n";
+       print $filehandle "  <name>\n";
+       print $filehandle $file .  "\n";
+       print $filehandle "  </name>\n";
+       print $filehandle "  <data>\n";
+       print $filehandle $files{$file}{'data'};
+       print $filehandle "  </data>\n";
+       print $filehandle "</file>\n";
+   }
+   close( $filehandle);
+
+   %files = ();
+   $size = 0;
+
+   undef %files;
+
+}
+
+
+sub validPermission {
+   my $permString = shift;
+   my ($result)  = ( $permString =~ /(r|w)$/) ;
+   if($result eq "r" or $result eq "w") {
+      return $result;
+   }
+   else {
+      return undef;
+   }
+}
+
+sub new {
+    my ($class, %args) = @_;
+    $maxSize = 100000000;
+    return bless {
+                     _name =>  $args{'file'} ||  croak('You must provide a file\n'),
+                     _permission=>  validPermission($args{'permission'})  || croak('You must provide a file permission w/r'),
+                 }, $class;
+ }
+
+
+}
+
+sub getData {
+   my ($filename) = @_; 
+   unless(open(DATAFILE, $filename)) 
+   {   
+     print  "Cannot open file $filename \n";
+     exit;  
+   }   
+   my @filedata = <DATAFILE>;
+
+   close(DATAFILE);
+
+   return join('',@filedata);
+ }
+ 
+
 1;

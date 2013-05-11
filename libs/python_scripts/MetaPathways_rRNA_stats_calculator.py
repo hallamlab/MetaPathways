@@ -6,12 +6,23 @@ Oct 26, 2009 by Simon Eng
     Changed the method of outputting statistics.
 """
 
-import optparse
-import csv
-from os import path
-import sys
-import logging.handlers
-import re
+try:
+   import optparse
+   import csv
+   from os import path
+   import sys
+   import logging.handlers
+   import re
+   from python_modules.sysutil import pathDelim
+except:
+     print """ Could not load some user defined  module functions"""
+     print """ Make sure your typed \"source MetaPathwaysrc\""""
+     print """ """
+     sys.exit(3)
+
+PATHDELIM=pathDelim()
+
+
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
@@ -72,10 +83,6 @@ def parse_Format_2(line):
     return( name.strip(), taxonomy.strip() )
 
 
-
-
-    return(None, None) 
-
 def getName_and_Taxonomy(line, format=0):
     
     if format==0:
@@ -92,6 +99,34 @@ def getName_and_Taxonomy(line, format=0):
     
     return(name, taxonomy )
     
+START_PATTERN = re.compile(r'^>')
+
+def read_select_fasta_sequences(candidates, records, input_file_name):
+    input_file = open(input_file_name, 'r')
+    line = input_file.readline()
+    while line:
+         if START_PATTERN.search(line): 
+            name=line.strip() 
+            name = re.sub(r'>', '',name)
+            if name and name in candidates:
+               records[name]=""
+         else:
+             sequence = line.strip()
+             if sequence and  name in candidates:
+               records[name] += sequence
+         line = input_file.readline()
+
+    input_file.close()
+
+def write_selected_sequences(selected_sequences, output_file_name):
+    output_file = open(output_file_name, 'w')
+    for read in selected_sequences:
+        fprintf(output_file, ">%s\n", read)
+        fprintf(output_file,"%s\n", selected_sequences[read])
+
+    output_file.close()
+
+
 
 def append_taxonomic_information(databaseSequences, table, params):
      try:
@@ -183,6 +218,10 @@ rRNA_stats_table.py -i x.blastout [y.blastout] -d  xdatabase [ydatabase]  -m xta
                            metavar='OUTPUTE', help='Taxonomic databases')
 
 
+    input_group.add_option('-f', '--fasta', dest='fasta',
+                           metavar='NUC_SEQUENCES', help='The nucleotide sequences')
+
+
 
     parser.add_option_group(input_group)
 
@@ -250,10 +289,9 @@ rRNA_stats_table.py -i x.blastout [y.blastout] -d  xdatabase [ydatabase]  -m xta
     fprintf(outputfile, "Number of rRNA sequences detected:\t" +  str(len(reads)) +'\n\n')
 
     
-    
     for x in range(0, len(options.tax_databases)):
     #  printf('\t%s\t\t\t', re.sub(r'^.*/','', options.tax_databases[x]))
-      fprintf(outputfile, '\t%s\t\t\t', re.sub(r'^.*/','', options.tax_databases[x]))
+      fprintf(outputfile, '\t%s\t\t\t', re.sub(r'^.*' + PATHDELIM, '', options.tax_databases[x]))
     #printf('\n')
     fprintf(outputfile,'\n')
        
@@ -272,9 +310,20 @@ rRNA_stats_table.py -i x.blastout [y.blastout] -d  xdatabase [ydatabase]  -m xta
             else:
                fprintf(outputfile, '\t-\t-\t-\t-\t-\t-')
         fprintf(outputfile,'\n')
-         
-
     outputfile.close() 
-    #print table
-    #print options
-    #print args
+
+    # collect the exact reads 
+    database_hits = {}
+    for read in reads:
+        for x in range(0, len(options.blast_files)):
+            if read in table[options.tax_databases[x]]:
+               database_hits[read] = [ table[options.tax_databases[x]][read][4], table[options.tax_databases[x]][read][5]]
+
+    # pick the hits, trim them according to the match and write them
+    if options.fasta:
+      selected_sequences={}
+      read_select_fasta_sequences(database_hits, selected_sequences, options.fasta)
+      for read in database_hits:
+         selected_sequences[read] = selected_sequences[read][database_hits[read][0]:database_hits[read][1]] 
+      write_selected_sequences(selected_sequences, options.output +'.fasta')
+

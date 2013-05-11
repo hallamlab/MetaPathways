@@ -85,13 +85,17 @@ class GenBankRecordParser(SequenceRecordParser):
                     sequence_record.locus = fields[0]
                     # sequence_record.size = fields[1]  <-- calculated later
                     # 'bp' = fields[2]                  <-- ignore
-                    if not fields[3] in ('DNA', 'RNA'):
+
+                    if not fields[3].upper()  in ('DNA', 'RNA'):
                         raise Exception("'DNA' or 'RNA' expected, got '%s' instead.  Line:\n%s" % (fields[3],value))
                     sequence_record.molecule_type = fields[3]
                     fields=fields[4:]
 
                     # Last item on the line is the date:
-                    sequence_record.date = datetime.datetime.strptime(fields.pop(), '%d-%b-%Y')
+                    try:
+                        sequence_record.date = datetime.datetime.strptime(fields.pop(), '%d-%b-%Y')
+                    except:
+                        sequence_record.date = 'UNKNOWN'
 
                     # Division: optional, comes just before date
                     if len(fields) > 0 :

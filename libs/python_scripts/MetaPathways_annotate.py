@@ -169,11 +169,15 @@ def process_gff_file(gff_file_name, orf_dictionary):
      gff_beg_pattern = re.compile("^#")
      gfffile.close()
      
+     count = 0
      for line in gff_lines:
         line = line.strip() 
         if gff_beg_pattern.search(line):
           continue
         insert_orf_into_dict(line, orf_dictionary)
+        count += 1
+        if count %10000 == 0:
+           print count
 
 
 def create_dictionary(databasemapfile, annot_map):
@@ -297,7 +301,9 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary) :
     
 def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_stats_files, tRNA_stats_files,  output_gff, output_comparative_annotation):
     orf_dictionary={}
+    print "Going to process gff file "
     process_gff_file(input_gff, orf_dictionary)
+    print "done"
 
     outputgff_file = open( output_gff, 'w')
     output_comp_annot_file1 = open( output_comparative_annotation + '.1.txt', 'w')
@@ -307,25 +313,29 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
     fprintf(output_comp_annot_file1,'%s\n', output_comp_annot_file1_Str)
 
     output_comp_annot_file2_Str = 'orf_id'
-    for dbname, weight in dbname_weight.iteritems():
+    dbnames = dbname_weight.keys()
+    for dbname in dbnames:
+         weight = dbname_weight[dbname]
          output_comp_annot_file2_Str += '\t{0}(EC) \t{0}(product)\t{0}(value)'.format(dbname)
     fprintf(output_comp_annot_file2,'%s\n', output_comp_annot_file2_Str)
        
 
-    for contig in  orf_dictionary:
+    for contig in  orf_dictionary.keys():
        count = 0
        for orf in  orf_dictionary[contig]:
          #print orf
          value = 0.0001
-         success = False
+         success =False
          output_comp_annot_file1_Str = ''
          output_comp_annot_file2_Str = ''
-         for dbname, weight in dbname_weight.iteritems():
+         for dbname in dbnames:
+            weight = dbname_weight[dbname]
+            value = 0
             if orf['id'] in results_dictionary[dbname]:
                 if value < results_dictionary[dbname][orf['id']]['value']:
                     value = results_dictionary[dbname][orf['id']]['value']
                     candidatedbname=dbname
-                    success = True
+                    success =True
                     candidate_orf_pos = count 
 
                     if output_comp_annot_file1_Str:
@@ -351,13 +361,27 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
                                results_dictionary[dbname][orf['id']]['product'],\
                                str(results_dictionary[dbname][orf['id']]['value']*float(weight)))
 
+            else: 
+                if not output_comp_annot_file1_Str:
+                   output_comp_annot_file1_Str += '{0}\t{1}\t{2}\t{3}\t{4}\n'.format(orf['id'], '','','','')
+
+                if output_comp_annot_file2_Str:
+                   output_comp_annot_file2_Str += '\t{0}\t{1}\t{2}'.format('', '','')
+                else:
+                   output_comp_annot_file2_Str += '{0}\t{1}\t{2}\t{3}'.format(orf['id'], '','','','')
+
+
 
          count +=1
 
-         if output_comp_annot_file1_Str:
+         if success:
             fprintf(output_comp_annot_file1,'%s\n', output_comp_annot_file1_Str)
             fprintf(output_comp_annot_file2,'%s\n', output_comp_annot_file2_Str)
             write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orf['id']) 
+       del orf_dictionary[contig]   
+
+
+    
 
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
@@ -497,8 +521,10 @@ class BlastOutputTsvParser(object):
         self.seq_beg_pattern = re.compile("#")
 
         try:
+           print "REading blast output"
            self.blastoutputfile = open( blastoutput,'r')
            self.lines=self.blastoutputfile.readlines()
+           print "done REading blast output"
            self.blastoutputfile.close()
            self.size = len(self.lines)
            if not self.seq_beg_pattern.search(self.lines[0]) :
@@ -563,7 +589,7 @@ def word_information(string_of_words):
     wordlist = {}
     underscore_pattern = re.compile("_")
     for word in words:
-       if not word in ['', 'is', 'have', 'has', 'will', 'can', 'should',  'in', 'at', 'upon', 'the', 'a', 'an', 'on', 'for', 'of', 'by', 'with' ,'and',  '>' ]:
+       if not word in ['', 'is', 'have', 'has', 'will', 'can', 'should',  'in', 'at', 'upon', 'the', 'a', 'an', 'on', 'for', 'of', 'by', 'with' ,'and',  '>', 'predicted', 'protein', 'conserved' ]:
           if not underscore_pattern.search(word):
              wordlist[word]=1
 
@@ -594,15 +620,23 @@ def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation
     fields.append('product')
 
     annotation = {}
+    count = 0
     for data in blastparser:
+        count+=1
+        if count%10000==0:
+           print count
+
         if isWithinCutoffs(data, cutoffs) :
            #print data['query'] + '\t' + str(data['q_length']) +'\t' + str(data['bitscore']) +'\t' + str(data['expect']) +'\t' + str(data['identity']) + '\t' + str(data['bsr']) + '\t' + data['ec'] + '\t' + data['product']
 #           if data['query'] =='NapDC_illum_asm_188606_0':
 
+    #       print dbname 
            annotation['bsr'] = data['bsr']
            annotation['ec'] = data['ec']
            annotation['product'] = process_product(data['product'], dbname) 
            annotation['value'] = compute_annotation_value(annotation)*weight
+         #  print annotation
+           
 
               #sys.exit(0)
 
@@ -626,11 +660,14 @@ def main(argv):
 
     results_dictionary={}
     dbname_weight={}
+    create_annotation(dbname_weight, results_dictionary, opts.input_gff, opts.rRNA_16S, opts.tRNA, opts.output_gff, opts.output_comparative_annotation)
     for dbname, blastoutput, weight in zip( opts.database_name, opts.input_blastout, opts.weight_db):
         results_dictionary[dbname]={}
         dbname_weight[dbname] = weight
         process_parsed_blastoutput( dbname, weight, blastoutput,opts, results_dictionary[dbname])
 
+    print "Done processing parsed files .."
+    #create the annotations from he results
     create_annotation(dbname_weight, results_dictionary, opts.input_gff, opts.rRNA_16S, opts.tRNA, opts.output_gff, opts.output_comparative_annotation)
 
 

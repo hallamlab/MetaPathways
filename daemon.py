@@ -2,11 +2,11 @@
 # File created on 27 Jan 2012.
 from __future__ import division
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2012, The metapaths Project"
+__author__ = "Kishori M Konwar, Niels W Hanson"
+__copyright__ = "Copyright 2013, MetaPathways"
 __credits__ = [""]
 __version__ = "1.0"
-__maintainer__ = "Kishori M Konwar"
+__maintainer__ = "Kishori M Konwar, Niels W Hanson"
 __status__ = "Release"
 
 import subprocess
@@ -57,8 +57,24 @@ parser.add_option("--format-database", dest="format_database",  default='',
 parser.add_option("--batch-size", dest="batch_size",  default=500, 
                   help='batch size')
 
+parser.add_option("--os-type", dest="os_type", action= 'store_true',  default=False,   
+                  help='return OS type')
+
+parser.add_option("--cpu-type", dest="cpu_type",  default='',   
+                  help='return CPU type')
+
+parser.add_option("--algorithm", dest="algorithm", choices = ['BLAST', 'LAST'], default = "BLAST",
+                  help='the algorithm used for computing homology [DEFAULT: BLAST]')
+
+
 parser.add_option("--submit-job", dest="submit_job",  default='',   
                   help='submit job')
+
+parser.add_option("--memory", dest="memory",  default='10gb',   
+                  help='memory size request')
+
+parser.add_option("--walltime", dest="walltime",  default='10:00:00',   
+                  help='wall time request')
 
 parser.add_option("--database-file", dest="database_file",  default='',   
                   help='database file name')
@@ -128,7 +144,17 @@ def  get_number_of_running_jobs(login):
      p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
      result = p.communicate() 
      lines = result[0].strip().split('\n')
-     print str(len(lines)-4)
+     num_running_jobs = 0 
+     loginPattern = re.compile( login )
+
+     for line in lines:
+        if loginPattern.match(line): 
+           num_runnning_jobs += 1 
+         
+     if num_running_jobs==0:   
+        num_running_jobs = str(len(lines)-4) 
+
+     print str(num_running_jobs)
 
 
 def  remove_sample_dir(sample_dir):
@@ -299,9 +325,15 @@ def read_completed_task(statsDir, jobid_dictionary):
     #print jobid_dictionary
     return
 
-def format_database(database):
-     formatdb = 'MetaPathways/executables/formatdb' 
-     args = [ formatdb, '-p', 'T', '-i', database ]
+def format_database(database, algorithm):
+     if algorithm=='LAST':
+       dbformatter = 'MetaPathways/executables/lastdb' 
+       args = [ dbformatter, '-p', '-c',  database, database ]
+
+     if algorithm=='BLAST':
+       dbformatter = 'MetaPathways/executables/formatdb' 
+       args = [ dbformatter, '-p', 'T', '-i', database ]
+
      p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
      result = p.communicate()
      if result[1].strip()=='':
@@ -310,6 +342,7 @@ def format_database(database):
      else:
         print 'no'
         return False
+
 
 def  _create_dictionary_of_arrays(listfilename, dictionary, col1=1, col2=2) :
   try:
@@ -363,7 +396,16 @@ def is_complete(sample_name, dbname):
          return False
 
 
-def submit_job(sample_name):
+def submit_job(sample_name, mem, walltime, algorithm):
+
+   validWallTime = re.compile(r'[0-9]+:[0-9]+:[0-9]+')
+   validMem = re.compile(r'[0-9]+gb')
+
+   if not validWallTime.match(walltime):  
+      walltime = '11:00:00'
+   if not validMem.match(mem):  
+      mem = '11gb'
+
    try:
      namePrefix = 'MetaPathways/' + sample_name + '/' + sample_name +'_' 
      samples_filename_dictionary={}
@@ -387,21 +429,27 @@ def submit_job(sample_name):
          dbname = samples_dbname_dictionary[key] 
          seq_file_name = samples_filename_dictionary[key] 
           
-
-         blastCommand = 'MetaPathways/executables/blastp -num_threads 1  -max_target_seqs 5  -outfmt 6' +\
+         if algorithm=='BLAST': 
+              command = 'MetaPathways/executables/blastp -num_threads 1  -max_target_seqs 5  -outfmt 6' +\
                         ' -db ' +  ('MetaPathways/databases/' + databasefile)  +\
                         ' -query ' + seq_file_name  + ' -evalue 0.000001 '+\
                         ' -out '  +  (seq_file_name + "." + dbname +".blastout")
 
+         if algorithm=='LAST':
+              command = 'MetaPathways/executables/lastal' +\
+                        ' -o '  +  (seq_file_name + "." + dbname +".blastout") +\
+                        ' -f 0 '  +  ('MetaPathways/databases/' + databasefile)  +\
+                        ' ' + seq_file_name
+
 
 
          #fprintf(commandfile, "echo %s\n",key)
-         fprintf(commandfile, "%s\n",blastCommand)
+         fprintf(commandfile, "%s\n",command)
 
          commandfile.close()
-         args = [ 'qsub', '-l', 'walltime=10:00:00', '-m',  'ea',  '-j',  'eo',  '-e',
+         args = [ 'qsub', '-l', 'walltime='+walltime, '-m',  'ea',  '-j',  'eo',  '-e',
              'MetaPathways/' + sample_name +'/.qstatdir/$PBS_JOBID',  '-l',  'procs=1',\
-             '-l', 'mem=4gb', 'command_job_qsub.txt']
+             '-l', 'mem='+ mem, 'command_job_qsub.txt']
          p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
          result = p.communicate()
          if result[1].strip()=='':
@@ -427,7 +475,15 @@ def submit_job(sample_name):
               add_to_listfile(namePrefix + 'completed.txt', key, submitted_dictionary[key])
 
 
-
+def os_type():
+    try:
+       from platform import machine, platform
+    except:
+       print "unknown"
+       return
+    
+    if platform():
+       print platform()
 
 def number_of_sequences_in_file(sequence_file_name):
      try:
@@ -561,14 +617,20 @@ def main(argv):
 
     if len(opts.submit_job) > 0:
        try:
-          submit_job(opts.submit_job)
+          submit_job(opts.submit_job, opts.memory, opts.walltime, opts.algorithm)
+       except:
+          return 0
+
+    if opts.os_type==True:
+       try:
+          os_type()
        except:
           return 0
 
     # format database
     if len(opts.format_database) > 0:
        try:
-          format_database(opts.format_database)
+          format_database(opts.format_database, opts.algorithm)
        except:
           return 0
 

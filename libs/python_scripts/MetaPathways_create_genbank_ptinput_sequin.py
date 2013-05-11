@@ -6,15 +6,24 @@ Oct 26, 2009 by Simon Eng
     Changed the method of outputting statistics.
 """
 
-import optparse
-import csv
-from os import makedirs, path, listdir, remove
-import shutil
-import traceback
-import sys
-import logging.handlers
-import re
-from glob import glob
+try:
+    import optparse
+    import csv
+    from os import makedirs, path, listdir, remove
+    import shutil
+    import traceback
+    import sys
+    import logging.handlers
+    import re
+    from glob import glob
+    from python_modules.sysutil import pathDelim, genbankDate
+except:
+    print """ Could not load some user defined  module functions"""
+    print """ Make sure your typed \"source MetaPathwaysrc\""""
+    print """ """
+    sys.exit(3)
+
+PATHDELIM = pathDelim()
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
@@ -33,7 +42,7 @@ def files_exist( files ):
 
 
 def removeDir(origFolderName):
-    folderName = origFolderName + '/*'
+    folderName = origFolderName + PATHDELIM + '*'
     files = glob(folderName)
     for  f in files:
        remove(f)
@@ -123,15 +132,15 @@ Fields must be tab-separated. Also, all but the final field in each feature line
 
 
 def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, protein_seq_dict):
-     print output_filenames
+     #print output_filenames
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
         print "Cannot read file " + gff_file_name + " !"
 
-     sample_name= re.sub('annotated.gff', '', gff_file_name)
-     sample_name= re.sub('annot.gff', '', gff_file_name) # Niels: somewhere we changed the file name?
-     sample_name= re.sub('.*/', '', sample_name)
+     sample_name= re.sub('.annotated.gff', '', gff_file_name)
+     sample_name= re.sub('.annot.gff', '', gff_file_name) # Niels: somewhere we changed the file name?
+     sample_name= re.sub(r'.*[/\\]', '', sample_name)
 
      gff_lines = gfffile.readlines()
      gff_beg_pattern = re.compile("^#")
@@ -151,7 +160,10 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
 
 
      if "gbk" in output_filenames:
-       write_gff_file(output_filenames['gbk'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict)
+       write_gbk_file(output_filenames['gbk'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict)
+
+     if "sequin" in output_filenames:
+       write_sequin_file(output_filenames['sequin'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict)
 
      if "ptinput" in output_filenames:
        write_ptinput_files(output_filenames['ptinput'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict)
@@ -160,9 +172,9 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
 def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict):
 
      try:
-        print output_dir_name
+        #print output_dir_name
         removeDir(output_dir_name)
-        print output_dir_name
+        #print output_dir_name
         makedirs(output_dir_name)
         genetic_elementsfile = open(output_dir_name + "/genetic-elements.dat", 'w')
         zerofastafile = open(output_dir_name + "/0.fasta", 'w')
@@ -179,6 +191,7 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
      startbase = 0
      endbase = 0
      fastaStr =""
+     cumulFastaLength=0
      fprintf(zerofastafile, ">0\n")
      for key in contig_dict:
         first = True
@@ -195,8 +208,8 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
            except:
               protein_seq = ""
               
-           startbase += attrib['start']
-           endbase += attrib['end']
+           startbase = cumulFastaLength + attrib['start']
+           endbase =  cumulFastaLength + attrib['end']
 
            try: 
               fprintf(zeropffile, "ID\t%s\n", attrib['id'])
@@ -221,17 +234,16 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
            try: 
               fprintf(zeropffile, "PRODUCT\t%s\n", attrib['product'])
            except:
-              print attrib
-              fprintf(zeropffile, "PRODUCT\t%s \n", attrib['product'])
-              sys.exit(0)
+              fprintf(zeropffile, "PRODUCT\t%s \n", 'hypothetical protein')
 
            fprintf(zeropffile, "PRODUCT-TYPE\tP\n")
            try:
              if  len(attrib['ec']) > 0:
                 fprintf(zeropffile, "EC\t%s\n", attrib['ec'])
            except: 
-              print attrib
-              sys.exit(0)
+                pass
+ #             print attrib
+ #             sys.exit(0)
 
            fprintf(zeropffile, "//\n")
 
@@ -243,9 +255,7 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
            continue
 
         fastaStr+=(wrap("",0,62, dna_seq)+'\n')
-
-        startbase += len(dna_seq)  
-        endbase += len(dna_seq)
+        cumulFastaLength += len(dna_seq)
 
         fprintf(zerofastafile, "%s",  fastaStr)
         fastaStr=""
@@ -256,7 +266,7 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
      # Niels: removing annotated.gff from sample_name
      sample_name = re.sub(".annot.gff", '', sample_name)
      sample_name = re.sub('.*/', '', sample_name)
-     sample_name = re.sub("\\.", '', sample_name)
+     sample_name = re.sub(r'[\\].', '', sample_name)
      
      # Niels: trim sample_name to less than 35 characters 
      # as it causes PGDB creation to fail
@@ -281,11 +291,81 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
      fprintf(genetic_elementsfile,"//")
      genetic_elementsfile.close()
 
+#this function creates the sequin  file from the gff, protein and nucleotide sequences  
+def  write_sequin_file(output_file_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict):
+
+     outputfile = open(output_file_name, 'w')
+     #print contig_dict
+    
+     count =0 
+     outputStr=""
+     for key in contig_dict:
+        first = True
+        if count %10000 == 0:
+           #print "count " + str(count)
+           outputfile.write(outputStr)
+           outputStr=""
+        count+=1
+
+        for attrib in contig_dict[key]:     
+           id  = attrib['id']
+           try:
+              protein_seq = protein_seq_dict[id]
+           except:
+              protein_seq = ""
+              None
+           
+           definition = sample_name
+           accession = '.'
+           version = '.' +spaces(10) + "GI:."
+           dblink = sample_name
+           keywords = '.'
+           source = sample_name
+           organism = sample_name
+           if first:   
+              first = False
+              try:
+                dna_seq =  nucleotide_seq_dict[key]
+                dna_seq_formatted =  format_sequence_origin(dna_seq)
+                dna_length = len(dna_seq)
+                sourceStr = "1.." + str(dna_length)
+              except:
+                dna_seq = ""
+                dna_seq_formatted =  ""
+                dna_length = 0
+                sourceStr ="0..0"
+
+              outputStr+=(">Feature %s\n" % (key))
+              outputStr+=re.sub('\.\.','\t',sourceStr)+'\t'+"REFERENCE" + '\n'
+            
+
+           if 'start' in attrib and 'end' in attrib:
+              if 'strand' in attrib:
+                 if attrib['strand']=='-':
+                     geneLoc = str(attrib['end']) +'\t' + str(attrib['start'])
+                 else:
+                     geneLoc = str(attrib['start']) +'\t' + str(attrib['end'])
+              outputStr+=geneLoc + '\t' + "gene" + '\n'
+ 
+
+           if 'locus_tag' in attrib:
+               locus_tag = "gene" + '\t' + attrib['locus_tag'] 
+               outputStr+='\t\t\t' + locus_tag +'\n'
+
+
+           outputStr+=geneLoc + '\t' + "CDS" + '\n'
+
+           if 'product' in attrib:
+              product_tag = "product" + '\t' + attrib['product'] 
+              outputStr+='\t\t\t' + product_tag +'\n'
+
+     outputfile.write(outputStr)
+     outputfile.close() 
 
 #this function creates the genbank file from the gff, protein and nucleotide sequences  
-def  write_gff_file(output_file_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict):
+def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict):
 
-     date = '08-NOV-2012'
+     date = genbankDate()
      outputfile = open(output_file_name, 'w')
      #print contig_dict
     

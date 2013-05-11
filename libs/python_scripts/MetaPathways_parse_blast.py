@@ -13,6 +13,7 @@ try:
      from os import makedirs, sys, remove
      from sys import path
      import re
+     from copy import copy
      
      from optparse import OptionParser, OptionGroup
      from python_modules.metapaths_utils  import parse_command_line_parameters, fprintf, printf
@@ -31,13 +32,14 @@ parser.add_option("-b", "--blastoutput", dest="input_blastout", action='append',
 parser.add_option("-d", "--dbasename", dest="database_name", action='append', default=[],
                   help='the database names [at least 1 REQUIRED]')
 
-parser.add_option("-o", "--output_file", dest="output_file",
-                  help='the output table [REQUIRED]')
 parser.add_option("-r", "--ref_score", dest="refscore_file", 
                   help='the refscore  table [REQUIRED]')
 
 parser.add_option("-m", "--map_for_database", dest="database_map", action='append', default=[],
                   help='the map file for the database  [at least 1 REQUIRED]')
+
+parser.add_option("-a", "--algorithm", dest="algorithm", choices = ['BLAST', 'LAST'], default = "BLAST",
+                   help='the algorithm used for computing homology [DEFAULT: BLAST]')
 
 cutoffs_group =  OptionGroup(parser, 'Cuttoff Related Options')
 
@@ -117,6 +119,10 @@ def create_dictionary(databasemapfile, annot_map):
               words.pop(0)
               annotation = ' '.join(words)
               annot_map[name]= annotation
+
+       if len(annot_map) ==0:
+           sys.exit( "File " + databasemapfile + " seems to be empty!" ) 
+        
        
 
 def create_refscores(refscores_file, refscore_map):
@@ -132,28 +138,35 @@ def create_refscores(refscores_file, refscore_map):
                 refscore_map[words[0]]= 1
 
 class BlastOutputParser(object):
+    commentPATTERN = re.compile(r'^#')
 
-    def __init__(self, dbname,  blastoutput, database_mapfile, refscore_file, cutoffs):
+    def __init__(self, dbname,  blastoutput, database_mapfile, refscore_file, opts):
+        self.Size = 10000
         self.dbname = dbname
         self.blastoutput = blastoutput
         self.database_mapfile =database_mapfile
         self.refscore_file = refscore_file
         self.annot_map = {} 
         self.i=0
-        self.cutoffs = cutoffs
+        self.opts = opts
         self.hits_counts = {}
         self.data = {}
         self.refscores = {}
 
         try:
            self.blastoutputfile = open( blastoutput,'r')
-           self.lines=self.blastoutputfile.readlines()
-           self.blastoutputfile.close()
-           self.size = len(self.lines)
-           #print self.lines
-           #print "size = " + str(self.size)
+#           print "Going to read the blastout\n"
+    #       self.lines=self.blastoutputfile.readlines()
+           #self.blastoutputfile.close()
+#           print "Doing reading  blastout\n"
+    #       self.size = len(self.lines)
+     
+#           print "Going to read the refscores\n"
            create_refscores(refscore_file, self.refscores)
+#           print "Doing reading  refscore\n"
+#           print "Going to read the dictionary\n"
            create_dictionary(database_mapfile, self.annot_map)
+#           print "Doing reading  dictionary\n"
         except AttributeError:
            print "Cannot read the map file for database :" + dbname
            sys.exit(0)
@@ -161,30 +174,71 @@ class BlastOutputParser(object):
     def __iter__(self):
         return self
  
+    def permuteForLAST(self, words):
+        try :
+           temp = copy(words) 
+           words[0] = temp[6]
+          # word[1] = temp[1]
+           words[2] = 100.0 # percent id
+          # word[3] = temp[3]  #aln length
+           words[6] = temp[2]
+           words[7] = int(temp[2]) + int(temp[3]) - 1
+           words[10] = 0.0   # evalue
+           words[11] = temp[0]
+        except:
+           print "ERROR : Invalid B/LAST output file"
+           sys.exit(0) 
+
+    def refillBuffer(self):
+       i = 0
+       self.lines = []
+       line = self.blastoutputfile.readline()
+       while line and i < self.Size:
+         line=self.blastoutputfile.readline()
+         if self.commentPATTERN.match(line):
+            continue
+         self.lines.append(line)
+         if not line:
+           break
+         i += 1
+
+       self.size = len(self.lines)
+       
     def next(self):
-        if self.i < self.size-1:
-           while self.i < self.size:
-               words = [ x.strip()  for x in self.lines[self.i].rstrip().split('\t')]
-               if not words[0] in self.hits_counts:
-                  self.hits_counts[words[0]] = 0
+        if self.i % self.Size ==0:
+           self.refillBuffer()
 
-               if self.hits_counts[words[0]] >= self.cutoffs.limit:
-                  self.i = self.i + 1
-                  continue 
+        if  self.i % self.Size < self.size:
+           words = [ x.strip()  for x in self.lines[self.i % self.Size].rstrip().split('\t')]
 
-               if not isWithinCutoffs(words, self.data, self.cutoffs, self.annot_map, self.refscores):
-                  self.i = self.i + 1
-                  continue 
-
-               self.hits_counts[words[0]] += 1
+           print len(words)
+           if len(words) != 12:
                self.i = self.i + 1
-               break
+               return None
+            
+           if  self.opts.algorithm =='LAST':
+                self.permuteForLAST(words)
+
+           if not words[0] in self.hits_counts:
+              self.hits_counts[words[0]] = 0
+
+           if self.hits_counts[words[0]] >= self.opts.limit:
+              self.i = self.i + 1
+              return None 
+
+           if len(words) != 12 or not isWithinCutoffs(words, self.data, self.opts, self.annot_map, self.refscores):
+             self.i = self.i + 1
+             return None 
+
+           self.hits_counts[words[0]] += 1
+           self.i = self.i + 1
               
            try:
               return self.data
            except:
               return None
         else:
+           self.blastoutputfile.close()
            raise StopIteration()
               
 def isWithinCutoffs(words, data, cutoffs, annot_map, refscores):
@@ -203,8 +257,8 @@ def isWithinCutoffs(words, data, cutoffs, annot_map, refscores):
     try:
        data['bsr'] = float(words[11])/refscores[words[0]]
     except:
-       print "words 0 " + str(refscores[words[0]])
-       print "words 11 " + str( words[11])
+       #print "words 0 " + str(refscores[words[0]])
+       #print "words 11 " + str( words[11])
        data['bsr'] = 0
 
     try:
@@ -225,6 +279,9 @@ def isWithinCutoffs(words, data, cutoffs, annot_map, refscores):
     try:
        data['product'] = annot_map[words[1]]
     except:
+       print words
+       sys.exit()
+       sys.exit("Sequence with name \"" + words[1] + "\" is not present in map file ")
        data['product'] = 'hypothetical protein'
 
     try:
@@ -312,11 +369,11 @@ def add_refscore_to_file(blast_table_out, refscore_file, allNames):
         
 
 # compute the refscores
-def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, cutoffs):
-    blastparser =  BlastOutputParser(dbname, blastoutput, mapfile, refscore_file, cutoffs)
+def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, opts):
+    blastparser =  BlastOutputParser(dbname, blastoutput, mapfile, refscore_file, opts)
 
     fields = ['q_length', 'bitscore', 'bsr', 'expect', 'aln_length', 'identity', 'ec' ]
-    if cutoffs.taxonomy:
+    if opts.taxonomy:
        fields.append('taxonomy')
     fields.append('product')
 
@@ -329,7 +386,13 @@ def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, cutoffs):
     fprintf(outputfile, "\n")
 
     for data in blastparser:
-        fprintf(outputfile, "%s",data['query'])
+        if not data:
+          continue
+        try:
+          fprintf(outputfile, "%s",data['query'])
+        except:
+           print data
+           sys.exit()
         for field in fields:
            fprintf(outputfile, "\t%s",data[field])
         fprintf(outputfile, "\n")

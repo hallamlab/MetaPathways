@@ -356,7 +356,9 @@ class BlastOutputTsvParser(object):
 
         try:
            self.blastoutputfile = open( blastoutput,'r')
+           print "reading blast"
            self.lines=self.blastoutputfile.readlines()
+           print "done"
            self.blastoutputfile.close()
            self.size = len(self.lines)
            if not self.seq_beg_pattern.search(self.lines[0]) :
@@ -421,6 +423,7 @@ def process_parsed_blastoutput(dbname, blastoutput, cutoffs, annotation_results)
     fields = ['q_length', 'bitscore', 'bsr', 'expect', 'identity', 'ec', 'query' ]
     fields.append('product')
 
+    count = 0 
     for data in blastparser:
         if isWithinCutoffs(data, cutoffs) :
            #if dbname=='refseq':
@@ -436,6 +439,9 @@ def process_parsed_blastoutput(dbname, blastoutput, cutoffs, annotation_results)
                annotation_results[data['query']] = []
 
            annotation_results[data['query']].append(annotation)
+        count += 1
+        if count%10000==0:
+            print count
  
     return None
 
@@ -592,6 +598,9 @@ def main(argv):
         print "Error:"
         pass
 
+    print "done parsing blast"
+    create_annotation(results_dictionary, opts.input_annotated_gff, opts.output_dir)
+
     for dbname in results_dictionary:
        if  dbname=='cog':
           create_table(results_dictionary[dbname], opts.input_cog_maps, 'cog', opts.output_dir)
@@ -600,7 +609,7 @@ def main(argv):
           create_table(results_dictionary[dbname], opts.input_kegg_maps, 'kegg', opts.output_dir)
 
     
-    create_annotation(results_dictionary, opts.input_annotated_gff, opts.output_dir)
+#    create_annotation(results_dictionary, opts.input_annotated_gff, opts.output_dir)
 
 
 

@@ -6,12 +6,19 @@ Oct 26, 2009 by Simon Eng
     Changed the method of outputting statistics.
 """
 
-import optparse
-import csv
-from os import path
-import sys
-import logging.handlers
-import re
+try:
+     import optparse
+     import csv
+     from os import path
+     import sys
+     import logging.handlers
+     import re
+except:
+     print """ Could not load some user defined  module functions"""
+     print """ Make sure your typed \"source MetaPathwaysrc\""""
+     print """ """
+     sys.exit(3)
+
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)

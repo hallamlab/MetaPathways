@@ -1,5 +1,0 @@
-GH1ref_	GH1	GH family 1
-GH3ref_	GH3	GH family 3
-GH5ref_	GH5	GH family 5
-prx1ref	prx1	Bacterial Peroxidase Family
-prx2ref	prx2	Animal/Plant/Fungal/Bacterial Peroxidase Family
