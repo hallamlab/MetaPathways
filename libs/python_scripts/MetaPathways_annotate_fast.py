@@ -248,19 +248,31 @@ def create_dictionary(databasemapfile, annot_map):
 def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid):
       fields = [  'source', 'feature', 'start', 'end', 'score', 'strand', 'frame' ]
 
+#      print contig
+#      print orf_dictionary[contig]
+ 
+#      print results_dictionary
+
       output_line= orf_dictionary[contig][candidate_orf_pos]['seqname']
+
       for field in fields:
         # printf("\t%s", orf_dictionary[contig][candidate_orf_pos][field])
          output_line += "\t"+ str(orf_dictionary[contig][candidate_orf_pos][field])
 
       attributes = "ID="+orf_dictionary[contig][candidate_orf_pos]['id']
       attributes += ";" + "locus_tag="+orf_dictionary[contig][candidate_orf_pos]['locus_tag']
+      attributes += ";" + "partial="+orf_dictionary[contig][candidate_orf_pos]['partial']
       attributes += ";" + "sourcedb="+candidatedbname
-      attributes += ";" + "annotvalue="+str(results_dictionary[candidatedbname][orfid]['value'])
-      attributes += ";" + "ec="+str(results_dictionary[candidatedbname][orfid]['ec'])
-      attributes += ";" + "product="+results_dictionary[candidatedbname][orfid]['product']
-      #printf("\t%s",attributes)
-      #printf("\n")
+     
+      if candidatedbname in results_dictionary:
+         attributes += ";" + "annotvalue="+str(results_dictionary[candidatedbname][orfid]['value'])
+         attributes += ";" + "ec="+str(results_dictionary[candidatedbname][orfid]['ec'])
+         attributes += ";" + "product="+results_dictionary[candidatedbname][orfid]['product']
+      else:
+         attributes += ";" + "annotvalue="+str('0')
+         attributes += ";" + "ec="+str('')
+         attributes += ";" + "product="+'hypothetical protein'
+
       output_line += '\t' + attributes
       fprintf(outputgff_file, "%s\n", output_line);
 
@@ -420,13 +432,16 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
                    output_comp_annot_file2_Str += '{0}\t{1}\t{2}\t{3}'.format(orf['id'], '','','','')
 
 
-
-         count +=1
-
-         if success:
+         if success:  # there was a database hit
             fprintf(output_comp_annot_file1,'%s\n', output_comp_annot_file1_Str)
             fprintf(output_comp_annot_file2,'%s\n', output_comp_annot_file2_Str)
             write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, gffreader.orf_dictionary, contig, candidate_orf_pos,  orf['id']) 
+         else:   # if it was not  a hit then it is a hypothetical protein
+            #print gffreader.orf_dictionary
+            write_annotation_for_orf(outputgff_file, 'None', '0', results_dictionary, gffreader.orf_dictionary, contig, count, orf['id']) 
+         
+         count +=1  #move to the next orf
+
        #del orf_dictionary[contig]   
 
 
@@ -570,10 +585,8 @@ class BlastOutputTsvParser(object):
         self.seq_beg_pattern = re.compile("#")
 
         try:
-           print "REading blast output"
            self.blastoutputfile = open( blastoutput,'r')
            self.lines=self.blastoutputfile.readlines()
-           print "done REading blast output"
            self.blastoutputfile.close()
            self.size = len(self.lines)
            if not self.seq_beg_pattern.search(self.lines[0]) :
@@ -701,7 +714,7 @@ def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation
 
 # the main function
 def main(argv): 
-    (opts, args) = parser.parse_args()
+    (opts, args) = parser.parse_args(argv)
     if not check_arguments(opts, args):
        print usage
        sys.exit(0)
@@ -715,13 +728,13 @@ def main(argv):
         dbname_weight[dbname] = weight
         process_parsed_blastoutput( dbname, weight, blastoutput,opts, results_dictionary[dbname])
 
-    print "Done processing parsed files .."
     #create the annotations from he results
     create_annotation(dbname_weight, results_dictionary, opts.input_gff, opts.rRNA_16S, opts.tRNA, opts.output_gff, opts.output_comparative_annotation)
 
 
-
-       
+def MetaPathways_annotate_fast(argv):       
+    main(argv)
+    return (0,'')
 
 # the main function of metapaths
 if __name__ == "__main__":

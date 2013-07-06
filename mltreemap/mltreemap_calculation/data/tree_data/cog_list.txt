@@ -47,3 +47,6 @@ COG1850	r	RuBisCo
 p_a_moA	m	Methane Monooxygenase (amoA & pmoA)
 _K02586	n	Nitrogenase (nifD)
 _K02588	h	Nitrogenase (nifH)
+dsr_v2_	d	dsrAB
+phocryp	c	Photolyase/Cryptochrome
+mcrAref	y	Methyl coenzyme M reductase alpha subunit (mcrA)

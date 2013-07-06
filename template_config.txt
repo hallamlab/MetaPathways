@@ -8,8 +8,8 @@ PYTHON_EXECUTABLE   /path/to/python
 PERL_EXECUTABLE   /path/to/perl
 METAPATHWAYS_PATH /path/to/MetaPathways
 
-# Replace with your current
-PATHOLOGIC_EXECUTABLE   /path/to/pathway_tools
+# Replace with your current installation binary of pathway-tools
+PATHOLOGIC_EXECUTABLE   /path/to/pathway-tools/pathway-tools
 
 REFDBS   'blastDB'
 
@@ -30,9 +30,9 @@ SCAN_tRNA               'executables/SYSTEM/bit64/trnascan-1.4'
 'GFF_TO_FASTA'          'libs/python_scripts/MetaPathways_create_amino_sequences.py'
 'COMPUTE_REFSCORE'      'libs/python_scripts/MetaPathways_refscore.py' 
 'PARSE_BLAST'           'libs/python_scripts/MetaPathways_parse_blast.py'
-'ANNOTATE'              'libs/python_scripts/MetaPathways_annotate.py'
+'ANNOTATE'              'libs/python_scripts/MetaPathways_annotate_fast.py'
 'GENBANK_FILE'          'libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py'  
-'CREATE_REPORT_FILES'   'libs/python_scripts/MetaPathways_create_reports.py' 
+'CREATE_REPORT_FILES'   'libs/python_scripts/MetaPathways_create_reports_fast.py' 
 'STATS_rRNA'            'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
 'MLTREEMAP_IMAGEMAKER'  'mltreemap/mltreemap_imagemaker/mltreemap_imagemaker.pl' 
 'MLTREEMAP_CALCULATION' 'mltreemap/mltreemap_calculation/mltreemap.pl'

@@ -1259,7 +1259,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
 
 
     mltreemap_calculation_cmd = create_MLTreeMap_Calculations(mltreemap_input_file, output_mltreemap_calculations_dir, config_settings)
-    commands.append( ["\n16. MLTreeMap Calculations  ....", mltreemap_calculation_cmd, 'MLTREEMAP_CALCULATION', command_Status, enable_flag])
+    commands.append( ["\n13. MLTreeMap Calculations  ....", mltreemap_calculation_cmd, 'MLTREEMAP_CALCULATION', command_Status, enable_flag])
 
 
 
@@ -1275,7 +1275,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
    # mltreemap_gather_hits_cmd=create_MLTreeMap_Hits(output_mltreemap_calculations_dir+ PATHDELIM + 'various_outputs', mltreemap_image_output, config_settings)
 
     #add command
-    commands.append( ["\n17. Making MLTreeMap Images  ....", mltreemap_imagemaker_cmd, 'MLTREEMAP_IMAGEMAKER', command_Status, enable_flag])
+    commands.append( ["\n14. Making MLTreeMap Images  ....", mltreemap_imagemaker_cmd, 'MLTREEMAP_IMAGEMAKER', command_Status, enable_flag])
    # commands.append( ["\n17a. Gather MLTreeMap Hits  ....", mltreemap_gather_hits_cmd, 'MLTREEMAP_CALCULATION', command_Status, enable_flag])
     #################################
 
@@ -1295,7 +1295,7 @@ def run_metapathways(input_fp, output_dir, command_handler, command_line_params,
     create_pgdb_cmd = create_pgdb_using_pathway_tools_cmd(output_fasta_pf_dir, taxonomic_pruning_flag, config_settings)
  #   print create_pgdb_cmd 
  #   print taxonomic_pruning_flag
-    commands.append( ["\n18. Create PGDB  ....", create_pgdb_cmd, 'PATHOLOGIC', command_Status, enable_flag])
+    commands.append( ["\n15. Create PGDB  ....", create_pgdb_cmd, 'PATHOLOGIC', command_Status, enable_flag])
     #################################
 
     create_pgdb_table_cmd = create_pgdb_using_pathway_tools_cmd(output_fasta_pf_dir, taxonomic_pruning_flag, config_settings)

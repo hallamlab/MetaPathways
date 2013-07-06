@@ -272,7 +272,8 @@ def create_annotation(results_dictionary, annotated_gff,  output_dir):
        for orf in  gffreader.orf_dictionary[contig]:
           #print orf
           if count%10000==0 :
-              print "fandt " + str(count)
+             # print "fandt " + str(count)
+             pass 
 
           species = []
           if 'refseq' in results_dictionary:
@@ -405,7 +406,7 @@ class BlastOutputTsvParser(object):
         self.dbname = dbname
         self.blastoutput = blastoutput
         self.i=0
-        self.Size = 10000
+        self.SIZE = 10000
         self.data = {}
         self.fieldmap={}
         self.seq_beg_pattern = re.compile("#")
@@ -417,11 +418,9 @@ class BlastOutputTsvParser(object):
            if not self.seq_beg_pattern.search(line) :
               print "First line must have field header names and begin with \"#\""
               sys.exit(0)
-
-           header = self.line.replace('#','',1)
+           header = re.sub('#','',line)
 
            fields = [ x.strip()  for x in header.rstrip().split('\t')]
-           print fields
            k = 0 
            for x in fields:
             self.fieldmap[x] = k 
@@ -435,11 +434,11 @@ class BlastOutputTsvParser(object):
        i = 0 
        self.lines = []
        line = self.blastoutputfile.readline()
-       while line and i < self.Size:
+       while line and i < self.SIZE:
          line=self.blastoutputfile.readline()
-         self.lines.append(line)
          if not line:
            break
+         self.lines.append(line)
          i += 1
 
        self.size = len(self.lines)
@@ -449,12 +448,13 @@ class BlastOutputTsvParser(object):
         return self
  
     def next(self):
-        if self.i % self.Size == 0:
-           refillBuffer()
+        if self.i % self.SIZE == 0:
+           self.refillBuffer()
 
-        if self.i % self.Size < self.size:
-           fields = [ x.strip()  for x in self.lines[self.i].rstrip().split('\t')]
+        if self.i % self.SIZE < self.size:
+           fields = [ x.strip()  for x in self.lines[self.i % self.SIZE].rstrip().split('\t')]
            try:
+              self.data = {}
               self.data['query'] = fields[self.fieldmap['query']]
               self.data['q_length'] = int(fields[self.fieldmap['q_length']])
               self.data['bitscore'] = float(fields[self.fieldmap['bitscore']])
@@ -464,6 +464,13 @@ class BlastOutputTsvParser(object):
               self.data['ec'] = fields[self.fieldmap['ec']]
               self.data['product'] = re.sub(r'=',' ',fields[self.fieldmap['product']])
            except:
+              print "<<<<<<-------"
+              print 'self size ' + str(self.size)
+              print 'line ' + self.lines[self.i % self.SIZE]
+              print 'index ' + str(self.i)
+              print 'data ' + str(self.data)
+              print ">>>>>>-------"
+                
               self.i = self.i + 1
               return None
            
@@ -477,6 +484,8 @@ class BlastOutputTsvParser(object):
            raise StopIteration()
               
 def isWithinCutoffs(data, cutoffs):
+  import traceback
+  try:
     if data['q_length'] < cutoffs.min_length:
        return False
 
@@ -491,22 +500,25 @@ def isWithinCutoffs(data, cutoffs):
 
     if data['bsr'] < cutoffs.min_bsr:
        return False
+  except:
+     print traceback.print_exc()
+    # print data
+    # print cutoffs
+     sys.exit(0)
 
-    return True
+  return True
 
 
 # compute the refscores
 def process_parsed_blastoutput(dbname, blastoutput, cutoffs, annotation_results):
-    print "parser not yet initialized "
     blastparser =  BlastOutputTsvParser(dbname, blastoutput)
-    print "parser initialized "
 
     fields = ['q_length', 'bitscore', 'bsr', 'expect', 'identity', 'ec', 'query' ]
     fields.append('product')
 
     count = 0 
     for data in blastparser:
-        if isWithinCutoffs(data, cutoffs) :
+        if data!=None and isWithinCutoffs(data, cutoffs) :
            #if dbname=='refseq':
             # print data['query'] + '\t' + str(data['q_length']) +'\t' + str(data['bitscore']) +'\t' + str(data['expect']) +'\t' + str(data['identity']) + '\t' + str(data['bsr']) + '\t' + data['ec'] + '\t' + data['product']
            
@@ -521,8 +533,8 @@ def process_parsed_blastoutput(dbname, blastoutput, cutoffs, annotation_results)
 
            annotation_results[data['query']].append(annotation)
         count += 1
-        if count%10000==0:
-            print count
+       # if count%100==0:
+       #    print count
  
     return None
 
@@ -668,18 +680,19 @@ def main(argv):
        print usage
        sys.exit(0)
 
-
     results_dictionary={}
     dbname_weight={}
-    try:
-      for dbname, blastoutput in zip( opts.database_name, opts.input_blastout):
-         results_dictionary[dbname]={}
-         process_parsed_blastoutput( dbname, blastoutput, opts, results_dictionary[dbname])
-    except:
-        print "Error:"
-        pass
+    #import traceback
+    for dbname, blastoutput in zip( opts.database_name, opts.input_blastout):
+        #print "Processing database " + dbname
+        try:
+           results_dictionary[dbname]={}
+           process_parsed_blastoutput( dbname, blastoutput, opts, results_dictionary[dbname])
+        except:
+           #traceback.print_exc()
+           print "Error: " + dbname
+           pass
 
-    print "done parsing blast"
     create_annotation(results_dictionary, opts.input_annotated_gff, opts.output_dir)
 
     for dbname in results_dictionary:
