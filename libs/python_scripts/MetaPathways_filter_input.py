@@ -65,15 +65,29 @@ def valid_arguments(opts, args):
     return state
 
 
+def isAminoAcidSequence(sequence):
+    if sequence:
+        count = 0
+        list = [ 'a', 't', 'c', 'g', 'A', 'T', 'C', 'G']
+        for x in sequence:
+            if x in list:
+               count+=1
+        if count/len(sequence) < 0.80:
+            return True
+        else:
+             return False
+    return True
+    
 
 def filter_sequence(sequence):
-   sequence = re.sub(r'^[atcgATCG]','-', sequence.strip())
-   
+   if isAminoAcidSequence(sequence):
+       return sequence
+   sequence = re.sub(r'[^atcgATCG]','-', sequence.strip())
    subsequences =  sequence.split('-')
    max_length = 0;
    longest_sequence = ""; 
    for seq  in subsequences: 
-      if len(seq) > max_length : 
+      if len(seq) > max_length :
           longest_sequence = seq
           max_length = len(seq)
 
@@ -194,7 +208,7 @@ def main(argv):
         stats[AV_LENGTH][BEFORE]  =  stats[AV_LENGTH][BEFORE] + length
 
         seqvalue = filter_sequence(seq)
-    
+
         stats[NUMSEQ][BEFORE] += 1
         
         seqlen = len(seqvalue)
