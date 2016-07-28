@@ -1,0 +1,12 @@
+version=475
+alphabet=ACDEFGHIKLMNPQRSTVWY
+numofsequences=10
+numofletters=1875
+letterfreqs=119 16 93 160 92 122 37 125 119 192 42 78 73 98 114 109 99 123 16 48
+maxunsortedinterval=0
+masklowercase=1
+numofindexes=1
+totallength=1886
+specialcharacters=11
+prefixlength=2
+subsetseed=A C D E F G H I K L M N P Q R S T V W Y

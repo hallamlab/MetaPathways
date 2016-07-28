@@ -1,0 +1,10 @@
+konwar_2	Prodigal_v2.00	CDS	3	1076	119.73	-	0	ID=konwar_2_0;locus_tag=konwar_2_0;partial=10;orf_length=1073;contig_length=2200
+konwar_2	Prodigal_v2.00	CDS	1064	2032	115.64	-	0	ID=konwar_2_1;locus_tag=konwar_2_1;partial=00;orf_length=968;contig_length=2200
+konwar_3	Prodigal_v2.00	CDS	170	409	23.81	+	0	ID=konwar_3_0;locus_tag=konwar_3_0;partial=00;orf_length=239;contig_length=1700
+konwar_3	Prodigal_v2.00	CDS	541	912	16.56	+	0	ID=konwar_3_1;locus_tag=konwar_3_1;partial=00;orf_length=371;contig_length=1700
+konwar_3	Prodigal_v2.00	CDS	955	1698	58.73	+	0	ID=konwar_3_2;locus_tag=konwar_3_2;partial=01;orf_length=743;contig_length=1700
+konwar_0	Prodigal_v2.00	CDS	3	329	18.90	-	0	ID=konwar_0_0;locus_tag=konwar_0_0;partial=10;orf_length=326;contig_length=1197
+konwar_0	Prodigal_v2.00	CDS	333	635	14.48	-	0	ID=konwar_0_1;locus_tag=konwar_0_1;partial=00;orf_length=302;contig_length=1197
+konwar_0	Prodigal_v2.00	CDS	942	1196	36.16	+	0	ID=konwar_0_2;locus_tag=konwar_0_2;partial=01;orf_length=254;contig_length=1197
+konwar_1	Prodigal_v2.00	CDS	2	538	35.42	-	0	ID=konwar_1_0;locus_tag=konwar_1_0;partial=10;orf_length=536;contig_length=1800
+konwar_1	Prodigal_v2.00	CDS	684	1508	84.54	-	0	ID=konwar_1_1;locus_tag=konwar_1_1;partial=00;orf_length=824;contig_length=1800

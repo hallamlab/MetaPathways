@@ -1,0 +1,380 @@
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Total Protein Annotations	0
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Total Protein Annotations	0
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Total Protein Annotations	0
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Total Protein Annotations	0
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Total Protein Annotations	0
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+5000	Total Protein Annotations refseq-nr-2014-01-18 (LAST)	26
+5000	Total Protein Annotations CAZY_2014_09_04 (LAST)	0
+5000	Total Protein Annotations COG_2013-12-27 (LAST)	7
+5000	Total Protein Annotations seed-2014-01-30 (LAST)	25
+7000	Taxonomic hits in GREENGENES_gg16S-2012-11-06	0
+6000	Protein Annotations from CAZY_2014_09_04	0
+6001	Protein Annotations from COG_2013-12-27	2
+6002	Protein Annotations from refseq-nr-2014-01-18	10
+6003	Protein Annotations from seed-2014-01-30	10
+6004	Total Protein Annotations	10
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+5000	Total Protein Annotations metacyc-v4-2011-07-03 (LAST)	4
+5000	Total Protein Annotations CAZY_2014_09_04 (LAST)	0
+5000	Total Protein Annotations COG_2013-12-27 (LAST)	7
+6000	Protein Annotations from CAZY_2014_09_04	0
+6001	Protein Annotations from COG_2013-12-27	2
+6002	Protein Annotations from metacyc-v4-2011-07-03	1
+6003	Protein Annotations from refseq-nr-2014-01-18	10
+6004	Protein Annotations from seed-2014-01-30	10
+6005	Total Protein Annotations	10
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+6000	Protein Annotations from CAZY_2014_09_04	0
+6001	Protein Annotations from COG_2013-12-27	2
+6002	Protein Annotations from metacyc-v4-2011-07-03	1
+6003	Protein Annotations from refseq-nr-2014-01-18	10
+6004	Protein Annotations from seed-2014-01-30	10
+6005	Total Protein Annotations	10
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+5000	Total Protein Annotations COG_2013-12-27 (LAST)	7
+5000	Total Protein Annotations metacyc-v4-2011-07-03 (LAST)	4
+6000	Protein Annotations from CAZY_2014_09_04	0
+6001	Protein Annotations from COG_2013-12-27	2
+6002	Protein Annotations from metacyc-v4-2011-07-03	1
+6003	Protein Annotations from refseq-nr-2014-01-18	10
+6004	Protein Annotations from seed-2014-01-30	10
+6005	Total Protein Annotations	10
+1000	Number of sequences in input file BEFORE QC (nucleotide)	5
+1001	-min length	112
+1002	-avg length	1782
+1003	-max length	3100
+1004	-total base pairs (bp)	8912
+1005	Number of sequences AFTER QC (nucleotide)	4
+1006	-min length	1197
+1007	-avg length	1724
+1008	-max length	2200
+1009	-total base pairs (bp)	6897
+2000	Number of translated ORFs BEFORE QC (amino)	10
+2001	-min length	79
+2002	-avg length	187
+2003	-max length	358
+2004	-total base pairs (bp)	1875
+2005	Number of tranlated ORFs AFTER QC (amino)	10
+2006	-min length	79
+2007	-avg length	187
+2008	-max length	358
+2009	-total base pairs (bp)	1875
+5000	Total Protein Annotations CAZY_2014_09_04 (LAST)	0
+5000	Total Protein Annotations InnateDB_mus-2010-07-16 (LAST)	0

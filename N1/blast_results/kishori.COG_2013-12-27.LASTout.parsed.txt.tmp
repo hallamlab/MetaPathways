@@ -1,0 +1,8 @@
+#query	target	q_length	bitscore	bsr	expect	aln_length	identity	ec	product
+konwar_1_0	BS_topA_1	154	388	0.423118865867	1.46e-45	149.0	50.0		COG0550 # Func_class: L Replication, recombination and repair # Function: Topoisomerase IA # Organism: Bacillus subtilis (Bsu)
+konwar_1_0	BH2467_1	155	385	0.419847328244	3.56e-45	150.0	49.0		COG0550 # Func_class: L Replication, recombination and repair # Function: Topoisomerase IA # Organism: Bacillus halodurans (Bha)
+konwar_2_1	alr2328	313	963	0.556004618938	9.23e-120	315.0	57.0		COG0174 # Func_class: E Amino acid transport and metabolism # Function: Glutamine synthetase # Organism: Nostoc sp. PCC 7120 (Nos)
+konwar_2_1	slr1756	310	959	0.553695150115	3.03e-119	310.0	56.0		COG0174 # Func_class: E Amino acid transport and metabolism # Function: Glutamine synthetase # Organism: Synechocystis (Syn)
+konwar_2_1	CC1969	312	943	0.544457274827	3.52e-117	311.0	54.0		COG0174 # Func_class: E Amino acid transport and metabolism # Function: Glutamine synthetase # Organism: Caulobacter vibrioides (Ccr)
+konwar_2_1	SMc00948	312	942	0.543879907621	4.73e-117	311.0	56.0		COG0174 # Func_class: E Amino acid transport and metabolism # Function: Glutamine synthetase # Organism: Sinorhizobium meliloti (Sme)
+konwar_2_1	mll0343	312	936	0.540415704388	2.81e-116	311.0	56.0		COG0174 # Func_class: E Amino acid transport and metabolism # Function: Glutamine synthetase # Organism: Mesorhizobium loti (Mlo)

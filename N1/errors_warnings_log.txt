@@ -1,0 +1,327 @@
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.faa
+#STEP	tRNA_SCAN
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.qced.faa
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/orf_prediction//konwar.unannot.gff
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input placeholder
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input placeholder
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input placeholder
+ERROR	Missing input placeholder
+#STEP	ORF_PREDICTION
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	COMPUTE_REFSCORE
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	STATS_rRNA
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+#STEP	BUILD_PGDB
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	COMPUTE_REFSCORE
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+#STEP	COMPUTE_RPKM
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	COMPUTE_REFSCORE
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+#STEP	COMPUTE_RPKM
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	COMPUTE_REFSCORE
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+#STEP	CREATE_ANNOT_REPORTS
+#STEP	COMPUTE_RPKM
+ERROR	Missing input no sam or fastq files to process [OPTIONAL]
+#STEP	ORF_PREDICTION
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	FUNC_SEARCH
+#STEP	COMPUTE_REFSCORE
+#STEP	PARSE_BLAST
+#STEP	PARSE_BLAST
+#STEP	PARSE_FUNC_SEARCH:refseq-nr-2014-01-18
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.refseq-nr-2014-01-18.LASTout
+#STEP	PARSE_FUNC_SEARCH:COG_2013-12-27
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.COG_2013-12-27.LASTout
+#STEP	PARSE_FUNC_SEARCH:MDM_SAG_proteins
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.MDM_SAG_proteins.LASTout
+#STEP	PARSE_FUNC_SEARCH:kegg-pep-2011-06-18
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.kegg-pep-2011-06-18.LASTout
+#STEP	PARSE_FUNC_SEARCH:seed-2014-01-30
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.seed-2014-01-30.LASTout
+#STEP	PARSE_FUNC_SEARCH:InnateDB_human-2010-07-16
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.InnateDB_human-2010-07-16.LASTout
+#STEP	PARSE_FUNC_SEARCH:SUP05-genome-2014-10-14
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.SUP05-genome-2014-10-14.LASTout
+#STEP	PARSE_FUNC_SEARCH:metacyc-v4-2011-07-03
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.metacyc-v4-2011-07-03.LASTout
+#STEP	tRNA_SCAN
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.COG_2013-12-27.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.metacyc-v4-2011-07-03.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.SUP05-genome-2014-10-14.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.seed-2014-01-30.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.kegg-pep-2011-06-18.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.refseq-nr-2014-01-18.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.MDM_SAG_proteins.LASTout.parsed.txt
+#STEP	ANNOTATE_ORFS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.InnateDB_human-2010-07-16.LASTout.parsed.txt
+#STEP	PATHOLOGIC_INPUT
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/genbank//konwar.annot.gff
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.metacyc-v4-2011-07-03.LASTout.parsed.txt
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.COG_2013-12-27.LASTout.parsed.txt
+#STEP	CREATE_ANNOT_REPORTS
+ERROR	Missing input /Users/kishori/MetaPathways2.4/MetaPathways_Python.2.5.1/regtests/output/konwar/blast_results//konwar.seed-2014-01-30.LASTout.parsed.txt

@@ -1,0 +1,1 @@
+GLUTAMINESYN-RXN	NIL	"konwar_2_1"
