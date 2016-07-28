@@ -48,3 +48,6 @@ SCAN_rRNA 'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
 SCAN_tRNA 'libs/python_scripts/MetaPathways_tRNA_scan.py'
 MLTREEMAP_CALCULATION 'libs/python_scripts/MetaPathways_mltreemap.py'
 RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
+
+
+NUM_CPUS '34'

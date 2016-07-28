@@ -20,7 +20,7 @@ annotation:algorithm LAST
 # e.g. blast or last
 
 #annotation:dbs COG_2013-12-27,kegg-pep-2011-06-18,refseq-nr-2014-01-18,metacyc-v4-2011-07-03,seed-2014-01-30 
-annotation:dbs 
+annotation:dbs COG_2013-12-27,kegg-pep-2011-06-18,refseq-nr-2014-01-18,metacyc-v4-2011-07-03
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc
 annotation:min_bsr 0.4
 annotation:max_evalue 0.000001
@@ -48,7 +48,7 @@ metapaths_steps:ORF_PREDICTION yes
 metapaths_steps:FILTER_AMINOS yes
 #metapaths_steps:COMPUTE_REFSCORES yes
 metapaths_steps:FUNC_SEARCH yes
-metapaths_steps:PARSE_FUNC_SEARCH yes
+metapaths_steps:PARSE_FUNC_SEARCH skip
 metapaths_steps:SCAN_rRNA skip
 metapaths_steps:SCAN_tRNA skip
 metapaths_steps:ANNOTATE_ORFS skip
