@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # MetaPathways 2: A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
 
 Niels W. Hanson, Kishori M. Konwar, Shang-Ju Wu, and Steven J. Hallam

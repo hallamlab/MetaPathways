@@ -1,1 +1,0 @@
-#query	target	q_length	bitscore	bsr	expect	aln_length	identity	ec	product

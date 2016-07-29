@@ -1,4 +1,0 @@
-konwar_0	Sequence0000000001	1197
-konwar_1	Sequence0000000002	1800
-konwar_2	Sequence0000000003	2200
-konwar_3	Sequence0000000004	1700

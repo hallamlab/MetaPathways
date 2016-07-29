@@ -1,9 +1,0 @@
-orf_id	COG_2013-12-27(EC) 	COG_2013-12-27(product)	COG_2013-12-27(value)	CAZY_2014_09_04(EC) 	CAZY_2014_09_04(product)	CAZY_2014_09_04(value)	refseq-nr-2014-01-18(EC) 	refseq-nr-2014-01-18(product)	refseq-nr-2014-01-18(value)	seed-2014-01-30(EC) 	seed-2014-01-30(product)	seed-2014-01-30(value)	metacyc-v4-2011-07-03(EC) 	metacyc-v4-2011-07-03(product)	metacyc-v4-2011-07-03(value)
-konwar_2_0								(glutamate--ammonia-ligase) adenylyltransferase	2.0	2.7.7.42	Glutamate-ammonia-ligase adenylyltransferase (EC 2.7.7.42)	14.0			
-konwar_2_1		COG0174 # E Amino acid transport metabolism Function: Glutamine synthetase Organism: Nostoc sp. PCC 7120 (Nos)	16.0					Glutamine synthetase, type I	4.0	6.3.1.2	Glutamine synthetase type I (EC 6.3.1.2)	16.0	6.3.1.2	Glutamine synthetase 1 OS Rhizobium leguminosarum bv. viciae GN glnA PE 3 SV # UNIPROT P09826 GLUTAMINESYN-RXN 6.3.1.2	28.0
-konwar_3_0								flagellar basal body rod protein FlgF	5.0		flagellar basal body rod protein	4.0			
-konwar_3_1								protein FlgA	1.0		Flagellar basal-body P-ring formation protein FlgA	5.0			
-konwar_3_2								flagellar L-ring protein	2.0			
-konwar_0_1								D-isomer specific 2-hydroxyacid dehydrogenase family protein	5.0	1.1.1.95	D-3-phosphoglycerate dehydrogenase (EC 1.1.1.95)	14.0			
-konwar_1_0		COG0550 # L Replication, recombination repair Function: Topoisomerase IA Organism: Bacillus halodurans (Bha)	13.0					DNA topoisomerase I, bacterial	4.0	5.99.1.2	DNA topoisomerase I (EC 5.99.1.2)	15.0			
-konwar_1_1								DNA repair protein RecN	3.0		DNA repair protein RecN	3.0			

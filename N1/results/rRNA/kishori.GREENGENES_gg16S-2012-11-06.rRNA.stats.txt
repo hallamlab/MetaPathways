@@ -1,8 +1,0 @@
-#Similarity cutoff :	20.0
-#Length cutoff :	180
-#Evalue cutoff :	1e-06
-#Bit score cutoff :	50.0
-#Number of rRNA sequences detected:	0
-
-	GREENGENES_gg16S-2012-11-06			
-sequence	start	end	similarity	evalue	bitscore	taxonomy
