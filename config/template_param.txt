@@ -47,12 +47,12 @@ metapaths_steps:ORF_PREDICTION yes
 #metapaths_steps:ORF_TO_AMINO yes
 metapaths_steps:FILTER_AMINOS yes
 #metapaths_steps:COMPUTE_REFSCORES yes
-metapaths_steps:FUNC_SEARCH yes
-metapaths_steps:PARSE_FUNC_SEARCH skip
+metapaths_steps:FUNC_SEARCH skip
+metapaths_steps:PARSE_FUNC_SEARCH yes
 metapaths_steps:SCAN_rRNA skip
 metapaths_steps:SCAN_tRNA skip
-metapaths_steps:ANNOTATE_ORFS skip
-metapaths_steps:PATHOLOGIC_INPUT skip
+metapaths_steps:ANNOTATE_ORFS yes
+metapaths_steps:PATHOLOGIC_INPUT yes
 #metapaths_steps:GENBANK_FILE skip
 metapaths_steps:CREATE_ANNOT_REPORTS skip
 #metapaths_steps:MLTREEMAP_CALCULATION skip

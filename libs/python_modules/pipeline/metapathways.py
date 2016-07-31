@@ -238,11 +238,11 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # make sure  MetaPathways directory is present
       if key in ['METAPATHWAYS_PATH' ]:
          if not path.isdir( config_settings[key]) :
-            eprintf("ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 1.Currently it is set to \"%s\"\n",  config_settings[key] )  
 
             if globalerrorlogger!=None:
-               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n"  %(key, file))  
+               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n"  %(key, file))  
                globalerrorlogger.write("       Currently it is set to \"%s\"\n" %(config_settings[key] )  )
             missingItems.append(key) 
          continue
@@ -251,10 +251,10 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # make sure  REFDB directories are present
       if key in [ 'REFDBS' ]:
          if not path.isdir( config_settings[key]) :
-            eprintf("ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 2.Currently it is set to \"%s\"\n", config_settings[key] )  
             if globalerrorlogger!=None:
-                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n" %(key,file))
+                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key,file))
                 globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key]) )  
             missingItems.append(key) 
          continue
@@ -262,10 +262,10 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # make sure EXECUTABLES_DIR directories are present
       if key in [ 'EXECUTABLES_DIR']:
          if not path.isdir( config_settings['METAPATHWAYS_PATH'] + PATHDELIM +  config_settings[key]) :
-            eprintf("ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 3.Currently it is set to \"%s\"\n", config_settings[key] )  
             if globalerrorlogger!=None:
-               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n" %(key, file))  
+               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))  
                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] )) 
             missingItems.append(key) 
          continue
@@ -273,11 +273,11 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # make sure RESOURCES_DIR directories are present
       if key in [ 'RESOURCES_DIR']:
          if not path.isdir( config_settings['METAPATHWAYS_PATH'] + PATHDELIM + config_settings[key]) :
-            eprintf("ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 4.Currently it is set to \"%s\"\n",  config_settings['METAPATHWAYS_PATH'] + PATHDELIM + config_settings[key] )  
             print  config_settings['METAPATHWAYS_PATH'], config_settings[key] 
             if globalerrorlogger!=None:
-               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n" %(key, file))
+               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))
                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key]))  
             missingItems.append(key) 
          continue
@@ -285,10 +285,10 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # make sure  MetaPaths directory is present
       if key in ['PYTHON_EXECUTABLE' , 'PATHOLOGIC_EXECUTABLE' ]:
          if not path.isfile( config_settings[key]) :
-            eprintf("ERROR: Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing)  in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 5.Currently it is set to \"%s\"\n", config_settings[key] )  
             if globalerrorlogger!=None:
-               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n" %(key, file)) 
+               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file)) 
                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] ) )
             missingItems.append(key) 
          continue
@@ -300,10 +300,10 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       # check if the desired file exists. if not, then print a message
       if not path.isfile( config_settings['METAPATHWAYS_PATH'] + PATHDELIM +  value)\
         and  not path.isfile( config_settings['METAPATHWAYS_PATH'] + PATHDELIM + config_settings['EXECUTABLES_DIR'] + PATHDELIM + value ) :
-           eprintf("ERROR:Path for \"%s\" is NOT set properly in configuration file \"%s\"\n", key, file)  
-           eprintf("5.Currently it is set to \"%s\"\n", config_settings['METAPATHWAYS_PATH'] + value ) 
+           eprintf("ERROR:Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
+           eprintf("6.Currently it is set to \"%s\"\n", config_settings['METAPATHWAYS_PATH']+ PATHDELIM + config_settings['EXECUTABLES_DIR'] + PATHDELIM + value ) 
            if globalerrorlogger!=None:
-              globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly in configuration file \"%s\"\n" %(key, file) )
+              globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file) )
               globalerrorlogger.write("Currently it is set to \"%s\"\n" %(config_settings['METAPATHWAYS_PATH'] + value)) 
            missingItems.append(key) 
            continue
