@@ -92,6 +92,7 @@ def read_pf_file(filel):
      lines = orgfile.readlines()
      orfids = []
      annotation={}
+     products ={}
 
      for line in lines:
          fields = line.strip().split('\t')
@@ -102,13 +103,19 @@ def read_pf_file(filel):
              id = fields[1]
              orfids.append(id)
              annotation[id] = []
+
          annotation[id].append(line.strip())
+
          if fields[0]=="EC":
             ecs[id] = fields[1]
 
+         if fields[0]=="PRODUCT":
+            products[id] = fields[1]
+           # print fields[1]
+
      orgfile.close()
 
-     return orfids, annotation, ecs
+     return orfids, products, annotation, ecs
 
      #for id in orfids:
      #   for line in annotation[id]:
@@ -116,11 +123,11 @@ def read_pf_file(filel):
 
 def read_reduced_file(filel):
 
-     equivalent={}
      try:
          orgfile = open(filel,'r')
      except IOError:
-         return  equivalent
+         print "ERROR : Cannot open organism file" + str(filel)
+         return 
      lines = orgfile.readlines()
      equivalent={}
 
@@ -194,27 +201,38 @@ def main(argv):
        print usage
        sys.exit(0)
 
-    orfids, annotations, ecs = read_pf_file(opts.pfin)
+    orfids, products, annotations, ecs = read_pf_file(opts.pfin)
     equivalent  = read_reduced_file(opts.redin)
 
     seenec ={}
+    seenproducts ={}
     neworfs =[]
 
     for orfid in orfids:
        if not orfid in ecs:
-          neworfs.append(orfid)
+          if products[orfid] in seenproducts:
+             equivalent[orfid] = seenproducts[products[orfid]]
+          else:
+             seenproducts[products[orfid]] = orfid
+             neworfs.append(orfid)
           continue
 
-       if not ecs[orfid] in seenec: 
+
+       if ecs[orfid] in seenec: 
+          if not orfid in equivalent:
+             equivalent[orfid] = seenec[ecs[orfid]]
+       else:
           neworfs.append(orfid)
           seenec[ecs[orfid]] = orfid
-       else:
-          if not orfid in equivalent:
-             equivalent[orfid] = ecs[orfid]
           
     write_new_pf_file(neworfs, annotations,opts.pfout)
 
-    print  "#Initial ORFs : ", len(orfids), "#New ORFs : ",  len(neworfs)
+#    print  len(orfids), len(neworfs), len(equivalent)
+
+    print  "Original # ORFs   :", len(orfids)
+    print  "Compressed # ORFs :", len(neworfs)
+    print  "Equiv # ORFS      :", len(equivalent)
+    print  "Annotations #     :", len(annotations)
 
     write_new_reduced_file(equivalent, opts.redout)
 
@@ -222,7 +240,8 @@ def main(argv):
 def write_new_reduced_file(equivalent, filename):
     outputfile = open(filename,'w')
     for orfid in equivalent: 
-       fprintf(outputfile, "%s\t%s\n",orfid, equivalent[orfid])
+       if orfid !=  equivalent[orfid]:
+          fprintf(outputfile, "%s\t%s\n",orfid, equivalent[orfid])
     outputfile.close()
 
 def write_new_pf_file(neworfs, annotations, filename):
