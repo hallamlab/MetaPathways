@@ -101,7 +101,6 @@ def execute_tasks(s, verbose = False, block = 0):
             c.removeOutput(s)
             if c.isInputAvailable( errorlogger = s.errorlogger):
                s.stepslogger.write('%s\t%s\n' %(c.name, "RUNNING"))
-
                result = [ 0, 'Error while executing step ' +  c.name ]
                try:
                   result = execute(s,c)

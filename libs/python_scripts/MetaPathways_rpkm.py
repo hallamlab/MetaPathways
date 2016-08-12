@@ -4,13 +4,13 @@
 
 try:
    import optparse, sys, re, csv, traceback
-   from os import path, _exit
+   from os import path, _exit, rename
    import logging.handlers
    from glob import glob
    import multiprocessing
 
    from libs.python_modules.utils.sysutil import pathDelim
-   from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf,  exit_process
+   from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf, exit_process, getReadFiles
    from libs.python_modules.utils.sysutil import getstatusoutput
 
    from libs.python_modules.utils.pathwaytoolsutils import *
@@ -41,19 +41,35 @@ def files_exist( files , errorlogger = None):
     return not status
 
 
+epilog = """\n""" + """
+                This script computes the RPKM values for each ORF, from the BWA recruits.  The input reads 
+                (in the form of fastq files)  for this step must be added to the subdirectory reads in the 
+                input folder (where the input fasta  files are located). The read file sare identified by 
+                the name format of the files: For examples, if the sample name is "abcd" then the following 
+                read files in the "reads" folders associated with the samples abcd:
+                
+                1.   abcd.fastq : this means non-paired reads
 
-usage = sys.argv[0] + """ -c <contigs> -o <output> -r <reads>  -O <orfgff> --rpkmExec <rpkmexec> """
+                2.   abcd.b1.fastq  : means only unpaired read from batch b1
+
+                3.   abcd_1.fastq  and abcd_2.fastq: this means paired reads for sample
+
+                4.   abcd_1.fastq or abcd_2.fastq: this means only one end of a paired read
+
+                5.   abcd_1.b2.fastq and  abcd_2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, 
+                     where n is a number
+
+                6.   abcd_1.b3.fastq or abcd_2.b3.fastq: this means only one of a paried read from batch b1
+             """
+
+
+usage = sys.argv[0] + """ -c <contigs> -o <output> -r <reads>  -O <orfgff> --rpkmExec <rpkmexec> """ + epilog
 parser = None
 def createParser():
     global parser
 
-    epilog = """This script computes the RPKM values for each ORF, from the BWA 
-                recruits. 
-             """
 
-    epilog = re.sub(r'\s+', ' ', epilog)
-
-    parser = optparse.OptionParser(usage=usage, epilog = epilog)
+    parser = optparse.OptionParser(usage=usage)
 
     # Input options
 
@@ -95,46 +111,12 @@ def getSamFiles(readdir, sample_name):
    if _samFile:
       samFiles += _samFile
 
-   _samFiles = glob(readdir + PATHDELIM + sample_name + '_[0-9].sam')
+   _samFiles = glob(readdir + PATHDELIM + sample_name + '_[0-9]*.sam')
 
    if _samFiles:
      samFiles += _samFiles
 
    return samFiles
-
-
-
-def getReadFiles(readdir, sample_name):
-   '''This function finds the set of fastq files that has the reads'''
-
-   fastqFiles = []
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '_[Rr][0-9].[fF][aA][Ss][Tt][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '_[0-9].[fF][aA][Ss][Tt][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '_[0-9].[fF][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '_[Rr][0-9].[fF][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '.[fF][aA][Ss][Tt][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '.[fF][qQ]')
-   if _fastqfiles:
-      fastqFiles += _fastqfiles
-
-   return fastqFiles
 
 
 
@@ -149,29 +131,39 @@ def indexForBWA(bwaExec, contigs,  indexfile):
     return False
 
 
-def runUsingBWA(bwaExec, sample_name, indexFile,  readFiles, bwaFolder) :
-
-    if len(readFiles) > 2:
-       return False
+def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
 
     num_threads =  int(multiprocessing.cpu_count()*0.8)
     if num_threads < 1:
        num_threads = 1
+    status = True
+    count = 0;
+    for readFiles in _readFiles:
+       bwaOutput = bwaFolder + PATHDELIM + sample_name + "_" + str(count) + '.sam'
+       bwaOutputTmp = bwaOutput + ".tmp"
+       cmd ="command not prepared"
+       if len(readFiles) == 2:
+          cmd = "%s mem -t %d -o %s %s %s %s"  %(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0], readFiles[1])
 
-    bwaOutput = bwaFolder + PATHDELIM + sample_name + '.sam'
+       if len(readFiles) == 1:
+          res0 = re.search(r'_[1-2].fastq',readFiles[0])
+          res1 = re.search(r'_[1-2].b\d+.fastq',readFiles[0])
+          if res0 or res1:
+             cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
+          else:
+             cmd = "%s mem -t %d -p  -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
+#       print cmd
+       result = getstatusoutput(cmd)
 
-    if len(readFiles) == 2:
-       cmd = "%s mem -t %d -o %s %s %s %s"  %(bwaExec, num_threads,  bwaOutput, indexFile,  readFiles[0], readFiles[1])
-
-    if len(readFiles) == 1:
-       cmd = "%s mem -t %d -p -o %s  %s %s "  %(bwaExec, num_threads,   bwaOutput, indexFile,  readFiles[0])
-
-    result = getstatusoutput(cmd)
-
-    if result[0]==0:
-       return True
-
-    return False
+       if result[0]==0:
+          pass
+          rename(bwaOutputTmp, bwaOutput)
+       else:
+          eprintf("ERROR:\t Error file processing read files %s\n", readFiles)
+          status = False
+       count += 1
+          
+    return status
 
 
 
@@ -208,7 +200,8 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     samFiles = getSamFiles(options.rpkmdir, options.sample_name)
     readFiles = getReadFiles(options.rpkmdir, options.sample_name)
 
-    if not samFiles and readFiles:
+
+    if  not samFiles and readFiles:
         if not readFiles:
            eprintf("ERROR\tCannot find the read files not found for sample %s!\n", options.sample_name)
            eprintf("ERROR\tMetaPathways need to have the sample names in the format %s.fastq or (%s_1.fastq and %s_2.fastq) !\n", options.sample_name, options.sample_name, options.sample_name)
@@ -220,8 +213,9 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
         # index for BWA
         bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
         indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile) 
+        #indexSuccess=True
 
-        if not indexSuccess:
+        if False and  not indexSuccess:
            eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
            if errorlogger:
               errorlogger.eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
@@ -232,6 +226,8 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
         #print 'running'
 
         bwaRunSuccess = runUsingBWA(options.bwaExec, options.sample_name,  bwaIndexFile, readFiles, options.bwaFolder) 
+        #bwaRunSuccess = True
+
         print 'run success', bwaRunSuccess
         if not bwaRunSuccess:
            eprintf("ERROR\tCannot successfully run BWA for file %s!\n", options.contigs)
@@ -241,8 +237,10 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
            #exit_process("ERROR\tFailed to run BWA!\n")
 
 
-    # is there a RPKM executable installed
-    print 'rpkm running', bwaRunSuccess
+    # make sure you get the latest set of sam file after the bwa
+    samFiles = getSamFiles(options.rpkmdir, options.sample_name)
+
+    print 'rpkm running'
     if not path.exists(options.rpkmExec):
        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
        if errorlogger:

@@ -101,6 +101,63 @@ def getSamFiles(readdir, sample_name):
 
 def getReadFiles(readdir, sample_name):
    '''This function finds the set of fastq files that has the reads'''
+   fastqFiles = []
+   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '*.[fF][aA][Ss][Tt][qQ]')
+
+   fastqfiles =[]
+   for _f in _fastqfiles:
+        f = re.sub(r'^.*[//]','', _f)
+        fastqfiles.append(f) 
+  
+   readfiles = []
+   samPATT=re.compile(sample_name+".fastq")
+   samPATT1=re.compile(sample_name+"[.]b\d+.fastq")
+   samPATT2=re.compile(sample_name+"_[1-2].fastq")
+   samPATT3=re.compile(sample_name+"_r[1-2].fastq")
+   samPATT4=re.compile(sample_name+"_[1-2][.](b\d+).fastq")
+
+   batch = {}
+   for f in fastqfiles:
+      res = samPATT.search(f)
+      if res:
+         readfiles.append( [readdir + PATHDELIM +f] )
+         continue
+
+      res = samPATT1.search(f)
+      if res:
+         readfiles.append( [readdir + PATHDELIM +f] )
+         continue
+      
+      res = samPATT2.search(f)
+      if res:
+         readfiles.append( [readdir + PATHDELIM +f] )
+         continue
+      
+      res = samPATT3.search(f)
+      if res:
+         if not 'r' in  batch:
+            batch['r'] = [] 
+
+         batch['r'].append( readdir + PATHDELIM +f )
+         continue
+      
+      res = samPATT4.search(f)
+      if res:
+         if not res.group(1) in batch:
+            batch[res.group(1)] = [] 
+         batch[res.group(1)].append( readdir + PATHDELIM +f ) 
+         continue
+      
+      eprintf("ERROR\tPossible error in read file naming \"%s\". Ignoring for now!\n", f)
+
+   for values in batch.values():
+        readfiles.append(values)
+
+   return readfiles
+
+
+def deprecated____getReadFiles(readdir, sample_name):
+   '''This function finds the set of fastq files that has the reads'''
 
    fastqFiles = []
 

@@ -44,11 +44,9 @@ class Context:
         return doFilesExist(self.outputs.values())
 
     def isInputAvailable(self, errorlogger = None):
-        #print self.inputs.values()
         status = True
         for file in self.inputs.values():
             if not doesFileExist(file):
-          #      print file
                 if errorlogger!=None:
                    errorlogger.printf("#STEP\t%s\n", self.name)
                    errorlogger.printf("ERROR\tMissing input %s\n", file)
@@ -58,7 +56,6 @@ class Context:
 
 
     def getMissingList(self, errorlogger = None):
-        #print self.inputs.values()
         missingList = []
         status = True
         for file in self.inputs.values():
@@ -73,7 +70,6 @@ class Context:
 
 
     def removeOutput(self, errorlogger = None):
-        #print self.inputs.values()
         annotationPATT = re.compile(r'annotation_table')
         for item in self.outputs.values():
            if not path.exists(item):

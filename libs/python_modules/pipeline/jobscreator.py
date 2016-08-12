@@ -1098,13 +1098,14 @@ class ContextCreator:
           samFiles = getSamFiles(rpkm_input, s.sample_name) 
           readFiles = getReadFiles(rpkm_input, s.sample_name)
 
+
           inputFile = 'no sam or fastq files to process [OPTIONAL]'
+
           if samFiles:
             inputFile = samFiles[0] 
          
           if readFiles:
-            inputFile = readFiles[0] 
-
+            inputFile = readFiles[0][0] 
 
           context = Context()
           context.name = 'COMPUTE_RPKM'
