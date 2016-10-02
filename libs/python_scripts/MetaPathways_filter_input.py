@@ -253,7 +253,8 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
         stats[AVG_LENGTH][BEFORE]  =  stats[AVG_LENGTH][BEFORE] + length
 
-        seqvalue = filter_sequence(seq)
+        #seqvalue = filter_sequence(seq)
+        seqvalue = seq
     
         stats[NUMSEQ][BEFORE] += 1
         
