@@ -489,6 +489,7 @@ class ContextCreator:
                         "--last_o %s "
                         "--last_f 2 "
                         "--last_db %s "
+                        "--num_hits %s "
                         "--last_query %s") \
                        %(pyScript, 
                          s.algorithm ,  
@@ -496,6 +497,7 @@ class ContextCreator:
                          num_threads,
                          blastoutput, 
                          refDbFullName, 
+                         max_hits,
                          input_filtered_faa) 
 
                   context.message = self._Message("LASTING AMINO SEQS AGAINST " + db)

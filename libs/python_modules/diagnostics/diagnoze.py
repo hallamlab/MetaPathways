@@ -258,16 +258,21 @@ def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger 
      """ format with 4GB file size """
      cmd = ""
      if algorithm=='BLAST':
-         cmd='%s -dbtype %s -max_file_sz 4294967296  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
+         cmd='%s -dbtype %s -max_file_sz 2000000000  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
          #cmd='%s -dbtype %s -max_file_sz 20267296  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
+
+     formatted_db_size = 4000000000
+     if configs['FORMATTED_DB_SIZE'].isdigit():
+       formatted_db_size = int(configs['FORMATTED_DB_SIZE'])
+
 
      if algorithm=='LAST':
          # dirname = os.path.dirname(raw_sequence_file)    
          cmd=""
          if seqType=="prot":
-            cmd='%s -s 4000M -p -c %s  %s' %(formatdb_executable, _temp_formatted_db, raw_sequence_file)
+            cmd='%s -s %s -p -c %s  %s' %(formatdb_executable, formatted_db_size, _temp_formatted_db, raw_sequence_file)
          if seqType=="nucl":
-            cmd='%s -s 4000M -c %s  %s' %(formatdb_executable, _temp_formatted_db, raw_sequence_file)
+            cmd='%s -s %s -c %s  %s' %(formatdb_executable, formatted_db_size,  _temp_formatted_db, raw_sequence_file)
 
          eprintf("INFO\tCommand to format \"%s\"\n", cmd)
          logger.printf("INFO\tCommand to format \"%s\"\n", cmd)
@@ -464,6 +469,8 @@ def executablesExist( executables, configs, logger = None ):
 
       if name=='PATHOLOGIC_EXECUTABLE' and  path.exists(script):
            #print "FIX ME: diagnoze"
+           eprintf("ERROR\tif you do not wish to install the Pathway-Tools and  run the ePGDB building step \n" + 
+                       "\tyou might want to create the place holder file by using the \"touch %s\" (%s) \n",script, name)
            continue
 
       

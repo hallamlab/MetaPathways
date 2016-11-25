@@ -491,8 +491,6 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
             if not shortORFId in pickorfs:
                 continue
 
-         #   if dbname=='refseq-nr-2014-01-18':
-         #         print  'refseq process',  data
 
         #        blastparser.rewind()
         #        return None
@@ -501,8 +499,8 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
             if not shortORFId in annotation_results:
                 annotation_results[shortORFId] = []
 
-    #        if dbname=='refseq-nr-2014-01-18':
-    #              print  annotation
+            #if dbname=='refseq-nr-2014-01-18':
+                  #print  annotation
             annotation_results[shortORFId].append(annotation)
     except:
        print  traceback.print_exc()
@@ -1180,6 +1178,7 @@ def process_subsys2peg_file(subsystems2peg, subsystems2peg_file):
 
 def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_output=False):
 
+    addHeader =True
     if not path.exists(output_dir):
        makedirs(output_dir)
 
@@ -1188,9 +1187,18 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
     for dbname in results.keys():
       print dbname, len(results[dbname].keys())
       for orfname in results[dbname]:
+
          for orf in results[dbname][orfname]:
+
            if not orf['query'] in orf_dict:
                orf_dict[orf['query']] = {}
+ 
+           if dbname in orf_dict[orf['query']]:
+               continue
+
+           #if orf['query']=='2_0' and dbname=='refseq-nr-2014-01-18':
+           #  print orf
+            
 
            orf_dict[orf['query']]['contig'] = orfToContig[orfname]
 
@@ -1222,6 +1230,9 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
              # print "---", orf_dict[orf['query']][dbname]
               continue
 
+           #if dbname=='refseq-nr-2014-01-18':
+           #   if orf['query']=='2_0':
+           #      print product 
            orf_dict[orf['query']][dbname] =  product
 
     # compute the databases
@@ -1247,10 +1258,15 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
        if _results:
          database_maps['metacyc'] = dbname
 
+       _results = re.search(r'refseq', dbname, re.I)
+       if _results:
+         database_maps['refseq'] = dbname
+
 
     sampleName = None
     for orfn in orf_dict:
-#       print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
+       #if orfn=='2_0':
+       #  print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
        #_keys =  orf_dict[orfn].keys()
        #_results = re.search(r'cog', dbname, re.I)
 
@@ -1280,6 +1296,11 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
        else:
           cazyFn= ""
 
+       if 'refseq' in database_maps and database_maps['refseq'] in orf_dict[orfn]:
+          refseqFn = orf_dict[orfn][database_maps['refseq']]
+       else:
+          refseqFn= ""
+    
        if not sampleName:
          sampleName = getSampleNameFromContig(orf_dict[orfn]['contig'])
 
@@ -1290,7 +1311,11 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
           orfName =  orfn
           contigName= ShortenContigId(contigName)
 
-       fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy)
+       #fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy)
+       if addHeader:
+           fprintf(outputfile, "# %s\n", "ORF_ID" + "\t" + "CONTIG_ID" + '\t' + "COG" + '\t' + "KEGG" +'\t' + "SEED" + '\t' + "CAZY" + '\t'+ "METACYC" + '\t' + "REFSEQ")
+           addHeader=False
+       fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy + '\t' + refseqFn )
 
 
 def MetaPathways_create_reports_fast(argv, errorlogger =  None, runstatslogger = None):

@@ -29,6 +29,7 @@ try:
      from libs.python_modules.diagnostics.parameters import *
      from libs.python_modules.diagnostics.diagnoze import *
      from libs.python_modules.pipeline.sampledata import *
+     from libs.python_modules.utils import globalcodes
 except:
    print """ Could not load some user defined  module functions"""
    print """ Make sure your typed \"source MetaPathwaysrc\""""
@@ -506,6 +507,7 @@ def main(argv):
     eprintf("INFO : FINISHED PROCESSING THE SAMPLES \n")
     eprintf("             THE END                   \n")
     eprintf("            ***********                \n")
+    eprintf(" EXIT CODE %s\n", globalcodes.exit_code)
     halt_process(opts.delay)
 
 # the main function of metapaths

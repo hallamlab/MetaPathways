@@ -11,14 +11,16 @@ METAPATHWAYS_PATH '/home/sgeadmin/MetaPathways_Python.3.0'
 # Replace with your current
 PATHOLOGIC_EXECUTABLE '/home/sgeadmin/pathway-tools/pathway-tools'
 
-REFDBS '/home/ariahahn/MetaPathways/databases/'
+REFDBS '/home/sgeadmin/MetaPathways/databases/'
 
 # Executables: replace  'yourOS' to your platform linux-flavor or macosx
 # Bit type - bit32 or bit64 
+EXECUTABLES_DIR 'executables/redhat'
+
+#executables
 FORMATDB_EXECUTABLE 'makeblastdb'
 BLASTP_EXECUTABLE 'blastp'
 BLASTN_EXECUTABLE 'blastn'
-EXECUTABLES_DIR 'executables/redhat'
 LASTDB_EXECUTABLE 'lastdb+'
 LAST_EXECUTABLE 'lastal+'
 PRODIGAL_EXECUTABLE 'prodigal'
@@ -50,4 +52,5 @@ MLTREEMAP_CALCULATION 'libs/python_scripts/MetaPathways_mltreemap.py'
 RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
 
 
-NUM_CPUS '13'
+NUM_CPUS '35'
+FORMATTED_DB_SIZE '8000000000'

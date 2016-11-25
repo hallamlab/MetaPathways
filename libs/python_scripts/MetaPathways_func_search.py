@@ -90,6 +90,9 @@ def createParser():
     blast_group.add_option('--blast_executable', dest='blast_executable',  default=None,
                            help='The BLASTP executable')
 
+    blast_group.add_option('--num_hits', dest='num_hits',  default=10,
+                           help='The BLASTP executable')
+
     parser.add_option_group(blast_group)
 
     last_group =  OptionGroup(parser, 'LAST parameters')
@@ -167,7 +170,7 @@ def  _execute_LAST(options, logger = None):
     if options.num_threads:
        args += [ "-P",  options.num_threads]
 
-    args += [ " -K 5"]
+    args += [ " -K", options.num_hits]
 
     if options.last_db:
        args += [ options.last_db ]

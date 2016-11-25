@@ -12,12 +12,14 @@ __status__ = "Release"
 try:
      from os import makedirs, sys, remove, rename
      from sys import path
-     import re, math, traceback
+     
+     import re, math, traceback, gzip
      from copy import copy
      from optparse import OptionParser, OptionGroup
 
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf,  exit_process, ShortenORFId
      from libs.python_modules.utils.sysutil import getstatusoutput
+     from libs.python_modules.utils.utils import doesFileExist
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -135,8 +137,13 @@ def create_query_dictionary(blastoutputfile, query_dictionary, algorithm, errorl
        seq_beg_pattern = re.compile("^#")
 
        try:
-          blastoutfh = open( blastoutputfile,'r')
+          if doesFileExist(blastoutputfile):
+              blastoutfh = open(blastoutputfile,'r')
+
+          if doesFileExist(blastoutputfile + '.gz'):
+              blastoutfh = gzip.open(blastoutputfile +'.gz','rb')
        except:
+          print traceback.print_exc(10)
           print "ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse "
           return
   
@@ -249,7 +256,10 @@ class BlastOutputParser(object):
 
         create_query_dictionary(self.blastoutput, query_dictionary, self.opts.algorithm, errorlogger =  errorlogger) 
         try:
-            self.blastoutputfile = open(self.blastoutput,'r')
+            if doesFileExist(self.blastoutput+'.gz'):
+               self.blastoutputfile = gzip.open(self.blastoutput +'.gz','rb')
+            if doesFileExist(self.blastoutput):
+               self.blastoutputfile = open(self.blastoutput,'r')
         except:
             eprintf("\nERROR : cannot open B/LAST output file " + blastoutput + " to parse "+\
                       "      : make sure \"B/LAST\"ing was done for the particular database" )
@@ -258,6 +268,7 @@ class BlastOutputParser(object):
                self.error_and_warning_logger.write("ERROR : cannot open B/LAST output file %s %s to parse \n" +\
                                              "      : make sure \"B/LAST\"ing was done for "+\
                                              "the particular database" %(blastoutput) )
+            print traceback.print_exc(10)
             exit_process( "Cannot open B/LAST output file " + blastoutput )
 
 

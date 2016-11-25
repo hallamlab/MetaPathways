@@ -46,7 +46,7 @@ class Context:
     def isInputAvailable(self, errorlogger = None):
         status = True
         for file in self.inputs.values():
-            if not doesFileExist(file):
+            if not doesFileExist(file) and not doesFileExist(file +'.gz'):
                 if errorlogger!=None:
                    errorlogger.printf("#STEP\t%s\n", self.name)
                    errorlogger.printf("ERROR\tMissing input %s\n", file)

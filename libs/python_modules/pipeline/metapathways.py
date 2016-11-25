@@ -232,7 +232,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
 
    for key, value in  config_settings.items():
       # these are not files or executables
-      if key in ['NUM_CPUS' ]:
+      if key in ['NUM_CPUS', 'FORMATTED_DB_SIZE' ]:
         continue
 
       # make sure  MetaPathways directory is present
