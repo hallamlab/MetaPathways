@@ -262,7 +262,7 @@ def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger 
          #cmd='%s -dbtype %s -max_file_sz 20267296  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
 
      formatted_db_size = 4000000000
-     if configs['FORMATTED_DB_SIZE'].isdigit():
+     if 'FORMATTED_DB_SIZE' in configs and configs['FORMATTED_DB_SIZE'].isdigit():
        formatted_db_size = int(configs['FORMATTED_DB_SIZE'])
 
 
