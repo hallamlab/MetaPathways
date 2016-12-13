@@ -75,6 +75,7 @@ def fix_pwy_file(pwy_txt_file,  output_file, equiv):
                if orf in equiv:
                   new_str = ','.join(equiv[orf])
                   orf_str += ','+ new_str
+               print orf_str
              orf_str = "[" + orf_str + "]"  
              new_line = re.sub(orfPATT, orf_str, line)
              fprintf(outfile, "%s\n", new_line)
