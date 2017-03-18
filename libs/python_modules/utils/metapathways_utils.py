@@ -21,12 +21,29 @@ from datetime import datetime
 from optparse import OptionParser
 import sys, os, traceback, math, re, time
 from libs.python_modules.utils.utils import *
+from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 
 
 
-def halt_process(secs=4):
+def halt_process(secs=4, verbose =False):
     time.sleep(secs)
+
+    errors=get_error_list()
+    if len(errors)>1:
+       insert_error(200)
+
+    if verbose:
+      for errorcode in errors.keys():
+         eprintf("ERROR:\t%d\t%s\n",errorcode, errors[errorcode])
+      
+    if len(errors.keys())>1:
+        errorcode = 200
+        _exit(errorcode)
+    elif len(errors.keys())==1:
+        errorcode = errors.keys()[0]
+        _exit(errorcode)
+
     _exit(0)
 
 def exit_process(message = None, delay = 0, logger = None):
@@ -73,6 +90,16 @@ def getShortContigId(contigname):
 
     return shortContigname
 
+def ContigID(contigname):
+    contigNameRegEx = re.compile(r'^(\S+_\d+)_\d+$')
+    shortContigname = "" 
+    pos  = contigNameRegEx.search(contigname)
+    if pos: 
+        shortContigname = pos.group(1)
+
+    return shortContigname
+
+
 def getSampleNameFromContig(contigname):
     contigNameRegEx = re.compile(r'(.*)_(\d+)$')
     sampleName = "" 
@@ -83,7 +110,7 @@ def getSampleNameFromContig(contigname):
     return sampleName
 
 def strip_taxonomy(product):
-   func = re.sub(r'\[[^\[]+\]', '', product)
+   func = re.sub(r'\[[^\[\]]+\]', '', product)
    return func
 
 
@@ -953,11 +980,38 @@ class WorkflowLogger(object):
 
 
 
-def ShortenORFId(_orfname) :
+def ShortenORFId(_orfname, RNA=False) :
+    
     ORFIdPATT = re.compile("(\\d+_\\d+)$")
+    RNAPATT = re.compile("(\\d+_\\d+_[tr]RNA)$")
+
+    if RNA:
+       result =  RNAPATT.search(_orfname)
+    else:
+       result =  ORFIdPATT.search(_orfname)
+
+    if result:
+      shortORFname = result.group(1)
+    else:
+        return ""
+    return shortORFname
+
+def ShortentRNAId(_orfname) :
+    ORFIdPATT = re.compile("(\\d+_\\d+_tRNA)$")
 
     result =  ORFIdPATT.search(_orfname)
 
+    if result:
+      shortORFname = result.group(1)
+      
+    else:
+        return ""
+    return shortORFname
+
+def ShortenrRNAId(_orfname) :
+    ORFIdPATT = re.compile("(\\d+_\\d+_rRNA)$")
+
+    result =  ORFIdPATT.search(_orfname)
     if result:
       shortORFname = result.group(1)
     else:
@@ -976,4 +1030,64 @@ def ShortenContigId(_contigname) :
         return ""
 
     return shortContigname
+
+def create_metapaths_parameters(filename, folder):
+    """ creates a parameters file from the default """
+    default_filename = folder + PATHDELIM + 'resources'+ PATHDELIM + "template_param.txt"
+    try:
+        filep = open(default_filename, 'r')
+    except:
+        eprintf("ERROR: cannot open the default  parameter file " + sQuote(default_filename) ) 
+        exit_process("ERROR: cannot open the default parameter file " + sQuote(default_filename), errorCode = 0 ) 
+
+    lines = filep.readlines()
+    with open(filename, 'w') as newfile:
+       for line in lines:
+         fprintf(newfile, "%s", line);
+         
+    filep.close()
+    #result['filename'] = filename
+    return True
+
+def create_metapaths_configuration(filename, folder):
+    """ creates a cofiguration file from the default """
+    variablePATT = re.compile(r'<([a-zA-Z0-9_]*)>')
+    default_filename = folder  + PATHDELIM + 'resources'+ PATHDELIM + "template_config.txt"
+    try:
+        filep = open(default_filename, 'r')
+    except:
+        eprintf("ERROR: cannot open the default config file " + sQuote(default_filename) ) 
+        exit_process("ERROR: cannot open the default config file " + sQuote(default_filename), errorCode = 0 ) 
+
+    lines = filep.readlines()
+    with open(filename, 'w') as newfile:
+       for line in lines:
+         line = line.strip()
+         result = variablePATT.search(line)
+         if result:
+            VARIABLE=result.group(1)
+            if VARIABLE in os.environ:
+               line =line.replace( '<'+ VARIABLE + '>', os.environ[VARIABLE])
+            else:
+               default =""
+               if VARIABLE=='METAPATHWAYS_PATH':
+                  default = folder + PATHDELIM
+
+               if VARIABLE=='METAPATHWAYS_DB':
+                  default = os.environ['HOME'] + PATHDELIM + 'MetaPathways/databases/'
+
+               line = line.replace('<' + VARIABLE + '>', default)
+               eprintf("INFO: Setting default value for \"%s\" as \"%s\"" %( VARIABLE, default))
+               eprintf("      To set other values :\n")
+               eprintf("                       1.  remove file \"%s\"\n" %(filename))
+               eprintf("                       2.  set the shell variable \"%s\"\n" %(VARIABLE))
+               eprintf("                       3.  rerun command\n")
+               
+               
+         fprintf(newfile, "%s\n", line);
+         
+    filep.close()
+    #result['filename'] = filename
+    return True
+
 

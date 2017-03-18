@@ -6,6 +6,17 @@ import sys
 import os
 import re
 import math
+from os import  sys
+import re, traceback
+from glob import glob
+try:
+    from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf
+    from libs.python_modules.utils.metapathways_utils  import ShortenORFId, ShortenContigId, ContigID
+except:
+    print """ Could not load some user defined  module functions"""
+    print """ Make sure your typed 'source MetaPathwaysrc'"""
+    print """ """
+    sys.exit(3)
 
 def parse_entry(entry, options):
     # Pull out details about the entry
@@ -247,3 +258,156 @@ class BlastParser(object):
         return results
 
     results = property(__get_results)
+
+
+class GffFileParser(object):
+
+    def __init__(self, gff_filename, shortenorfid=False):
+        self.Size = 10000
+        self.i=0
+        self.orf_dictionary = {}
+        self.gff_beg_pattern = re.compile("^#")
+        self.lines= []
+        self.size=0
+        self.shortenorfid = shortenorfid
+        try:
+           self.gff_file = open( gff_filename,'r')
+        except AttributeError:
+           eprintf("Cannot read the map file for database : %s\n", dbname)
+           exit_process()
+  
+    def __iter__(self):
+        return self
+ 
+    def refillBuffer(self):
+       self.orf_dictionary = {}
+       i = 0
+       while i < self.Size:
+          line=self.gff_file.readline()
+          if not line:
+            break
+          if self.gff_beg_pattern.search(line):
+            continue
+          insert_orf_into_dict(line, self.orf_dictionary, self.shortenorfid)
+          #print self.orf_dictionary
+          i += 1
+
+       self.orfs = self.orf_dictionary.keys()
+       self.size = len(self.orfs)
+       self.i = 0
+
+    def next(self):
+        if self.i == self.size:
+           self.refillBuffer()
+
+        if self.size==0:
+           self.gff_file.close()
+           raise StopIteration()
+
+        #print self.i
+        if self.i < self.size:
+           self.i = self.i + 1
+           return self.orfs[self.i-1]
+       
+
+
+class BlastOutputTsvParser(object):
+    def __init__(self, dbname,  blastoutput, shortenorfid=False):
+        self.dbname = dbname
+        self.blastoutput = blastoutput
+        self.i=1
+        self.data = {}
+        self.fieldmap={}
+        self.shortenorfid=shortenorfid
+        self.seq_beg_pattern = re.compile("#")
+
+        try:
+           self.blastoutputfile = open( blastoutput,'r')
+           self.lines=self.blastoutputfile.readlines()
+           self.blastoutputfile.close()
+           self.size = len(self.lines)
+           if not self.seq_beg_pattern.search(self.lines[0]) :
+              exit_process("First line must have field header names and begin with \"#\"")
+           header = self.lines[0].replace('#','',1)
+           fields = [ x.strip()  for x in header.rstrip().split('\t')]
+           k = 0 
+           for x in fields:
+             self.fieldmap[x] = k 
+             k+=1
+           eprintf("\nProcessing database : %s\n", dbname)
+           
+        except AttributeError:
+           eprintf("Cannot read the map file for database :%s\n", dbname)
+           exit_process()
+  
+    def __iter__(self):
+        return self
+    count = 0 
+    def next(self):
+        if self.i < self.size:
+           
+           try:
+              fields = [ x.strip()  for x in self.lines[self.i].split('\t')]
+              #print self.fieldmap['ec'], fields, self.i,  self.blastoutput
+              if self.shortenorfid:
+                 self.data['query'] = ShortenORFId(fields[self.fieldmap['query']])
+              else:
+                 self.data['query'] = fields[self.fieldmap['query']]
+
+              self.data['target'] = fields[self.fieldmap['target']]
+              self.data['q_length'] = int(fields[self.fieldmap['q_length']])
+              self.data['bitscore'] = float(fields[self.fieldmap['bitscore']])
+              self.data['bsr'] = float(fields[self.fieldmap['bsr']])
+              self.data['expect'] = float(fields[self.fieldmap['expect']])
+              self.data['identity'] = float(fields[self.fieldmap['identity']])
+              self.data['ec'] = fields[self.fieldmap['ec']]
+              self.data['product'] = re.sub(r'=',' ',fields[self.fieldmap['product']])
+
+              self.i = self.i + 1
+              return self.data
+           except:
+              print self.lines[self.i]
+              print traceback.print_exc(10)
+              sys.exit(0)
+              return None
+        else:
+           raise StopIteration()
+              
+def getParsedBlastFileNames(blastdir, sample_name, algorithm) :
+    database_names = []
+    parsed_blastouts = [] 
+
+    dbnamePATT = re.compile(r'' + blastdir + '*' + sample_name + '*[.](.*)[.]' + algorithm.upper() + 'out.parsed.txt')
+
+    blastOutNames = glob(blastdir + '*' + algorithm.upper() + 'out.parsed.txt')  
+    for blastoutname in blastOutNames :
+        result = dbnamePATT.search(blastoutname)
+        if result:
+            dbname = result.group(1)
+            database_names.append(dbname)
+            parsed_blastouts.append(blastoutname)
+
+
+    return database_names, parsed_blastouts
+
+def getrRNAStatFileNames(blastdir, sample_name, algorithm) :
+    database_names = []
+    parsed_blastouts = [] 
+
+    dbnamePATT = re.compile(r'' + blastdir + '*' + sample_name + '*[.](.*)[.]' + 'rRNA.stats.txt')
+
+    blastOutNames = glob(blastdir + '*' + 'rRNA.stats.txt')  
+    for blastoutname in blastOutNames :
+        result = dbnamePATT.search(blastoutname)
+        if result:
+            dbname = result.group(1)
+            database_names.append(dbname)
+            parsed_blastouts.append(blastoutname)
+
+
+    return database_names, parsed_blastouts
+
+
+
+
+

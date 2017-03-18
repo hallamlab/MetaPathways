@@ -24,9 +24,12 @@ try:
     from libs.python_modules.parsers.fastareader  import FastaReader
     from libs.python_modules.utils.sysutil import pathDelim
 except:
-    print "Cannot load some modules"
-    sys.exit(0)
-   
+    print """ Could not load some user defined  module functions"""
+    print """ Make sure your typed \'source MetaPathwaysrc\'"""
+    print """ """
+    print traceback.print_exc(10)
+    sys.exit(3)
+
 
 def fprintf(file, fmt, *args):
    file.write(fmt % args)
@@ -564,15 +567,18 @@ def checkOrCreateFolder( folderName ):
     else:
         return True
 
-def doFilesExist( fileNames, dir="" ):
+def doFilesExist( fileNames, dir="", gz=False ):
     """ does the file Exist? """
     for fileName in fileNames:
        file = fileName
        if dir!='':
          file = dir + PATHDELIM + fileName
        if not path.exists(file):
-          return False
+         if gz==False or not path.exists(file + ".gz"):
+             return False
+
     return True
+
 
 
 def Singleton(class_):
@@ -605,3 +611,12 @@ def extractSampleName(sampleName, type = None):
      return sample_name 
 
 
+def createDummyFile(absfilename):
+    try:
+        f = open(absfilename, 'w')
+        f.close()
+    except:
+        return False
+
+    return True
+    #

@@ -93,7 +93,8 @@ def execute_tasks(s, verbose = False, block = 0):
            return (0,'')
 
         if verbose:
-             eprintf("\n\n\nEXECUTED COMMAND : %s\n", ', '.join(c.commands) )
+             eprintf("\n\n\nEXECUTING STEP : %s [%s]\n", c.name, c.status)
+             eprintf("EXECUTING COMMAND : %s\n", ', '.join(c.commands) )
 
         eprintf("%s" %(c.message))
 
@@ -125,6 +126,7 @@ def execute_tasks(s, verbose = False, block = 0):
 
         elif c.status in ['yes']:
            if not c.isOutputAvailable():
+
                if c.isInputAvailable(errorlogger = s.errorlogger):
                   s.stepslogger.write('%s\t%s\n' %(c.name, "RUNNING"))
 

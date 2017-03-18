@@ -18,6 +18,7 @@ try:
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf
      from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
      from libs.python_modules.parsers.fastareader  import FastaReader
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -366,10 +367,14 @@ def main(argv, errorlogger = None, runstatslogger = None):
          runstatslogger.write("%s\t-total base pairs (bp)\t%s\n" %( str(priority + 9), str(int(stats[AVG_LENGTH][AFTER]* stats[NUMSEQ][AFTER])) ))
 
 
-
 def MetaPathways_filter_input(argv, errorlogger = None, runstatslogger = None):
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger) 
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger) 
+    except:
+       insert_error(1)
+       return (0,'')
+
     return (0,'')
 
 # the main function of metapaths

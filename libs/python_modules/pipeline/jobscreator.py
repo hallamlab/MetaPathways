@@ -23,8 +23,13 @@ try:
     from libs.python_modules.utils.utils import *
     from libs.python_modules.pipeline.context import *
 except:
-    print "Cannot load some modules"
-    sys.exit(0)
+   print """ Could not load some user defined  module functions"""
+   print """ Make sure your typed \"source MetaPathwaysrc\""""
+   import traceback
+   print """ """
+   print traceback.print_exc(10)
+   sys.exit(3)
+
    
 PATHDELIM = pathDelim()
 
@@ -53,7 +58,8 @@ class JobCreator():
             for stage in stageList: 
                if stage in self.params['metapaths_steps'] or\
                   stage in [ 'ORF_TO_AMINO', 'GBK_TO_FNA_FAA_GFF', 'GBK_TO_FNA_FAA_GFF_ANNOT',\
-                           'COMPUTE_REFSCORES', 'PREPROCESS_AMINOS', 'PATHOLOGIC_INPUT',  'CREATE_ANNOT_REPORTS']:
+                           'COMPUTE_REFSCORES', 'PREPROCESS_AMINOS', 'PATHOLOGIC_INPUT',\
+                           'CREATE_ANNOT_REPORTS', 'CREATE_BIOM']:
                              # 'MLTREEMAP_CALCULATION',
                   #if self.params['INPUT']['format'] =='gbk-unannotated':
                   #  if stage=='PREPROCESS_INPUT':
@@ -293,6 +299,9 @@ class ContextCreator:
           context.outputs = { 'output_gff' : output_gff }
           context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
           translation_table = self.params.get('orf_prediction', 'translation_table')
+          strand = self.params.get('orf_prediction', 'strand')
+
+          mode = self.params.get('orf_prediction', 'mode')
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.ORF_PREDICTION
 
@@ -303,11 +312,11 @@ class ContextCreator:
                     pyScript,
                     "--prod_exec", executable,
                     "--prod_m",
-                    "--prod_p", 'meta',
+                    "--prod_p", mode,
                     "--prod_f", "gff",
                     "--prod_g", translation_table,
                     "--prod_input", context.inputs['input_file'],
-                    "--prod_output", context.outputs['output_gff']
+                    "--prod_output", context.outputs['output_gff'], "--strand",  strand
                 ]
 
           context.commands = [ ' '.join(cmd)]
@@ -433,6 +442,7 @@ class ContextCreator:
           num_threads = self.configs.NUM_CPUS
 
           dbstring =  self.params.get('annotation', 'dbs', default=None)
+
           dbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
       
           
@@ -489,7 +499,6 @@ class ContextCreator:
                         "--last_o %s "
                         "--last_f 2 "
                         "--last_db %s "
-                        "--num_hits %s "
                         "--last_query %s") \
                        %(pyScript, 
                          s.algorithm ,  
@@ -497,7 +506,6 @@ class ContextCreator:
                          num_threads,
                          blastoutput, 
                          refDbFullName, 
-                         max_hits,
                          input_filtered_faa) 
 
                   context.message = self._Message("LASTING AMINO SEQS AGAINST " + db)
@@ -683,7 +691,7 @@ class ContextCreator:
           refdbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
 
           rRNAdbstring =   self.params.get('rRNA', 'refdbs', default=None)
-          rRNAdbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
+          rRNAdbs= [x.strip() for x in rRNAdbstring.split(",")  if len(x)!=0 ]
 
 
 
@@ -711,6 +719,7 @@ class ContextCreator:
           for rRNArefdb in rRNAdbs:
                rRNA_stat_results= s.output_results_rRNA_dir + s.sample_name +\
                                   '.' + rRNArefdb + '.rRNA.stats.txt' 
+               #print rRNA_stat_results
                if  hasResults(rRNA_stat_results)  :
                    context.inputs['rRNA_stat_results']  = rRNA_stat_results                   
                    options += " --rRNA_16S " +  context.inputs['rRNA_stat_results'] 
@@ -801,14 +810,24 @@ class ContextCreator:
           input_nucleotide_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
           input_amino_acid_fasta =  s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
 
+          basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree' 
+          ncbi_tree = basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt'
+          taxonomy_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
           '''outputs'''
 
           context = Context()
+          context1 = Context()
           context.name = 'PATHOLOGIC_INPUT'
         
           context.inputs = { 
                              'input_annot_gff':input_annot_gff,
                            }
+
+          context.inputs1 = {
+                               'ncbi_tree': ncbi_tree,
+                               'taxonomy_table': taxonomy_table
+                            }
+
 
           context.inputs_optional = { 
                              'input_amino_acid_fasta':input_amino_acid_fasta,
@@ -819,10 +838,18 @@ class ContextCreator:
           #  'output_fasta_pf_dir_fasta':s.output_fasta_pf_dir + PATHDELIM +  '0.fasta',
           context.outputs = {
             'output_fasta_pf_dir':s.output_fasta_pf_dir,
-            'output_fasta_pf_dir_pf':s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
             'output_fasta_pf_dir_genetic':s.output_fasta_pf_dir + PATHDELIM + 'genetic-elements.dat',
-            'output_fasta_pf_dir_organism':s.output_fasta_pf_dir + PATHDELIM +  'organism-params.dat'
+            'output_fasta_pf_dir_organism':s.output_fasta_pf_dir + PATHDELIM +  'organism-params.dat',
+            'dummy_ouptut_file':s.output_fasta_pf_dir + PATHDELIM +  s.sample_name + '.dummy.txt'
           }
+
+          compact_mode = self.params.get('ptools_input', 'compact_mode')
+          context1.outputs = {} 
+          if compact_mode=='yes':
+             context.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
+          else:
+             context1.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
+
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.GENBANK_FILE
           ''' remove the fasta files '''
@@ -834,8 +861,16 @@ class ContextCreator:
 
           """PATHOLOGIC_INPUT"""
           ptinput_status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+
           if ptinput_status in ['redo'] or ( ptinput_status in ['yes'] and not s.hasPToolsInput() ):
               cmd += ' --out-ptinput ' + context.outputs['output_fasta_pf_dir']
+              cmd += ' -n ' + context.inputs_optional['input_nucleotide_fasta']
+              cmd += ' --ncbi-tree ' + context.inputs1['ncbi_tree']
+              cmd += ' --taxonomy-table ' + context.inputs1['taxonomy_table']
+
+              if compact_mode=='yes':
+                 cmd += " --compact-output"
+
           context.message = self._Message("PATHOLOGIC INPUT" )
 
           #context.status = self.params.get('metapaths_steps','PATHOLOGIC_INPUT')
@@ -857,6 +892,10 @@ class ContextCreator:
           output_annot_table = s.output_results_annotation_table_dir +\
                                PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
 
+          orf_annot_table = s.output_results_annotation_table_dir +\
+                            PATHDELIM + s.sample_name + '.ORF_annotation_table.txt' 
+
+
           context = Context()
           context.name = 'CREATE_ANNOT_REPORTS'
           basefun  =  self.configs.REFDBS + PATHDELIM + 'functional_categories' 
@@ -870,13 +909,20 @@ class ContextCreator:
                            'ncbi_taxonomy_tree': basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt',
                            'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
                            }
+
+          context.inputs1 = {
+                               'gi_to_taxon_map': basencbi + PATHDELIM + self.configs.ACCESSION_TO_TAXONID
+                            }
+
           context.outputs = {
                            'output_results_annotation_table_dir':s.output_results_annotation_table_dir,
                            'output_annot_table':output_annot_table,
+                           'orf_annot_table': orf_annot_table
                          }
 
 
-          dbstring =   self.params.get('annotation', 'dbs', default=None)
+
+          dbstring =  self.params.get('annotation', 'dbs', default=None)
           refdbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
 
           #db_argument_string = ''
@@ -894,7 +940,7 @@ class ContextCreator:
 
           cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
                  --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-                 --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
+                 --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
                %(\
                   pyScript, \
                   context.inputs['input_annot_gff'],\
@@ -904,17 +950,18 @@ class ContextCreator:
                   context.inputs['CAZY_hierarchy'],\
                   context.outputs['output_results_annotation_table_dir'],\
                   context.inputs['ncbi_taxonomy_tree'],\
-                  context.inputs['ncbi_megan_map']
+                  context.inputs['ncbi_megan_map'],\
+                  context.inputs1['gi_to_taxon_map']
                )
           cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
 
           #add the command now, remove to disable in a hackish way
           context.commands = [ cmd ]
 
-          #context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS') 
+          context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS') 
 
-          context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
-          context.message = self._Message("CREATING REPORT FILE FOR ORF ANNOTATION")
+          #context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+          context.message = self._Message("CREATING REPORT AND ANNOTATION FILES :\"<sample>.functional_and_taxonomic_table.txt, <sample>.ORF_annotation_table.txt\"")
 
           contexts.append(context)
           return contexts
@@ -1084,7 +1131,7 @@ class ContextCreator:
           '''input'''
           rpkm_input = s.rpkm_input_dir 
           bwaFolder = s.bwa_folder 
-          output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
+          output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
           output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
           rpkmExec = self.configs.METAPATHWAYS_PATH + PATHDELIM + self.configs.EXECUTABLES_DIR +\
                      PATHDELIM + self.configs.RPKM_EXECUTABLE
@@ -1094,8 +1141,9 @@ class ContextCreator:
 
 
           '''output'''
-          rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_rpkm.txt"
-          stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_rpkm_stats.txt"
+          rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orfwise"
+          microbecensus_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".microbe_census.txt"
+          stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
 
           samFiles = getSamFiles(rpkm_input, s.sample_name) 
           readFiles = getReadFiles(rpkm_input, s.sample_name)
@@ -1110,6 +1158,7 @@ class ContextCreator:
             inputFile = readFiles[0][0] 
 
           context = Context()
+          context1 = Context()
           context.name = 'COMPUTE_RPKM'
           context.inputs = {
                              'rpkm_input':rpkm_input,
@@ -1121,18 +1170,21 @@ class ContextCreator:
                              'inputFile': inputFile
                            }
 
+          context1.outputs = {
+                             'rpkm_output': rpkm_output
+                            }
           context.outputs = {
-                             'rpkm_output': rpkm_output,
+                             'microbecensusoutput': microbecensus_output,
                              'stats_file': stats_file
                             }
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.RPKM_CALCULATION
 
-          cmd = "%s -c %s  --rpkmExec %s --rpkmdir %s -O %s -o %s --sample_name %s --stats %s --bwaFolder %s --bwaExec %s"\
+          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
                 % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
                    context.inputs['rpkm_input'], context.inputs['output_gff'],\
-                 context.outputs['rpkm_output'], s.sample_name, context.outputs['stats_file'],\
-                 context.inputs['bwaFolder'], context.inputs['bwaExec'])
+                 context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
+                 context.inputs['bwaFolder'], context.inputs['bwaExec'], context.outputs['microbecensusoutput'])
                 
           context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
 
@@ -1141,6 +1193,50 @@ class ContextCreator:
           context.message = self._Message("RUNNING RPKM_CALCULATION")
           return contexts
 
+      def create_biom_cmd(self, s):
+          """CREATE BIOM"""
+          contexts = []
+
+          '''input'''
+          blast_results_dir = s.blast_results_dir 
+          output_results_rRNA_dir=s.output_results_rRNA_dir 
+          '''output'''
+          readcounts_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orfwise.read_counts.txt"
+          results_biom_dir = s.output_results_biom_dir 
+          place_holder_file = s.output_results_biom_dir + PATHDELIM + s.sample_name + ".dummy.txt" 
+
+          context = Context()
+          context1 = Context()
+          context.name = 'CREATE_BIOM'
+          context.inputs = {
+                             'blast_results_dir':blast_results_dir,
+                             'results_rRNA_dir':output_results_rRNA_dir
+                           }
+
+          context.inputs1 = {
+                             'readcounts':readcounts_file
+                            }
+
+          context1.outputs = {
+                             'results_biom_dir': results_biom_dir
+                            }
+          context.outputs = {
+                             'place_holder_file': place_holder_file
+                            }
+
+          pyScript = self.configs.METAPATHWAYS_PATH + self.configs.CREATE_BIOM
+
+          cmd = "%s -B %s -s %s -R %s  --readcounts %s --readrpkgs %s -O %s --algorithm %s"\
+                % (pyScript, context.inputs['blast_results_dir'], s.sample_name,\
+                   context.inputs['results_rRNA_dir'], context.inputs1['readcounts'],\
+                 context.inputs1['readcounts'], context1.outputs['results_biom_dir'], s.algorithm)
+                
+          context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
+
+          context.commands = [cmd]  
+          contexts.append(context)
+          context.message = self._Message("CREATING BIOM FILES")
+          return contexts
 
       # def create_pgdb_using_pathway_tools_cmd(self, s):
       #     """BUILD PGDB"""
@@ -1192,6 +1288,8 @@ class ContextCreator:
       def __init__(self, params, configs): 
           self.params = Singleton(Params)(params)
           self.configs = Singleton(Configs)(configs)
+          if self.checkConfigFile():
+             exit_process()
           self.initFactoryList()
           pass
 
@@ -1208,6 +1306,56 @@ class ContextCreator:
            return self.stageList[type]
            
 
+
+      def checkConfigFile(self):
+           items= [
+                "PYTHON_EXECUTABLE",
+               "PGDB_FOLDER",
+               "METAPATHWAYS_PATH",
+               "PATHOLOGIC_EXECUTABLE",
+               "REFDBS",
+               "FORMATDB_EXECUTABLE",
+               "BLASTP_EXECUTABLE",
+               "BLASTN_EXECUTABLE",
+               "EXECUTABLES_DIR",
+               "LASTDB_EXECUTABLE",
+               "LAST_EXECUTABLE",
+               "PRODIGAL_EXECUTABLE",
+               "RESOURCES_DIR",
+               "SCAN_tRNA_EXECUTABLE",
+               "RPKM_EXECUTABLE",
+               "BWA_EXECUTABLE",
+               "GBK_TO_FNA_FAA_GFF",
+               "GFF_TO_FNA_FAA_GFF",
+               "PREPROCESS_INPUT",
+               "PREPROCESS_AMINOS",
+               "ORF_PREDICTION",
+               "ORF_TO_AMINO",
+               "COMPUTE_REFSCORES",
+               "FUNC_SEARCH",
+               "PARSE_FUNC_SEARCH",
+               "ANNOTATE_ORFS",
+               "GENBANK_FILE",
+               "CREATE_ANNOT_REPORTS",
+               "RUN_PATHOLOGIC",
+               "SCAN_rRNA",
+               "SCAN_tRNA",
+               "MLTREEMAP_CALCULATION",
+               "RPKM_CALCULATION",
+              # "CREATE_BIOM",
+               "NUM_CPUS",
+               "ACCESSION_TO_TAXONID"
+             ]
+           error = False
+           for item in items:
+               #print item,  getattr(self.configs, item, False) 
+               if not hasattr(self.configs, item) or not getattr(self.configs, item, False) :
+                  print "ERROR: Missing configuration parameter %s in config file" %(item)
+                  error =True
+
+
+           return error
+               
       def initFactoryList(self):
            self.factory['GBK_TO_FNA_FAA_GFF'] = self.convert_gbk_to_fna_faa_gff_unannotated
            self.factory['GBK_TO_FNA_FAA_GFF_ANNOT'] = self.convert_gbk_to_fna_faa_gff_annotated
@@ -1228,6 +1376,7 @@ class ContextCreator:
            self.factory['BUILD_PGDB'] = self.create_pgdb_using_pathway_tools_cmd
            self.factory['MLTREEMAP_CALCULATION'] = self.create_mltreemap_cmd
            self.factory['COMPUTE_RPKM'] = self.create_rpkm_cmd
+           self.factory['CREATE_BIOM'] = self.create_biom_cmd
 
            self.stageList['AMINO-FASTA'] = [
                              ['PREPROCESS_AMINOS',
@@ -1236,10 +1385,8 @@ class ContextCreator:
                              [ 'COMPUTE_REFSCORES',
                               'PARSE_FUNC_SEARCH',
                               'ANNOTATE_ORFS',
-                              'PATHOLOGIC_INPUT',
-                             # 'GENBANK_FILE',  
                               'CREATE_ANNOT_REPORTS',
-                             # 'MLTREEMAP_CALCULATION',
+                              'PATHOLOGIC_INPUT',
                               'BUILD_PGDB' ]
                              ]
            
@@ -1254,12 +1401,11 @@ class ContextCreator:
                               'SCAN_rRNA',
                               'SCAN_tRNA',
                               'ANNOTATE_ORFS',
-                              'PATHOLOGIC_INPUT',
-                             # 'GENBANK_FILE',  
                               'CREATE_ANNOT_REPORTS',
-                            #  'MLTREEMAP_CALCULATION',
+                              'PATHOLOGIC_INPUT',
                               'BUILD_PGDB',
-                              'COMPUTE_RPKM']
+                              'COMPUTE_RPKM'
+                              ]
                              ]
            
            self.stageList['AMINO-GENBANK-UNANNOT'] = [
@@ -1271,10 +1417,8 @@ class ContextCreator:
                               'SCAN_rRNA',
                               'SCAN_tRNA',
                               'ANNOTATE_ORFS',
-                              'PATHOLOGIC_INPUT',
-                             # 'GENBANK_FILE',  
                               'CREATE_ANNOT_REPORTS',
-                             # 'MLTREEMAP_CALCULATION',
+                              'PATHOLOGIC_INPUT',
                               'BUILD_PGDB']
                              ]
            

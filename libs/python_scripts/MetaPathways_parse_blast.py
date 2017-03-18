@@ -20,6 +20,7 @@ try:
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf,  exit_process, ShortenORFId
      from libs.python_modules.utils.sysutil import getstatusoutput
      from libs.python_modules.utils.utils import doesFileExist
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -601,10 +602,12 @@ def main(argv, errorlogger = None, runstatslogger = None):
 def MetaPathways_parse_blast(argv, errorlogger = None, runstatslogger = None):       
     createParser()
     main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    insert_error(5)
     return (0,'')
 
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
     main(sys.argv[1:])
+
 

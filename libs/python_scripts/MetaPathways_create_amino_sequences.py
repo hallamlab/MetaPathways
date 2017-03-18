@@ -10,6 +10,7 @@ try:
      import optparse, csv, re, sys
      from os import path
      import logging.handlers
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -504,7 +505,13 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
 def MetaPathways_create_amino_sequences(argv, errorlogger = None, runstatslogger = None):
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    except:
+       insert_error(3)
+       return (0,'')
+
+
     return (0,'')
     
 if __name__ == '__main__':

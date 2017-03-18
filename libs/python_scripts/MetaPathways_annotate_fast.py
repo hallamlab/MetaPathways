@@ -16,8 +16,10 @@ try:
     from optparse import OptionParser, OptionGroup
     from glob import glob
     from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf
-    from libs.python_modules.utils.metapathways_utils  import strip_taxonomy, ShortenORFId, ShortenContigId
+    from libs.python_modules.utils.metapathways_utils  import strip_taxonomy, ShortenrRNAId, ShortenORFId, ShortenContigId, ContigID
     from libs.python_modules.utils.sysutil import getstatusoutput
+    from libs.python_modules.utils.utils  import doesFileExist
+    from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
     print """ Could not load some user defined  module functions"""
@@ -163,7 +165,7 @@ def split_attributes(str, attributes):
 
      return attributes
 
-def insert_orf_into_dict(line, contig_dict):
+def insert_orf_into_dict(line, contig_dict, shortenorfid=False):
      rawfields = re.split('\t', line)
 
      fields = []
@@ -178,7 +180,10 @@ def insert_orf_into_dict(line, contig_dict):
   
      seqname = fields[0]
      try:
-       seqname = ShortenContigId(fields[0])
+       if shortenorfid:
+          seqname = ShortenContigId(fields[0])
+       else:
+          seqname = fields[0]
      except:
        seqname = fields[0]
 
@@ -208,13 +213,14 @@ def insert_orf_into_dict(line, contig_dict):
 
 class GffFileParser(object):
 
-    def __init__(self, gff_filename):
+    def __init__(self, gff_filename, shortenorfid=False):
         self.Size = 10000
         self.i=0
         self.orf_dictionary = {}
         self.gff_beg_pattern = re.compile("^#")
         self.lines= []
         self.size=0
+        self.shortenorfid = shortenorfid
         try:
            self.gff_file = open( gff_filename,'r')
         except AttributeError:
@@ -233,7 +239,7 @@ class GffFileParser(object):
             break
           if self.gff_beg_pattern.search(line):
             continue
-          insert_orf_into_dict(line, self.orf_dictionary)
+          insert_orf_into_dict(line, self.orf_dictionary, self.shortenorfid)
           #print self.orf_dictionary
           i += 1
 
@@ -301,11 +307,9 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
       output_line= orf_dictionary[contig][candidate_orf_pos]['seqname']
 
       #if compact_output:
-      output_line = ShortenContigId(output_line)
-
+      #output_line = ShortenContigId(output_line)
 
       for field in fields:
-        # printf("\t%s", orf_dictionary[contig][candidate_orf_pos][field])
          output_line += "\t"+ str(orf_dictionary[contig][candidate_orf_pos][field])
 
       #if compact_output:
@@ -345,12 +349,12 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
 def  write_16S_tRNA_gene_info(rRNA_dictionary, outputgff_file, tag):
       fields = [  'source', 'feature', 'start', 'end', 'score', 'strand', 'frame' ]
       for rRNA in rRNA_dictionary:
-          output_line= rRNA_dictionary[rRNA]['seqname']
+          output_line= rRNA_dictionary[rRNA]['id']
           for field in fields:
              output_line += "\t"+ str(rRNA_dictionary[rRNA][field])
 
-          attributes = "ID="+rRNA_dictionary[rRNA]['seqname'] + tag
-          attributes += ";" + "locus_tag="+rRNA_dictionary[rRNA]['seqname'] + tag
+          attributes = "ID="+ShortenORFId(rRNA_dictionary[rRNA]['seqname']) + tag
+          attributes += ";" + "locus_tag="+ShortenORFId(rRNA_dictionary[rRNA]['seqname']) + tag
           attributes += ";" + "orf_length=" + str(rRNA_dictionary[rRNA]['orf_length'])
           attributes += ";" + "contig_length=" + str(rRNA_dictionary[rRNA]['contig_length'])
           attributes += ";" + "ec="
@@ -358,8 +362,10 @@ def  write_16S_tRNA_gene_info(rRNA_dictionary, outputgff_file, tag):
           output_line += '\t' + attributes
           fprintf(outputgff_file, "%s\n", output_line);
 
-
-def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary):
+def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary, shortenorfid=False):
+     counter_rRNA={}
+     if not doesFileExist(rRNA_16S_file):
+         return
      try:
         taxonomy_file = open(rRNA_16S_file, 'r')
      except IOError:
@@ -379,16 +385,37 @@ def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary):
             continue
          fields = [ x.strip() for x in line.split('\t') ]
          if len(fields) >=6:
+
+           if shortenorfid:
+              name = get_sequence_number(fields[0])
+           else:
+              name = fields[0]
+            
+           if not name in counter_rRNA:
+              counter_rRNA[name] =0
+
+           _name = name + "_" + str(counter_rRNA[name])
+           counter_rRNA[name] = counter_rRNA[name]  + 1
+
+           
            if fields[1]!='-':
-              rRNA_16S_dictionary[fields[0]] =  [ fields[1], fields[2], fields[5] ]
+              rRNA_16S_dictionary[_name] =  [ fields[1], fields[2], fields[5] ]
            else:
               if len(fields) >=12:
                  if fields[7]!='-':
-                     rRNA_16S_dictionary[fields[0]] =  [ fields[7], fields[8], fields[11] ]
+                     rRNA_16S_dictionary[_name] =  [ fields[7], fields[8], fields[11] ]
 
      taxonomy_file.close()
 
-def process_tRNA_stats(tRNA_stats_file, tRNA_dictionary):
+def get_sequence_number(line):
+      seqnamePATT = re.compile(r'[\S]+_(\d+)$')
+      result = seqnamePATT.search(line.strip())
+      if result:
+         return result.group(1)
+      return  line
+
+def process_tRNA_stats(tRNA_stats_file, tRNA_dictionary, shortenorfid=False):
+     counter_tRNA={}
      try:
         tRNA_file = open(tRNA_stats_file, 'r')
      except IOError:
@@ -409,7 +436,18 @@ def process_tRNA_stats(tRNA_stats_file, tRNA_dictionary):
             continue
          fields = [ x.strip() for x in line.split('\t') ]
          if len(fields) >=6:
-              tRNA_dictionary[fields[0]] =  [ fields[3], fields[4], fields[5], fields[1] ]
+
+              if shortenorfid:
+                 name = get_sequence_number(fields[0])
+              else:
+                 name = fields[0]
+              if not name in counter_tRNA:
+                 counter_tRNA[name] =0
+
+              _name = name + "_" + str(counter_tRNA[name])
+              counter_tRNA[name] = counter_tRNA[name] +1
+
+              tRNA_dictionary[_name] =  [ fields[3], fields[4], fields[5], fields[1] ]
 
 # this adds the features and attributes to  be added to the gff file format for the tRNA genes
 def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths) :
@@ -425,7 +463,7 @@ def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths) :
         else:
            contig_length = 0
 
-        dict = { 'id':tRNA, 'seqname': tRNA, 'start':str(tRNA_dictionary[tRNA][0]), 'end':str(tRNA_dictionary[tRNA][1]),\
+        dict = { 'id':ContigID(tRNA), 'seqname': tRNA, 'start':str(tRNA_dictionary[tRNA][0]), 'end':str(tRNA_dictionary[tRNA][1]),\
                  'strand':tRNA_dictionary[tRNA][2], 'score':" ", 'orf_length':str(orf_length),\
                  'contig_length':str(contig_length),\
                  'feature':'tRNA', 'source':'tranScan-1.4', 'frame':0, 'product':'tRNA-' + tRNA_dictionary[tRNA][3], 'ec':'' }      
@@ -436,6 +474,7 @@ def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths) :
 def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths) :
 
     for rRNA in rRNA_16S_dictionary: 
+        #print rRNA
         try:
            orf_length = abs(int( tRNA_dictionary[rRNA][1] )-int( tRNA_dictionary[rRNA][0] )) + 1
         except:
@@ -447,10 +486,11 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths) :
            contig_length = 0
 
 
-        dict = { 'id':rRNA, 'seqname': rRNA, 'start':str(rRNA_16S_dictionary[rRNA][0]), 'end':str(rRNA_16S_dictionary[rRNA][1]),\
-                 'strand':'+', 'score':str(rRNA_16S_dictionary[rRNA][2]),  'orf_length':str(orf_length),\
-                 'contig_length':str(contig_length),\
-                 'feature':'CDS', 'source':'BLAST Search', 'frame':0, 'product':'16S rRNA', 'ec':'' }      
+        dict = { 
+                 'id':ContigID(rRNA), 'seqname': rRNA, 'start':str(rRNA_16S_dictionary[rRNA][0]), 'end':str(rRNA_16S_dictionary[rRNA][1]),\
+                 'strand':'+', 'score':str(rRNA_16S_dictionary[rRNA][2]),  'orf_length':str(orf_length), 'contig_length':str(contig_length),\
+                 'feature':'rRNA', 'source':'BLAST Search', 'frame':0, 'product':'16S rRNA', 'ec':'' 
+               }      
         rRNA_dictionary[rRNA] = dict.copy() 
 
     
@@ -480,21 +520,26 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
    # for dbname in dbnames:
    #   print dbname, len(results_dictionary[dbname].keys())
    #   print results_dictionary[dbname].keys()
+    values= {}
     i = 0
     for contig in  gffreader:
        count = 0
        for orf in  gffreader.orf_dictionary[contig]:
-         value = 0.0001
+         for dbname in dbnames: 
+           values[dbname] =0.0001
+
          success =False
          output_comp_annot_file1_Str = ''
          output_comp_annot_file2_Str = ''
          for dbname in dbnames:
             weight = dbname_weight[dbname]
-            value = 0
             orf_id = orf['id']
+
             if orf_id in results_dictionary[dbname]:
-                if value < results_dictionary[dbname][orf_id]['value']:
-                    value = results_dictionary[dbname][orf_id]['value']
+
+                if values[dbname] < results_dictionary[dbname][orf_id]['value']:
+                    values[dbname] = results_dictionary[dbname][orf_id]['value']
+    #                print value, dbname
                     candidatedbname=dbname
                     success =True
                     candidate_orf_pos = count 
@@ -531,6 +576,7 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
                 else:
                    output_comp_annot_file2_Str += '{0}\t{1}\t{2}\t{3}'.format(orf_id, '','','','')
 
+         # end of for all dbname
          
          if success:  # there was a database hit
             fprintf(output_comp_annot_file1,'%s\n', output_comp_annot_file1_Str)
@@ -589,7 +635,6 @@ def process_product(product, database, similarity_threshold=0.9):
 
     processed_product = ''
 
-    # print 'dbase', database
     # COG
     if database == 'cog':
         results = re.search(r'Function: (.+?) #', product)
@@ -615,14 +660,13 @@ def process_product(product, database, similarity_threshold=0.9):
 
             if kegg_product.strip():
                 processed_product=kegg_product.strip()
-                
 
     # RefSeq: split and process
-
     elif database == 'refseq':
         for subproduct in product.split('; '):
-            subproduct = re.sub(r'[a-z]{2,}\|(.+?)\|\S*', '', subproduct)
             subproduct = re.sub(r'\[.+?\]', '', subproduct)
+            subproduct = re.sub(r'[a-z]{2,}\|(.+?)\|\S*', '', subproduct)
+            subproduct = re.sub(r'\[', '', subproduct)
             if subproduct.strip():
                 processed_product=subproduct.strip()
 
@@ -633,6 +677,7 @@ def process_product(product, database, similarity_threshold=0.9):
         product_name = product.split('#')[0].strip()
         product_name = re.sub(r'^[^ ]* ', '', product_name)
         product_name = re.sub(r' OS=.*', '', product_name)
+
         if product_name:
             processed_product=product_name
 
@@ -653,23 +698,21 @@ def process_product(product, database, similarity_threshold=0.9):
             subproduct = re.sub(r'\(.+?\)', '', subproduct)
             if subproduct.strip():
                 processed_product=subproduct.strip()
-                print processed_product
 
     # MetaCyc: split and process
-
     # Generic
     else:
         processed_product=strip_taxonomy(product)
+        processed_product = re.sub(r'\[.*\]', '', processed_product)
 
-    words = [ x.strip() for x in processed_product.split() ]
+    words = [x.strip() for x in processed_product.split() ]
     filtered_words =[]
     underscore_pattern = re.compile("_")
     arrow_pattern = re.compile(">")
     for word in words:
        if not  underscore_pattern.search(word) and not arrow_pattern.search(word):
            filtered_words.append(word)
-    
-
+           
     #processed_product = ' '.join(filtered_words)
     # Chop out hypotheticals
     processed_product = remove_repeats(filtered_words)
@@ -677,7 +720,7 @@ def process_product(product, database, similarity_threshold=0.9):
 
     # can actually be a proper annotation
     # processed_product = re.sub(r'hypothetical protein','', processed_product)
-
+       
     return processed_product
 
 def remove_repeats(filtered_words):
@@ -686,18 +729,21 @@ def remove_repeats(filtered_words):
     for word in filtered_words:
        if not word in word_dict:
           if not word in ['', 'is', 'have', 'has', 'will', 'can', 'should',  'in', 'at', 'upon', 'the', 'a', 'an', 'on', 'for', 'of', 'by', 'with' ,'and',  '>' ]:
-             word_dict[word]=1
-             newlist.append(word)
+            if not word=='#':   # for metacyc this is important
+                word_dict[word]=1
+
+            newlist.append(word)
     return ' '.join(newlist)
 
 
 class BlastOutputTsvParser(object):
-    def __init__(self, dbname,  blastoutput):
+    def __init__(self, dbname,  blastoutput, shortenorfid=False):
         self.dbname = dbname
         self.blastoutput = blastoutput
         self.i=1
         self.data = {}
         self.fieldmap={}
+        self.shortenorfid=shortenorfid
         self.seq_beg_pattern = re.compile("#")
 
         try:
@@ -713,7 +759,7 @@ class BlastOutputTsvParser(object):
            for x in fields:
              self.fieldmap[x] = k 
              k+=1
-           eprintf("\nProcessing database : %s\n", dbname)
+           eprintf("Processing database : %s\n", dbname)
            
         except AttributeError:
            eprintf("Cannot read the map file for database :%s\n", dbname)
@@ -728,8 +774,11 @@ class BlastOutputTsvParser(object):
            try:
               fields = [ x.strip()  for x in self.lines[self.i].split('\t')]
               #print self.fieldmap['ec'], fields, self.i,  self.blastoutput
+              if self.shortenorfid:
+                 self.data['query'] = ShortenORFId(fields[self.fieldmap['query']])
+              else:
+                 self.data['query'] = fields[self.fieldmap['query']]
 
-              self.data['query'] = ShortenORFId(fields[self.fieldmap['query']])
               self.data['q_length'] = int(fields[self.fieldmap['q_length']])
               self.data['bitscore'] = float(fields[self.fieldmap['bitscore']])
               self.data['bsr'] = float(fields[self.fieldmap['bsr']])
@@ -737,11 +786,12 @@ class BlastOutputTsvParser(object):
               self.data['identity'] = float(fields[self.fieldmap['identity']])
               self.data['ec'] = fields[self.fieldmap['ec']]
               self.data['product'] = re.sub(r'=',' ',fields[self.fieldmap['product']])
+
               self.i = self.i + 1
               return self.data
            except:
               print self.lines[self.i]
-              print data
+              print traceback.print_exc(10)
               sys.exit(0)
               return None
         else:
@@ -796,7 +846,7 @@ def compute_annotation_value(data):
 
 # compute the refscores
 def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation_results):
-    blastparser =  BlastOutputTsvParser(dbname, blastoutput)
+    blastparser =  BlastOutputTsvParser(dbname, blastoutput, shortenorfid=False)
 
     fields = ['q_length', 'bitscore', 'bsr', 'expect', 'aln_length', 'identity', 'ec' ]
     if cutoffs.taxonomy:
@@ -806,9 +856,9 @@ def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation
     annotation = {}
     for data in blastparser:
         #if count%10000==0:
-        #   print count
 
         if isWithinCutoffs(data, cutoffs) :
+  
            #print data['query'] + '\t' + str(data['q_length']) +'\t' + str(data['bitscore']) +'\t' + str(data['expect']) +'\t' + str(data['identity']) + '\t' + str(data['bsr']) + '\t' + data['ec'] + '\t' + data['product']
 #           if data['query'] =='NapDC_illum_asm_188606_0':
 
@@ -862,7 +912,11 @@ def getBlastFileNames(opts) :
             dbname = result.group(1)
             database_names.append(dbname)
             parsed_blastouts.append(blastoutname)
-            weight_dbs.append(1)
+
+            if re.search(r'metacyc', blastoutname, re.I):
+               weight_dbs.append(2)
+            else:
+               weight_dbs.append(1)
 
     return database_names, parsed_blastouts, weight_dbs
 
@@ -897,10 +951,12 @@ def main(argv, errorlogger =None, runstatslogger = None):
 
     priority = 6000
     count_annotations = {}
+    
+    print ''
     for dbname, blastoutput, weight in zip(database_names, input_blastouts, weight_dbs): 
         results_dictionary[dbname]={}
         dbname_weight[dbname] = weight
-        count = process_parsed_blastoutput( dbname, weight, blastoutput, opts, results_dictionary[dbname])
+        count = process_parsed_blastoutput(dbname, weight, blastoutput, opts, results_dictionary[dbname])
         if runstatslogger!=None:
            runstatslogger.write("%s\tProtein Annotations from %s\t%s\n" %( str(priority), dbname, str(count)))
         count_annotations 
@@ -922,7 +978,13 @@ def main(argv, errorlogger =None, runstatslogger = None):
 def MetaPathways_annotate_fast(argv, errorlogger = None, runstatslogger = None):       
     createParser()
     errorlogger.write("#STEP\tANNOTATE_ORFS\n")
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    except:
+       insert_error(8)
+       return (0,'')
+
+
     return (0,'')
 
 # the main function of metapaths

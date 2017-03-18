@@ -232,6 +232,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
 
    for key, value in  config_settings.items():
       # these are not files or executables
+
       if key in ['NUM_CPUS', 'FORMATTED_DB_SIZE' ]:
         continue
 
@@ -269,6 +270,17 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] )) 
             missingItems.append(key) 
          continue
+
+      if key in [ 'ACCESSION_TO_TAXONID']:
+         if not path.isfile( config_settings['REFDBS'] + PATHDELIM +   'ncbi_tree' + PATHDELIM +  config_settings[key]) :
+            eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
+            eprintf("ERROR: 7.Currently it is set to \"%s\"\n", config_settings['REFDBS'] + PATHDELIM + 'ncbi_tree' + PATHDELIM +config_settings[key] )  
+            if globalerrorlogger!=None:
+               globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))  
+               globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] )) 
+            missingItems.append(key) 
+         continue
+
 
       # make sure RESOURCES_DIR directories are present
       if key in [ 'RESOURCES_DIR']:

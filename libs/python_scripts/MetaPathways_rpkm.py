@@ -87,7 +87,7 @@ def createParser():
                            help='the directory that should have the read files')
 
     parser.add_option('-O', '--orfgff', dest='orfgff', default=None,
-                           help='folder of the PGDB')
+                           help='the gff file of the orf')
 
     parser.add_option('-s', '--sample_name', dest='sample_name', default=None,
                            help='name of the sample')

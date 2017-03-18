@@ -35,6 +35,8 @@ class LCAComputation:
     tax_dbname = 'refseq'
 
     megan_map = {} # hash between NCBI ID and taxonomic name name
+    
+    accession_to_taxon_map = {} # hash between gi and taxon name
 
     # initialize with the ncbi tree file 
     def __init__(self, filenames, megan_map=None):
@@ -50,6 +52,15 @@ class LCAComputation:
                 fields = line.split("\t")
                 fields = map(str.strip, fields)
                 self.megan_map[ fields[0] ] = fields[1]
+
+
+    def load_accession_to_taxon_map(self, accession_to_taxon_file):
+        with open(accession_to_taxon_file) as file:
+            for line in file:
+                fields = line.split("\t")
+                fields = map(str.strip, fields)
+                self.accession_to_taxon_map[ fields[1] ] = fields[0]
+
 
     def get_preferred_taxonomy(self, ncbi_id):
         ncbi_id = str(ncbi_id)
@@ -219,20 +230,30 @@ class LCAComputation:
 
     # extracts taxon names for a refseq annotation
     def get_species(self, hit):
-        if not 'product' in hit:
+        accession_PATT=re.compile(r'ref\|(.*)\|')
+        if not 'product' in hit and not 'target' in hit:
             return None
+
         species = []
+
         try:
             # extracting taxon names here
-            m = re.findall(r'\[([^\[]+?)\]', hit['product'])
-            if m != None:
-                copyList(m,species)
-                #print hit['product']
-                #print species
+            if 'target' in hit:
+               gires = accession_PATT.search(hit['target'])
+               if gires:
+                  gi = gires.group(1)
+                  if gi in self.accession_to_taxon_map:
+                    species.append(self.accession_to_taxon_map[gi])                         
+            else:
+               m = re.findall(r'\[([^\[]+?)\]', hit['product'])
+               if m != None:
+                 copyList(m,species)
+                 #print hit['product']
+                 #print species
         except:
             return None
+      
         if species and species != "":
-            # print species
             return species
         else:
             return None

@@ -37,6 +37,9 @@ parser.add_option( "--rout", dest="redout", default = None,
                   help='reduced out file')
 
 
+parser.add_option( "--level", dest="level", default = '0',  choices=['0', '1'],
+                  help='level of equivalennce    0 : if ECs and FUNCTIONS are the similar, 1: if ECs are the similar')
+
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
 
@@ -109,14 +112,14 @@ def read_pf_file(filel):
          if fields[0]=="EC":
             ecs[id] = fields[1]
 
-         if fields[0]=="PRODUCT":
+         if fields[0]=="FUNCTION":
             products[id] = fields[1]
-           # print fields[1]
 
      orgfile.close()
 
      return orfids, products, annotation, ecs
 
+     
      #for id in orfids:
      #   for line in annotation[id]:
      #      print line
@@ -209,6 +212,9 @@ def main(argv):
     neworfs =[]
 
     for orfid in orfids:
+       if not orfid in products:
+          continue
+
        if not orfid in ecs:
           if products[orfid] in seenproducts:
              equivalent[orfid] = seenproducts[products[orfid]]

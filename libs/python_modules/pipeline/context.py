@@ -41,7 +41,7 @@ class Context:
 
     def isOutputAvailable(self):
 
-        return doFilesExist(self.outputs.values())
+        return doFilesExist(self.outputs.values(), gz=True)
 
     def isInputAvailable(self, errorlogger = None):
         status = True

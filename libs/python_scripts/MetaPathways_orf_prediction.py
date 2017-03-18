@@ -14,6 +14,7 @@ try:
    from libs.python_modules.utils.sysutil import getstatusoutput
 
    from libs.python_modules.utils.pathwaytoolsutils import *
+   from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
      print """ Could not load some user defined  module functions"""
@@ -132,7 +133,11 @@ def MetaPathways_orf_prediction(argv, extra_command = None, errorlogger = None, 
     if errorlogger != None:
        errorlogger.write("#STEP\tORF_PREDICTION\n")
     createParser()
-    main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    try:
+       main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    except:
+       insert_error(2)
+
     return (0,'')
 
 if __name__ == '__main__':
