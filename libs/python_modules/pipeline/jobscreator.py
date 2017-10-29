@@ -319,6 +319,7 @@ class ContextCreator:
                     "--prod_output", context.outputs['output_gff'], "--strand",  strand
                 ]
 
+          print cmd    
           context.commands = [ ' '.join(cmd)]
           context.message = self._Message("ORF PREDICTION")
           contexts.append(context)
@@ -485,7 +486,7 @@ class ContextCreator:
                         refDbFullName,
                         input_filtered_faa, 
                         str(max_evalue), blastoutput) 
-
+             
                  context.message = self._Message("BLASTING AMINO SEQS AGAINST " + db)
    
               if s.algorithm == 'LAST':
@@ -510,6 +511,9 @@ class ContextCreator:
 
                   context.message = self._Message("LASTING AMINO SEQS AGAINST " + db)
               
+              compress = self.params.get('compress','gzip')
+
+
               context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
               context.commands = [ cmd ]
 
@@ -571,6 +575,11 @@ class ContextCreator:
       
              if s.algorithm == 'BLAST':
                   cmd = cmd + ' --algorithm BLAST'
+
+             compress = self.params.get('compress','gzip')
+
+             if compress=="yes":
+                 cmd += " --compact_output"
              context.commands = [ cmd ]
              context.status = self.params.get('metapaths_steps','PARSE_FUNC_SEARCH')
              context.message = self._Message("PARSING " + s.algorithm + " OUTPUT FOR " + db)
@@ -846,9 +855,10 @@ class ContextCreator:
           compact_mode = self.params.get('ptools_input', 'compact_mode')
           context1.outputs = {} 
           if compact_mode=='yes':
-             context.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
+             context.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf'
+             context.outputs['output_fasta_pf_dir_reduced.txt'] = s.output_fasta_pf_dir + PATHDELIM +  'reduced.txt'
           else:
-             context1.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
+             context1.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf'
 
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.GENBANK_FILE
@@ -878,6 +888,7 @@ class ContextCreator:
 
           context.commands = [ cmd ]
           contexts.append(context)
+
           return contexts
 
 
@@ -910,9 +921,9 @@ class ContextCreator:
                            'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
                            }
 
-          context.inputs1 = {
-                               'gi_to_taxon_map': basencbi + PATHDELIM + self.configs.ACCESSION_TO_TAXONID
-                            }
+          #context.inputs1 = {
+          #                     'gi_to_taxon_map': basencbi + PATHDELIM + self.configs.ACCESSION_TO_TAXONID
+          #                  }
 
           context.outputs = {
                            'output_results_annotation_table_dir':s.output_results_annotation_table_dir,
@@ -938,9 +949,10 @@ class ContextCreator:
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.CREATE_ANNOT_REPORTS
 
 
+                 #--ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
           cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
                  --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-                 --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
+                 --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
                %(\
                   pyScript, \
                   context.inputs['input_annot_gff'],\
@@ -950,8 +962,8 @@ class ContextCreator:
                   context.inputs['CAZY_hierarchy'],\
                   context.outputs['output_results_annotation_table_dir'],\
                   context.inputs['ncbi_taxonomy_tree'],\
-                  context.inputs['ncbi_megan_map'],\
-                  context.inputs1['gi_to_taxon_map']
+                  context.inputs['ncbi_megan_map']
+                 # context.inputs1['gi_to_taxon_map']
                )
           cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
 
@@ -961,7 +973,7 @@ class ContextCreator:
           context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS') 
 
           #context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
-          context.message = self._Message("CREATING REPORT AND ANNOTATION FILES :\"<sample>.functional_and_taxonomic_table.txt, <sample>.ORF_annotation_table.txt\"")
+          context.message = self._Message("CREATING REPORT AND ANNOTATION FILES : " + s.sample_name+".functional_and_taxonomic_table.txt" +", "+ s.sample_name + ".ORF_annotation_table.txt")
 
           contexts.append(context)
           return contexts
@@ -1142,7 +1154,6 @@ class ContextCreator:
 
           '''output'''
           rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orfwise"
-          microbecensus_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".microbe_census.txt"
           stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
 
           samFiles = getSamFiles(rpkm_input, s.sample_name) 
@@ -1174,17 +1185,16 @@ class ContextCreator:
                              'rpkm_output': rpkm_output
                             }
           context.outputs = {
-                             'microbecensusoutput': microbecensus_output,
                              'stats_file': stats_file
                             }
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.RPKM_CALCULATION
 
-          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
+          cmd = "%s -c %s  --rpkmExec %s --rpkmdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
                 % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
                    context.inputs['rpkm_input'], context.inputs['output_gff'],\
                  context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
-                 context.inputs['bwaFolder'], context.inputs['bwaExec'], context.outputs['microbecensusoutput'])
+                 context.inputs['bwaFolder'], context.inputs['bwaExec'])
                 
           context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
 
@@ -1344,7 +1354,7 @@ class ContextCreator:
                "RPKM_CALCULATION",
               # "CREATE_BIOM",
                "NUM_CPUS",
-               "ACCESSION_TO_TAXONID"
+              # "ACCESSION_TO_TAXONID"
              ]
            error = False
            for item in items:

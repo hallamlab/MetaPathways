@@ -176,6 +176,7 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
      if "ptinput" in output_filenames:
        write_ptinput_files(output_filenames['ptinput'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid=orf_to_taxonid)
 
+
 # this function creates the pathway tools input files
 def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid={}):
 
@@ -261,7 +262,6 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
                 first_hits[attrib['product']] = {}
                 first_hits[attrib['product']]['n'] =shortid
                 first_hits[attrib['product']]['ec'] =attrib['ec']
-
            if compactid in orf_to_taxonid: 
                attrib['taxon'] = orf_to_taxonid[compactid]
 
@@ -272,30 +272,33 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
               append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
         #endfor
 
-
         #write the sequence now only once per contig
-        try:
-           contig_seq =  nucleotide_seq_dict[key]
-        except:
-           #print nucleotide_seq_dict.keys()[0]
-           if countError < 10:
-              printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
-              countError += 1
-              if countError == 10:
-                printf("...................................................................\n")
-           continue
-
-        fastaStr=wrap("",0,62, contig_seq)
 
            #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
         if compact_output==False:
+           try:
+             contig_seq =  nucleotide_seq_dict[key]
+           except:
+             #print nucleotide_seq_dict.keys()[0]
+             if countError < 10:
+               printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
+               countError += 1
+               if countError == 10:
+                 printf("...................................................................\n")
+             continue
+           fastaStr=wrap("",0,62, contig_seq)
            write_input_sequence_file(output_dir_name, shortid, fastaStr)
      #endif 
 
      if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
-
-     rename(output_dir_name + "/tmp.reduced.txt",output_dir_name + "/reduced.txt")
+        rename(output_dir_name + "/tmp.reduced.txt",output_dir_name + "/reduced.txt")
+     else:
+        for f in [ "/tmp.reduced.txt", "/reduced.txt" ]:
+          red =output_dir_name + f
+          if os.path.exists(red):
+             os.remove(red)
+       
 
      # Niels: removing annotated.gff from sample_name
      sample_name = re.sub(".annot.gff", '', sample_name)
@@ -321,6 +324,7 @@ pfFile = None
 
 def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
     global pfFile
+
     if compact_output:
        if pfFile==None:
           pfFile = open(output_dir_name + "/" + "0.pf", 'w')
@@ -355,27 +359,6 @@ def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
           fprintf(pfFile, "EC\t%s\n", ec)
           #printf("EC\t%s\n", ec)
 
-
-#       if len(prod_attributes)>=5:
-#         for i in range(0, len(prod_attributes)):
-#            if i==0:
-#              fprintf(pfFile, "FUNCTION\t%s\n", prod_attributes[i])
-#
-#            if i==1:
-#              fprintf(pfFile, "DBLINK\tSP:%s\n", prod_attributes[i])
-#            #  printf("DBLINK\tSP:%s\n", prod_attributes[0])
-#   
-#            if i == 2:
-#              fprintf(pfFile, "DBLINK\tMetaCyc:%s\n", prod_attributes[i])
-#            #  printf("DBLINK\tMetaCyc:%s\n", prod_attributes[1])
-#   
-#            if i >= 4:
-#              if not prod_attributes[i] in ec_nos:
-#                 fprintf(pfFile, "EC\t%s\n", prod_attributes[i])
-#                 ec_nos[prod_attributes[i]] = True
-#       else:
-#         fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
-#            #  printf("EC\t%s\n", prod_attributes[3])
     except:
        fprintf(pfFile, "FUNCTION\t%s \n", 'hypothetical protein')
 
@@ -717,7 +700,9 @@ def wrap(prefix, start, end, string):
 
 def process_sequence_file(sequence_file_name,  seq_dictionary, shortorfid=False):
      try:
-        sequencefile = open(sequence_file_name, 'r')
+         sequencefile = open_plain_or_gz(sequence_file_name, 'r')
+         if sequencefile==None:
+            raise IOError("Cannot read file " + sequence_file_name + "/.gz !")
      except IOError:
         print "Cannot read file " + sequence_file_name + " !"
 
@@ -846,7 +831,9 @@ def main(argv, errorlogger = None, runstatslogger = None):
     # filtering options
 
 
+    global pfFile
     global parser
+    pfFile = None
     options, args = parser.parse_args(argv)
 
     if not(options.gff_file or options.nucleotide_sequences or options.protein_sequences or options.output):
@@ -891,10 +878,10 @@ def main(argv, errorlogger = None, runstatslogger = None):
     nucleotide_seq_dict = {}
     protein_seq_dict = {}
 
-    if options.nucleotide_sequences  and path.exists(options.nucleotide_sequences):
+    if options.compact_output==False and options.nucleotide_sequences and plain_or_gz_file_exists(options.nucleotide_sequences):
        process_sequence_file(options.nucleotide_sequences, nucleotide_seq_dict) 
 
-    if options.protein_sequences and  path.exists(options.protein_sequences):
+    if options.compact_output==False and options.protein_sequences and  plain_or_gz_file_exists(options.protein_sequences):
        process_sequence_file(options.protein_sequences, protein_seq_dict) 
     
     orf_to_taxonid={}

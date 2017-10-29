@@ -18,7 +18,7 @@ try:
      from optparse import OptionParser, OptionGroup
 
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf,  exit_process, ShortenORFId
-     from libs.python_modules.utils.sysutil import getstatusoutput
+     from libs.python_modules.utils.sysutil import getstatusoutput, open_file_read
      from libs.python_modules.utils.utils import doesFileExist
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
@@ -137,21 +137,22 @@ def check_arguments(opts, args):
 def create_query_dictionary(blastoutputfile, query_dictionary, algorithm, errorlogger= None ):
        seq_beg_pattern = re.compile("^#")
 
+       print blastoutputfile
        try:
-          if doesFileExist(blastoutputfile):
-              blastoutfh = open(blastoutputfile,'r')
+          blastoutfh = open_file_read(blastoutputfile)
 
-          if doesFileExist(blastoutputfile + '.gz'):
-              blastoutfh = gzip.open(blastoutputfile +'.gz','rb')
        except:
           print traceback.print_exc(10)
           print "ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse "
           return
   
+       x = 'gi|927828437|ref|WP_053827326.1|'
+
        try:
           for line in blastoutfh:
              if not seq_beg_pattern.search(line):
                  words = line.rstrip().split('\t')
+
                  if len(words) != 12: 
                      continue
    
@@ -180,6 +181,8 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
             errologger.write("WARNING : empty query dictionary in parse B/LAST\n")
           return 
 
+       queryPATT = re.compile(r'gi|927828437|ref|WP_053827326.1|')
+
        seq_beg_pattern = re.compile(">")
        try:
             dbmapfile = open( databasemapfile,'r')
@@ -195,14 +198,29 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
               if not name in query_dictionary: 
                  continue
               words.pop(0)
+
               if len(words)==0:
                  annotation = 'hypothetical protein'
               else:
                  annotation = ' '.join(words)
-
+              #print name
               annot_map[name] = annotation
        dbmapfile.close()
 
+       print 'num hits and annots', len(query_dictionary.keys()), len(annot_map.keys())
+
+       x = 'gi|927828437|ref|WP_053827326.1|'
+
+       if x in annot_map:
+           print 'found in  annot', x
+       else:
+           print 'not found in  annot', x
+
+       if x in query_dictionary:
+           print 'found in  dictionary', x
+       else:
+           print 'not found in  dictionary', x
+      
        if len(annot_map)==0:
           if errorlogger:
              errorlogger.write( "PARSE_BLAST\tERROR\tFile "+databasemapfile+ " seems to be empty!\tCreate datbasemap file\n") 
@@ -235,7 +253,7 @@ class BlastOutputParser(object):
         self.lnk = math.log(opts.k)
         self.Lambda = opts.Lambda
         self.blastoutput = blastoutput
-        self.database_mapfile =database_mapfile
+        self.database_mapfile = database_mapfile
         self.refscore_file = refscore_file
         self.annot_map = {} 
         self.i=0
@@ -522,9 +540,13 @@ def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, opts, erro
     output_blastoutput_parsed = opts.parsed_output
 
     # temporary file is used to deal with incomplete processing of the file
-    output_blastoutput_parsed_tmp =  output_blastoutput_parsed + ".tmp"
     try:
-        outputfile = open(output_blastoutput_parsed_tmp, 'w') 
+        output_blastoutput_parsed_tmp =  output_blastoutput_parsed +   ".tmp"
+        if opts.compact_output:
+            output_blastoutput_parsed += ".gz" 
+            outputfile = gzip.open(output_blastoutput_parsed_tmp, 'wb') 
+        else:
+            outputfile = open(output_blastoutput_parsed_tmp, 'w') 
     except:
         if errorlogger:
            errorlogger.write("PARSE_BLAST\tERROR\tCannot open temp file %s to sort\tfor reference db\n" %(soutput_blastoutput_parsed_tmp, dbname))

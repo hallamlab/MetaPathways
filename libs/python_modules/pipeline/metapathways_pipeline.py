@@ -126,7 +126,6 @@ def execute_tasks(s, verbose = False, block = 0):
 
         elif c.status in ['yes']:
            if not c.isOutputAvailable():
-
                if c.isInputAvailable(errorlogger = s.errorlogger):
                   s.stepslogger.write('%s\t%s\n' %(c.name, "RUNNING"))
 
@@ -153,6 +152,7 @@ def execute_tasks(s, verbose = False, block = 0):
            else:
                eprintf('..... Already Computed!\n')
                s.stepslogger.write('%s\t%s\n' %( c.name, "ALREADY_COMPUTED"))
+
 
         elif c.status in ['skip']:
            eprintf('..... Skipping!\n')

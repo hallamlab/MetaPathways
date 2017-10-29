@@ -56,8 +56,9 @@ PATHDELIM =  str(pathDelim())
 #print sys.path
 
 #config = load_config()
-metapaths_config = """config/template_config.txt""";
-metapaths_param = """config/template_param.txt""";
+metapaths_config = """config/template_config.txt"""
+metapaths_param_file = """template_param.txt"""
+metapaths_param = """config/""" + metapaths_param_file
 
 script_info={}
 script_info['brief_description'] = """A workflow script for making PGDBs from metagenomic sequences"""
@@ -324,9 +325,11 @@ def main(argv):
 #    else:
 #       force_remove_dir=False
 
-    if opts.config_file:
-       config_file= opts.config_file
-    else:
+    if opts.config_file:  #if provided with command line
+       config_file = opts.config_file
+    elif path.exists(metapaths_config):  #if the file exists in the current folder
+       config_file=metapaths_config
+    else:  # otherwise get it from config/ folder 
        config_file = cmd_folder + PATHDELIM + metapaths_config
     
     if opts.ncbi_header and opts.ncbi_sbt:
@@ -348,10 +351,14 @@ def main(argv):
 
     # try to load the parameter file    
     try:
-       if opts.parameter_fp:
+
+       if opts.parameter_fp:   # if provided with command line
           parameter_fp= opts.parameter_fp
-       else:
+       elif path.exists(metapaths_param_file):  # if template_param exists in current folder
+          parameter_fp =  metapaths_param_file
+       else:   # otherwise get it from config/ folder 
           parameter_fp = cmd_folder + PATHDELIM + metapaths_param
+
     except IOError:
         raise IOError, ( "Can't open parameters file (%s). Does it exist? Do you have read access?" % opts.parameter_fp )
 
@@ -394,9 +401,9 @@ def main(argv):
           input_output_list = create_input_output_pairs(input_fp, output_dir, globalerrorlogger=globalerrorlogger)
        else:   
           """ must be an error """
-          eprintf("ERROR\tNo valid input sample file or directory containing samples exists .!")
-          eprintf("ERROR\tAs provided as arguments in the -in option.!\n")
-          exit_process("ERROR\tAs provided as arguments in the -in option.!\n")
+          eprintf("ERROR\tNo valid input sample file or directory containing samples exists!")
+          eprintf("ERROR\tAs provided as arguments in the -i option!\n")
+          exit_process("As provided as arguments in the -i option!\n")
    
     """ these are the subset of sample to process if specified
         in case of an empty subset process all the sample """

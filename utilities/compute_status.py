@@ -10,7 +10,7 @@ __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
 try:
-     import sys, os, re, math
+     import sys, os, re, math, gzip
      from glob import glob
      from os import makedirs, sys, remove, rename, path
      from optparse import OptionParser
@@ -24,6 +24,8 @@ except:
 
 
 DBLIST = ["COG-14-2016-10-20",  "kegg-uniprot-2016-10-20", "metacyc-2016-10-31", "refseq-2016-10-06-rel-78", "eggnog-v4-2016-10-30"]
+
+MAX_NUM = 10000000
 
 def printf(fmt, *args):
    sys.stdout.write(fmt % args)
@@ -115,7 +117,7 @@ This script computes the sequence stats for the fasta files
     parser = OptionParser(usage=usage, epilog=epilog)
 
     parser.add_option("-f",  dest="folders", action='append',
-                      help='add the folder to be examined')
+                      help='add the folder to be examined, it expects a input and output folders under this folder')
 
     parser.add_option("-s",  dest="stages",   default=[], action='append', 
                       help=''' INPUT   : 1\n
@@ -129,12 +131,18 @@ This script computes the sequence stats for the fasta files
     parser.add_option("-t",  dest="type",   default='1', choices=['1', '2', '3', '4'], 
                       help=''' present    : 1 
                                isNonEmpty : 2
-                               maxSize    : 3
-                               Size       : 4
+                               num lines    : 3
+                               file size       : 4
                                turns on the cumulative mod''')
     parser.add_option("-c", action="store_false", dest="cumul", default=True,
                        help="print the preceeding stages")
 
+
+    parser.add_option("-m",  dest="top", type='int', default=100000000,
+                      help='max number of samples to read [default : 100000000]')
+
+    parser.add_option("-n",  dest="max_num", type='int', default=100000000,
+                      help='max number of items to count to save time [default : 100000000]')
 
 def valid_arguments(opts, args):
     state = True
@@ -208,14 +216,72 @@ def read_fasta_records(input_file):
             sequence = sequence + line.rstrip()
     return records
 
-       
-def numLines(filename):
-    count = 0
-    if path.exists(filename):
-       for line in open(filename):
-          count += 1
-        
 
+def numLinesPf(filename):
+    global MAX_NUM 
+    count = 0
+
+    commPATT = re.compile(r'^NAME')
+
+    fh = None
+    if path.exists(filename):
+      fh = open(filename)
+    elif path.exists(filename + ".gz"):
+      fh = gzip.open(filename + ".gz")
+    else:
+      return 0
+
+
+    for line in fh:
+       if commPATT.search(line):
+          count += 1
+          if count > MAX_NUM:
+            break
+        
+    fh.close()
+    return count
+
+      
+def numLines(filename):
+    global MAX_NUM 
+    count = 0
+
+    commPATT = re.compile(r'^#')
+
+    fh = None
+    if path.exists(filename):
+      fh = open(filename)
+    elif path.exists(filename + ".gz"):
+      fh = gzip.open(filename + ".gz")
+    else:
+      return 0
+
+
+    for line in fh:
+       if not commPATT.search(line):
+          count += 1
+          if count > MAX_NUM:
+            break
+        
+    fh.close()
+    return count
+
+def numSeqFasta(file):
+    """ process one fasta sequence at a time """
+
+    global MAX_NUM
+    fastareader= FastaReader(file)
+    count = 0
+
+    for record in fastareader:
+        seqname = record.name
+        seq = record.sequence
+        length = len(seq)
+        count += 1
+        if count > MAX_NUM:
+          break
+
+    fastareader.close()
     return count
 
 def maxSizeFasta(file):
@@ -273,10 +339,15 @@ def extractSampleName(name):
     return sample_name
 
 
-def add_samples(folder, folders_samples):
+def add_samples(folder, folders_samples, top):
      files = glob( folder + '/input/*.fasta')
 
-     for file in files:
+     count = top
+     for file in sorted(files):
+       if count==0:
+          break
+       count -= 1 
+
        sample_name =  extractSampleName(file)
 
        if not folder in  folders_samples:
@@ -286,6 +357,10 @@ def add_samples(folder, folders_samples):
 
 
 def check_file(file):
+
+    if not path.exists(file):
+      return path.exists(file + '.gz')
+
     return path.exists(file)
 
 
@@ -299,9 +374,15 @@ def isNotEmpty(file):
     return size
 
 
-def  check_type1(folders_samples, folder,  stages):
+def  check_type1(folders_samples, folder,  stages, top):
 
-    for sample in folders_samples[folder].keys():
+    count = top
+    for sample in sorted(folders_samples[folder].keys()):
+
+      if count==0:
+         break
+      count -=1
+
       if '1' in stages:
          status = check_file(folder + '/input/' + sample+'.fasta')
          if status:
@@ -334,9 +415,13 @@ def  check_type1(folders_samples, folder,  stages):
               folders_samples[folder][sample]['4:' + db] = 'Absent'
 
 
-def  check_type2(folders_samples, folder,  stages):
+def  check_type2(folders_samples, folder,  stages, top):
 
-    for sample in folders_samples[folder].keys():
+    count = top
+    for sample in sorted(folders_samples[folder].keys()):
+      if count==0:
+         break
+      count -= 1
 
       if '1' in stages:
          filename = folder + '/input/' + sample+'.fasta'
@@ -367,17 +452,21 @@ def  check_type2(folders_samples, folder,  stages):
 
 
 
-def check_type3(folders_samples, folder,  stages):
+def check_type3(folders_samples, folder,  stages, top):
 
+    count = top
     i = 1
     for sample in sorted(folders_samples[folder].keys()):
+      if count==0:
+         break
+      count -= 1
 
       eprintf("  %3d\t%s\n",i, sample)
       i+=1
 
       if '1' in stages:
          filename = folder + '/input/' + sample+'.fasta'
-         size = maxSizeFasta(filename)
+         size = numSeqFasta(filename)
          folders_samples[folder][sample]['1'] = int(size)
 
       if '2' in stages:
@@ -388,18 +477,30 @@ def check_type3(folders_samples, folder,  stages):
       for db in get_db_names(stages, '3'):
            filename =folder + '/output/' + sample+ '/blast_results/' + sample + "." + db +".LASTout"
            size = numLines(filename)
-           if size:
-              folders_samples[folder][sample]['3:' + db ] = int(size)
-           else:
-              folders_samples[folder][sample]['3:' + db] =  int(size)
+           folders_samples[folder][sample]['3:' + db ] = int(size)
 
       for db in get_db_names(stages, '4'):
            filename =folder + '/output/' + sample+ '/blast_results/' + sample + "." + db +".LASTout.parsed.txt"
            size = numLines(filename)
-           if size:
-              folders_samples[folder][sample]['4:' + db ] = int(size)
-           else:
-              folders_samples[folder][sample]['4:' + db ] =  int(size)
+           folders_samples[folder][sample]['4:' + db ] = int(size)
+
+      if '5' in stages:
+           filename =folder + '/output/' + sample+ '/results/annotation_table/' + sample + ".ORF_annotation_table.txt"
+           size = numLines(filename)
+           folders_samples[folder][sample]['5'] = int(size)
+
+      if '6' in stages:
+           filename =folder + '/output/' + sample+ '/results/annotation_table/' + sample + ".functional_and_taxonomic_table.txt"
+           size = numLines(filename)
+           folders_samples[folder][sample]['6'] = int(size)
+
+      if '7' in stages:
+           filename =folder + '/output/' + sample+ '/ptools/' + "0.pf"
+           size = numLinesPf(filename)
+           folders_samples[folder][sample]['7'] = int(size)
+
+
+
 
 
 def get_db_names(stages, c):
@@ -414,20 +515,25 @@ def get_db_names(stages, c):
 
      return sorted(stage_suffix.keys())
 
-def check_type(folder_samples, folder,  stages, type):
+def check_type(folder_samples, folder,  stages, type, top):
 
      if type=='1':
-         check_type1(folder_samples, folder,  stages)
+        check_type1(folder_samples, folder,  stages, top)
+        return
 
      if type=='2':
-         check_type2(folder_samples, folder,  stages)
+        check_type2(folder_samples, folder,  stages, top)
+        return
 
      if type=='3':
-         check_type3(folder_samples, folder,  stages)
+        check_type3(folder_samples, folder,  stages, top)
+        return
 
 
 def print_status(folders_samples, folder, sample,  stage, type) :
+    #  print folders_samples
       printf('\t' + str(folders_samples[folder][sample][stage]))
+
 
 
 # the main function
@@ -450,14 +556,19 @@ def main(argv, errorlogger = None, runstatslogger = None):
     # adding the sampls
     folders_samples = {}
     for folder in opts.folders: 
-       add_samples(folder, folders_samples)
+       add_samples(folder, folders_samples, opts.top)
 
+
+    #MAX_NUM
+    global MAX_NUM
+    MAX_NUM = opts.max_num
  
     # stage processing 
+    count = opts.top
+
     for folder in opts.folders: 
        eprintf("%s\n",folder)
-       check_type(folders_samples, folder,  stages, opts.type) 
-
+       check_type(folders_samples, folder,  stages, opts.type, opts.top) 
 
     printf("#FOLDER\tSAMPLE") 
     if '1' in stages:
@@ -473,6 +584,16 @@ def main(argv, errorlogger = None, runstatslogger = None):
     for db in get_db_names(stages, '4'):
         if '4:'+db in stages:
           printf("\t" + db + ".LASTout.parsed.txt") 
+
+    if '5' in stages:
+        printf("\tORF_ANNOTATION") 
+
+    if '6' in stages:
+        printf("\tTAXONOMIC_FUNCTIONAL") 
+
+    if '7' in stages:
+        printf("\tPTOOLS_ORF") 
+
     printf("\n") 
 
 
@@ -492,46 +613,69 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
     printf("#Name\tName") 
     if '1' in stages:
-        printf("\t"+ status1) 
+        printf("\t"+ status1 + "(1)") 
    
     if '2' in stages:
-        printf("\t"+ status2) 
+        printf("\t"+ status2 + "(2)") 
    
     for db in get_db_names(stages, '3'):
         if '3:'+db in stages:
-           printf("\t"+ status2) 
+           printf("\t"+ status2 + "(3)") 
    
     for db in get_db_names(stages, '4'):
         if '4:'+db in stages:
-           printf("\t"+ status2) 
+           printf("\t"+ status2 + "(4)" ) 
+
+    if '5' in stages:
+        printf("\t"+ status2 + "(5)") 
+   
+    if '6' in stages:
+        printf("\t"+ status2 + "(6)") 
+   
+    if '7' in stages:
+        printf("\t"+ status2 + "(7)") 
+   
     printf("\n") 
 
 
-
+    count = opts.top
     for folder in opts.folders: 
        for sample in sorted(folders_samples[folder].keys()):
+          if count ==0:
+            break
+          count -= 1
+
           printf("%s\t%s",folder, sample) 
 
           if '1' in stages:
-             print_status(folders_samples, folder, sample,  '1', opts.type) 
+             print_status(folders_samples, folder, sample, '1', opts.type) 
 
           if '2' in stages:
-             print_status(folders_samples, folder, sample,  '2', opts.type) 
+             print_status(folders_samples, folder, sample, '2', opts.type) 
 
           for db in get_db_names(stages, '3'):
             if '3:'+db in stages:
-               print_status(folders_samples, folder, sample,  '3:'+ db, opts.type) 
+               print_status(folders_samples, folder, sample, '3:'+ db, opts.type) 
 
           for db in get_db_names(stages, '4'):
             if '4:'+db in stages:
-               print_status(folders_samples, folder, sample,  '4:'+ db, opts.type) 
+               print_status(folders_samples, folder, sample, '4:'+ db, opts.type) 
+
+          if '5' in stages:
+             print_status(folders_samples, folder, sample, '5', opts.type) 
+
+          if '6' in stages:
+             print_status(folders_samples, folder, sample, '6', opts.type) 
+
+          if '7' in stages:
+             print_status(folders_samples, folder, sample, '7', opts.type) 
 
           printf("\n") 
 
   #  print folders_samples
 
 
-     
+    # python  ~/MetaPathways_Python.3.0/utilities/compute_status.py -f . -s 1 -s 2 -s 3:COG-14-2016-10-20  -s 3:kegg-uniprot-2016-10-20 -s 3:metacyc-2016-10-31 -s 3:refseq-2016-10-06-rel-78  -s 3:eggnog-v4-2016-10-30 -s 4:COG-14-2016-10-20  -s 4:kegg-uniprot-2016-10-20 -s 4:metacyc-2016-10-31 -s 4:refseq-2016-10-06-rel-78  -s 4:eggnog-v4-2016-10-30 -s 5 -s 6  -s 7 -t 3 -m 4 -n 400 
 
 
 # the main function of metapaths
