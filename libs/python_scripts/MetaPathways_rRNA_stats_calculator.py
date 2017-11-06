@@ -9,6 +9,7 @@ try:
    from libs.python_modules.utils.sysutil import pathDelim
    from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf,  exit_process
    from libs.python_modules.utils.sysutil import getstatusoutput
+   from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -360,7 +361,6 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
 def runBlastCommandrRNA(runcommand = None):
     if runcommand == None:
       return False
-    print runcommand
     result = getstatusoutput(runcommand)
 
     return result[0]
@@ -371,7 +371,13 @@ def MetaPathways_rRNA_stats_calculator(argv, extra_command = None, errorlogger =
     if errorlogger != None:
        errorlogger.write("#STEP\tSTATS_rRNA\n")
     createParser()
-    main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+
+    try:
+      main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    except:
+       insert_error(6)
+       return (0,'')
+    
     return (0,'')
 
 if __name__ == '__main__':

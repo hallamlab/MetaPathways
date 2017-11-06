@@ -1,6 +1,4 @@
-import sys
-import os
-import re
+import sys, os, re, gzip
 from datetime import date
 
 
@@ -64,3 +62,42 @@ def deleteDir(path):
     result = getstatusoutput(cmd)
     if(output[0]!=0):
         raise RuntimeError(output[1])
+
+def open_file(filename, perm, compress=False, tag = ''):
+   try:
+     gzPATT = re.compile(r'[.]gz$')
+     if compress and  not gzPATT.search(filename):
+         filename = filename + ".gz"
+         perm = perm + 'b'
+
+     if compress:
+        fh = gzip.open(filename + tag, perm)
+     else:
+        fh = open(filename + tag, perm)
+   except:
+      raise IOError("ERROR: Cannot open file %s with permission %s" %(filename, perm) )
+
+   return fh, filename
+
+
+def open_file_read(filename):
+   try:
+     gzPATT = re.compile(r'[.]gz$')
+     if gzPATT.search(filename):
+        fh = gzip.open(filename, 'rb')
+     else:
+        if os.path.exists(filename):
+           fh = open(filename, 'r')
+        elif os.path.exists(filename + '.gz'):
+           fh = gzip.open(filename + '.gz', 'rb')
+        else:
+           raise IOError("ERROR: Cannot open file %s to read" %(filename) )
+   except:
+      raise IOError("ERROR: Cannot open file %s to read" %(filename) )
+
+   return fh
+
+
+
+
+

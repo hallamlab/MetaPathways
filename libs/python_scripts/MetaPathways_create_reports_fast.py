@@ -10,8 +10,8 @@ __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
 try:
-     from os import makedirs, sys, remove, path, _exit
-     import re, traceback, gc, resource
+     from os import makedirs, sys, remove, path, _exit, rename
+     import re, traceback, gc, resource, gzip
      from optparse import OptionParser, OptionGroup
      from glob import glob
 
@@ -19,8 +19,9 @@ try:
      from libs.python_modules.taxonomy.MeganTree import *
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters,\
                fprintf, printf, eprintf,  GffFileParser, exit_process, getShortORFId, getSampleNameFromContig,  ShortenORFId, ShortenContigId
-     from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
+     from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim, open_file_read
      from libs.python_modules.utils.utils import *
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
      print """ Could not load some user defined  module functions"""
@@ -36,7 +37,7 @@ parser=None
 def createParser():
      global parser
 
-     epilog = """Report tables summarizing and listing the functional and taxonomic annotation for all the ORFs in a sample are computed.The results are dropped in the folder <output_dir>"""
+     epilog = """Report tables summarizing and,  functional and taxonomic annotation (functional_and_taxonomic.txt) for all the ORFs in a sample are computed.The results are dropped in the folder <output_dir>"""
      epilog = re.sub(r'\s+', ' ',epilog)
 
      parser = OptionParser(usage = usage, epilog = epilog)
@@ -125,8 +126,10 @@ def createParser():
                        help='minimum number of reads that must be assigned to a taxon for ' +\
                             'that taxon to be present otherwise move up the tree until there ' +
                             'is a taxon that meets the requirement')
-     parser.add_option_group(lca_options_group)
+     lca_options_group.add_option("--lca-gi-to-taxon-map", dest="accession_to_taxon_map",  type='str', default=None,
+                       help='accession to taxon map')
 
+     parser.add_option_group(lca_options_group)
 
      compact_io_options_group =  OptionGroup(parser, 'Compact Input/Output Options')
      compact_io_options_group.add_option( "--compact_output", dest="compact_output", action='store_true', default=False,
@@ -176,7 +179,7 @@ def process_gff_file(gff_file_name, orf_dictionary):
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
-        print "Cannot read file " + gff_file_name + " !"
+        print "Cannot read GFF file " + gff_file_name + " !"
 
      gff_lines = gfffile.readlines()
      gff_beg_pattern = re.compile("^#")
@@ -321,7 +324,6 @@ def remove_repeats(filtered_words):
 
 
 class BlastOutputTsvParser(object):
-
     def __init__(self, dbname,  blastoutput):
         self.lineToProcess = ""
         self.dbname = dbname
@@ -334,6 +336,7 @@ class BlastOutputTsvParser(object):
         self.seq_beg_pattern = re.compile("^#")
         self.lines = []
         self.headerline = None
+        self.blastoutputfile = None
 
         self.MAX_READ_ERRORS_ALLOWED = 0
         self.ERROR_COUNT = 0
@@ -341,7 +344,12 @@ class BlastOutputTsvParser(object):
         self.error_and_warning_logger = None
 
         try:
-           self.blastoutputfile = open( blastoutput,'r')
+
+           if isgzipped(blastoutput):
+              self.blastoutputfile = gzip.open(blastoutput,'rb')
+           else:
+              self.blastoutputfile = open(blastoutput,'r')
+
            line = self.blastoutputfile.readline()
            if not self.seq_beg_pattern.search(line) :
               eprintf("First line must have field header names and begin with \"#\"\n")
@@ -466,12 +474,14 @@ def isWithinCutoffs(data, cutoffs):
 def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results, pickorfs):
     fields = ['target', 'q_length', 'bitscore', 'bsr', 'expect', 'identity', 'ec', 'query' ]
     fields.append('product')
+    first =0
 
     try:
       for data in blastparser:
     #    if dbname=='refseq-nr-2014-01-18':
     #       print  'refseq process',  data
 
+        first = first + 1  
         if  data!=None and isWithinCutoffs(data, cutoffs) :
             #if dbname=='refseq-nr-2014-01-18':
             #      print  'refseq process',  data
@@ -509,6 +519,7 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
     #if dbname=='refseq-nr-2014-01-18':
     #     print 'annot refseq process', len(annotation_results)
 
+    #print 'count read ', dbname, first
     return None
 
 def beginning_valid_field(line):
@@ -940,21 +951,152 @@ def  create_sorted_parse_blast_files(dbname, blastoutput, listOfOrfs, size = 100
        remove(file)
 
 
-def getBlastFileNames(opts) :
+
+def getparasedblastfiles(dbnamePATT, blastparsedNames):
     database_names = []
     parsed_blastouts = []  
     weight_dbs = []
-
-    dbnamePATT = re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt')
-
-    blastOutNames = glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt')
-    for blastoutname in blastOutNames :
+    for blastoutname in blastparsedNames :
         result = dbnamePATT.search(blastoutname)
         if result:
             dbname = result.group(1)
             database_names.append(dbname)
             parsed_blastouts.append(blastoutname)
             weight_dbs.append(1)
+
+    return database_names, parsed_blastouts, weight_dbs
+
+def getBlastFileNames(opts) :
+    database_names = []
+    parsed_blastouts = []  
+    weight_dbs = []
+
+    dbnamePATT = re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt')
+    blastparsedNames = glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt')
+    _database_names, _parsed_blastouts, _weight_dbs = getparasedblastfiles(dbnamePATT, blastparsedNames)
+
+    database_names = database_names + _database_names 
+    parsed_blastouts = parsed_blastouts + _parsed_blastouts 
+    weight_dbs = weight_dbs + _weight_dbs
+
+    dbnamePATT = re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt.gz')
+    blastparsedNames = glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt.gz')
+    _database_names, _parsed_blastouts, _weight_dbs = getparasedblastfiles(dbnamePATT, blastparsedNames)
+
+    database_names = database_names + _database_names 
+    parsed_blastouts = parsed_blastouts + _parsed_blastouts 
+    weight_dbs = weight_dbs + _weight_dbs
+
+    return database_names, parsed_blastouts, weight_dbs
+
+
+opts_global = ""
+
+# the main function
+def main(argv, errorlogger = None,  runstatslogger = None):
+    global parser
+    (opts, args) = parser.parse_args(argv)
+    global opts_global
+    opts_global = opts
+    if not check_arguments(opts, args):
+       print usage
+       sys.exit(0)
+
+
+    db_to_map_Maps =  {'cog':opts.input_cog_maps, 'seed':opts.input_seed_maps, 'kegg':opts.input_kegg_maps, 'cazy':opts.input_cazy_maps}
+
+    results_dictionary={}
+    dbname_weight={}
+
+    if opts.output_dir:
+       checkOrCreateFolder(opts.output_dir)
+       
+
+    output_table_name = opts.output_dir + PATHDELIM +'functional_and_taxonomic_table.txt'
+    if path.exists(output_table_name):
+        remove(output_table_name)
+
+
+    output_table_name = opts.output_dir + PATHDELIM + opts.sample_name + ".functional_and_taxonomic_table.txt"
+    if path.exists(output_table_name):
+        remove(output_table_name)
+
+    output_table_file = open(output_table_name, 'w')
+    fprintf(output_table_file, "ORF_ID\tORF_length\tstart\tend\tContig_Name\tContig_length\tstrand\tec\ttaxonomy\t     product\n")
+    output_table_file.close()
+#    print "memory used  = %s" %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss /1000000)
+    listOfOrfs =  get_list_of_queries(opts.input_annotated_gff)
+    listOfOrfs.sort(key=lambda tup: tup, reverse=False)
+
+
+    if opts.blastdir !=None and opts.sample_name != None:
+        try:
+           database_names, input_blastouts, weight_dbs = getBlastFileNames(opts)
+        except:
+           print traceback.print_exc(10)
+           pass
+    else:
+        database_names = opts.database_name
+        input_blastouts = opts.input_blastout
+        weight_dbs = opts.weight_db
+
+##### uncomment the following lines
+    for dbname, blastoutput in zip(database_names, input_blastouts):
+       create_sorted_parse_blast_files(dbname, blastoutput, listOfOrfs, verbose= opts.verbose, errorlogger = errorlogger)
+#####
+
+    # process in blocks of size _stride
+    lca = LCAComputation(opts.ncbi_taxonomy_map, opts.ncbi_megan_map)
+    lca.setParameters(opts.lca_min_score, opts.lca_top_percent, opts.lca_min_support)
+
+    if opts.accession_to_taxon_map:
+       lca.load_accession_to_taxon_map(opts.accession_to_taxon_map)
+
+    blastParsers={}
+    for dbname, blastoutput in zip( database_names, input_blastouts):
+        blastParsers[dbname] =  BlastOutputTsvParser(dbname, blastoutput + '.tmp')
+        #print dbname, blastoutput + '.tmp'
+        blastParsers[dbname].setMaxErrorsLimit(5)
+        blastParsers[dbname].setErrorAndWarningLogger(errorlogger)
+
+    # this part of the code computes the occurence of each of the taxons
+    # which is use in the later stage is used to evaluate the min support
+    # as used in the MEGAN software
+
+    start = 0
+    Length = len(listOfOrfs)
+    _stride = 20000000
+    Taxons = {}
+    while start < Length:
+       pickorfs= {}
+       last =  min(Length, start + _stride)
+       for i in range(start, last):
+          pickorfs[listOfOrfs[i]]= 'root'
+       start = last
+       #print 'Num of Min support orfs ' + str(start)
+
+       results_dictionary={}
+       for dbname, blastoutput in zip(database_names, input_blastouts):
+          results = re.search(r'refseq', dbname, re.I)
+          if results:
+          #if True:
+            try:
+               results_dictionary[dbname]={}
+              # blastParsers[dbname].rewind()
+               process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs)
+
+
+               lca.set_results_dictionary(results_dictionary)
+               lca.compute_min_support_tree(opts.input_annotated_gff, pickorfs, dbname = dbname )
+               for key, taxon  in pickorfs.iteritems():
+                   Taxons[key] = taxon
+            except:
+               eprintf("ERROR: while training for min support tree %s\n", dbname)
+               traceback.print_exc()
+
+
+    # this loop determines the actual/final taxonomy of each of the ORFs 
+    # taking into consideration the min support
 
     return database_names, parsed_blastouts, weight_dbs
 
@@ -1009,12 +1151,15 @@ def main(argv, errorlogger = None,  runstatslogger = None):
 
 ##### uncomment the following lines
     for dbname, blastoutput in zip(database_names, input_blastouts):
-      create_sorted_parse_blast_files(dbname, blastoutput, listOfOrfs, verbose= opts.verbose, errorlogger = errorlogger)
+       create_sorted_parse_blast_files(dbname, blastoutput, listOfOrfs, verbose= opts.verbose, errorlogger = errorlogger)
 #####
 
     # process in blocks of size _stride
     lca = LCAComputation(opts.ncbi_taxonomy_map, opts.ncbi_megan_map)
     lca.setParameters(opts.lca_min_score, opts.lca_top_percent, opts.lca_min_support)
+
+    if opts.accession_to_taxon_map:
+       lca.load_accession_to_taxon_map(opts.accession_to_taxon_map)
 
     blastParsers={}
     for dbname, blastoutput in zip( database_names, input_blastouts):
@@ -1029,7 +1174,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
 
     start = 0
     Length = len(listOfOrfs)
-    _stride = 100000
+    _stride = 20000000
     Taxons = {}
     while start < Length:
        pickorfs= {}
@@ -1058,15 +1203,13 @@ def main(argv, errorlogger = None,  runstatslogger = None):
                eprintf("ERROR: while training for min support tree %s\n", dbname)
                traceback.print_exc()
 
-    blastParsers={}
-    for dbname, blastoutput in zip(database_names, input_blastouts):
-        blastParsers[dbname] =  BlastOutputTsvParser(dbname, blastoutput + '.tmp')
 
     # this loop determines the actual/final taxonomy of each of the ORFs 
     # taking into consideration the min support
     filePermTypes= {}
     start = 0
-    outputfile = open( opts.output_dir + PATHDELIM + opts.sample_name + '.ORF_annotation_table.txt', 'w')
+    outputfile_name = opts.output_dir + PATHDELIM + opts.sample_name + '.ORF_annotation_table.txt'
+    outputfile = open( outputfile_name + ".tmp", 'w')
 
 
     short_to_long_dbnames = {}
@@ -1105,7 +1248,16 @@ def main(argv, errorlogger = None,  runstatslogger = None):
             raise
             pass
 
+
+    _stride = 1000000
     while start < Length:
+       blastParsers={}
+       for dbname, blastoutput in zip(database_names, input_blastouts):
+           blastParsers[dbname] =  BlastOutputTsvParser(dbname, blastoutput + '.tmp')
+           blastParsers[dbname].setMaxErrorsLimit(5)
+           blastParsers[dbname].setErrorAndWarningLogger(errorlogger)
+
+
        pickorfs= {}
        last =  min(Length, start + _stride)
        for  i in range(start, last):
@@ -1119,6 +1271,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
                results_dictionary[dbname]={}
                eprintf("Processing database : %s...", dbname)
                process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs)
+               print 'num orfs picked', len(pickorfs.keys()), len(results_dictionary[dbname])
                eprintf("done\n")
             except:
                traceback.print_exc()
@@ -1140,12 +1293,15 @@ def main(argv, errorlogger = None,  runstatslogger = None):
 #             create_table(results_dictionary[dbname], opts.input_kegg_maps, 'kegg', opts.output_dir, filePermType)
 
        print_orf_table(results_dictionary, orfToContig, opts.output_dir, outputfile, compact_output= opts.compact_output)
+       eprintf("Num orfs processed  1: %s\n", str(start))
 
     for std_dbname, db_map_filename in zip(standard_dbs, standard_db_maps):
        if std_dbname in short_to_long_dbnames:
           print_kegg_cog_tables(std_dbname, opts.output_dir, hierarchical_map, field_to_description,  filePermType = 'w', sample_name = opts.sample_name)
 
     outputfile.close()
+    rename(outputfile_name + ".tmp", outputfile_name)
+
     # now remove the temporary files
     for dbname, blastoutput in zip( database_names, input_blastouts):
         try:
@@ -1176,6 +1332,8 @@ def process_subsys2peg_file(subsystems2peg, subsystems2peg_file):
      except:
          print "Cannot close " + str(subsystems2peg_file)
 
+
+
 def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_output=False):
 
     addHeader =True
@@ -1193,7 +1351,7 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
            if not orf['query'] in orf_dict:
                orf_dict[orf['query']] = {}
  
-           if dbname in orf_dict[orf['query']]:
+           if dbname in orf_dict[orf['query']]:  # only the best hit prevails
                continue
 
            #if orf['query']=='2_0' and dbname=='refseq-nr-2014-01-18':
@@ -1233,6 +1391,8 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
            #if dbname=='refseq-nr-2014-01-18':
            #   if orf['query']=='2_0':
            #      print product 
+
+           #adds it anyway
            orf_dict[orf['query']][dbname] =  product
 
     # compute the databases
@@ -1241,26 +1401,54 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
        _results = re.search(r'cog', dbname, re.I)
        if _results:
          database_maps['cog'] = dbname
+         continue
+         
 
        _results = re.search(r'kegg', dbname, re.I)
        if _results:
          database_maps['kegg'] = dbname
+         hit=True
+         continue
 
        _results = re.search(r'cazy', dbname, re.I)
        if _results:
          database_maps['cazy'] = dbname
+         continue
 
        _results = re.search(r'seed', dbname, re.I)
        if _results:
          database_maps['seed'] = dbname
+         continue
 
        _results = re.search(r'metacyc', dbname, re.I)
        if _results:
          database_maps['metacyc'] = dbname
+         continue
 
        _results = re.search(r'refseq', dbname, re.I)
        if _results:
          database_maps['refseq'] = dbname
+         continue
+
+       database_maps[dbname] = dbname
+
+
+    std_dbnames = ['cog', 'kegg', 'seed', 'cazy', 'metacyc', 'refseq'] 
+    dbnames = std_dbnames
+
+    headers = ["#  ORF_ID", "CONTIG_ID"]
+    for std_dbname in std_dbnames:
+       headers.append(std_dbname.upper())
+
+    for dbname in sorted(results.keys()):
+       non_std =True
+       for std_dbname in std_dbnames:
+          if re.search(std_dbname, dbname, re.I):
+             non_std =False
+             
+       if non_std:
+         dbnames.append(dbname)
+         headers.append(std_dbname)
 
 
     sampleName = None
@@ -1269,6 +1457,7 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
        #  print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
        #_keys =  orf_dict[orfn].keys()
        #_results = re.search(r'cog', dbname, re.I)
+
 
        if 'cog' in database_maps and  database_maps['cog'] in orf_dict[orfn]:
           cogFn = orf_dict[orfn][database_maps['cog']]
@@ -1301,6 +1490,7 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
        else:
           refseqFn= ""
     
+
        if not sampleName:
          sampleName = getSampleNameFromContig(orf_dict[orfn]['contig'])
 
@@ -1311,20 +1501,40 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
           orfName =  orfn
           contigName= ShortenContigId(contigName)
 
+       row = [ orfName, contigName ]
+       for dbname in dbnames:
+         if dbname in database_maps and database_maps[dbname] in orf_dict[orfn]:
+           row.append(orf_dict[orfn][database_maps[dbname]])
+         else:
+           row.append("")
+
+#       print '\t'.join(headers)
+#       print '\t'.join(row) 
+
+
+
+
+
+
        #fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy)
        if addHeader:
-           fprintf(outputfile, "# %s\n", "ORF_ID" + "\t" + "CONTIG_ID" + '\t' + "COG" + '\t' + "KEGG" +'\t' + "SEED" + '\t' + "CAZY" + '\t'+ "METACYC" + '\t' + "REFSEQ")
+           #fprintf(outputfile, "# %s\n", '\t'.join(headers)_"ORF_ID" + "\t" + "CONTIG_ID" + '\t' + "COG" + '\t' + "KEGG" +'\t' + "SEED" + '\t' + "CAZY" + '\t'+ "METACYC" + '\t' + "REFSEQ" )
+           fprintf(outputfile, "# %s\n", '\t'.join(headers))
            addHeader=False
-       fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy + '\t' + refseqFn )
+
+       #fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy + '\t' + refseqFn )
+       fprintf(outputfile, "%s\n", '\t'.join(row))
 
 
 def MetaPathways_create_reports_fast(argv, errorlogger =  None, runstatslogger = None):
     createParser()
     errorlogger.write("#STEP\tCREATE_ANNOT_REPORTS\n")
     main(argv,errorlogger= errorlogger, runstatslogger = runstatslogger )
+    insert_error(16)
     return (0,'')
 
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
     main(sys.argv[1:])
+

@@ -121,6 +121,13 @@ class Parameters():
                                          'no': True 
                                          }
                        },
+               'ptools_input': {
+                          'compact_mode' : {
+                                         'yes': True, 
+                                         'no': True 
+                                         }
+                       },
+
                'rRNA': { 'refdbs': { }
                }, 
 # grid settings

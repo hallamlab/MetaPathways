@@ -27,21 +27,21 @@ PATHDELIM = pathDelim()
 
 class Context:
     """ This class holds the context of a stage """
-    inputs = {}
-    inputs1 = {}
-    outputs = {}
-    outputs1 = {}
-    name = None
-    status = None
-    commands = []
-    message = "Message not set"
 
     def __init__(self):
+        self.outputs = {}
+        self.outputs1 = {}
+        self.inputs = {}
+        self.inputs1 = {}
+        self.name = None
+        self.status = None
+        self.commands = []
+        self.message = "Message not set"
         pass
 
     def isOutputAvailable(self):
 
-        return doFilesExist(self.outputs.values())
+        return doFilesExist(self.outputs.values(), gz=True)
 
     def isInputAvailable(self, errorlogger = None):
         status = True

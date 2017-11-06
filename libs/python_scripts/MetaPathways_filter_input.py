@@ -10,14 +10,15 @@ __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
 try:
-     import os, re
+     import os, re, gzip
      from os import makedirs, sys, remove, rename
      from sys import path
      from optparse import OptionParser
 
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf
-     from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
+     from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim, open_file
      from libs.python_modules.parsers.fastareader  import FastaReader
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -67,6 +68,9 @@ file names "samplename".qced.faa. These amino acid sequences can be used in
                       help='file name to store the sequence name maps')
     parser.add_option("-t", "--type", dest="seqtype", type='str', default ='nucleotide',
                       help='the type of sequences,  choices are [ nucleotide, amino]')
+    parser.add_option("-c", "--compress", action="store_true", dest="compress", default=False,
+                      help="stores the fasta files in the gzipped format [default: not gizpped]")
+    
 
 
 def valid_arguments(opts, args):
@@ -180,7 +184,9 @@ def main(argv, errorlogger = None, runstatslogger = None):
        sys.exit(0)
 
     min_length = opts.min_length
-    outfile = open(opts.output_fasta + '.tmp', 'w') 
+
+    outfile, opts.output_fasta = open_file(opts.output_fasta, 'w', compress= opts.compress, tag=".tmp") 
+
     logfile = open(opts.log_file, 'w') 
     lengthsfile = open(opts.lengths_file + '.tmp', 'w') 
      
@@ -366,10 +372,14 @@ def main(argv, errorlogger = None, runstatslogger = None):
          runstatslogger.write("%s\t-total base pairs (bp)\t%s\n" %( str(priority + 9), str(int(stats[AVG_LENGTH][AFTER]* stats[NUMSEQ][AFTER])) ))
 
 
-
 def MetaPathways_filter_input(argv, errorlogger = None, runstatslogger = None):
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger) 
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger) 
+    except:
+       insert_error(1)
+       return (0,'')
+
     return (0,'')
 
 # the main function of metapaths

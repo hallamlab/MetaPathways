@@ -14,6 +14,7 @@ try:
    from libs.python_modules.utils.sysutil import getstatusoutput
 
    from libs.python_modules.utils.pathwaytoolsutils import *
+   from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
      print """ Could not load some user defined  module functions"""
@@ -111,7 +112,13 @@ def MetaPathways_tRNA_scan(argv, extra_command = None, errorlogger = None, runst
     if errorlogger != None:
        errorlogger.write("#STEP\ttRNA_SCAN\n")
     createParser()
-    result = main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    result =[0, '']
+    try:
+       result = main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    except:
+       insert_error(7)
+       return (0,'')
+    
     return (result[0],'')
 
 if __name__ == '__main__':

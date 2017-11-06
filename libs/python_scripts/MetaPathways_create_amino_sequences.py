@@ -7,9 +7,10 @@ Oct 26, 2009 by Simon Eng
 """
 
 try:
-     import optparse, csv, re, sys
-     from os import path
+     import optparse, csv, re, sys, os
      import logging.handlers
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
+     from libs.python_modules.utils.sysutil import open_file
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -97,7 +98,7 @@ def get_translation_table(num):
 
 def files_exist( files ):
      for file in files:
-        if not path.exists(file):
+        if not os.path.exists(file):
            print 'Could not read File ' +  file
            print 'Please make sure these sequences are in the \"blastDB\" folder'
            sys.exit(3)
@@ -253,8 +254,8 @@ def create_sequnces(output_amino_file_name, output_nuc_file_name, contig_dict, n
      #print translation_table
      #print contig_dict
      
-     aa_outputfile = open(output_amino_file_name, 'w')
-     nucl_outputfile = open(output_nuc_file_name, 'w')
+     aa_outputfile, output_amino_file_name  = open_file(output_amino_file_name, 'w', compress= options.compress, tag='.tmp')
+     nucl_outputfile, output_nuc_file_name = open_file(output_nuc_file_name, 'w', compress =options.compress, tag = '.tmp')
 
      for key in contig_dict:
         for elem in contig_dict[key]  :
@@ -270,6 +271,8 @@ def create_sequnces(output_amino_file_name, output_nuc_file_name, contig_dict, n
 
      aa_outputfile.close() 
      nucl_outputfile.close() 
+     os.rename( output_amino_file_name + ".tmp", output_amino_file_name)
+     os.rename( output_nuc_file_name + ".tmp", output_nuc_file_name)
 
 def get_amino_acid_sequence(nucleotide_seq_dict, translation_table, seqname, start, end, strand):  
 
@@ -458,13 +461,18 @@ def createParser():
     input_group.add_option('--output_gff', dest='output_gff',
                            metavar='OUTPUT', help='output file in gff format')
 
+    input_group.add_option("-c", "--compress", action="store_true", dest="compress", default=False,
+                      help="stores the fasta files in the gzipped format [default: not gizpped]")
 
     parser.add_option_group(input_group)
 
+options = None
 
 def main(argv, errorlogger = None, runstatslogger = None):
     # filtering options
     global parser
+    global options
+
     options, args = parser.parse_args(argv)
 
     if not(options.gff_file or options.nucleotide_sequences or options.output_amino or  options.output_nuc  or options.output_gff):
@@ -487,11 +495,11 @@ def main(argv, errorlogger = None, runstatslogger = None):
        parser.error('Output gff file must be specified')
     #print options
 
-    if not path.exists(options.gff_file):
+    if not os.path.exists(options.gff_file):
         print "gff file does not exist"
         sys.exit(0)
 
-    if not path.exists(options.nucleotide_sequences):
+    if not os.path.exists(options.nucleotide_sequences):
         print "nucloetide sequences file does not exist"
         sys.exit(0)
 
@@ -504,7 +512,13 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
 def MetaPathways_create_amino_sequences(argv, errorlogger = None, runstatslogger = None):
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    except:
+       insert_error(3)
+       return (0,'')
+
+
     return (0,'')
     
 if __name__ == '__main__':

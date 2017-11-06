@@ -17,6 +17,7 @@ try:
 
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, ShortenORFId
      from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
+     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -344,10 +345,8 @@ def MetaPathways_refscore(argv, errorlogger = None, runstatslogger = None):
     try:
        main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
     except:
-       print 'error'
-       print traceback.format_exc(10)
-
-       return (1,traceback.format_exc(10))
+       insert_error(15)
+       return (0,traceback.format_exc(10))
 
     return (0,'')
 

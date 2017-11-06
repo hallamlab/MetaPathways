@@ -11,9 +11,13 @@ quality_control:min_length 180
 quality_control:delete_replicates yes
 
 # ORF prediction parameters 
+
+orf_prediction:strand  both
+
 orf_prediction:algorithm prodigal
 orf_prediction:min_length 60
 orf_prediction:translation_table 11
+orf_prediction:mode meta
 
 # ORF annotation parameters
 annotation:algorithm LAST
@@ -21,7 +25,11 @@ annotation:algorithm LAST
 
 #annotation:dbs COG_2013-12-27,kegg-pep-2011-06-18,refseq-nr-2014-01-18,metacyc-v4-2011-07-03,seed-2014-01-30 
 #annotation:dbs COG-14-2016-10-20,eggnog-v4-2016-10-30,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-nr-78
-annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-nr-78,eggnog-v4-2016-10-30
+#annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-rel-78,eggnog-v4-2016-10-30
+#annotation:dbs COG-14-2016-10-20,metacyc-2016-10-31,kegg-uniprot-2016-10-20,
+annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-rel-78,eggnog-v4-2016-10-30,cazydb
+#annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31
+#annotation:dbs CytochromeDB
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc
 annotation:fmtdbsize 8000000000
 annotation:min_bsr 0.4
@@ -39,6 +47,7 @@ rRNA:min_bitscore 50
 
 # pathway tools parameters
 ptools_settings:taxonomic_pruning no
+ptools_input:compact_mode yes
 
 # grid settings
 
@@ -48,12 +57,11 @@ metapaths_steps:PREPROCESS_INPUT yes
 metapaths_steps:ORF_PREDICTION yes
 metapaths_steps:FILTER_AMINOS yes
 metapaths_steps:FUNC_SEARCH yes
-metapaths_steps:PARSE_FUNC_SEARCH skip
+metapaths_steps:PARSE_FUNC_SEARCH yes
 metapaths_steps:SCAN_rRNA skip
 metapaths_steps:SCAN_tRNA skip
 metapaths_steps:ANNOTATE_ORFS redo
-metapaths_steps:PATHOLOGIC_INPUT skip
-metapaths_steps:CREATE_ANNOT_REPORTS skip
+metapaths_steps:CREATE_ANNOT_REPORTS redo
 metapaths_steps:BUILD_PGDB skip
 metapaths_steps:COMPUTE_RPKM skip
 

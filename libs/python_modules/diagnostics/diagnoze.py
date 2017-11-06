@@ -416,7 +416,7 @@ def check_for_raw_sequences(dbs, refdbspath, dbType,  logger = None):
     status = True
     for db in dbs:
        fullPath =  refdbspath + PATHDELIM + dbType + PATHDELIM +  db 
-       if not doesFolderExist(fullPath):
+       if not plain_or_gz_file_exists(fullPath):
             eprintf("ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType)
             logger.printf("ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType)
             status = False

@@ -19,14 +19,17 @@ try:
     from collections import defaultdict
     from optparse import make_option
     from glob import glob
-    import sys, os, traceback, shutil
+    import sys, os, traceback, shutil, gzip
 
     from libs.python_modules.parsers.fastareader  import FastaReader
     from libs.python_modules.utils.sysutil import pathDelim
 except:
-    print "Cannot load some modules"
-    sys.exit(0)
-   
+    print """ Could not load some user defined  module functions"""
+    print """ Make sure your typed \'source MetaPathwaysrc\'"""
+    print """ """
+    print traceback.print_exc(10)
+    sys.exit(3)
+
 
 def fprintf(file, fmt, *args):
    file.write(fmt % args)
@@ -564,16 +567,45 @@ def checkOrCreateFolder( folderName ):
     else:
         return True
 
-def doFilesExist( fileNames, dir="" ):
+def doFilesExist( fileNames, dir="", gz=False ):
     """ does the file Exist? """
     for fileName in fileNames:
        file = fileName
        if dir!='':
          file = dir + PATHDELIM + fileName
        if not path.exists(file):
-          return False
+         if gz==False or not path.exists(file + ".gz"):
+             return False
+
     return True
 
+
+def isgzipped(filename):
+     patt = re.compile(r'.gz$')
+
+     if patt.search(filename):
+        return True
+     return False
+
+def open_plain_or_gz(filename, perm):
+    if path.exists(filename):
+       if isgzipped(filename):
+          fh = gzip.open(filename, perm)
+       else:
+          fh = open(filename, perm)
+    else:
+       if path.exists(filename + ".gz"):
+          fh = gzip.open(filename + ".gz", perm)
+       else: 
+          fh = None
+    return fh
+
+def plain_or_gz_file_exists(filename):
+    if path.exists(filename):
+        return True
+    if path.exists(filename + ".gz"):
+        return True
+    return False
 
 def Singleton(class_):
   instances = {}
@@ -605,3 +637,12 @@ def extractSampleName(sampleName, type = None):
      return sample_name 
 
 
+def createDummyFile(absfilename):
+    try:
+        f = open(absfilename, 'w')
+        f.close()
+    except:
+        return False
+
+    return True
+    #

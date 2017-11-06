@@ -87,7 +87,7 @@ def createParser():
                            help='the directory that should have the read files')
 
     parser.add_option('-O', '--orfgff', dest='orfgff', default=None,
-                           help='folder of the PGDB')
+                           help='the gff file of the orf')
 
     parser.add_option('-s', '--sample_name', dest='sample_name', default=None,
                            help='name of the sample')
@@ -152,7 +152,6 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
              cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
           else:
              cmd = "%s mem -t %d -p  -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
-#       print cmd
        result = getstatusoutput(cmd)
 
        if result[0]==0:
@@ -200,7 +199,6 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     samFiles = getSamFiles(options.rpkmdir, options.sample_name)
     readFiles = getReadFiles(options.rpkmdir, options.sample_name)
 
-
     if  not samFiles and readFiles:
         if not readFiles:
            eprintf("ERROR\tCannot find the read files not found for sample %s!\n", options.sample_name)
@@ -240,6 +238,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     # make sure you get the latest set of sam file after the bwa
     samFiles = getSamFiles(options.rpkmdir, options.sample_name)
 
+    print samFiles
     print 'rpkm running'
     if not path.exists(options.rpkmExec):
        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
@@ -260,6 +259,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
        command += " --ORFS %s" %(options.orfgff)
 
     samFiles = getSamFiles(options.bwaFolder, options.sample_name)
+    print samFiles
 
     if not samFiles:
        return 0

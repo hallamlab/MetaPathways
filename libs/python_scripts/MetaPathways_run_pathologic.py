@@ -168,6 +168,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     if options.no_web_cel_overview:
        command += " -no-web-cel-overview"
 
+    command += " -tip"
     command += " -api"
 
     status =0
