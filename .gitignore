@@ -6,8 +6,3 @@ regtests*
 redhat
 rpkm_c
 *.o
-executables/source/bwa-0.7.7/*
-executables/source/rpkm/*
-executables/source/LAST-Plus/*
-executables/source/prodigal.v2_00/
-executables/source/trnascan/
