@@ -1,6 +1,6 @@
 ;;/home/ubuntu/RiboCensus//libs/python_scripts/RiboCensus_annotate_otus.py
 ;;  % pathway-tools -lisp
-;; (load "~/examples")
+;; (load "~/extract_sbml.lisp")
 ;; list the pgdb names in "list.txt"
 (defun get-sbml(org)
 
