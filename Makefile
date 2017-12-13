@@ -34,7 +34,6 @@ FAST=$(BINARY_FOLDER)/fastal
 PRODIGAL=$(BINARY_FOLDER)/prodigal
 
 METAPATHWAYS_DB_DEFAULT=../fogdogdatabases
-PTOOLS_DIR=../
 METAPATHWAYS_DB_TAR=Metapathways_DBs_2016-04.tar.xz
 
 

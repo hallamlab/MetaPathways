@@ -7,12 +7,12 @@ redhat
 rpkm_c
 *.o
 
-executables/*/trnascan-1.4
-executables/*/lastal+
-executables/*/lastdb+
-executables/*/bwa
-executables/*/prodigal
-executables/*/rpkm
+executables/linux/trnascan-1.4
+executables/linux/lastal+
+executables/linux/lastdb+
+executables/linux/bwa
+executables/linux/prodigal
+executables/lixnu/rpkm
 executables/source/LAST-Plus/last-merge-batches+
 executables/source/LAST-Plus/last-split+
 executables/source/bwa-0.7.7/libbwa.a
