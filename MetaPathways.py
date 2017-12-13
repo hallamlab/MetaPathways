@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import division
 
 __author__ = "Kishori M Konwar Niels W Hanson"
@@ -29,7 +30,6 @@ try:
      from libs.python_modules.diagnostics.parameters import *
      from libs.python_modules.diagnostics.diagnoze import *
      from libs.python_modules.pipeline.sampledata import *
-     from libs.python_modules.utils import globalcodes
 except:
    print """ Could not load some user defined  module functions"""
    print """ Make sure your typed \"source MetaPathwaysrc\""""
@@ -56,9 +56,8 @@ PATHDELIM =  str(pathDelim())
 #print sys.path
 
 #config = load_config()
-metapaths_config = """config/template_config.txt"""
-metapaths_param_file = """template_param.txt"""
-metapaths_param = """config/""" + metapaths_param_file
+metapaths_config = """config/template_config.txt""";
+metapaths_param = """config/template_param.txt""";
 
 script_info={}
 script_info['brief_description'] = """A workflow script for making PGDBs from metagenomic sequences"""
@@ -109,16 +108,11 @@ def createParser():
                       action="store_true", dest="print_only", default=False,
                       help="print only  the commands [default False]")
     
-    parser.add_option("-n", "--ncbi-header", dest="ncbi_header", 
-                      help="NCBI sequin submission parameters file" )
-    
     parser.add_option("-s", "--subset", dest="sample_subset", action="append", default=[],
                       help="Processes only samples in the list  subset specified [ -s sample1 -s sample2 ]" )
     
     parser.add_option("--runid", dest="runid",  default="",
                       help="Any string to represent the runid [ default Empty string ]" )
-    #parser.add_option("-s", "--ncbi-sbt-file", dest="ncbi_sbt", 
-    #                  help="the NCBI sbt location created by the \"Create Submission Template\" form: http://www.ncbi.nlm.nih.gov/WebSub/template.cgi" )
 
 
 
@@ -297,8 +291,21 @@ def sigint_handler(signum, frame):
     eprintf("Received TERMINATION signal\n")
     exit_process()
 
+
+def environment_variables_defined():
+    variables = ['METAPATHWAYS_DB']
+    status =True
+    for variable in variables:
+      if not variable in os.environ:
+         eprintf("%-10s:Environment variable %s not defined! Please set %s as \'export %s=<value>\'\n" %('ERROR', variable, variable,variable))
+         if variables in ['METAPATHWAYS_DB']:
+           status=False
+    
+    return status
+
 def main(argv):
     global parser
+
     (opts, args) = parser.parse_args()
     if valid_arguments(opts, args):
        print usage
@@ -307,7 +314,7 @@ def main(argv):
     signal.signal(signal.SIGINT, sigint_handler)
     signal.signal(signal.SIGTERM, sigint_handler)
 
-    eprintf("COMMAND : %s\n", sys.argv[0] + ' ' +  ' '.join(argv))
+    eprintf("%-10s:%s\n" %('COMMAND', sys.argv[0] + ' ' +  ' '.join(argv)) )
     # initialize the input directory or file
     input_fp = opts.input_fp 
     output_dir = path.abspath(opts.output_dir)
@@ -325,40 +332,18 @@ def main(argv):
 #    else:
 #       force_remove_dir=False
 
-    if opts.config_file:  #if provided with command line
-       config_file = opts.config_file
-    elif path.exists(metapaths_config):  #if the file exists in the current folder
-       config_file=metapaths_config
-    else:  # otherwise get it from config/ folder 
+    if opts.config_file:
+       config_file= opts.config_file
+    else:
        config_file = cmd_folder + PATHDELIM + metapaths_config
     
-    if opts.ncbi_header and opts.ncbi_sbt:
-       if not path.exists(opts.ncbi_header):
-          print "Could not open or missing NCBI header file " + opts.ncbi_header
-          print "Either disable option to CREATE_SEQUIN_FILE or provide a valid header file"
-          sys.exit(0)
-
-       if  not path.exists(opts.ncbi_sbt):
-          print """You must must have a sbt file obtained from the NCBI \"Create Submission Template\" form \n 
-                 http://www.ncbi.nlm.nih.gov/WebSub/template.cgi """ + opts.ncbi_sbt
-          sys.exit(0)
-
-       ncbi_sequin_params = path.abspath(opts.ncbi_header)
-       ncbi_sequin_sbt = path.abspath(opts.ncbi_sbt)
-    else:
-       ncbi_sequin_params = None
-       ncbi_sequin_sbt = None
 
     # try to load the parameter file    
     try:
-
-       if opts.parameter_fp:   # if provided with command line
+       if opts.parameter_fp:
           parameter_fp= opts.parameter_fp
-       elif path.exists(metapaths_param_file):  # if template_param exists in current folder
-          parameter_fp =  metapaths_param_file
-       else:   # otherwise get it from config/ folder 
+       else:
           parameter_fp = cmd_folder + PATHDELIM + metapaths_param
-
     except IOError:
         raise IOError, ( "Can't open parameters file (%s). Does it exist? Do you have read access?" % opts.parameter_fp )
 
@@ -372,7 +357,7 @@ def main(argv):
               "       Perhaps directory \"" + output_dir  + "\" already exists.\n" +\
               "       Please choose a different directory, or \n" +\
               "       run with the option \"-r  overwrite\" to force overwrite it."
-        sys.exit(1)
+        sys.exit(2)
 
         
     if verbose:
@@ -382,6 +367,11 @@ def main(argv):
     
     command_line_params={}
     command_line_params['verbose']= opts.verbose
+
+    if not path.exists(parameter_fp):
+        eprintf("%-10s: No parameters file %s found!\n" %('WARNING', parameter_fp))
+        eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
+        create_metapaths_parameters(parameter_fp, cmd_folder)
 
     params=parse_metapaths_parameters(parameter_fp)
 
@@ -401,9 +391,9 @@ def main(argv):
           input_output_list = create_input_output_pairs(input_fp, output_dir, globalerrorlogger=globalerrorlogger)
        else:   
           """ must be an error """
-          eprintf("ERROR\tNo valid input sample file or directory containing samples exists!")
-          eprintf("ERROR\tAs provided as arguments in the -i option!\n")
-          exit_process("As provided as arguments in the -i option!\n")
+          eprintf("ERROR\tNo valid input sample file or directory containing samples exists .!")
+          eprintf("ERROR\tAs provided as arguments in the -in option.!\n")
+          exit_process("ERROR\tAs provided as arguments in the -in option.!\n")
    
     """ these are the subset of sample to process if specified
         in case of an empty subset process all the sample """
@@ -426,14 +416,23 @@ def main(argv):
 
 
     #check the pipeline configuration
+
+    print 'config'
+    if not path.exists(config_file):
+        eprintf("%-10s: No config file %s found!\n" %('WARNING', config_file))
+        eprintf("%-10s: Creating a config file %s!\n" %('INFO', config_file))
+        if not environment_variables_defined():
+           sys.exit(0)
+        create_metapaths_configuration(config_file, cmd_folder)
+
     config_settings = read_pipeline_configuration(config_file, globalerrorlogger)
+
 
     parameter =  Parameters()
     if not staticDiagnose(config_settings, params, logger = globalerrorlogger):
         eprintf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
         globalerrorlogger.printf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
-        halt_process(opts.delay)
-
+        return 
     
     samplesData = {}
     # PART1 before the blast
@@ -443,7 +442,7 @@ def main(argv):
 
     try:
          # load the sample information 
-         print "RUNNING MetaPathways version 2.5.1"
+         print "RUNNING MetaPathways version FogDog 3.0"
          if len(input_output_list): 
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]
@@ -452,8 +451,6 @@ def main(argv):
                 s = SampleData() 
                 s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
-                s.setParameter('ncbi_params_file', ncbi_sequin_params)
-                s.setParameter('ncbi_sequin_sbt', ncbi_sequin_sbt)
                 s.setParameter('FILE_TYPE', filetypes[input_file][0])
                 s.setParameter('SEQ_TYPE', filetypes[input_file][1])
                 s.clearJobs()
@@ -487,24 +484,6 @@ def main(argv):
               eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",sQuote(input_fp) )
               globalerrorlogger.printf("ERROR\tNo valid input files to process in folder %s!\n",sQuote(input_fp) )
    
-        
-         # blast the files
-     
-         blasting_system =    get_parameter(params,  'metapaths_steps', 'BLAST_REFDB', default='yes')
-         if blasting_system =='grid':
-            #  blasting the files files on the grids
-             input_files = sorted_input_output_list
-             blast_in_grid(
-                   sampleData[input_file],
-                   input_files, 
-                   path.abspath(opts.output_dir),   #important to use opts.
-                   params=params,
-                   metapaths_config=metapaths_config,
-                   config_file=config_file,
-                   run_type = run_type,
-                   runid = runid
-                )
-     
     except:
        exit_process(str(traceback.format_exc(10)), logger= globalerrorlogger )
 
@@ -514,12 +493,15 @@ def main(argv):
     eprintf("INFO : FINISHED PROCESSING THE SAMPLES \n")
     eprintf("             THE END                   \n")
     eprintf("            ***********                \n")
-    eprintf(" EXIT CODE %s\n", globalcodes.exit_code)
-    halt_process(opts.delay)
+    #halt_process(opts.delay)
+    #halt_process(3, verbose=opts.verbose)
 
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
+
     main(sys.argv[1:])    
+    sys.exit(get_recent_error())
+    halt_process(1)
     
 

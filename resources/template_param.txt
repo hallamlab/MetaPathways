@@ -1,0 +1,69 @@
+##V.1   do not remove this line
+# MetaPathways v1.0 
+# Kishori M. Konwar, Niels W. Hanson
+# Parameter File
+
+INPUT:format fasta
+# e.g. fasta gbk-annotated gbk-unannotated gff-annotated gff-unannotated
+
+# Quality Control  parameters 
+quality_control:min_length 180
+quality_control:delete_replicates yes
+
+# ORF prediction parameters 
+# Metatranscripts   pos, neg, both
+
+orf_prediction:strand  both
+orf_prediction:algorithm prodigal
+orf_prediction:min_length 60
+orf_prediction:translation_table 11
+orf_prediction:mode meta
+
+
+# ORF annotation parameters
+annotation:algorithm BLAST
+# e.g. blast or last, for fogdob BLAST only
+
+# e.g. annotation:dbs    cog,kegg,refseq,metacyc
+annotation:dbs_high card, tcdb, metacyc-2016-10-31
+#annotation:dbs_custom card, cazydb, tcdb, merops, VFDB, uniprot_sprot COG-14-2016-10-20, metacyc-2016-10-31, refseq-2016-10-06-rel-78
+#annotation:dbs card, cazydb, tcdb, merops, VFDB, uniprot_sprot COG-14-2016-10-20, metacyc-2016-10-31, refseq-2016-10-06-rel-78
+
+annotation:dbs_custom card, cazydb, tcdb, merops, VFDB, uniprot_sprot COG-14-2016-10-20, metacyc-2016-10-31
+annotation:dbs card, cazydb, tcdb, merops, VFDB, uniprot_sprot COG-14-2016-10-20, metacyc-2016-10-31
+
+# high/all/custom
+annotation:dbtype custom
+
+annotation:min_bsr 0.4
+annotation:max_evalue 0.000001
+annotation:min_score 20
+annotation:min_length 45
+annotation:max_hits 5
+
+# rRNA annotation parameters LSURef_115_tax_silva
+rRNA:refdbs SILVA_128_SSURef_tax_silva,SILVA_128_LSURef_tax_silva, GREENGENES_gg16S_13_5
+
+
+rRNA:max_evalue 0.000001
+rRNA:min_identity 20
+rRNA:min_bitscore 50
+
+# pathway tools parameters
+ptools_settings:taxonomic_pruning no
+ptools_input:compact_mode yes
+
+
+# pipeline execution flags
+# e.g. yes, skip, redo
+metapaths_steps:PREPROCESS_INPUT yes
+metapaths_steps:ORF_PREDICTION yes
+metapaths_steps:FILTER_AMINOS yes
+metapaths_steps:FUNC_SEARCH yes
+metapaths_steps:PARSE_FUNC_SEARCH yes
+metapaths_steps:SCAN_rRNA yes
+metapaths_steps:SCAN_tRNA yes
+metapaths_steps:ANNOTATE_ORFS yes
+metapaths_steps:CREATE_ANNOT_REPORTS yes
+metapaths_steps:BUILD_PGDB skip
+metapaths_steps:COMPUTE_RPKM yes

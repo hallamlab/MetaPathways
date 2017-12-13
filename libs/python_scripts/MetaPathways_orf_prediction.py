@@ -9,6 +9,7 @@ try:
 
    from optparse import OptionParser, OptionGroup
 
+   from libs.python_modules.utils.errorcodes import *
    from libs.python_modules.utils.sysutil import pathDelim
    from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf,  exit_process
    from libs.python_modules.utils.sysutil import getstatusoutput
@@ -24,6 +25,7 @@ except:
      sys.exit(3)
 
 PATHDELIM=pathDelim()
+errorcode=2
 
 
 
@@ -83,10 +85,6 @@ def createParser():
     prodigal_group.add_option('--prod_exec', dest='prod_exec', default=None,
                            help='prodigal executable')
 
-
-    prodigal_group.add_option('--strand', dest='strand', default='both', choices = ['both', 'pos', 'neg'],
-                           help='strands to use in case of transcriptomic sample')
-
     parser.add_option_group(prodigal_group)
 
 
@@ -134,13 +132,14 @@ def  _execute_prodigal(options):
 
 
 def MetaPathways_orf_prediction(argv, extra_command = None, errorlogger = None, runstatslogger =None): 
+    global errorcode
     if errorlogger != None:
        errorlogger.write("#STEP\tORF_PREDICTION\n")
     createParser()
     try:
        main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
     except:
-       insert_error(2)
+       insert_error(errrocode)
 
     return (0,'')
 
