@@ -12,7 +12,6 @@ use strict;
 
 use Getopt::Long;
 use perlcyc;
-use XML::Writer;
 use IO::File;
 
 use Data::Dumper;
@@ -94,9 +93,8 @@ if (!grep {/^$DB_NAME$/i} @dblist) {die("There is no $DB_NAME in the list of dat
 
 # 7. Create a writer:
 my $output = new IO::File(">$OUTFILE") or die("$OUTFILE: $!");
-my $writer = new XML::Writer(DATA_MODE => 1, DATA_INDENT => 4,OUTPUT => $output);
+#my $writer = new XML::Writer(DATA_MODE => 1, DATA_INDENT => 4,OUTPUT => $output);
 
-$writer->startTag('pgdb', name => (uc $DB_NAME));
 
 # Pull out reactions, and keep a hash of compounds to drag out later
 
@@ -138,6 +136,8 @@ for (@pclass_pathways) {
 
 # Perform parent traversal until we hit the |Pathways| frame and build a tree of pathway classes
 
+
+
 my %pathway_classes;
 my %pathway_class_parents;
 my %pathway_class_children;
@@ -145,21 +145,42 @@ my %pathway_class_children;
 
 @pclass_pathways = $cyc->all_pathways();
 
+
+#print Dumper(\@pclass_pathways);
+
+
+
 #my @base_pathways = $cyc->call_func('all-pathways :all T');
 my %tree;
 for my $p (@base_pathways) {
     &recurse_pathway_classes($p, \%tree);
-    my @totalrxns = $cyc->get_slot_values($p, "REACTION-LIST");
+
+    #my @totalrxns = $cyc->get_slot_values($p, "REACTION-LIST");
+
     if( !defined($tree{$p}) ) {
        %{$tree{$p}} = ();
     }
-    for my $reaction (@totalrxns) {
-        $tree{$p}{$reaction} = 2;
-    }
+    #for my $reaction (@totalrxns) {
+    #    $tree{$p}{$reaction} = 2;
+    #}
 }
 
+#print Dumper(\%tree);
+
+
 if( defined($FULL) ) {
-   &printTree('|Pathways|', '|Pathways|',  \%tree,  $cyc, 0);
+   # commented out for now
+   #&printTree('|Pathways|', '|Pathways|',  \%tree,  $cyc, 0);
+   
+   my %basepathways;
+   for my $basepathway (@base_pathways) {
+       $basepathways{$basepathway} = 1;
+   }
+   my @stack;
+   my %unique;
+   print "PWY_SHORT_NAME\tType\tLevel_1\tLevel_2\tLevel_3\tLevel_4\tLevel_5\tLevel_6\n";
+   &printPwyLineage('|Pathways|', '|Pathways|',  \%tree,  $cyc, 0, \%basepathways, \@stack, \%unique);
+   exit(0);
 }
 else {
     for my $name (@base_pathways){
@@ -171,37 +192,6 @@ else {
 # Then output the pathway classes
 exit(0);
 
-
-for my $frame_id (keys %pathway_classes) {
-    
-    my $common_name = $cyc->get_slot_value($frame_id, 'Common-Name');
-
-    if (not defined $common_name) {
-        $common_name = $frame_id;
-    }
-
-    # A pathway class is a leaf if it has any children that are actual pathways
-
-    my $leaf = 0;
-
-    if (defined $pathway_class_children{$frame_id} and grep { /^[^\|]+$/ } (keys %{$pathway_class_children{$frame_id}})) {
-        $leaf++;
-    }
-
-
-    if (defined $pathway_class_parents{$frame_id}) {
-        for (keys %{$pathway_class_parents{$frame_id}}) {
-            $writer->emptyTag('parent', 'frame-id' => $_);
-        }
-    }
-
-    if (defined $pathway_class_children{$frame_id}) {
-        for (keys %{$pathway_class_children{$frame_id}}) {
-            $writer->emptyTag('child', 'frame-id' => $_);
-        }
-    }
-}
-exit(0);
 
 # Pathways
 print STDERR 'Fetching pathways';
@@ -240,17 +230,18 @@ for my $pathway (@pathways) {
     # Pathway classes
 
     my @ocelot_parents = $cyc->get_slot_values($pathway, 'Ocelot-GFP::Parents');
-    $writer->startTag('pathway-classes');
+    #$writer->startTag('pathway-classes');
     for my $ocp (@ocelot_parents) {
         if ($ocp =~ /^\|.+\|$/) {
-            $writer->emptyTag('pathway-class', 'frame-id' => $ocp);
+    #        $writer->emptyTag('pathway-class', 'frame-id' => $ocp);
+             
         }
     }
 
     # Superpathways
     my @superpathways = $cyc->get_slot_values($pathway, 'Super-Pathways');
     for my $sp (@superpathways) {
-        $writer->emptyTag('superpathway', 'frame-id' => $sp);
+    #    $writer->emptyTag('superpathway', 'frame-id' => $sp);
     }
 
     # Subpathways
@@ -260,7 +251,7 @@ for my $pathway (@pathways) {
 
     for my $sp (@subpathways) {
         my $sp_common_name = $cyc->get_slot_value($sp, 'Common-Name');
-        #print "P  ".$pathway."\t". $pathway_name."\n";
+        print "P  ".$pathway."\t". $pathway_name."\n";
         #print $sp."\t".$sp_common_name."\n";
         #$writer->emptyTag('subpathway', 'frame-id' => $sp);
     }
@@ -294,6 +285,73 @@ sub recurse_pathway_classes {
     }
 
 }
+
+
+sub printPwyLineage{
+   my $node = shift;
+   my $pnode = shift;
+   my $tree_ = shift;
+   my $cyc = shift;
+   my $indent = shift;
+   my $basepathways = shift;
+   my $stack = shift;
+   my $unique = shift;
+
+   
+   my $common_name = $cyc->get_slot_value($node, 'Common-Name') || $node;
+
+   my $outStr = "\t" x $indent . $node."\t".$common_name. "\n";
+   if( !(ref $tree_->{$pnode}{$node} eq "HASH") && defined $tree_->{$pnode}{$node} &&   $tree_->{$pnode}{$node} == 2 ) {
+         my @rxngenes = $cyc->genes_of_reaction($node,"T");
+         $outStr .= " (" . scalar(@rxngenes) . ")";
+   }
+
+
+   $outStr =~ s/<[a-zA-Z]>//g;
+   $outStr =~ s/<\/[a-zA-Z]>//g;
+
+   $outStr =~ s/<em>//g;
+   $outStr =~ s/<\/em>//g;
+   $outStr =~ s/<small>//g;
+   $outStr =~ s/<\/small>//g;
+   $outStr =~ s/<sup>//ig;
+   $outStr =~ s/<\/sup>//ig;
+   $outStr =~ s/<sub>//ig;
+   $outStr =~ s/<\/sub>//ig;
+
+   if ($basepathways->{$node} && !exists($unique->{$node}) ) {
+      # for  my $ancestor (@{$stack}) {
+       #    print $ancestor; 
+       #}
+
+      # print join "\t", @{$stack} ;
+
+       my $pwy = $stack->[$#{$stack}];
+       print $pwy."\tPathways";
+       my $index = $#{$stack}-1;
+       for( my $i=0; $i <=  $index; $i++) {
+          print "\t".$stack->[$i] ;
+       }
+       for (my $i=$index; $i < 5; $i++) {
+         print "\tNone" ;  
+       }
+       
+       print "\n";
+       $unique->{$node}=defined
+    }
+
+   if( !defined($tree_->{$node} ) ) {
+      return;
+   }
+
+   for my $cnode ( keys %{$tree_->{$node}} ) {
+      push(@{$stack}, $cnode);
+      &printPwyLineage($cnode, $node, $tree_, $cyc, $indent+1, $basepathways, $stack, $unique);
+      pop(@{$stack});
+   }
+
+}
+
 
 sub printTree{
    my $node = shift;
