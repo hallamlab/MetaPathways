@@ -24,7 +24,7 @@ try:
     from libs.python_modules.pipeline.context import *
 except:
    print """ Could not load some user defined  module functions"""
-   print """ Make sure your typed \"source MetaPathwaysrc\""""
+   print """ Make sure your typed \"source MetaPathwaysrc\" """
    import traceback
    print """ """
    print traceback.print_exc(10)
@@ -299,6 +299,7 @@ class ContextCreator:
           context.outputs = { 'output_gff' : output_gff }
           context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
           translation_table = self.params.get('orf_prediction', 'translation_table')
+          algorithm = self.params.get('orf_prediction', 'algorithm')
           strand = self.params.get('orf_prediction', 'strand')
 
           mode = self.params.get('orf_prediction', 'mode')
@@ -306,7 +307,14 @@ class ContextCreator:
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.ORF_PREDICTION
 
           executable = self.configs.METAPATHWAYS_PATH + PATHDELIM +\
-                       self.configs.EXECUTABLES_DIR + PATHDELIM + self.configs.PRODIGAL_EXECUTABLE
+                       self.configs.EXECUTABLES_DIR + PATHDELIM 
+       
+          if algorithm=="prodigal":
+              executable = executable + self.configs.PRODIGAL_EXECUTABLE
+
+          if algorithm=="FGS+":
+              executable = executable + self.configs.FGSPlus_EXECUTABLE
+          
           
           cmd = [ 
                     pyScript,
@@ -318,8 +326,11 @@ class ContextCreator:
                     "--prod_input", context.inputs['input_file'],
                     "--prod_output", context.outputs['output_gff'], "--strand",  strand
                 ]
+          if algorithm=="FGS+":
+             num_threads = self.configs.NUM_CPUS
+             cmd += [ "--algorithm", "FGS+" ]
+             cmd += [ "--nthreads", num_threads ]
 
-          print cmd    
           context.commands = [ ' '.join(cmd)]
           context.message = self._Message("ORF PREDICTION")
           contexts.append(context)
@@ -921,9 +932,9 @@ class ContextCreator:
                            'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
                            }
 
-          #context.inputs1 = {
-          #                     'gi_to_taxon_map': basencbi + PATHDELIM + self.configs.ACCESSION_TO_TAXONID
-          #                  }
+          context.inputs1 = {
+                               'gi_to_taxon_map': basencbi + PATHDELIM + self.configs.ACCESSION_TO_TAXONID
+                            }
 
           context.outputs = {
                            'output_results_annotation_table_dir':s.output_results_annotation_table_dir,
@@ -950,9 +961,10 @@ class ContextCreator:
 
 
                  #--ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
+                 #--ncbi-taxonomy-map %s --ncbi-megan-map %s"\
           cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
                  --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-                 --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
+                 --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
                %(\
                   pyScript, \
                   context.inputs['input_annot_gff'],\
@@ -962,8 +974,8 @@ class ContextCreator:
                   context.inputs['CAZY_hierarchy'],\
                   context.outputs['output_results_annotation_table_dir'],\
                   context.inputs['ncbi_taxonomy_tree'],\
-                  context.inputs['ncbi_megan_map']
-                 # context.inputs1['gi_to_taxon_map']
+                  context.inputs['ncbi_megan_map'],\
+                  context.inputs1['gi_to_taxon_map']
                )
           cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
 

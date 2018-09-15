@@ -266,13 +266,14 @@ def halt_on_invalid_input(input_output_list, filetypes, sample_subset):
     for samplePath in input_output_list.keys():
        sampleName =  path.basename(input_output_list[samplePath]) 
 
+       if filetypes[samplePath][0]=='UNKNOWN':
+          eprintf("ERROR\tIncorrect input sample %s. Check for bad characters or format\n!", samplePath)
+          return False
+
        ''' in the selected list'''
        if not sampleName in sample_subset:
           continue
 
-       if filetypes[samplePath][0]=='UNKNOWN':
-          eprintf("ERROR\tIncorrect input sample %s. Check for bad characters or format\n!", samplePath)
-          return False
 
     return True
           

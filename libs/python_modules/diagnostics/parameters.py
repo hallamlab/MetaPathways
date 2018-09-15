@@ -97,7 +97,8 @@ class Parameters():
 
               'orf_prediction': {
                         'algorithm': {
-                                       'prodigal':True
+                                       'prodigal':True,
+                                       'FGS+':True
                                      }
                       },
 

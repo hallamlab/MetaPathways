@@ -14,7 +14,8 @@ quality_control:delete_replicates yes
 
 orf_prediction:strand  both
 
-orf_prediction:algorithm prodigal
+# prodigal, FGS+
+orf_prediction:algorithm FGS+
 orf_prediction:min_length 60
 orf_prediction:translation_table 11
 orf_prediction:mode meta
@@ -27,7 +28,7 @@ annotation:algorithm LAST
 #annotation:dbs COG-14-2016-10-20,eggnog-v4-2016-10-30,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-nr-78
 #annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-rel-78,eggnog-v4-2016-10-30
 #annotation:dbs COG-14-2016-10-20,metacyc-2016-10-31,kegg-uniprot-2016-10-20,
-annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-rel-78,eggnog-v4-2016-10-30,cazydb
+annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,refseq-2016-10-06-rel-78,eggnog-v4-2016-10-30,cazydb,seed-2014-01-30
 #annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31
 #annotation:dbs CytochromeDB
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc

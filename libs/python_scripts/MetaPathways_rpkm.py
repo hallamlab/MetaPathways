@@ -149,11 +149,13 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
           res0 = re.search(r'_[1-2].fastq',readFiles[0])
           res1 = re.search(r'_[1-2].b\d+.fastq',readFiles[0])
           if res0 or res1:
-             cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
+             cmd = "%s mem -t %d -p -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
           else:
-             cmd = "%s mem -t %d -p  -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
+             cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
+       print cmd
        result = getstatusoutput(cmd)
 
+        
        if result[0]==0:
           pass
           rename(bwaOutputTmp, bwaOutput)

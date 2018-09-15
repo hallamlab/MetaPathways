@@ -4,7 +4,7 @@
 
 try:
    import  sys, re, csv, traceback
-   from os import path, _exit, rename
+   from os import path, _exit, rename, remove
    import logging.handlers
 
    from optparse import OptionParser, OptionGroup
@@ -16,6 +16,7 @@ try:
    from libs.python_modules.utils.pathwaytoolsutils import *
    from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
+   from libs.python_modules.parsers.fastareader  import FastaReader
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -58,7 +59,9 @@ def createParser():
     # Input options
 
     parser.add_option('--algorithm', dest='algorithm', default='prodigal',
-                           help='ORF prediction algorithm')
+                           choices = ['prodigal', 'FGS+'], help='default : prodigal ORF prediction algorithm [prodigal, FGS+]')
+
+    parser.add_option('--nthreads', dest='nthreads', default="1", help='number of threads default : 1')
 
     prodigal_group =  OptionGroup(parser, 'Prodigal parameters')
 
@@ -83,7 +86,6 @@ def createParser():
     prodigal_group.add_option('--prod_exec', dest='prod_exec', default=None,
                            help='prodigal executable')
 
-
     prodigal_group.add_option('--strand', dest='strand', default='both', choices = ['both', 'pos', 'neg'],
                            help='strands to use in case of transcriptomic sample')
 
@@ -99,6 +101,61 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     if options.algorithm == 'prodigal':
         _execute_prodigal(options)
        
+    if options.algorithm == 'FGS+':
+        _execute_fgs(options)
+       
+def _execute_fgs(options):
+    modelFile =  "illumina_10"
+    sample_name=re.sub(r'.gff', '', options.prod_output) 
+
+    args= [ ]
+    if options.prod_exec :
+       args.append( options.prod_exec )
+    if options.prod_input:
+       args += [ "-s", options.prod_input ]
+
+    if options.prod_output:
+       args += [ "-o", sample_name + ".tmp" ]
+
+    args += [ "-w", "0" ]
+    args += [ "-t", modelFile ]
+    args += [ "-p", options.nthreads ]
+
+    #arguments =  [ fragGeneScan, "-s", inputFile, "-o", outputfile, "-w", "0", "-t", modelFile, "-p", thread]
+
+    result = getstatusoutput(' '.join(args))
+
+    create_gff_faa(sample_name+ ".tmp" + ".faa", sample_name + ".gff", sample_name+".faa")
+    remove(sample_name + ".tmp" + ".faa")
+    return (0, '')
+
+def create_gff_faa(tempfile, gfffile, faafile):
+    patt = re.compile(r'>(.*)_(\d+)_(\d+)_([+-])')
+    idpatt = re.compile(r'.*_(\d+_\d+)')
+
+    with open(gfffile, 'w') as gffout:
+      with open(faafile, 'w') as faaout:
+        fastareader = FastaReader(tempfile)
+        for fasta in fastareader:
+          res=patt.search(fasta.name)
+          if res:
+             #nameprint(res.group(1),res.group(2), res.group(3), res.group(4))
+             orfname=res.group(1)
+             start=res.group(2)
+             end=res.group(3)
+             strand=res.group(4)
+             res=idpatt.search(orfname)
+             id=''
+             if res:
+                id=res.group(1)
+             attr = "ID=" + id + ";partial=00"
+          fields=[orfname, 'FGS+', 'CDS', start, end, '0', strand, "0", attr]
+
+          fprintf(faaout,'>' + orfname + "\n" + fasta.sequence+"\n")
+          fprintf(gffout,'\t'.join(fields) +'\n')
+
+
+#engcyc_3300002128_0	Prodigal_v2.00	CDS	32	322	32.0	-	0	ID=1_1;partial=00;type=ATG;rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp;score=33.49;cscore=16.72;sscore=16.76;rscore=11.36;uscore=-0.16;tscore=4.12
 
 
 def  _execute_prodigal(options):
