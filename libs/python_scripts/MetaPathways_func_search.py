@@ -179,6 +179,7 @@ def  _execute_LAST(options, logger = None):
        args += [ options.last_query ]
 
     result =None
+    print ' '.join(args)
     try:
        result = getstatusoutput(' '.join(args) )
        rename(options.last_o + ".tmp", options.last_o) 

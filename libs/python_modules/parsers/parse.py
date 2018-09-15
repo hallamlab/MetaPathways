@@ -13,10 +13,9 @@ from string import strip
 from collections import defaultdict
 from copy import deepcopy
 import os, re
-import libs.python_modules.utils.globalcodes
 
 from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, eprintf, halt_process
-from libs.python_modules.utils  import globalcodes
+from libs.python_modules.utils.utils import *
 
 
 class MetaPathwaysError(Exception):
@@ -218,13 +217,11 @@ def parse_metapaths_parameters(filename):
         line = line.strip()
         if line and not line.startswith('#'):
             fields = line.split()
+            script_id, parameter_id = fields[0].split(':')
             try:
-                script_id, parameter_id = fields[0].split(':')
                 value = ','.join([ x.strip() for x in fields[1:] ])
                 value = re.sub(',,',',',value)
-                globalcodes.exit_code = 1
             except IndexError:
-                print 'exit code'
                 continue
                 
             #if value.upper() == 'FALSE' or value.upper() == 'NONE':

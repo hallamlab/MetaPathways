@@ -3,12 +3,13 @@
 """This script run the pathologic """
 
 try:
-   import optparse, sys, re, csv, traceback
+   import copy, optparse, sys, re, csv, traceback
    from os import path, _exit, rename
    import logging.handlers
    from glob import glob
    import multiprocessing
 
+   from libs.python_modules.utils.errorcodes import *
    from libs.python_modules.utils.sysutil import pathDelim
    from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf, exit_process, getReadFiles
    from libs.python_modules.utils.sysutil import getstatusoutput
@@ -78,16 +79,19 @@ def createParser():
                            help='the contigs file')
 
     parser.add_option('-o', '--output', dest='output', default=None,
-                           help='orfwise RPKM file')
+                           help='orfwise read count file')
+
+    parser.add_option('-m', '--microbecensusoutput', dest='microbecensusoutput', default=None,
+                           help='output from the MicrobeCensus run')
 
     parser.add_option('--stats', dest='stats', default=None,
                            help='output stats for ORFs  into file')
 
-    parser.add_option('-r', '--rpkmdir', dest='rpkmdir', default=None,
+    parser.add_option('-r', '--readsdir', dest='readsdir', default=None,
                            help='the directory that should have the read files')
 
     parser.add_option('-O', '--orfgff', dest='orfgff', default=None,
-                           help='the gff file of the orf')
+                           help='folder of the PGDB')
 
     parser.add_option('-s', '--sample_name', dest='sample_name', default=None,
                            help='name of the sample')
@@ -103,7 +107,7 @@ def createParser():
 
 
 def getSamFiles(readdir, sample_name):
-   '''This function finds the set of fastq files that has the reads'''
+   '''This function finds the set of SAM files that has the BWA recruitment information'''
 
    samFiles = []
    _samFile = glob(readdir + PATHDELIM + sample_name + '.sam')
@@ -143,16 +147,22 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
        bwaOutputTmp = bwaOutput + ".tmp"
        cmd ="command not prepared"
        if len(readFiles) == 2:
-          cmd = "%s mem -t %d -o %s %s %s %s"  %(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0], readFiles[1])
+          cmd = "%s mem -t %d %s %s %s > %s"  %(bwaExec, num_threads, indexFile,  readFiles[0], readFiles[1], bwaOutputTmp )
 
        if len(readFiles) == 1:
           res0 = re.search(r'_[1-2].fastq',readFiles[0])
           res1 = re.search(r'_[1-2].b\d+.fastq',readFiles[0])
           if res0 or res1:
+<<<<<<< HEAD
              cmd = "%s mem -t %d -p -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
           else:
              cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
        print cmd
+=======
+             cmd = "%s mem -t %d  %s %s > %s "%(bwaExec, num_threads, indexFile,  readFiles[0], bwaOutputTmp)
+          else:
+             cmd = "%s mem -t %d -p  %s %s > %s "%(bwaExec, num_threads,  indexFile,  readFiles[0], bwaOutputTmp)
+>>>>>>> 9d3adb2ed47aa16f9fe02e1a5da5260224a6e659
        result = getstatusoutput(cmd)
 
         
@@ -166,7 +176,51 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
           
     return status
 
+def runMicrobeCensus(microbeCensusExec, microbeCensusOutput,  sample_name, readFiles, rpkmFolder) :
 
+    num_threads =  int(multiprocessing.cpu_count()*0.8)
+    if num_threads < 1:
+       num_threads = 1
+    status = True
+
+    readfiles= [ ','.join(read) for read in readFiles ]
+
+    
+    if len(readFiles) == 2:
+       command_frags = [microbeCensusExec, ','.join(readfiles), microbeCensusOutput + ".tmp"]
+
+       result = getstatusoutput(' '.join(command_frags))
+       print ' '.join(command_frags)
+
+       if result[0]==0:
+          pass
+          rename(microbeCensusOutput+".tmp", microbeCensusOutput)
+       else:
+          eprintf("ERROR:\tError while running MicrobeCensus on read  files %s\n", readFiles)
+          status = False
+    else:
+          eprintf("ERROR:\tThe number of read files for MicrobeCensus must be at most 3. Found %d:%s\n", len(readFiles), ','.join(readFiles))
+          status = False
+          
+    return status
+
+
+def read_genome_equivalent(microbecensusoutput):
+    gen_equiv_patt = re.compile(r'genome_equivalents:\s+(.*)$')
+    
+    with open(microbecensusoutput, 'r') as inputfile: 
+        lines = inputfile.readlines()
+        for line in lines:
+          result =  gen_equiv_patt.search(line)
+          if result:
+             genome_equivalent = result.group(1)
+             try:
+               return float(genome_equivalent)
+             except:
+               return 1
+
+    return 1
+        
 
 def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     global parser
@@ -174,40 +228,50 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     options, args = parser.parse_args(argv)
     if not (options.contigs!=None and  path.exists(options.contigs)):
        parser.error('ERROR\tThe contigs file is missing')
+       insert_error(10)
        return 255
 
     if not (options.rpkmExec !=None and path.exists(options.rpkmExec) ) :
        parser.error('ERROR\tThe RPKM executable is missing')
+       insert_error(10)
        return 255 
 
     if not (options.bwaExec !=None and path.exists(options.bwaExec) ) :
        parser.error('ERROR\tThe BWA executable is missing')
+       insert_error(10)
        return 255 
 
-    if not (options.rpkmdir !=None and path.exists(options.rpkmdir) ):
+    if not (options.readsdir !=None and path.exists(options.readsdir) ):
        parser.error('ERROR\tThe RPKM directory is missing')
+       insert_error(10)
        return 255 
 
     if not (options.bwaFolder !=None and path.exists(options.bwaFolder) ):
        parser.error('ERROR\tThe BWA directory is missing')
+       insert_error(10)
        return 255 
 
     if  options.sample_name==None :
        parser.error('ERROR\tThe sample name is missing')
+       insert_error(10)
        return 255 
 
 
     # read the input sam and fastq  files
-    samFiles = getSamFiles(options.rpkmdir, options.sample_name)
-    readFiles = getReadFiles(options.rpkmdir, options.sample_name)
+    samFiles = getSamFiles(options.readsdir, options.sample_name)
+    readFiles = getReadFiles(options.readsdir, options.sample_name)
+    if not  samFiles:
+        samFiles = getSamFiles(options.bwaFolder, options.sample_name)
 
-    if  not samFiles and readFiles:
+    genome_equivalent = 1
+    if not samFiles and readFiles:
         if not readFiles:
            eprintf("ERROR\tCannot find the read files not found for sample %s!\n", options.sample_name)
            eprintf("ERROR\tMetaPathways need to have the sample names in the format %s.fastq or (%s_1.fastq and %s_2.fastq) !\n", options.sample_name, options.sample_name, options.sample_name)
            if errorlogger:
              errorlogger.eprintf("ERROR\tCannot find the read files not found for sample %s!\n", options.sample_name)
              errorlogger.eprintf("ERROR\tMetaPathways need to have the sample names in the format %s.fastq or (%s_1.fastq and %s_2.fastq) !\n", options.sample_name, options.sample_name, options.sample_name)
+             insert_error(10)
              return 255
     
         # index for BWA
@@ -215,79 +279,125 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
         indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile) 
         #indexSuccess=True
 
-        if False and  not indexSuccess:
+        if not indexSuccess:
            eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
            if errorlogger:
               errorlogger.eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
+              insert_error(10)
            return 255
            #exit_process("ERROR\tMissing read files!\n")
     
-    
-        #print 'running'
+        # run the microbe Census  if not computed already
+        if not path.exists(options.microbecensusoutput):
+            microbeCensusStatus = runMicrobeCensus("run_microbe_census.py", options.microbecensusoutput, options.sample_name, readFiles, options.readsdir) 
+            if microbeCensusStatus:
+               print 'Successfully ran MicrobeCensus!'
+            else:
+               eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
+               if errorlogger:
+                  errorlogger.eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
+                  insert_error(10)
+               return 255
 
+
+
+        genome_equivalent = read_genome_equivalent(options.microbecensusoutput)
+        #bwaRunSuccess = True
+
+       
         bwaRunSuccess = runUsingBWA(options.bwaExec, options.sample_name,  bwaIndexFile, readFiles, options.bwaFolder) 
         #bwaRunSuccess = True
 
-        print 'run success', bwaRunSuccess
-        if not bwaRunSuccess:
+        if bwaRunSuccess:
+           print 'Successfully ran bwa!'
+        else:
            eprintf("ERROR\tCannot successfully run BWA for file %s!\n", options.contigs)
            if errorlogger:
               errorlogger.eprintf("ERROR\tCannot successfully run BWA for file %s!\n", options.contigs)
+              insert_error(10)
            return 255
            #exit_process("ERROR\tFailed to run BWA!\n")
+           # END of running BWA
 
+           # make sure you get the latest set of sam file after the bwa
+        samFiles = getSamFiles(options.bwaFolder, options.sample_name)
 
-    # make sure you get the latest set of sam file after the bwa
-    samFiles = getSamFiles(options.rpkmdir, options.sample_name)
+    if not samFiles:
+       eprintf("ERROR\tSam files not created for RPMK run!\n")
+       insert_error(10)
+       return 255
 
-    print samFiles
-    print 'rpkm running'
+    print 'Running RPKM'
     if not path.exists(options.rpkmExec):
        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
        if errorlogger:
           errorlogger.printf("ERROR\tRPKM executable %s not found!\n",  options.rpkmExec)
+       insert_error(10)
        return 255
        #exit_process("ERROR\tRPKM executable %s not found!\n" %(options.rpkmExec))
 
-
     # command to build the RPKM
-    command = "%s --c %s"  %(options.rpkmExec, options.contigs)
-    command += " --multireads " 
+  
+    command =  [
+                  "%s --contigs-file %s"  %(options.rpkmExec, options.contigs),
+                  "--multireads" ,
+                  "--read-counts", 
+                  "--genome_equivalent %0.10f" %(genome_equivalent)
+               ]
+
     if options.output:
-       command += " --ORF-RPKM %s" %(options.output)
-       command += " --stats %s" %(options.stats)
+       command.append("--ORF-RPKM %s" %(options.output))
+       command.append("--stats %s" %(options.stats))
 
     if options.orfgff:
-       command += " --ORFS %s" %(options.orfgff)
-
-    samFiles = getSamFiles(options.bwaFolder, options.sample_name)
-    print samFiles
-
-    if not samFiles:
-       return 0
+       command.append("--ORFS %s" %(options.orfgff))
 
     for samfile in samFiles:
-        command += " -r " + samfile
+        command.append("-r " + samfile)
+
+    rpkmstatus =0
 
     try:
-       status  = runRPKMCommand(runcommand = command) 
+       command1 = copy.copy(command)
+
+       command1.append("--type 1")
+       rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command1))
+       rename(options.output, options.output + ".read_counts.txt")
+
+       command2 = copy.copy(command)
+       command2.append("--type 2")
+       rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command2)) 
+       rename(options.output, options.output + ".rpkg.txt")
     except:
-       status = 1
+       rpkmstatus = 1
        pass
 
-    if status!=0:
+    if rpkmstatus:
+        print 'Successfully ran RPKM!'
+
+    if rpkmstatus!=0:
        eprintf("ERROR\tRPKM calculation was unsuccessful\n")
+       insert_error(10)
        return 255
        #exit_process("ERROR\tFailed to run RPKM" )
 
-    return status
+    return rpkmstatus
 
 def runRPKMCommand(runcommand = None):
     if runcommand == None:
       return False
 
     result = getstatusoutput(runcommand)
+    if result[1]:
+       print result[1]
     return result[0]
+
+
+def runBIOMCommand(infile, outfile, biomExec="biom"):
+    commands =  [biomExec,  " convert", "-i", infile, "-o", outfile,  "--table-type=\"Table\"", "--to-hdf5"]
+    result = getstatusoutput(' '.join(commands))
+    return result[0]
+
 
 
 # this is the portion of the code that fixes the name
@@ -326,6 +436,7 @@ def process_organism_file(filel):
          orgfile = open(filel,'r')
      except IOError:
          print "ERROR : Cannot open organism file" + str(filel)
+         insert_error(10)
          return 
 
      lines = orgfile.readlines()
@@ -378,7 +489,10 @@ def MetaPathways_rpkm(argv, extra_command = None, errorlogger = None, runstatslo
     if errorlogger != None:
        errorlogger.write("#STEP\tRPKM_CALCULATION\n")
     createParser()
-    returncode = main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    try:
+       returncode = main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    except:
+       insert_error(10)
     return (returncode,'')
 
 if __name__ == '__main__':

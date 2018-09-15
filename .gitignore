@@ -6,6 +6,7 @@ regtests*
 redhat
 rpkm_c
 *.o
+<<<<<<< HEAD
 executables/source/bwa-0.7.7/*
 executables/source/rpkm/*
 executables/source/LAST-Plus/*
@@ -23,6 +24,13 @@ executables/*/lastdb+
 executables/*/bwa
 executables/*/prodigal
 executables/*/rpkm
+
+executables/linux/trnascan-1.4
+executables/linux/lastal+
+executables/linux/lastdb+
+executables/linux/bwa
+executables/linux/prodigal
+
 executables/source/LAST-Plus/last-merge-batches+
 executables/source/LAST-Plus/last-split+
 executables/source/bwa-0.7.7/libbwa.a
@@ -38,9 +46,7 @@ regtests/input/reads/beaver*
 Metapathways_DBs_2016-04.tar.xz
 MetaPathways_DBs
 regtests/output/B1*
-
 config/template_config.txt
 config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
-ptools.tar.gz

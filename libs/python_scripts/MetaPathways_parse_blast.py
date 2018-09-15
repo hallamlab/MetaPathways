@@ -12,15 +12,14 @@ __status__ = "Release"
 try:
      from os import makedirs, sys, remove, rename
      from sys import path
-     
-     import re, math, traceback, gzip
+     import re, math, traceback
      from copy import copy
      from optparse import OptionParser, OptionGroup
 
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf,  exit_process, ShortenORFId
-     from libs.python_modules.utils.sysutil import getstatusoutput, open_file_read
-     from libs.python_modules.utils.utils import doesFileExist
+     from libs.python_modules.utils.sysutil import getstatusoutput
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
+     from libs.python_modules.utils.errorcodes import *
 except:
      print """ Could not load some user defined  module functions"""
      print """ Make sure your typed 'source MetaPathwaysrc'"""
@@ -32,6 +31,7 @@ usage= sys.argv[0] +" -d dbname1 -b blastout_for_database1 -m map_for_database1 
 
 
 parser = None
+errorcode = 5
 
 def createParser():
     global parser
@@ -137,22 +137,16 @@ def check_arguments(opts, args):
 def create_query_dictionary(blastoutputfile, query_dictionary, algorithm, errorlogger= None ):
        seq_beg_pattern = re.compile("^#")
 
-       print blastoutputfile
        try:
-          blastoutfh = open_file_read(blastoutputfile)
-
+          blastoutfh = open( blastoutputfile,'r')
        except:
-          print traceback.print_exc(10)
           print "ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse "
           return
   
-       x = 'gi|927828437|ref|WP_053827326.1|'
-
        try:
           for line in blastoutfh:
              if not seq_beg_pattern.search(line):
                  words = line.rstrip().split('\t')
-
                  if len(words) != 12: 
                      continue
    
@@ -181,8 +175,6 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
             errologger.write("WARNING : empty query dictionary in parse B/LAST\n")
           return 
 
-       queryPATT = re.compile(r'gi|927828437|ref|WP_053827326.1|')
-
        seq_beg_pattern = re.compile(">")
        try:
             dbmapfile = open( databasemapfile,'r')
@@ -198,29 +190,14 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
               if not name in query_dictionary: 
                  continue
               words.pop(0)
-
               if len(words)==0:
                  annotation = 'hypothetical protein'
               else:
                  annotation = ' '.join(words)
-              #print name
+
               annot_map[name] = annotation
        dbmapfile.close()
 
-       print 'num hits and annots', len(query_dictionary.keys()), len(annot_map.keys())
-
-       x = 'gi|927828437|ref|WP_053827326.1|'
-
-       if x in annot_map:
-           print 'found in  annot', x
-       else:
-           print 'not found in  annot', x
-
-       if x in query_dictionary:
-           print 'found in  dictionary', x
-       else:
-           print 'not found in  dictionary', x
-      
        if len(annot_map)==0:
           if errorlogger:
              errorlogger.write( "PARSE_BLAST\tERROR\tFile "+databasemapfile+ " seems to be empty!\tCreate datbasemap file\n") 
@@ -253,7 +230,7 @@ class BlastOutputParser(object):
         self.lnk = math.log(opts.k)
         self.Lambda = opts.Lambda
         self.blastoutput = blastoutput
-        self.database_mapfile = database_mapfile
+        self.database_mapfile =database_mapfile
         self.refscore_file = refscore_file
         self.annot_map = {} 
         self.i=0
@@ -273,12 +250,13 @@ class BlastOutputParser(object):
         #print "trying to open blastoutput file " + blastoutput
         query_dictionary = {}
 
-        create_query_dictionary(self.blastoutput, query_dictionary, self.opts.algorithm, errorlogger =  errorlogger) 
         try:
-            if doesFileExist(self.blastoutput+'.gz'):
-               self.blastoutputfile = gzip.open(self.blastoutput +'.gz','rb')
-            if doesFileExist(self.blastoutput):
-               self.blastoutputfile = open(self.blastoutput,'r')
+          create_query_dictionary(self.blastoutput, query_dictionary, self.opts.algorithm, errorlogger =  errorlogger) 
+        except:
+          insert_error(5)
+
+        try:
+            self.blastoutputfile = open(self.blastoutput,'r')
         except:
             eprintf("\nERROR : cannot open B/LAST output file " + blastoutput + " to parse "+\
                       "      : make sure \"B/LAST\"ing was done for the particular database" )
@@ -287,7 +265,7 @@ class BlastOutputParser(object):
                self.error_and_warning_logger.write("ERROR : cannot open B/LAST output file %s %s to parse \n" +\
                                              "      : make sure \"B/LAST\"ing was done for "+\
                                              "the particular database" %(blastoutput) )
-            print traceback.print_exc(10)
+            insert_error(5)
             exit_process( "Cannot open B/LAST output file " + blastoutput )
 
 
@@ -540,13 +518,9 @@ def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, opts, erro
     output_blastoutput_parsed = opts.parsed_output
 
     # temporary file is used to deal with incomplete processing of the file
+    output_blastoutput_parsed_tmp =  output_blastoutput_parsed + ".tmp"
     try:
-        output_blastoutput_parsed_tmp =  output_blastoutput_parsed +   ".tmp"
-        if opts.compact_output:
-            output_blastoutput_parsed += ".gz" 
-            outputfile = gzip.open(output_blastoutput_parsed_tmp, 'wb') 
-        else:
-            outputfile = open(output_blastoutput_parsed_tmp, 'w') 
+        outputfile = open(output_blastoutput_parsed_tmp, 'w') 
     except:
         if errorlogger:
            errorlogger.write("PARSE_BLAST\tERROR\tCannot open temp file %s to sort\tfor reference db\n" %(soutput_blastoutput_parsed_tmp, dbname))
@@ -623,13 +597,16 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
 def MetaPathways_parse_blast(argv, errorlogger = None, runstatslogger = None):       
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
-    insert_error(5)
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    except:
+       insert_error(5)
+       return (0,'')
+
     return (0,'')
 
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
     main(sys.argv[1:])
-
 
