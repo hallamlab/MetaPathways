@@ -1,0 +1,20 @@
+[submodule "executables/source/trnascan"]
+	path = executables/source/trnascan
+	url = https://github.com/Koonkie/Koonkie_transcan-1.4
+[submodule "executables/source/prodigal"]
+	path = executables/source/prodigal
+	url = https://github.com/hyattpd/prodigal
+        ignore = dirty
+[submodule "executables/source/bwa"]
+	path = executables/source/bwa
+	url = https://github.com/lh3/bwa
+[submodule "executables/source/rpkm"]
+	path = executables/source/rpkm
+	url = https://github.com/kishori82/MetaPathways_rpkm
+[submodule "executables/source/MicrobeCensus"]
+	path = executables/source/MicrobeCensus
+	url = https://github.com/snayfach/MicrobeCensus
+        ignore = dirty
+[submodule "executables/source/FAST"]
+	path = executables/source/FAST
+	url = https://github.com/hallamlab/FAST
