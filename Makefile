@@ -33,12 +33,13 @@ TRNASCAN=$(BINARY_FOLDER)/trnascan-1.4
 FAST=$(BINARY_FOLDER)/fastal
 PRODIGAL=$(BINARY_FOLDER)/prodigal
 
+
 METAPATHWAYS_DB_DEFAULT=../fogdogdatabases
 METAPATHWAYS_DB_TAR=Metapathways_DBs_2016-04.tar.xz
 
 GIT_SUBMODULE_UPDATE=gitupdate
 
-## Alias for target 'all', for compliance with FogDog deliverables standard:
+# Alias for target 'all', for compliance with FogDog deliverables standard:
 #all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
 all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) METAPATHWAYS_DB_FETCH 
 #all: PTOOLS_FETCH
@@ -131,7 +132,6 @@ $(BINARY_FOLDER):
 mp-regression-tests:
 	./run_regtests.sh
 	@exit $$?
-
 
 ## Top-level test target
 test: test-mp-regression-tests
