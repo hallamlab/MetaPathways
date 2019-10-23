@@ -11,10 +11,6 @@
 [submodule "executables/source/rpkm"]
 	path = executables/source/rpkm
 	url = https://github.com/kishori82/MetaPathways_rpkm
-[submodule "executables/source/MicrobeCensus"]
-	path = executables/source/MicrobeCensus
-	url = https://github.com/snayfach/MicrobeCensus
-        ignore = dirty
 [submodule "executables/source/FAST"]
 	path = executables/source/FAST
 	url = https://github.com/hallamlab/FAST

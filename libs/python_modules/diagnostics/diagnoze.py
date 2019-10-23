@@ -19,6 +19,7 @@ try:
     from tools import *
     from libs.python_modules.utils.sysutil import pathDelim, getstatusoutput
     from libs.python_modules.utils.utils import *
+    from libs.python_modules.utils.errorcodes import *
     from libs.python_modules.utils.metapathways_utils import  fprintf
     from os import path, _exit, rename , remove
 except:
@@ -64,10 +65,11 @@ def staticDiagnose(configs, params, logger = None ):
 
 #    print  parameters.getRunSteps( activeOnly = True)
     if not checkForRequiredDatabases(tools, params, configs, 'functional',  logger = logger):
+        insert_error(17)
         return False
         
-
     if not checkForRequiredDatabases(tools, params, configs, 'taxonomic',  logger = logger):
+        insert_error(17)
         return False
     
     message = checkbinaries(configs)
@@ -79,7 +81,7 @@ def staticDiagnose(configs, params, logger = None ):
     return True
 
 def checkbinaries(configs):
-
+  
     message = None
     executables_dir = "---"
     if "METAPATHWAYS_PATH" in configs:
@@ -99,8 +101,8 @@ def checkbinaries(configs):
     binaries = {}
     binaries["LASTDB_EXECUTABLE"] = ["-h"]
     binaries["LAST_EXECUTABLE"] = ["-h"]
-    binaries["FORMATDB_EXECUTABLE"] = ["-help" ]
 
+    binaries["FORMATDB_EXECUTABLE"] = ["-help" ]
     binaries["BLASTP_EXECUTABLE"] = ['-h' ] 
     binaries["BLASTN_EXECUTABLE"] = ['-h' ]
 
@@ -111,6 +113,10 @@ def checkbinaries(configs):
     status = {}
     error = False
     for name in binaries.keys():
+
+       if name in ["FORMATDB_EXECUTABLE", "BLASTP_EXECUTABLE", "BLASTN_EXECUTABLE"] and configs[name]=='':
+          continue
+
        if not name in configs : 
           status[name] = "BINARY UNSPECIFIED"
           error = True
@@ -150,10 +156,19 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger =None):
           -- formats if necessary 
     """
     
-    if dbType=='functional':
-       dbstring = get_parameter(params, 'annotation', 'dbs', default=None)
-       _algorithm = get_parameter(params, 'annotation', 'algorithm', default=None)
 
+
+
+    if dbType=='functional':
+       dbtype = get_parameter(params, 'annotation', 'dbtype', default='high')
+       dbstring ="" 
+       if dbtype=='high':
+          dbstring =  get_parameter(params, 'annotation', 'dbs_high', default='')
+       elif dbtype=='custom':
+          dbstring =  get_parameter(params, 'annotation', 'dbs_custom', default='')
+       elif dbtype=='all':
+          dbstring =  get_parameter(params, 'annotation', 'dbs', default='')
+       _algorithm = get_parameter(params, 'annotation', 'algorithm', default=None)
 
     if dbType=='taxonomic':
        dbstring = get_parameter(params, 'rRNA', 'refdbs', default=None)
@@ -178,6 +193,7 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger =None):
     """ checks raw sequences for dbtype functional/taxonimic """
     if isRefDBNecessary(params, dbType):
         if not check_for_raw_sequences(dbs, refdbspath, dbType,  logger = logger):
+          insert_error(17)
           return False
 
         for db in dbs:
@@ -194,8 +210,8 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger =None):
            """ is db formatted ? """
            if not isDBformatted(db, refdbspath, dbType, seqType,  algorithm, logger = logger):
               """ if note formatted then format it """
-              eprintf("WARNING\tTrying to format %s  database %s for algorithm %s\n", seqType, sQuote(db), sQuote(algorithm) )
-              logger.printf("WARNING\tTrying to format %s database %s for algorithm %s\n", seqType,  sQuote(db), sQuote(algorithm) )
+              eprintf("WARNING\tTrying to format %s  database %s\n", seqType, sQuote(db))
+              logger.printf("WARNING\tTrying to format %s database %s \n", seqType,  sQuote(db) )
 
               if not formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger = logger):
                  return False
@@ -233,22 +249,24 @@ def createMapFile(seqFilePath, dbMapFile):
       return True
 
 
-
 def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger = None):
      """ Formats the sequences for the specified algorithm """
      EXECUTABLES_DIR = configs['METAPATHWAYS_PATH'] + PATHDELIM + configs['EXECUTABLES_DIR'] 
-     formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE']
-     if seqType=='nucl':
-        if algorithm=='LAST':
-            formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['LAST']['LASTDB_EXECUTABLE'] 
-        if algorithm=='BLAST':
-            formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE'] 
+     formatdb_executable = '' #EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE']
+     if seqType == 'prot' and algorithm=='LAST':
+        formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['LAST']['LASTDB_EXECUTABLE'] 
 
-     if seqType=='prot':
-        if algorithm=='LAST':
-            formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['LAST']['LASTDB_EXECUTABLE']
-        if algorithm=='BLAST':
-            formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE']
+     if seqType =='nucl' or algorithm=='BLAST':
+        if configs['FORMATDB_EXECUTABLE']:
+            formatdb_executable = EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE'] 
+        else:
+            formatdb_executable = which('makeblastdb') 
+            if formatdb_executable==None:
+              eprintf("ERROR\tCannot find makeblastdb to format \"%s\"\n", db)
+              logger.printf("ERROR\tCannot find makeblastdb to format \"%s\"\n",db )
+              return False
+
+
 
      formatted_db = refdbspath + PATHDELIM + dbType + PATHDELIM + 'formatted'  + PATHDELIM + db
      raw_sequence_file = refdbspath + PATHDELIM + dbType + PATHDELIM + db
@@ -257,8 +275,10 @@ def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger 
 
      """ format with 4GB file size """
      cmd = ""
-     if algorithm=='BLAST':
+     if seqType =='nucl' or algorithm=='BLAST':
          cmd='%s -dbtype %s -max_file_sz 2000000000  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
+ 
+         
          #cmd='%s -dbtype %s -max_file_sz 20267296  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
 
      formatted_db_size = 4000000000
@@ -266,17 +286,19 @@ def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger 
        formatted_db_size = int(configs['FORMATTED_DB_SIZE'])
 
 
-     if algorithm=='LAST':
+     if seqType=='prot' and algorithm=='LAST':
          # dirname = os.path.dirname(raw_sequence_file)    
          cmd=""
          if seqType=="prot":
             cmd='%s -s %s -p -c %s  %s' %(formatdb_executable, formatted_db_size, _temp_formatted_db, raw_sequence_file)
-         if seqType=="nucl":
-            cmd='%s -s %s -c %s  %s' %(formatdb_executable, formatted_db_size,  _temp_formatted_db, raw_sequence_file)
+
+#         if seqType=="nucl":
+#            cmd='%s -s %s -c %s  %s' %(formatdb_executable, formatted_db_size,  _temp_formatted_db, raw_sequence_file)
 
          eprintf("INFO\tCommand to format \"%s\"\n", cmd)
          logger.printf("INFO\tCommand to format \"%s\"\n", cmd)
 
+     print 'COMMAND: ', cmd
      result= getstatusoutput(cmd)
      temp_fileList = glob(_temp_formatted_db + '*') 
 
@@ -359,6 +381,7 @@ def isDBformatted(db, refdbspath, dbType, seqType,  algorithm, logger = None):
        fileList = []
        tempFilePattern = re.compile(r''+ dbname + '[.\d]*.' + suffix +'$');
 
+    
        for aFile in allfileList:
            searchResult =  tempFilePattern.search(aFile)
            if searchResult:
@@ -416,11 +439,10 @@ def check_for_raw_sequences(dbs, refdbspath, dbType,  logger = None):
     status = True
     for db in dbs:
        fullPath =  refdbspath + PATHDELIM + dbType + PATHDELIM +  db 
-       if not plain_or_gz_file_exists(fullPath):
+       if not does_plain_or_gz_FileExist(fullPath):
             eprintf("ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType)
             logger.printf("ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType)
             status = False
-
     return status 
     
 
@@ -469,7 +491,7 @@ def executablesExist( executables, configs, logger = None ):
 
       if name=='PATHOLOGIC_EXECUTABLE' and  path.exists(script):
            #print "FIX ME: diagnoze"
-           eprintf("ERROR\tif you do not wish to install the Pathway-Tools and  run the ePGDB building step \n" + 
+           eprintf("INFO     :if you do not wish to install the Pathway-Tools and  run the ePGDB building step \n" + 
                        "\tyou might want to create the place holder file by using the \"touch %s\" (%s) \n",script, name)
            continue
 

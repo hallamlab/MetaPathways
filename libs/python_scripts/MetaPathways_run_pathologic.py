@@ -13,6 +13,7 @@ try:
    from os import path, _exit, remove, rename
    import logging.handlers
    from glob import glob
+   from libs.python_modules.utils.errorcodes import insert_error
    from libs.python_modules.utils.sysutil import pathDelim
    from libs.python_modules.utils.metapathways_utils  import fprintf, printf, eprintf,  exit_process
    from libs.python_modules.utils.sysutil import getstatusoutput
@@ -143,7 +144,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     else:
       # required files to be able to build ePGDB
       files = [ 
-                options.inputfolder + PATHDELIM + '0.pf',
+                #options.inputfolder + PATHDELIM + '0.pf',
                 # options.inputfolder + PATHDELIM + '0.fasta',
                 options.inputfolder + PATHDELIM + 'genetic-elements.dat',  
                 options.inputfolder + PATHDELIM + 'organism-params.dat'
@@ -174,6 +175,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     status =0
     fix_pgdb_input_files(options.pgdbdir, pgdbs = [])
 
+
     if not path.exists(options.pgdbdir):
       status  = runPathologicCommand(runcommand = command) 
       fix_pgdb_input_files(options.pgdbdir, pgdbs = [])
@@ -184,7 +186,9 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
           errorlogger.write("ERROR\tFailed to run Pathologic on input %s : " %(options.inputfolder))
           errorlogger.write("INFO\tKill any other PathwayTools instance running on the machine and try again")
           errorlogger.write("     : " + command)
-       exit_process("ERROR\tFailed to run Pathologic on input %s : "  %(options.inputfolder) )
+          insert_error(9)
+       sys.exit(0)
+       #exit_process("ERROR\tFailed to run Pathologic on input %s : "  %(options.inputfolder) )
 
 
     if not path.exists(options.reactions_list):
@@ -208,6 +212,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
            if errorlogger:
                errorlogger.write("ERROR\tFailed to run extract pathways for %s : " %(options.sample_name))
                errorlogger.write("INFO\tKill any other PathwayTools instance running on the machine and try again\n")
+           insert_error(9)
            StopPathwayTools()
 
     if not path.exists(options.table_out):
@@ -297,6 +302,7 @@ def  ExtractPathway_WTD(options):
             StopPathwayTools()
 
         except:
+            insert_error(9)
             print """
             Problem connecting to Pathway Tools. Check the /tmp/ptools-socket file.
             """
@@ -304,6 +310,7 @@ def  ExtractPathway_WTD(options):
         print """
         Problem calculating WTD via Pathway Tools. Check the /tmp/ptools-socket file.
         """
+        insert_error(9)
 
     # get LCA per pathway
     pwy_lca = {}
@@ -392,6 +399,7 @@ def  ExtractPathway_WTD(options):
         out = open(table_out_tmp, "w")
     except:
         print "Had problems opening file: " + options.table_out
+        insert_error(9)
 
     # write appropreate header
     if options.wtd:
@@ -424,12 +432,14 @@ def  ExtractPathway_WTD(options):
         rename(table_out_tmp, options.table_out)
     except:
         print "Had problems closing file: " + options.table_out
+        insert_error(9)
 
 
 
 def runPathologicCommand(runcommand = None):
     if runcommand == None:
       return False
+    print runcommand
     result = getstatusoutput(runcommand)
     return result[0]
 
@@ -512,6 +522,7 @@ def write_new_file(lines, output_file):
        pass
     except IOError:
          print "ERROR :Cannot open output file "  + output_file
+         insert_error(9)
    
     for line in lines:
        fprintf(outputfile, "%s\n", line)
@@ -557,7 +568,11 @@ def MetaPathways_run_pathologic(argv, extra_command = None, errorlogger = None, 
     if errorlogger != None:
        errorlogger.write("#STEP\tBUILD_PGDB\n")
     createParser()
-    main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    try:
+       main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
+    except:
+       insert_error(error_code)
+       return (1,'Error running pathologic')
     return (0,'')
 
 if __name__ == '__main__':

@@ -23,11 +23,11 @@ try:
     from libs.python_modules.utils.utils import *
     from libs.python_modules.pipeline.context import *
 except:
-   print """ Could not load some user defined  module functions"""
-   print """ Make sure your typed \"source MetaPathwaysrc\" """
+   print(""" Could not load some user defined  module functions""")
+   print(""" Make sure your typed \"source MetaPathwaysrc\" """)
    import traceback
-   print """ """
-   print traceback.print_exc(10)
+   print(""" """)
+   print(traceback.print_exc(10))
    sys.exit(3)
 
    
@@ -96,6 +96,11 @@ class Params:
               return default
 
           return self.params[key1][key2]
+
+      def print_key_values(self):
+          print self.params
+       
+
 
 @Singleton
 class Configs:
@@ -323,7 +328,7 @@ class ContextCreator:
                     "--prod_f", "gff",
                     "--prod_g", translation_table,
                     "--prod_input", context.inputs['input_file'],
-                    "--prod_output", context.outputs['output_gff'], "--strand",  strand
+                    "--prod_output", context.outputs['output_gff'], #"--strand",  strand
                 ]
           if algorithm=="FGS+":
              num_threads = self.configs.NUM_CPUS
@@ -440,6 +445,18 @@ class ContextCreator:
           contexts.append(context)
           return contexts
              
+      def get_dbstring(self) :
+          dbtype = self.params.get('annotation', 'dbtype', default='high')
+          dbstring ="" 
+          if dbtype=='high':
+             dbstring =  self.params.get('annotation', 'dbs_high', default='')
+          elif dbtype=='custom':
+             dbstring =  self.params.get('annotation', 'dbs_custom', default='')
+          elif dbtype=='all':
+             dbstring =  self.params.get('annotation', 'dbs', default='')
+
+          return dbstring
+ 
       def create_blastp_against_refdb_cmd(self, s):
           """FUNC_SEARCH"""
           contexts = []
@@ -452,8 +469,7 @@ class ContextCreator:
       
           num_threads = self.configs.NUM_CPUS
 
-          dbstring =  self.params.get('annotation', 'dbs', default=None)
-
+          dbstring = self.get_dbstring()
           dbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
       
           
@@ -475,8 +491,11 @@ class ContextCreator:
               cmd = None
               if s.algorithm == 'BLAST':
                  pyScript      = self.configs.METAPATHWAYS_PATH + PATHDELIM +  self.configs.FUNC_SEARCH
-                 searchExec =   self.configs.METAPATHWAYS_PATH + PATHDELIM + self.configs.EXECUTABLES_DIR +\
-                                 PATHDELIM + self.configs.BLASTP_EXECUTABLE
+
+                 searchExec =   self.configs.BLASTP_EXECUTABLE
+                 if not path.exists(self.configs.BLASTP_EXECUTABLE):
+                     searchExec =   self.configs.METAPATHWAYS_PATH + PATHDELIM + self.configs.EXECUTABLES_DIR +\
+                                    PATHDELIM + self.configs.BLASTP_EXECUTABLE
 
                  cmd= ("%s "
                        "--algorithm %s "
@@ -496,7 +515,7 @@ class ContextCreator:
                         refDbFullName,
                         input_filtered_faa, 
                         str(max_evalue), blastoutput) 
-             
+
                  context.message = self._Message("BLASTING AMINO SEQS AGAINST " + db)
    
               if s.algorithm == 'LAST':
@@ -521,9 +540,6 @@ class ContextCreator:
 
                   context.message = self._Message("LASTING AMINO SEQS AGAINST " + db)
               
-              compress = self.params.get('compress','gzip')
-
-
               context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
               context.commands = [ cmd ]
 
@@ -550,7 +566,9 @@ class ContextCreator:
           min_score  = self.params.get('annotation', 'min_score', default=0.0)
           min_length = self.params.get('annotation', 'min_length', default=100)
           max_evalue = self.params.get('annotation', 'max_evalue', default=1000)
-          dbstring =   self.params.get('annotation', 'dbs', default=None)
+
+
+          dbstring = self.get_dbstring()
           dbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
       
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.PARSE_FUNC_SEARCH
@@ -585,11 +603,6 @@ class ContextCreator:
       
              if s.algorithm == 'BLAST':
                   cmd = cmd + ' --algorithm BLAST'
-
-             compress = self.params.get('compress','gzip')
-
-             if compress=="yes":
-                 cmd += " --compact_output"
              context.commands = [ cmd ]
              context.status = self.params.get('metapaths_steps','PARSE_FUNC_SEARCH')
              context.message = self._Message("PARSING " + s.algorithm + " OUTPUT FOR " + db)
@@ -634,12 +647,16 @@ class ContextCreator:
              context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
              cmd1=""
-             if algorithm=="BLAST":
-                executable =  self.configs.METAPATHWAYS_PATH +  PATHDELIM + self.configs.EXECUTABLES_DIR + PATHDELIM +  self.configs.BLASTN_EXECUTABLE
+             if True or algorithm=="BLAST":
+                executable = which('blastn') 
+                if executable==None:
+                    eprintf("ERROR\tCannot find blastn\n")
+                        #logger.printf("ERROR\tCannot find blastn to format\n")
+
                 cmd1="%s -outfmt 6 -num_threads 8  -query %s -out %s -db %s -max_target_seqs 5"\
                       %(executable, context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
-             if algorithm=="LAST":
+             if False and algorithm=="LAST":
                 executable =  self.configs.METAPATHWAYS_PATH +  PATHDELIM + self.configs.EXECUTABLES_DIR + PATHDELIM +  self.configs.LAST_EXECUTABLE
                 cmd1="%s -f 2 -o %s %s %s"\
                       %(executable, context.outputs['rRNA_blastout'], context.inputs1['dbpath'], context.inputs['input_fasta'])
@@ -706,13 +723,11 @@ class ContextCreator:
           output_annotated_gff  = s.genbank_dir +PATHDELIM + s.sample_name+".annot.gff"
           output_comparative_annotation  =  s.output_results_annotation_table_dir\
                                               + PATHDELIM + s.sample_name
-          dbstring =   self.params.get('annotation', 'dbs', default=None)
+          dbstring = self.get_dbstring()
           refdbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
 
           rRNAdbstring =   self.params.get('rRNA', 'refdbs', default=None)
           rRNAdbs= [x.strip() for x in rRNAdbstring.split(",")  if len(x)!=0 ]
-
-
 
           context = Context()
           context.name = 'ANNOTATE_ORFS'
@@ -863,13 +878,10 @@ class ContextCreator:
             'output_annot_gbk':s.genbank_dir + PATHDELIM + s.sample_name +  '.gbk'
           }
 
-          compact_mode = self.params.get('ptools_input', 'compact_mode')
-          context1.outputs = {} 
-          if compact_mode=='yes':
-             context.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf'
-             context.outputs['output_fasta_pf_dir_reduced.txt'] = s.output_fasta_pf_dir + PATHDELIM +  'reduced.txt'
-          else:
-             context1.outputs['output_fasta_pf_dir_pf'] = s.output_fasta_pf_dir + PATHDELIM +  '0.pf'
+          context1.outputs = {
+            'output_fasta_pf_dir_pf':s.output_fasta_pf_dir + PATHDELIM +  '0.pf',
+          }
+
 
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.GENBANK_FILE
@@ -891,9 +903,6 @@ class ContextCreator:
               cmd += ' -p ' + context.inputs['input_amino_acid_fasta']
               cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
 
-              if compact_mode=='yes':
-                 cmd += " --compact-output"
-
           context.message = self._Message("PATHOLOGIC INPUT" )
 
           #context.status = self.params.get('metapaths_steps','PATHOLOGIC_INPUT')
@@ -901,7 +910,6 @@ class ContextCreator:
 
           context.commands = [ cmd ]
           contexts.append(context)
-
           return contexts
 
 
@@ -915,10 +923,6 @@ class ContextCreator:
           '''output'''
           output_annot_table = s.output_results_annotation_table_dir +\
                                PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
-
-          orf_annot_table = s.output_results_annotation_table_dir +\
-                            PATHDELIM + s.sample_name + '.ORF_annotation_table.txt' 
-
 
           context = Context()
           context.name = 'CREATE_ANNOT_REPORTS'
@@ -941,12 +945,10 @@ class ContextCreator:
           context.outputs = {
                            'output_results_annotation_table_dir':s.output_results_annotation_table_dir,
                            'output_annot_table':output_annot_table,
-                           'orf_annot_table': orf_annot_table
                          }
 
 
-
-          dbstring =  self.params.get('annotation', 'dbs', default=None)
+          dbstring = self.get_dbstring()
           refdbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
 
           #db_argument_string = ''
@@ -984,10 +986,10 @@ class ContextCreator:
           #add the command now, remove to disable in a hackish way
           context.commands = [ cmd ]
 
-          context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS') 
+          #context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS') 
 
-          #context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
-          context.message = self._Message("CREATING REPORT AND ANNOTATION FILES : " + s.sample_name+".functional_and_taxonomic_table.txt" +", "+ s.sample_name + ".ORF_annotation_table.txt")
+          context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+          context.message = self._Message("CREATING REPORT FILE FOR ORF ANNOTATION")
 
           contexts.append(context)
           return contexts
@@ -1168,6 +1170,7 @@ class ContextCreator:
 
           '''output'''
           rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orfwise"
+          microbecensus_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".microbe_census.txt"
           stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
 
           samFiles = getSamFiles(rpkm_input, s.sample_name) 
@@ -1199,16 +1202,17 @@ class ContextCreator:
                              'rpkm_output': rpkm_output
                             }
           context.outputs = {
+                             'microbecensusoutput': microbecensus_output,
                              'stats_file': stats_file
                             }
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.RPKM_CALCULATION
 
-          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
+          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
                 % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
                    context.inputs['rpkm_input'], context.inputs['output_gff'],\
                  context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
-                 context.inputs['bwaFolder'], context.inputs['bwaExec'])
+                 context.inputs['bwaFolder'], context.inputs['bwaExec'], context.outputs['microbecensusoutput'])
                 
           context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
 
@@ -1366,16 +1370,43 @@ class ContextCreator:
                "SCAN_tRNA",
                "MLTREEMAP_CALCULATION",
                "RPKM_CALCULATION",
-              # "CREATE_BIOM",
+               "CREATE_BIOM",
                "NUM_CPUS",
-              # "ACCESSION_TO_TAXONID"
+               "ACCESSION_TO_TAXONID"
              ]
            error = False
            for item in items:
                #print item,  getattr(self.configs, item, False) 
                if not hasattr(self.configs, item) or not getattr(self.configs, item, False) :
-                  print "ERROR: Missing configuration parameter %s in config file" %(item)
-                  error =True
+
+                  if item in ["FORMATDB_EXECUTABLE"]:
+                     executable = which('makeblastdb') 
+                     if executable==None:
+                        eprintf("ERROR\tCannot find makeblastdb to format\n")
+                        #logger.printf("ERROR\tCannot find makeblastdb to format\n")
+                        return False
+                     else:
+                        setattr(self.configs, item, executable)
+
+                  elif item in ["BLASTP_EXECUTABLE"]:
+                     executable = which('blastp') 
+                     if executable==None:
+                        eprintf("ERROR\tCannot find blastp\n")
+                        #logger.printf("ERROR\tCannot find blastp to format\n")
+                        return False
+                     else:
+                        setattr(self.configs, item, executable)
+                  elif item in [ "BLASTN_EXECUTABLE"]:
+                     executable = which('blastn') 
+                     if executable==None:
+                        eprintf("ERROR\tCannot find blastn\n")
+                        #logger.printf("ERROR\tCannot find blastn to format\n")
+                        return False
+                     else:
+                        setattr(self.configs, item, executable)
+                  else:
+                     print "ERROR: Missing configuration parameter %s in config file" %(item)
+                     error =True
 
 
            return error
@@ -1429,8 +1460,8 @@ class ContextCreator:
                               "GENBANK_FILE",
                               'PATHOLOGIC_INPUT',
                               'BUILD_PGDB',
-                              'COMPUTE_RPKM'
-                              ]
+                              'COMPUTE_RPKM',
+                              'CREATE_BIOM' ]
                              ]
            
            self.stageList['AMINO-GENBANK-UNANNOT'] = [

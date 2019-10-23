@@ -24,6 +24,7 @@ except:
      sys.exit(3)
 
 PATHDELIM=pathDelim()
+errorcode = 7
 
 
 
@@ -84,6 +85,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
 
 
 def  _execute_tRNA_Scan(options):
+    global errorcode
     args= [ ]
 
     if options.trna_executable :
@@ -105,10 +107,13 @@ def  _execute_tRNA_Scan(options):
        args += [ "-F",  options.trna_F]
     result = getstatusoutput(' '.join(args) )
 
+    if result[0]!=0:
+       insert_error(errorcode)
     return result
     
 
 def MetaPathways_tRNA_scan(argv, extra_command = None, errorlogger = None, runstatslogger =None): 
+    global errorcode
     if errorlogger != None:
        errorlogger.write("#STEP\ttRNA_SCAN\n")
     createParser()
@@ -116,8 +121,8 @@ def MetaPathways_tRNA_scan(argv, extra_command = None, errorlogger = None, runst
     try:
        result = main(argv, errorlogger = errorlogger, runcommand= extra_command, runstatslogger = runstatslogger)
     except:
-       insert_error(7)
-       return (0,'')
+       insert_error(errorcode)
+       return (res[0], res[1])
     
     return (result[0],'')
 

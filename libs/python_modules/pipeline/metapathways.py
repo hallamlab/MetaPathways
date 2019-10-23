@@ -236,6 +236,11 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
       if key in ['NUM_CPUS', 'FORMATTED_DB_SIZE' ]:
         continue
 
+      if key in ['FORMATDB_EXECUTABLE', 'BLASTP_EXECUTABLE', 'BLASTN_EXECUTABLE' ] and value=='':
+        continue 
+
+
+
       # make sure  MetaPathways directory is present
       if key in ['METAPATHWAYS_PATH' ]:
          if not path.isdir( config_settings[key]) :
@@ -244,7 +249,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
 
             if globalerrorlogger!=None:
                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n"  %(key, file))  
-               globalerrorlogger.write("       Currently it is set to \"%s\"\n" %(config_settings[key] )  )
+               globalerrorlogger.write("       Currently it is set to \"%s\". Please correct it and try again.\n" %(config_settings[key] )  )
             missingItems.append(key) 
          continue
 
@@ -256,7 +261,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
             eprintf("ERROR: 2.Currently it is set to \"%s\"\n", config_settings[key] )  
             if globalerrorlogger!=None:
                 globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key,file))
-                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key]) )  
+                globalerrorlogger.write("Currently it is set to \"%s\". Please correct it and try again.\n" %( config_settings[key]) )  
             missingItems.append(key) 
          continue
 
@@ -267,7 +272,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
             eprintf("ERROR: 3.Currently it is set to \"%s\"\n", config_settings[key] )  
             if globalerrorlogger!=None:
                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))  
-               globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] )) 
+               globalerrorlogger.write("Currently it is set to \"%s\". Please correct the path.\n" %( config_settings[key] )) 
             missingItems.append(key) 
          continue
 
@@ -277,7 +282,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
             eprintf("ERROR: 7.Currently it is set to \"%s\"\n", config_settings['REFDBS'] + PATHDELIM + 'ncbi_tree' + PATHDELIM +config_settings[key] )  
             if globalerrorlogger!=None:
                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))  
-               globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key] )) 
+               globalerrorlogger.write("Currently it is set to \"%s\". Please correct the path to compute LCA with accession id translation.\n" %( config_settings[key] )) 
             missingItems.append(key) 
          continue
 
@@ -501,6 +506,7 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
       s =  samplesData[input_file]
       jobcreator.addJobs(s, block_mode = block_mode)
 
+    _params = Singleton(Params)(params)
 
     if block_mode:
        eprintf("==============  RUNNING STEPS IN BLOCK 0 ================\n")
@@ -510,6 +516,7 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
          sample_name_banner = "PROCESSING INPUT " + input_file
          eprintf('\n'+ '#'*len(sample_name_banner) + "\n")
          eprintf( '\n' + sample_name_banner +  ' [STEPS BLOCK 0] ' + '\n')
+         s.writeParamsToRunLogs(_params)
          try:
             pass
             execute_tasks(s, verbose = command_line_params['verbose'], block = 0)    

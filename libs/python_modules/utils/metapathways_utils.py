@@ -1049,6 +1049,10 @@ def create_metapaths_parameters(filename, folder):
     #result['filename'] = filename
     return True
 
+def touch(fname, times=None):
+   with open(fname, 'a'):
+      os.utime(fname, times) 
+
 def create_metapaths_configuration(filename, folder):
     """ creates a cofiguration file from the default """
     variablePATT = re.compile(r'<([a-zA-Z0-9_]*)>')
@@ -1059,6 +1063,7 @@ def create_metapaths_configuration(filename, folder):
         eprintf("ERROR: cannot open the default config file " + sQuote(default_filename) ) 
         exit_process("ERROR: cannot open the default config file " + sQuote(default_filename), errorCode = 0 ) 
 
+    setVariables = {}
     lines = filep.readlines()
     with open(filename, 'w') as newfile:
        for line in lines:
@@ -1066,7 +1071,11 @@ def create_metapaths_configuration(filename, folder):
          result = variablePATT.search(line)
          if result:
             VARIABLE=result.group(1)
-            if VARIABLE in os.environ:
+            CONFIG_VARIABLE =[ x for x in line.split(' ') if x.strip() ][0]
+
+            if VARIABLE in setVariables:
+               line =line.replace( '<'+ VARIABLE + '>', setVariables[VARIABLE])
+            elif VARIABLE in os.environ:
                line =line.replace( '<'+ VARIABLE + '>', os.environ[VARIABLE])
             else:
                default =""
@@ -1074,10 +1083,35 @@ def create_metapaths_configuration(filename, folder):
                   default = folder + PATHDELIM
 
                if VARIABLE=='METAPATHWAYS_DB':
-                  default = os.environ['HOME'] + PATHDELIM + 'MetaPathways/databases/'
+                  if 'METAPATHWAYS_PATH' in os.environ:
+                     default = os.environ['METAPATHWAYS_PATH'] + PATHDELIM + 'databases/'
+                  else:
+                     eprintf("%-10s:\tSet required environment variable METAPATHWAYS_DB as 'export METAPATHWAYS_DB=<path>'\n" %('INFO'))
 
+               if VARIABLE=='PTOOLS_DIR':
+                  if 'METAPATHWAYS_PATH' in os.environ:
+                     default = os.environ['METAPATHWAYS_PATH'] + PATHDELIM + '/regtests'
+                     
+                     target = default + PATHDELIM + 'pathway-tools'
+                     print target
+                     if not os.path.exists(target):
+                         print 'create'
+                         os.mkdir(target)
+                     target = target + PATHDELIM + 'pathway-tools'
+                     if not os.path.exists(target):
+                         touch(target)
+
+                     print CONFIG_VARIABLE
+                  else:
+                     eprintf("%-10%:\tSet shell essential variable PTOOLS_DIR as 'export PTOOLS_DIR=<path>'\n" %('INFO') )
+
+
+
+               setVariables[VARIABLE]= default
                line = line.replace('<' + VARIABLE + '>', default)
-               eprintf("INFO: Setting default value for \"%s\" as \"%s\"" %( VARIABLE, default))
+               print line
+
+               eprintf("INFO: Setting default value for \"%s\" as \"%s\"\n" %( CONFIG_VARIABLE, line))
                eprintf("      To set other values :\n")
                eprintf("                       1.  remove file \"%s\"\n" %(filename))
                eprintf("                       2.  set the shell variable \"%s\"\n" %(VARIABLE))

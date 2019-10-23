@@ -95,6 +95,7 @@ if (!grep {/^$DB_NAME$/i} @dblist) {die("There is no $DB_NAME in the list of dat
 # 7. Create a writer:
 my $output = new IO::File(">$OUTFILE") or die("$OUTFILE: $!");
 my $writer = new XML::Writer(DATA_MODE => 1, DATA_INDENT => 4,OUTPUT => $output);
+
 $writer->startTag('pgdb', name => (uc $DB_NAME));
 
 # Pull out reactions, and keep a hash of compounds to drag out later

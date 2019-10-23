@@ -12,24 +12,27 @@ __status__ = "Release"
 try:
     from os import makedirs, sys, remove, rename
     from sys import path
-    import re, traceback, gzip
+    import re, traceback
     from optparse import OptionParser, OptionGroup
     from glob import glob
     from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, printf, eprintf
     from libs.python_modules.utils.metapathways_utils  import strip_taxonomy, ShortenrRNAId, ShortenORFId, ShortenContigId, ContigID
-    from libs.python_modules.utils.sysutil import getstatusoutput, open_file_read
+    from libs.python_modules.utils.sysutil import getstatusoutput
     from libs.python_modules.utils.utils  import doesFileExist
     from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
+    from libs.python_modules.utils.errorcodes  import *
 
 except:
-    print """ Could not load some user defined  module functions"""
-    print """ Make sure your typed 'source MetaPathwaysrc'"""
-    print """ """
+    print(""" Could not load some user defined  module functions""")
+    print(""" Make sure your typed 'source MetaPathwaysrc'""")
+    print(""" """)
     sys.exit(3)
 
 
 usage=  sys.argv[0] + """ -d dbname1 -b parsed_blastout_for_database1 -w weight_for_database1 [-d dbname2 -b parsed_blastout_for_database2 -w weight_for_database2 ] [ --rRNA_16S  16SrRNA-stats-table ] [ --tRNA tRNA-stats-table ] [ --compact_output ]"""
 parser = None
+
+errrocode=8
 
 def createParser():
      global parser
@@ -299,7 +302,8 @@ def create_dictionary(databasemapfile, annot_map):
               annot_map[name]= annotation
            
 
-def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid, sample_name, compact_output):
+def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid, compact_output):
+   global errorcode
    try:
       fields = [  'source', 'feature', 'start', 'end', 'score', 'strand', 'frame' ]
 
@@ -348,6 +352,7 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
       eprintf("ERROR : Failure to annotate in contig %s\n", contig)
       #print orf_dictionary[contig]
       print traceback.print_exc(10)
+      insert_error(errorcode)
       exit_process()
 
 
@@ -374,7 +379,7 @@ def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary, shortenorfid=Fals
      try:
         taxonomy_file = open(rRNA_16S_file, 'r')
      except IOError:
-        eprintf("Cannot read rRNA_16S hits file %s!\n", rRNA_16S_file)
+        eprintf("Cannot read file %s!\n", rRNA_16S_file)
         exit_process()
 
      tax_lines = taxonomy_file.readlines()
@@ -424,7 +429,7 @@ def process_tRNA_stats(tRNA_stats_file, tRNA_dictionary, shortenorfid=False):
      try:
         tRNA_file = open(tRNA_stats_file, 'r')
      except IOError:
-        eprintf("Cannot read tRNA hits  file %s!\n", tRNA_stats_file)
+        eprintf("Cannot read file %s!\n", tRNA_stats_file)
         exit_process()
      tRNA_lines = tRNA_file.readlines()
 
@@ -502,7 +507,6 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths) :
 def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_stats_files, tRNA_stats_files,  output_gff, output_comparative_annotation, contig_lengths, sample_name, compact_output = False):
     orf_dictionary={}
 #    process_gff_file(input_gff, orf_dictionary)
-   
     gffreader = GffFileParser(input_gff)
 
     output_gff_tmp = output_gff + ".tmp"
@@ -521,11 +525,11 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          output_comp_annot_file2_Str += '\t{0}(EC) \t{0}(product)\t{0}(value)'.format(dbname)
     fprintf(output_comp_annot_file2,'%s\n', output_comp_annot_file2_Str)
        
-    c = 0
-    b = 0
+
 #    gffreader = GffReader(input_gff)
    # for dbname in dbnames:
    #   print dbname, len(results_dictionary[dbname].keys())
+   #   print results_dictionary[dbname].keys()
     values= {}
     i = 0
     for contig in  gffreader:
@@ -537,12 +541,16 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          success =False
          output_comp_annot_file1_Str = ''
          output_comp_annot_file2_Str = ''
+<<<<<<< HEAD
          orf_id = orf['id']
        
          # check the annotation of the orf by dbname
         
+=======
+>>>>>>> 78c5f25776d378f7678bf3bdbce0464a4cb0941b
          for dbname in dbnames:
             weight = dbname_weight[dbname]
+            orf_id = orf['id']
 
             if orf_id in results_dictionary[dbname]:
                 if values[dbname] < results_dictionary[dbname][orf_id]['value']:
@@ -597,7 +605,6 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          count +=1  #move to the next orf
 
        #del orf_dictionary[contig]   
-
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
 
@@ -754,20 +761,14 @@ class BlastOutputTsvParser(object):
         self.fieldmap={}
         self.shortenorfid=shortenorfid
         self.seq_beg_pattern = re.compile("#")
-        self.gz_pattern = re.compile(r'[.]gz$')
 
         try:
-           if self.gz_pattern.search(self.blastoutput):
-               self.blastoutputfile = gzip.open(self.blastoutput,'rb')
-           else:
-               self.blastoutputfile = open(self.blastoutput,'r')
-
+           self.blastoutputfile = open( blastoutput,'r')
            self.lines=self.blastoutputfile.readlines()
            self.blastoutputfile.close()
            self.size = len(self.lines)
            if not self.seq_beg_pattern.search(self.lines[0]) :
               exit_process("First line must have field header names and begin with \"#\"")
-
            header = self.lines[0].replace('#','',1)
            fields = [ x.strip()  for x in header.rstrip().split('\t')]
            k = 0 
@@ -811,9 +812,6 @@ class BlastOutputTsvParser(object):
               return None
         else:
            raise StopIteration()
-
-
-
               
 def isWithinCutoffs(data, cutoffs):
     if data['q_length'] < cutoffs.min_length:
@@ -864,7 +862,6 @@ def compute_annotation_value(data):
 
 # compute the refscores
 def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation_results):
-
     blastparser =  BlastOutputTsvParser(dbname, blastoutput, shortenorfid=False)
 
     fields = ['q_length', 'bitscore', 'bsr', 'expect', 'aln_length', 'identity', 'ec' ]
@@ -900,9 +897,10 @@ def process_parsed_blastoutput(dbname, weight,  blastoutput, cutoffs, annotation
 
 def read_contig_lengths(contig_map_file, contig_lengths):
      try:
-        mapfile = open_file_read(contig_map_file)
+        mapfile = open(contig_map_file, 'r')
      except IOError:
-        print "Cannot read contig map  file " + contig_map_file + " !"
+        print "Cannot read file " + contig_map_file + " !"
+        insert_error(errorcode)
         return
 
      mapfile_lines = mapfile.readlines()
@@ -922,38 +920,20 @@ def getBlastFileNames(opts) :
     parsed_blastouts = [] 
     weight_dbs = []
 
-    dbnamePATTs = [
-      re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt'),
-      re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt.gz')
-    ]
-    blastOutNames = []
-    blastOutNames += glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt') 
-    blastOutNames += glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt.gz') 
-    dbs_select = {}
+    dbnamePATT = re.compile(r'' + opts.blastdir + '*' + opts.sample_name + '*[.](.*)[.]' + opts.algorithm.upper() + 'out.parsed.txt')
 
+    blastOutNames = glob(opts.blastdir + '*' + opts.algorithm.upper() + 'out.parsed.txt')  
     for blastoutname in blastOutNames :
-        results = []
-        results.append(dbnamePATTs[0].search(blastoutname))
-        results.append(dbnamePATTs[1].search(blastoutname))
-
-        for result in results:
-          if result:
+        result = dbnamePATT.search(blastoutname)
+        if result:
             dbname = result.group(1)
-            if dbname in dbs_select:
-               continue
-
-
             database_names.append(dbname)
             parsed_blastouts.append(blastoutname)
-            dbs_select[dbname] = True
 
             if re.search(r'metacyc', blastoutname, re.I):
                weight_dbs.append(2)
             else:
                weight_dbs.append(1)
-
-
-
 
     return database_names, parsed_blastouts, weight_dbs
 
@@ -979,6 +959,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
            database_names, input_blastouts, weight_dbs = getBlastFileNames(opts) 
         except:
            print traceback.print_exc(10)
+           insert_error(errorcode)
            pass
     else:
         database_names = opts.database_name
@@ -989,6 +970,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
     priority = 6000
     count_annotations = {}
     
+    print ''
     for dbname, blastoutput, weight in zip(database_names, input_blastouts, weight_dbs): 
         results_dictionary[dbname]={}
         dbname_weight[dbname] = weight
@@ -999,6 +981,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
         priority += 1
 
     for dbname in results_dictionary: 
+      print dbname, len(results_dictionary[dbname].keys())
       for seqname in results_dictionary[dbname]: 
          count_annotations[seqname] = True      
     count = len(count_annotations)
@@ -1016,7 +999,7 @@ def MetaPathways_annotate_fast(argv, errorlogger = None, runstatslogger = None):
     try:
        main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
     except:
-       insert_error(8)
+       insert_error(errorcode)
        return (0,'')
 
 

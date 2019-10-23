@@ -17,17 +17,19 @@ try:
     import logging.handlers
     import re
     from glob import glob
+    from libs.python_modules.utils.errorcodes import *
     from libs.python_modules.utils.utils import *
     from libs.python_modules.utils.metapathways_utils import ShortenORFId,ShortentRNAId, ShortenrRNAId, ContigID
     from libs.python_modules.utils.sysutil import pathDelim, genbankDate, getstatusoutput
     from libs.python_modules.parsers.parse  import parse_parameter_file
 except:
-    print """ Could not load some user defined  module functions"""
-    print """ Make sure your typed 'source MetaPathwaysrc'"""
-    print """ """
+    print(""" Could not load some user defined  module functions""")
+    print(""" Make sure your typed 'source MetaPathwaysrc'""")
+    print(""" """)
     sys.exit(3)
 
 PATHDELIM = pathDelim()
+errorcode = 12
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
@@ -38,8 +40,8 @@ def printf(fmt, *args):
 def files_exist( files ):
      for file in files:
         if not path.exists(file):
-           print 'Could not read File ' +  file
-           print 'Please make sure these sequences are in the \"blastDB\" folder'
+           print('Could not read File ' +  file)
+           print('Please make sure these sequences are in the \"blastDB\" folder')
            sys.exit(3)
            return False
      return True
@@ -59,13 +61,10 @@ def insert_attribute(attributes, attribStr):
      if len(rawfields) == 2:
        attributes[rawfields[0].strip().lower()] = rawfields[1].strip()
 
-
-
 def split_attributes(str, attributes):        
      rawattributes = re.split(';', str)
      for attribStr in rawattributes:
         insert_attribute(attributes, attribStr) 
-
      return attributes
      
    
@@ -86,7 +85,7 @@ def insert_orf_into_dict(line, contig_dict):
          attributes['start'] =  int(fields[3])
          attributes['end'] =  int(fields[4])
      except:
-         print line
+         print(line)
          sys.exit(0)
 
      try:
@@ -151,7 +150,7 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
-        print "Cannot read file " + gff_file_name + " !"
+        print("Cannot read file " + gff_file_name + " !")
 
      sample_name=get_sample_name(gff_file_name)
 
@@ -174,7 +173,6 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
 
      if "ptinput" in output_filenames:
        write_ptinput_files(output_filenames['ptinput'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid=orf_to_taxonid)
-
 
 # this function creates the pathway tools input files
 def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid={}):
@@ -239,7 +237,7 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
               if attrib['product']=='hypothetical protein':
                  continue
            except:
-              print attrib
+              print(attrib)
               sys.exit(0)
 
             
@@ -249,18 +247,19 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
                      fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
 
                     # to  remove redundancy add "continue "
-                     continue
+                    # continue
                  else:    
                      first_hits[attrib['product']]['ec'] =attrib['ec'] 
                      first_hits[attrib['product']]['n'] =shortid 
                else:
                  fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
                  # to  remove redundancy add "continue "
-                 continue
+                 #continue
            else: 
                 first_hits[attrib['product']] = {}
                 first_hits[attrib['product']]['n'] =shortid
                 first_hits[attrib['product']]['ec'] =attrib['ec']
+
            if compactid in orf_to_taxonid: 
                attrib['taxon'] = orf_to_taxonid[compactid]
 
@@ -271,33 +270,30 @@ def  write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_s
               append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
         #endfor
 
+
         #write the sequence now only once per contig
+        try:
+           contig_seq =  nucleotide_seq_dict[key]
+        except:
+           #print nucleotide_seq_dict.keys()[0]
+           if countError < 10:
+              printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
+              countError += 1
+              if countError == 10:
+                printf("...................................................................\n")
+           continue
+
+        fastaStr=wrap("",0,62, contig_seq)
 
            #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
         if compact_output==False:
-           try:
-             contig_seq =  nucleotide_seq_dict[key]
-           except:
-             #print nucleotide_seq_dict.keys()[0]
-             if countError < 10:
-               printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
-               countError += 1
-               if countError == 10:
-                 printf("...................................................................\n")
-             continue
-           fastaStr=wrap("",0,62, contig_seq)
            write_input_sequence_file(output_dir_name, shortid, fastaStr)
      #endif 
 
      if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
-        rename(output_dir_name + "/tmp.reduced.txt",output_dir_name + "/reduced.txt")
-     else:
-        for f in [ "/tmp.reduced.txt", "/reduced.txt" ]:
-          red =output_dir_name + f
-          if os.path.exists(red):
-             os.remove(red)
-       
+
+     rename(output_dir_name + "/tmp.reduced.txt",output_dir_name + "/reduced.txt")
 
      # Niels: removing annotated.gff from sample_name
      sample_name = re.sub(".annot.gff", '', sample_name)
@@ -323,7 +319,6 @@ pfFile = None
 
 def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
     global pfFile
-
     if compact_output:
        if pfFile==None:
           pfFile = open(output_dir_name + "/" + "0.pf", 'w')
@@ -358,11 +353,29 @@ def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
           fprintf(pfFile, "EC\t%s\n", ec)
           #printf("EC\t%s\n", ec)
 
+
+#       if len(prod_attributes)>=5:
+#         for i in range(0, len(prod_attributes)):
+#            if i==0:
+#              fprintf(pfFile, "FUNCTION\t%s\n", prod_attributes[i])
+#
+#            if i==1:
+#              fprintf(pfFile, "DBLINK\tSP:%s\n", prod_attributes[i])
+#            #  printf("DBLINK\tSP:%s\n", prod_attributes[0])
+#   
+#            if i == 2:
+#              fprintf(pfFile, "DBLINK\tMetaCyc:%s\n", prod_attributes[i])
+#            #  printf("DBLINK\tMetaCyc:%s\n", prod_attributes[1])
+#   
+#            if i >= 4:
+#              if not prod_attributes[i] in ec_nos:
+#                 fprintf(pfFile, "EC\t%s\n", prod_attributes[i])
+#                 ec_nos[prod_attributes[i]] = True
+#       else:
+#         fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+#            #  printf("EC\t%s\n", prod_attributes[3])
     except:
        fprintf(pfFile, "FUNCTION\t%s \n", 'hypothetical protein')
-
-
-
 
     if attrib['feature']=='CDS':
        fprintf(pfFile, "PRODUCT-TYPE\tP\n")
@@ -694,9 +707,7 @@ def wrap(prefix, start, end, string):
 
 def process_sequence_file(sequence_file_name,  seq_dictionary, shortorfid=False):
      try:
-         sequencefile = open_plain_or_gz(sequence_file_name, 'r')
-         if sequencefile==None:
-            raise IOError("Cannot read file " + sequence_file_name + "/.gz !")
+        sequencefile = open(sequence_file_name, 'r')
      except IOError:
         print "Cannot read file " + sequence_file_name + " !"
 
@@ -825,9 +836,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     # filtering options
 
 
-    global pfFile
-    global parser
-    pfFile = None
+    global parser, errorcode
     options, args = parser.parse_args(argv)
 
     if not(options.gff_file or options.nucleotide_sequences or options.protein_sequences or options.output):
@@ -842,7 +851,9 @@ def main(argv, errorlogger = None, runstatslogger = None):
    
     if not options.gbk_file and not options.ptinput_file:
        eprintf("ERROR:No genbank or ptools input is specified\n")
-       return (0,'')
+        
+       insert_error(errorcode)
+       return (1,'')
 
 
     if not path.exists(options.gff_file):
@@ -872,7 +883,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     nucleotide_seq_dict = {}
     protein_seq_dict = {}
 
-    if options.compact_output==False and options.nucleotide_sequences and plain_or_gz_file_exists(options.nucleotide_sequences):
+    if options.nucleotide_sequences  and path.exists(options.nucleotide_sequences):
        process_sequence_file(options.nucleotide_sequences, nucleotide_seq_dict) 
 
     if  options.protein_sequences and  plain_or_gz_file_exists(options.protein_sequences):
@@ -889,7 +900,11 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
 def MetaPathways_create_genbank_ptinput_sequin(argv, errorlogger = None, runstatslogger = None):
     createParser()
-    main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    global errorcode
+    try:
+       main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
+    except:
+       insert_error(errorcode)
     return (0,'')
     
 if __name__ == '__main__':
