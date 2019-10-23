@@ -101,7 +101,6 @@ def insert_orf_into_dict(line, contig_dict):
      if not fields[0] in contig_dict :
        contig_dict[fields[0]] = []
 
-     #print attributes
      contig_dict[fields[0]].append(attributes)
 
 
@@ -149,7 +148,6 @@ def get_sample_name(gff_file_name):
 
 
 def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, protein_seq_dict, input_filenames, orf_to_taxonid = {},  compact_output=True):
-     #print output_filenames
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
@@ -171,6 +169,7 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, prote
         insert_orf_into_dict(line, contig_dict)
 
      if "gbk" in output_filenames:
+       print('gbk')
        write_gbk_file(output_filenames['gbk'], contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict)
 
      if "ptinput" in output_filenames:
@@ -544,18 +543,15 @@ def get_parameter(config_params, category, field, default = None):
 
 #this function creates the genbank file from the gff, protein and nucleotide sequences  
 def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_dict, protein_seq_dict):
-
      date = genbankDate()
      output_file_name_tmp = output_file_name + ".tmp"
      outputfile = open(output_file_name_tmp, 'w')
-     #print contig_dict
     
      count =0 
      outputStr=""
      for key in contig_dict:
         first = True
         if count %10000 == 0:
-           #print "count " + str(count)
            outputfile.write(outputStr)
            outputStr=""
         count+=1
@@ -613,8 +609,6 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
               outputStr+=( wrap("",21,74,"/chromosome=\"1\"") +'\n')
             
 
-
-
            if 'start' in attrib and 'end' in attrib:
                geneLoc = str(attrib['start']) +".." + str(attrib['end'])
            else:
@@ -630,9 +624,9 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
            else:
                locus_tag = "/locus_tag" + "\"\"" 
            outputStr+=( wrap("",21,74,locus_tag) +'\n')
-           outputStr+=( wrap("     CDS",21,74,geneLoc) +'\n')
+           outputStr+=( wrap("     CDS",21,74, geneLoc) +'\n')
            if 'product' in attrib:
-              product="/product=" + attrib['product']
+              product="/product=" + "\""+ attrib['product'] + "\""
            else:
               product="/product=\"\""
            outputStr+=( wrap("",21,74,product) +'\n')
@@ -845,7 +839,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
        eprintf("ERROR\tGFF file not specified\n")
        errorlogger.printf("ERROR\tGFF file not specified\n")
 
-
+   
     if not options.gbk_file and not options.ptinput_file:
        eprintf("ERROR:No genbank or ptools input is specified\n")
        return (0,'')
@@ -881,7 +875,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     if options.compact_output==False and options.nucleotide_sequences and plain_or_gz_file_exists(options.nucleotide_sequences):
        process_sequence_file(options.nucleotide_sequences, nucleotide_seq_dict) 
 
-    if options.compact_output==False and options.protein_sequences and  plain_or_gz_file_exists(options.protein_sequences):
+    if  options.protein_sequences and  plain_or_gz_file_exists(options.protein_sequences):
        process_sequence_file(options.protein_sequences, protein_seq_dict) 
     
     orf_to_taxonid={}
@@ -889,7 +883,6 @@ def main(argv, errorlogger = None, runstatslogger = None):
       orf_to_taxonid = read_taxons_for_orfs(options.ncbi_taxonomy_tree, options.taxonomy_table)
 
     process_gff_file(options.gff_file, output_files, nucleotide_seq_dict, protein_seq_dict, input_files,  orf_to_taxonid=orf_to_taxonid, compact_output=options.compact_output) 
-    #print params['bitscore']
  
     sample_name = get_sample_name(options.gff_file)
     createDummyFile(options.ptinput_file + PATHDELIM + sample_name + ".dummy.txt")

@@ -238,13 +238,13 @@ class LCAComputation:
 
         try:
             # extracting taxon names here
-            if 'target' in hit:
-               gires = accession_PATT.search(hit['target'])
-               if gires:
-                  gi = gires.group(1)
-                  if gi in self.accession_to_taxon_map:
-                    species.append(self.accession_to_taxon_map[gi])                         
-            else:
+            #if 'target' in hit:
+            #   gires = accession_PATT.search(hit['target'])
+            #   if gires:
+            #      gi = gires.group(1)
+            #      if gi in self.accession_to_taxon_map:
+            #        species.append(self.accession_to_taxon_map[gi])                         
+            #else:
                m = re.findall(r'\[([^\[]+?)\]', hit['product'])
                if m != None:
                  copyList(m,species)
@@ -290,10 +290,10 @@ class LCAComputation:
     # this is use to compute the min support for each taxon in the tree
     # this is called before the  getMeganTaxonomy
     def compute_min_support_tree(self, annotate_gff_file, pickorfs, dbname= 'refseq'):
-        print 'dbname' , dbname
+        #print 'dbname' , dbname
         self.tax_dbname = dbname
         gffreader = GffFileParser(annotate_gff_file)
-        print 'done'
+        #print 'done'
         try:
          #   if dbname=='refseq-nr-2014-01-18':
          #       print  'refseq', len(pickorfs)
@@ -302,8 +302,8 @@ class LCAComputation:
                 #    print  'refseq',  contig 
                 for orf in  gffreader.orf_dictionary[contig]:
                     shortORFId = getShortORFId(orf['id'])
-                    #if dbname=='refseq-nr-2014-01-18':
-                    #   print  'refseq',  contig , shortORFId
+                    if re.search(r'Xrefseq', dbname):
+                       print  'refseq',  contig , shortORFId, self.tax_dbname
 
                     #print shortORFId, orf['id']
 
@@ -317,8 +317,10 @@ class LCAComputation:
                     species = []
                    
                     if self.tax_dbname in self.results_dictionary:
-         #               if dbname=='refseq-nr-2014-01-18':
-         #                     print  'hit',  len(self.results_dictionary[self.tax_dbname])
+                        if re.search(r'Xrefseq', dbname):
+                              print  'hit',  len(self.results_dictionary[self.tax_dbname])
+                              print(self.results_dictionary[self.tax_dbname].keys())
+
                         if shortORFId in self.results_dictionary[self.tax_dbname]:
                             #compute the top hit wrt score
                             top_score = 0

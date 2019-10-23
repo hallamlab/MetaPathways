@@ -56,10 +56,9 @@ epilog = """\n""" + """
 
                 4.   abcd_1.fastq or abcd_2.fastq: this means only one end of a paired read
 
-                5.   abcd_1.b2.fastq and  abcd_2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, 
-                     where n is a number
+                5.   abcd_1.b2.fastq and  abcd_2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, where n is a number
 
-                6.   abcd_1.b3.fastq or abcd_2.b3.fastq: this means only one of a paried read from batch b1
+                6.   abcd_1.b1.fastq or abcd_2.b1.fastq: this means only one of a paried read from batch b1
              """
 
 
@@ -83,7 +82,7 @@ def createParser():
     parser.add_option('--stats', dest='stats', default=None,
                            help='output stats for ORFs  into file')
 
-    parser.add_option('-r', '--rpkmdir', dest='rpkmdir', default=None,
+    parser.add_option('-r', '--readsdir', dest='readsdir', default=None,
                            help='the directory that should have the read files')
 
     parser.add_option('-O', '--orfgff', dest='orfgff', default=None,
@@ -152,18 +151,15 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
              cmd = "%s mem -t %d -p -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
           else:
              cmd = "%s mem -t %d -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
-       print cmd
        result = getstatusoutput(cmd)
 
         
        if result[0]==0:
-          pass
           rename(bwaOutputTmp, bwaOutput)
        else:
           eprintf("ERROR:\t Error file processing read files %s\n", readFiles)
           status = False
        count += 1
-          
     return status
 
 
@@ -184,7 +180,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
        parser.error('ERROR\tThe BWA executable is missing')
        return 255 
 
-    if not (options.rpkmdir !=None and path.exists(options.rpkmdir) ):
+    if not (options.readsdir !=None and path.exists(options.readsdir) ):
        parser.error('ERROR\tThe RPKM directory is missing')
        return 255 
 
@@ -198,8 +194,8 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
 
 
     # read the input sam and fastq  files
-    samFiles = getSamFiles(options.rpkmdir, options.sample_name)
-    readFiles = getReadFiles(options.rpkmdir, options.sample_name)
+    samFiles = getSamFiles(options.readsdir, options.sample_name)
+    readFiles = getReadFiles(options.readsdir, options.sample_name)
 
     if  not samFiles and readFiles:
         if not readFiles:
@@ -238,10 +234,8 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
 
 
     # make sure you get the latest set of sam file after the bwa
-    samFiles = getSamFiles(options.rpkmdir, options.sample_name)
+    samFiles = getSamFiles(options.readsdir, options.sample_name)
 
-    print samFiles
-    print 'rpkm running'
     if not path.exists(options.rpkmExec):
        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
        if errorlogger:
@@ -261,7 +255,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
        command += " --ORFS %s" %(options.orfgff)
 
     samFiles = getSamFiles(options.bwaFolder, options.sample_name)
-    print samFiles
+    print 'rpkm running'
 
     if not samFiles:
        return 0

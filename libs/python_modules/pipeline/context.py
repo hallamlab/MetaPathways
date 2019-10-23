@@ -40,7 +40,6 @@ class Context:
         pass
 
     def isOutputAvailable(self):
-
         return doFilesExist(self.outputs.values(), gz=True)
 
     def isInputAvailable(self, errorlogger = None):

@@ -573,8 +573,9 @@ def doFilesExist( fileNames, dir="", gz=False ):
        file = fileName
        if dir!='':
          file = dir + PATHDELIM + fileName
-       if not path.exists(file):
-         if gz==False or not path.exists(file + ".gz"):
+
+       if (not path.exists(file)) and (gz==True and not path.exists(file + ".gz")):
+       #      print("FALSE", gz, file, path.exists(file), file+ ".gz", path.exists(file + ".gz"))
              return False
 
     return True

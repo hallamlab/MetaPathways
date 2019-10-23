@@ -299,7 +299,7 @@ def create_dictionary(databasemapfile, annot_map):
               annot_map[name]= annotation
            
 
-def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid, compact_output):
+def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid, sample_name, compact_output):
    try:
       fields = [  'source', 'feature', 'start', 'end', 'score', 'strand', 'frame' ]
 
@@ -314,7 +314,11 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
 
       #if compact_output:
       try:
-         attributes = "ID="+ShortenORFId(orf_dictionary[contig][candidate_orf_pos]['id'])
+         if compact_output:
+            attributes = "ID="+ShortenORFId(orf_dictionary[contig][candidate_orf_pos]['id'])
+         else:
+            attributes = "ID=" + sample_name + "_"  + ShortenORFId(orf_dictionary[contig][candidate_orf_pos]['id'])
+
          attributes += ";" + "locus_tag="+ShortenORFId(orf_dictionary[contig][candidate_orf_pos]['locus_tag'])
       except:
          attributes = "ID="+orf_dictionary[contig][candidate_orf_pos]['id']
@@ -337,8 +341,9 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
 
       output_line += '\t' + attributes
 
-      if candidatedbname in results_dictionary:
-         fprintf(outputgff_file, "%s\n", output_line);
+      # print any db name for now
+      #if candidatedbname in results_dictionary:
+      fprintf(outputgff_file, "%s\n", output_line);
    except:
       eprintf("ERROR : Failure to annotate in contig %s\n", contig)
       #print orf_dictionary[contig]
@@ -494,7 +499,7 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths) :
         rRNA_dictionary[rRNA] = dict.copy() 
 
     
-def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_stats_files, tRNA_stats_files,  output_gff, output_comparative_annotation, contig_lengths, compact_output = False):
+def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_stats_files, tRNA_stats_files,  output_gff, output_comparative_annotation, contig_lengths, sample_name, compact_output = False):
     orf_dictionary={}
 #    process_gff_file(input_gff, orf_dictionary)
    
@@ -533,12 +538,13 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          output_comp_annot_file1_Str = ''
          output_comp_annot_file2_Str = ''
          orf_id = orf['id']
-
+       
+         # check the annotation of the orf by dbname
+        
          for dbname in dbnames:
             weight = dbname_weight[dbname]
 
             if orf_id in results_dictionary[dbname]:
-
                 if values[dbname] < results_dictionary[dbname][orf_id]['value']:
                     values[dbname] = results_dictionary[dbname][orf_id]['value']
     #                print value, dbname
@@ -583,10 +589,10 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          if success:  # there was a database hit
             fprintf(output_comp_annot_file1,'%s\n', output_comp_annot_file1_Str)
             fprintf(output_comp_annot_file2,'%s\n', output_comp_annot_file2_Str)
-            write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, gffreader.orf_dictionary, contig, candidate_orf_pos,  orf_id, compact_output=compact_output) 
+            write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, gffreader.orf_dictionary, contig, candidate_orf_pos,  orf_id, sample_name, compact_output=compact_output) 
          else:   # if it was not  a hit then it is a hypothetical protein
             #print gffreader.orf_dictionary
-            write_annotation_for_orf(outputgff_file, 'None', '0', results_dictionary, gffreader.orf_dictionary, contig, count, orf_id, compact_output = compact_output) 
+            write_annotation_for_orf(outputgff_file, 'None', '0', results_dictionary, gffreader.orf_dictionary, contig, count, orf_id, sample_name= sample_name, compact_output = compact_output) 
          
          count +=1  #move to the next orf
 
@@ -1001,7 +1007,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
         
 
     #create the annotations from he results
-    create_annotation(dbname_weight, results_dictionary, opts.input_gff, opts.rRNA_16S, opts.tRNA, opts.output_gff, opts.output_comparative_annotation, contig_lengths, compact_output = opts.compact_output)
+    create_annotation(dbname_weight, results_dictionary, opts.input_gff, opts.rRNA_16S, opts.tRNA, opts.output_gff, opts.output_comparative_annotation, contig_lengths, sample_name=opts.sample_name, compact_output = opts.compact_output)
 
 
 def MetaPathways_annotate_fast(argv, errorlogger = None, runstatslogger = None):       

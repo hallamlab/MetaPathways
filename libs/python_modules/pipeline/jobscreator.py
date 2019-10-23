@@ -59,7 +59,7 @@ class JobCreator():
                if stage in self.params['metapaths_steps'] or\
                   stage in [ 'ORF_TO_AMINO', 'GBK_TO_FNA_FAA_GFF', 'GBK_TO_FNA_FAA_GFF_ANNOT',\
                            'COMPUTE_REFSCORES', 'PREPROCESS_AMINOS', 'PATHOLOGIC_INPUT',\
-                           'CREATE_ANNOT_REPORTS', 'CREATE_BIOM']:
+                           'CREATE_ANNOT_REPORTS']:
                              # 'MLTREEMAP_CALCULATION',
                   #if self.params['INPUT']['format'] =='gbk-unannotated':
                   #  if stage=='PREPROCESS_INPUT':
@@ -115,7 +115,6 @@ class ContextCreator:
       format = None
 
       def _Message(self, str):
-
           return '{0: <60}'.format(str)
 
       def create_quality_check_cmd(self, s):
@@ -392,7 +391,7 @@ class ContextCreator:
                               'orf_lengths_file': orf_lengths_file }
 
 
-          context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
+          context.status = self.params.get('metapaths_steps','FILTER_AMINOS')
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.PREPROCESS_INPUT
 
@@ -806,7 +805,6 @@ class ContextCreator:
           cmd="%s -g %s -n %s -p %s " %(pyScript, context.inputs['input_annot_gff'],\
                context.inputs['input_nucleotide_fasta'], context.inputs['input_amino_acid_fasta'])  
 
-
           """GENBANK_FILE"""
           genbank_file_status = self.params.get('metapaths_steps','GENBANK_FILE')
           if genbank_file_status in ['redo'] or\
@@ -818,7 +816,6 @@ class ContextCreator:
           context.commands = [ cmd ]
           contexts.append(context)
           return contexts
-
 
       def create_ptinput_cmd(self, s): 
           """PATHOLOGIC_INPUT"""
@@ -841,6 +838,7 @@ class ContextCreator:
         
           context.inputs = { 
                              'input_annot_gff':input_annot_gff,
+                             'input_amino_acid_fasta':input_amino_acid_fasta
                            }
 
           context.inputs1 = {
@@ -850,17 +848,19 @@ class ContextCreator:
 
 
           context.inputs_optional = { 
-                             'input_amino_acid_fasta':input_amino_acid_fasta,
                              'input_nucleotide_fasta':input_nucleotide_fasta
                            }
 
 
           #  'output_fasta_pf_dir_fasta':s.output_fasta_pf_dir + PATHDELIM +  '0.fasta',
+          input_output_gbk  = s.genbank_dir +PATHDELIM + s.sample_name+".gbk"
+
           context.outputs = {
             'output_fasta_pf_dir':s.output_fasta_pf_dir,
             'output_fasta_pf_dir_genetic':s.output_fasta_pf_dir + PATHDELIM + 'genetic-elements.dat',
             'output_fasta_pf_dir_organism':s.output_fasta_pf_dir + PATHDELIM +  'organism-params.dat',
-            'dummy_ouptut_file':s.output_fasta_pf_dir + PATHDELIM +  s.sample_name + '.dummy.txt'
+            'dummy_ouptut_file':s.output_fasta_pf_dir + PATHDELIM +  s.sample_name + '.dummy.txt',
+            'output_annot_gbk':s.genbank_dir + PATHDELIM + s.sample_name +  '.gbk'
           }
 
           compact_mode = self.params.get('ptools_input', 'compact_mode')
@@ -888,6 +888,8 @@ class ContextCreator:
               cmd += ' -n ' + context.inputs_optional['input_nucleotide_fasta']
               cmd += ' --ncbi-tree ' + context.inputs1['ncbi_tree']
               cmd += ' --taxonomy-table ' + context.inputs1['taxonomy_table']
+              cmd += ' -p ' + context.inputs['input_amino_acid_fasta']
+              cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
 
               if compact_mode=='yes':
                  cmd += " --compact-output"
@@ -1202,7 +1204,7 @@ class ContextCreator:
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.RPKM_CALCULATION
 
-          cmd = "%s -c %s  --rpkmExec %s --rpkmdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
+          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
                 % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
                    context.inputs['rpkm_input'], context.inputs['output_gff'],\
                  context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
@@ -1246,7 +1248,7 @@ class ContextCreator:
                              'place_holder_file': place_holder_file
                             }
 
-          pyScript = self.configs.METAPATHWAYS_PATH + self.configs.CREATE_BIOM
+          pyScript = self.configs.METAPATHWAYS_PATH  + self.configs.CREATE_BIOM
 
           cmd = "%s -B %s -s %s -R %s  --readcounts %s --readrpkgs %s -O %s --algorithm %s"\
                 % (pyScript, context.inputs['blast_results_dir'], s.sample_name,\
@@ -1398,7 +1400,7 @@ class ContextCreator:
            self.factory['BUILD_PGDB'] = self.create_pgdb_using_pathway_tools_cmd
            self.factory['MLTREEMAP_CALCULATION'] = self.create_mltreemap_cmd
            self.factory['COMPUTE_RPKM'] = self.create_rpkm_cmd
-           self.factory['CREATE_BIOM'] = self.create_biom_cmd
+           #self.factory['CREATE_BIOM'] = self.create_biom_cmd
 
            self.stageList['AMINO-FASTA'] = [
                              ['PREPROCESS_AMINOS',
@@ -1424,6 +1426,7 @@ class ContextCreator:
                               'SCAN_tRNA',
                               'ANNOTATE_ORFS',
                               'CREATE_ANNOT_REPORTS',
+                              "GENBANK_FILE",
                               'PATHOLOGIC_INPUT',
                               'BUILD_PGDB',
                               'COMPUTE_RPKM'

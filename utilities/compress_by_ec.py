@@ -9,19 +9,17 @@ __version__ = "1.0"
 __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
-try:
-     import re
-     import sys, os
-     from optparse import OptionParser, OptionGroup
-     from glob import glob
-except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwayrc\""""
-     print """ """
-     sys.exit(3)
+import re
+import sys, os
+from optparse import OptionParser, OptionGroup
+from glob import glob
 
 script_name = sys.argv[0]
-usage= script_name + """ --pin <input pf file> --pout <output pf file> --rin <reduced input file> --rout <reduced output file>"""
+usage= script_name + """ --pin <input pf file> --pout <output pf file>  \n --rin <reduced input file> 
+                         --rout <reduced output file>
+                          This script takes the 0.pf and reduced.txt files to create a new set of 
+                          0.pf and  reduced.txt
+                     """
 parser = OptionParser(usage)
 
 parser.add_option( "--pin", dest="pfin", default =None, 
@@ -38,7 +36,7 @@ parser.add_option( "--rout", dest="redout", default = None,
 
 
 parser.add_option( "--level", dest="level", default = '0',  choices=['0', '1'],
-                  help='level of equivalennce    0 : if ECs and FUNCTIONS are the similar, 1: if ECs are the similar')
+                  help='level of equivalennce    \n0 : if ECs and FUNCTIONS are the similar, \n1: if ECs are the similar')
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
@@ -90,7 +88,7 @@ def read_pf_file(filel):
      try:
          orgfile = open(filel,'r')
      except IOError:
-         print "ERROR : Cannot open organism file" + str(filel)
+         print("ERROR : Cannot open organism file" + str(filel))
          return 
      lines = orgfile.readlines()
      orfids = []
@@ -129,7 +127,7 @@ def read_reduced_file(filel):
      try:
          orgfile = open(filel,'r')
      except IOError:
-         print "ERROR : Cannot open organism file" + str(filel)
+         print("ERROR : Cannot open organism file" + str(filel))
          return 
      lines = orgfile.readlines()
      equivalent={}
@@ -147,12 +145,12 @@ def read_reduced_file(filel):
 
 def write_new_file(lines, output_file):
     
-    print "Fixing file " + output_file 
+    print("Fixing file " + output_file )
     try:
        outputfile = open(output_file,'w')
        pass
     except IOError:
-         print "ERROR :Cannot open output file "  + output_file
+         print("ERROR :Cannot open output file "  + output_file)
    
     for line in lines:
        fprintf(outputfile, "%s\n", line)
@@ -163,7 +161,7 @@ def write_new_file(lines, output_file):
 def  modify_files(filerenames, source, target):
 
     for file, newname in filerenames.iteritems():
-        print "<<<<" , file
+        print("<<<<" , file)
         with open(file) as f:
             lines = f.readlines()
             outputfile = open(file + '.tmp','w')
@@ -201,7 +199,7 @@ def  get_new_file_names(files, source, target):
 def main(argv): 
     (opts, args) = parser.parse_args()
     if not check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     orfids, products, annotations, ecs = read_pf_file(opts.pfin)
@@ -233,12 +231,11 @@ def main(argv):
           
     write_new_pf_file(neworfs, annotations,opts.pfout)
 
-#    print  len(orfids), len(neworfs), len(equivalent)
-
-    print  "Original # ORFs   :", len(orfids)
-    print  "Compressed # ORFs :", len(neworfs)
-    print  "Equiv # ORFS      :", len(equivalent)
-    print  "Annotations #     :", len(annotations)
+#   print  len(orfids), len(neworfs), len(equivalent)
+    print("Original # ORFs   : {}".format(len(orfids)))
+    print("Compressed # ORFs : {}".format(len(neworfs)))
+    print("Equiv # ORFS      : {}".format(len(equivalent)))
+    print("Annotations #     : {}".format(len(annotations)))
 
     write_new_reduced_file(equivalent, opts.redout)
 
