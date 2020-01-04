@@ -129,17 +129,16 @@ def getSamFiles(readdir, sample_name):
 def getReadFiles(readdir, sample_name):
    '''This function finds the set of fastq files that has the reads'''
    fastqFiles = []
-   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '*.[fF][aA][Ss][Tt][qQ]')
+   _fastqfiles = glob(readdir + PATHDELIM + sample_name + '*.[fF][aA][Ss][Tt][qQ][gz.]*')
 
    fastqfiles =[]
    for _f in _fastqfiles:
         f = re.sub(r'^.*[//]','', _f)
         fastqfiles.append(f) 
   
-   readfiles = []
    samPATT=re.compile(sample_name+".fastq")
    samPATT1=re.compile(sample_name+"[.]b\d+.fastq")
-   samPATT2=re.compile(sample_name+"_[1-2].fastq")
+   samPATT2=re.compile('('+sample_name+ ')'+"_[1-2].(fastq|fastq[.]gz)")
    samPATT3=re.compile(sample_name+"_r[1-2].fastq")
    samPATT4=re.compile(sample_name+"_[1-2][.](b\d+).fastq")
 
@@ -157,14 +156,15 @@ def getReadFiles(readdir, sample_name):
       
       res = samPATT2.search(f)
       if res:
-         readfiles.append( [readdir + PATHDELIM +f] )
+         if not res.group(1) in batch:
+            batch[res.group(1)] = []
+         batch[res.group(1)].append( readdir + PATHDELIM +f )
          continue
       
       res = samPATT3.search(f)
       if res:
          if not 'r' in  batch:
             batch['r'] = [] 
-
          batch['r'].append( readdir + PATHDELIM +f )
          continue
       
@@ -177,7 +177,8 @@ def getReadFiles(readdir, sample_name):
       
       eprintf("ERROR\tPossible error in read file naming \"%s\". Ignoring for now!\n", f)
 
-   for values in batch.values():
+   readfiles = []
+   for key, values in batch.items():
         readfiles.append(values)
 
    return readfiles

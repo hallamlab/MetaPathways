@@ -9,6 +9,7 @@ __status__ = "Release"
 
 
 try:
+   import  traceback
    from optparse import make_option
    from os import makedirs,  path, listdir, remove, rename, _exit
    import os, sys, errno, shutil, re
@@ -31,9 +32,8 @@ try:
 
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwaysrc\""""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed \"source MetaPathwaysrc\" """)
      sys.exit(3)
 
 
@@ -518,9 +518,9 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
          eprintf( '\n' + sample_name_banner +  ' [STEPS BLOCK 0] ' + '\n')
          s.writeParamsToRunLogs(_params)
          try:
-            pass
             execute_tasks(s, verbose = command_line_params['verbose'], block = 0)    
          except:
+            print traceback.print_exc(10)
             pass
 
        for input_file in sorted_samplesData_keys:
@@ -530,7 +530,6 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
          eprintf('\n' + '#'*len(sample_name_banner) + "\n")
          eprintf( '\n' + sample_name_banner +  ' [STEPS BLOCK 1] ' + '\n')
          try:
-            pass
             execute_tasks(s, verbose = command_line_params['verbose'], block = 1)    
          except:
             pass
@@ -542,7 +541,6 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
          eprintf('\n' + '#'*len(sample_name_banner) + "\n")
          eprintf( '\n' + sample_name_banner +  ' [STEPS BLOCK 2] ' + '\n')
          try:
-            pass
             execute_tasks(s, verbose = command_line_params['verbose'], block = 2)    
          except:
             pass

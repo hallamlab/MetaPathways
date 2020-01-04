@@ -217,23 +217,19 @@ def parse_metapaths_parameters(filename):
         line = line.strip()
         if line and not line.startswith('#'):
             fields = line.split()
-            script_id, parameter_id = fields[0].split(':')
             try:
+                script_id, parameter_id = fields[0].split(':')
                 value = ','.join([ x.strip() for x in fields[1:] ])
                 value = re.sub(',,',',',value)
-            except IndexError:
-                continue
-                
             #if value.upper() == 'FALSE' or value.upper() == 'NONE':
             #    continue
             #elif value.upper() == 'TRUE':
             #    value = None
             #else:
             #    pass
-            
-            try:
                 result[script_id][parameter_id] = value
-            except KeyError:
+            except :
+                print("ERROR: " + line)
                 result[script_id] = {parameter_id:value}
     filep.close()
     #result['filename'] = filename

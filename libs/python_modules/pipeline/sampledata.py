@@ -167,8 +167,6 @@ class SampleData():
         self.runstatslogger = WorkflowLogger(generate_log_fp(self.output_run_statistics_dir,  basefile_name = self.sample_name + '.run.stats'),open_mode='a')
 
     def writeParamsToRunLogs(self, params):
-        print params
-
         param_values = [
                ["quality_control", "min_length",  "180"], 
                ["quality_control", "delete_replicates", "yes"], 

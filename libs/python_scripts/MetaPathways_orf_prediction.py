@@ -88,12 +88,9 @@ def createParser():
     prodigal_group.add_option('--prod_exec', dest='prod_exec', default=None,
                            help='prodigal executable')
 
-<<<<<<< HEAD
     prodigal_group.add_option('--strand', dest='strand', default='both', choices = ['both', 'pos', 'neg'],
                            help='strands to use in case of transcriptomic sample')
 
-=======
->>>>>>> 9d3adb2ed47aa16f9fe02e1a5da5260224a6e659
     parser.add_option_group(prodigal_group)
 
 

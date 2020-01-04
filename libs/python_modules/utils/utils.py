@@ -21,8 +21,8 @@ try:
     from glob import glob
     import sys, os, traceback, shutil
 
-    from libs.python_modules.parsers.fastareader  import FastaReader
     from libs.python_modules.utils.sysutil import pathDelim
+    from libs.python_modules.parsers.fastareader  import FastaReader
 except:
     print """ Could not load some user defined  module functions"""
     print """ Make sure your typed \'source MetaPathwaysrc\'"""
@@ -589,7 +589,7 @@ def checkOrCreateFolder( folderName ):
     else:
         return True
 
-def doFilesExist( fileNames, dir="" ):
+def doFilesExist( fileNames, dir="", gz=False ):
     """ does the file Exist? """
     for fileName in fileNames:
        file = fileName

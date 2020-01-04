@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
      from libs.python_modules.parsers.fastareader  import FastaReader
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 PATHDELIM = pathDelim()
@@ -54,15 +54,15 @@ def valid_arguments(opts, args):
     state = True
 
     if opts.sample_name == None :
-        print 'ERROR: Missing sample name'
+        print('ERROR: Missing sample name')
         state = False
 
     if opts.output_folder == None :
-        print 'ERROR: Missing output folder for sample'
+        print('ERROR: Missing output folder for sample')
         state = False
 
     if opts.input_folder == None :
-        print 'WARNING: Missing input folder for sample'
+        print('WARNING: Missing input folder for sample')
 
     return state
 

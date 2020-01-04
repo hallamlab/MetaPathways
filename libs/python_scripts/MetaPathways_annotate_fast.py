@@ -26,6 +26,7 @@ except:
     print(""" Could not load some user defined  module functions""")
     print(""" Make sure your typed 'source MetaPathwaysrc'""")
     print(""" """)
+    print traceback.print_exc(10)
     sys.exit(3)
 
 
@@ -302,7 +303,8 @@ def create_dictionary(databasemapfile, annot_map):
               annot_map[name]= annotation
            
 
-def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orfid, compact_output):
+def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, \
+      contig, candidate_orf_pos, orfid,  sample_name, compact_output=True):
    global errorcode
    try:
       fields = [  'source', 'feature', 'start', 'end', 'score', 'strand', 'frame' ]
@@ -461,22 +463,34 @@ def process_tRNA_stats(tRNA_stats_file, tRNA_dictionary, shortenorfid=False):
 
 # this adds the features and attributes to  be added to the gff file format for the tRNA genes
 def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths) :
-
      for tRNA in tRNA_dictionary: 
+        start = int(tRNA_dictionary[tRNA][0])
+        end = int(tRNA_dictionary[tRNA][1])
+        if start > end: 
+           start = int(tRNA_dictionary[tRNA][1])
+           end = int(tRNA_dictionary[tRNA][0])
+
         try:
-           orf_length = abs(int( tRNA_dictionary[tRNA][1] )-int( tRNA_dictionary[tRNA][0] )) + 1
+           orf_length = end - start 
         except:
            orf_length = 0
 
-        if tRNA in  contig_lengths: 
-           contig_length = contig_lengths[tRNA]
+        contig_name= re.sub(r'_\d+$','', tRNA)
+
+        if contig_name in  contig_lengths: 
+           contig_length = contig_lengths[contig_name]
         else:
            contig_length = 0
 
-        dict = { 'id':ContigID(tRNA), 'seqname': tRNA, 'start':str(tRNA_dictionary[tRNA][0]), 'end':str(tRNA_dictionary[tRNA][1]),\
+        if start > end or contig_length < end :
+          eprintf("trna {}   {}  {}  {} {}\n".format(tRNA, start, end, end-start, contig_length))
+          end = contig_length
+          eprintf("trna {}   {}  {}  {} {}\n".format(tRNA, start, end, end-start, contig_length))
+
+        dict = { 'id':ContigID(tRNA), 'seqname': tRNA, 'start':start, 'end':end,\
                  'strand':tRNA_dictionary[tRNA][2], 'score':" ", 'orf_length':str(orf_length),\
                  'contig_length':str(contig_length),\
-                 'feature':'tRNA', 'source':'tranScan-1.4', 'frame':0, 'product':'tRNA-' + tRNA_dictionary[tRNA][3], 'ec':'' }      
+                 'feature':'tRNA', 'source':'trnaScan-1.4', 'frame':0, 'product':'tRNA-' + tRNA_dictionary[tRNA][3], 'ec':'' }      
         tRNA_gff_dictionary[tRNA] = dict.copy() 
 
 
@@ -495,10 +509,14 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths) :
         else:
            contig_length = 0
 
+        strand = "+"
+        reverse=0
 
         dict = { 
-                 'id':ContigID(rRNA), 'seqname': rRNA, 'start':str(rRNA_16S_dictionary[rRNA][0]), 'end':str(rRNA_16S_dictionary[rRNA][1]),\
-                 'strand':'+', 'score':str(rRNA_16S_dictionary[rRNA][2]),  'orf_length':str(orf_length), 'contig_length':str(contig_length),\
+                 'id':ContigID(rRNA), 'seqname': rRNA, 'start':str(rRNA_16S_dictionary[rRNA][reverse%2]), \
+                 'end':str(rRNA_16S_dictionary[rRNA][ (reverse+1)%2]),\
+                 'strand':strand, 'score':str(rRNA_16S_dictionary[rRNA][2]),  \
+                 'orf_length':str(orf_length), 'contig_length':str(contig_length),\
                  'feature':'rRNA', 'source':'BLAST Search', 'frame':0, 'product':'16S rRNA', 'ec':'' 
                }      
         rRNA_dictionary[rRNA] = dict.copy() 
@@ -541,16 +559,12 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
          success =False
          output_comp_annot_file1_Str = ''
          output_comp_annot_file2_Str = ''
-<<<<<<< HEAD
          orf_id = orf['id']
        
          # check the annotation of the orf by dbname
         
-=======
->>>>>>> 78c5f25776d378f7678bf3bdbce0464a4cb0941b
          for dbname in dbnames:
             weight = dbname_weight[dbname]
-            orf_id = orf['id']
 
             if orf_id in results_dictionary[dbname]:
                 if values[dbname] < results_dictionary[dbname][orf_id]['value']:
@@ -600,7 +614,7 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
             write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, gffreader.orf_dictionary, contig, candidate_orf_pos,  orf_id, sample_name, compact_output=compact_output) 
          else:   # if it was not  a hit then it is a hypothetical protein
             #print gffreader.orf_dictionary
-            write_annotation_for_orf(outputgff_file, 'None', '0', results_dictionary, gffreader.orf_dictionary, contig, count, orf_id, sample_name= sample_name, compact_output = compact_output) 
+            write_annotation_for_orf(outputgff_file, 'None', '0', results_dictionary, gffreader.orf_dictionary, contig, count, orf_id, sample_name, compact_output = compact_output) 
          
          count +=1  #move to the next orf
 
@@ -629,7 +643,7 @@ def create_annotation(dbname_weight, results_dictionary, input_gff,  rRNA_16S_st
        write_16S_tRNA_gene_info(tRNA_gff_dictionary, outputgff_file, '_tRNA')
        #print tRNA_dictionary
 
-
+   
     outputgff_file.close()     
     rename(output_gff_tmp, output_gff)
 

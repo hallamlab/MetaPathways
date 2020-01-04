@@ -16,7 +16,7 @@ orf_prediction:strand  both
 
 # prodigal, FGS+
 orf_prediction:algorithm FGS+
-orf_prediction:min_length 60
+orf_prediction:min_length 30
 orf_prediction:translation_table 11
 orf_prediction:mode meta
 
@@ -33,7 +33,7 @@ annotation:dbs COG-14-2016-10-20,kegg-uniprot-2016-10-20, metacyc-2016-10-31,ref
 #annotation:dbs CytochromeDB
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc
 annotation:fmtdbsize 8000000000
-annotation:min_bsr 0.4
+annotation:min_bsr 0.2
 annotation:max_evalue 0.000001
 annotation:min_score 20
 annotation:min_length 45
@@ -58,7 +58,7 @@ metapaths_steps:PREPROCESS_INPUT yes
 metapaths_steps:ORF_PREDICTION yes
 metapaths_steps:FILTER_AMINOS yes
 metapaths_steps:FUNC_SEARCH yes
-metapaths_steps:PARSE_FUNC_SEARCH yes
+metapaths_steps:PARSE_FUNC_SEARCH redo
 metapaths_steps:SCAN_rRNA skip
 metapaths_steps:SCAN_tRNA skip
 metapaths_steps:ANNOTATE_ORFS redo

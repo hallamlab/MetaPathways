@@ -31,9 +31,9 @@ try:
      from libs.python_modules.diagnostics.diagnoze import *
      from libs.python_modules.pipeline.sampledata import *
 except:
-   print """ Could not load some user defined  module functions"""
-   print """ Make sure your typed \"source MetaPathwaysrc\""""
-   print """ """
+   print(""" Could not load some user defined  module functions""")
+   print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+   print()
    #print traceback.print_exc(10)
    sys.exit(3)
 
@@ -81,10 +81,10 @@ def createParser():
                       help='the input fasta file/input dir [REQUIRED]')
     parser.add_option("-o", "--output_dir", dest="output_dir",
                       help='the input fasta file/input dir [REQUIRED]')
-    parser.add_option('-p','--parameter_fp', dest="parameter_fp",
+    parser.add_option('-p','--parameter_fp', dest="parameter_fp", 
                        help='path to the parameter file [REQUIRED]')
-    parser.add_option("-c", "--config_filer", dest="config_file",
-                      help='pipeline_configuratin file [OPTIONAL,  default : \"MetaPathways/template_config.txt\"]')
+    parser.add_option("-c", "--config_filer", dest="config_file", 
+                      help='pipeline_configuratin file [example : \"MetaPathways/template_config.txt\"]')
     parser.add_option('-r','--run-type', dest="run_type", default='safe',
                        choices=['safe', 'overlay', 'overwrite','dry-run'], 
                        help= '\n(a) \'overwrite\' -- wipes out the previous runs with the same name\n'+
@@ -309,7 +309,7 @@ def main(argv):
 
     (opts, args) = parser.parse_args()
     if valid_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     signal.signal(signal.SIGINT, sigint_handler)
@@ -346,18 +346,18 @@ def main(argv):
        else:
           parameter_fp = cmd_folder + PATHDELIM + metapaths_param
     except IOError:
-        raise IOError, ( "Can't open parameters file (%s). Does it exist? Do you have read access?" % opts.parameter_fp )
+        raise IOError( "Can't open parameters file (%s). Does it exist? Do you have read access?" % opts.parameter_fp )
 
     
     try:
        if run_type in ['overlay', 'safe'] and not path.exists(output_dir):
              makedirs(output_dir)
     except OSError:
-        print ""
-        print "ERROR: Cannot create output directory \"" + output_dir + "\"\n"+\
+        print("")
+        print("ERROR: Cannot create output directory \"" + output_dir + "\"\n"+\
               "       Perhaps directory \"" + output_dir  + "\" already exists.\n" +\
               "       Please choose a different directory, or \n" +\
-              "       run with the option \"-r  overwrite\" to force overwrite it."
+              "       run with the option \"-r  overwrite\" to force overwrite it." )
         sys.exit(2)
 
         
@@ -418,7 +418,6 @@ def main(argv):
 
     #check the pipeline configuration
 
-    print 'config'
     if not path.exists(config_file):
         eprintf("%-10s: No config file %s found!\n" %('WARNING', config_file))
         eprintf("%-10s: Creating a config file %s!\n" %('INFO', config_file))
@@ -443,7 +442,7 @@ def main(argv):
 
     try:
          # load the sample information 
-         print "RUNNING MetaPathways version FogDog 3.0"
+         print("RUNNING MetaPathways version 3.5")
          if len(input_output_list): 
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]

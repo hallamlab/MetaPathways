@@ -446,15 +446,7 @@ class ContextCreator:
           return contexts
              
       def get_dbstring(self) :
-          dbtype = self.params.get('annotation', 'dbtype', default='high')
-          dbstring ="" 
-          if dbtype=='high':
-             dbstring =  self.params.get('annotation', 'dbs_high', default='')
-          elif dbtype=='custom':
-             dbstring =  self.params.get('annotation', 'dbs_custom', default='')
-          elif dbtype=='all':
-             dbstring =  self.params.get('annotation', 'dbs', default='')
-
+          dbstring =  self.params.get('annotation', 'dbs', default='')
           return dbstring
  
       def create_blastp_against_refdb_cmd(self, s):
@@ -472,7 +464,6 @@ class ContextCreator:
           dbstring = self.get_dbstring()
           dbs= [x.strip() for x in dbstring.split(",")  if len(x)!=0 ]
       
-          
           for db in dbs:
               '''inputs'''
               input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
@@ -1169,7 +1160,7 @@ class ContextCreator:
 
 
           '''output'''
-          rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orfwise"
+          rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_rpkm.txt"
           microbecensus_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".microbe_census.txt"
           stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
 
@@ -1201,18 +1192,20 @@ class ContextCreator:
           context1.outputs = {
                              'rpkm_output': rpkm_output
                             }
+
           context.outputs = {
-                             'microbecensusoutput': microbecensus_output,
+                             #'microbecensusoutput': microbecensus_output,
                              'stats_file': stats_file
                             }
 
           pyScript = self.configs.METAPATHWAYS_PATH + self.configs.RPKM_CALCULATION
 
-          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
+          #cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
+          cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
                 % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
                    context.inputs['rpkm_input'], context.inputs['output_gff'],\
                  context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
-                 context.inputs['bwaFolder'], context.inputs['bwaExec'], context.outputs['microbecensusoutput'])
+                 context.inputs['bwaFolder'], context.inputs['bwaExec'])
                 
           context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
 
@@ -1370,7 +1363,6 @@ class ContextCreator:
                "SCAN_tRNA",
                "MLTREEMAP_CALCULATION",
                "RPKM_CALCULATION",
-               "CREATE_BIOM",
                "NUM_CPUS",
                "ACCESSION_TO_TAXONID"
              ]
@@ -1431,7 +1423,6 @@ class ContextCreator:
            self.factory['BUILD_PGDB'] = self.create_pgdb_using_pathway_tools_cmd
            self.factory['MLTREEMAP_CALCULATION'] = self.create_mltreemap_cmd
            self.factory['COMPUTE_RPKM'] = self.create_rpkm_cmd
-           #self.factory['CREATE_BIOM'] = self.create_biom_cmd
 
            self.stageList['AMINO-FASTA'] = [
                              ['PREPROCESS_AMINOS',
@@ -1460,8 +1451,7 @@ class ContextCreator:
                               "GENBANK_FILE",
                               'PATHOLOGIC_INPUT',
                               'BUILD_PGDB',
-                              'COMPUTE_RPKM',
-                              'CREATE_BIOM' ]
+                              'COMPUTE_RPKM']
                              ]
            
            self.stageList['AMINO-GENBANK-UNANNOT'] = [

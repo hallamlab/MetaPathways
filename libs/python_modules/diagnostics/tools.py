@@ -152,9 +152,6 @@ class Tools():
                'COMPUTE_RPKM'  : {
                               'exec':  {'COMPUTE_RPKM': None }
                               }, 
-               'CREATE_BIOM'  : {
-                              'exec':  {'CREATE_BIOM': None }
-                              }, 
            }
 
 

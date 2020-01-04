@@ -4,7 +4,6 @@ import re
 from datetime import date
 
 
-
 DATEMAP= [ 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC' ] 
 def genbankDate():
 

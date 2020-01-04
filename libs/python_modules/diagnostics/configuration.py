@@ -92,7 +92,6 @@ class Configuration():
             'SCAN_tRNA': False ,
             'MLTREEMAP_CALCULATION': False,
             'COMPUTE_RPKM': True,
-            'CREATE_BIOM': True,
             'NUM_CPUS':False
          }
 

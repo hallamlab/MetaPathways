@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 """This script run the orf prediction """
-
 try:
    import  sys, re, csv, traceback
    from os import path, _exit

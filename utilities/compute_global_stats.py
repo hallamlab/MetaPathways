@@ -11,6 +11,7 @@ __status__ = "Release"
 
 try:
      import sys, os, re, math, scipy
+     import traceback
      from os import makedirs, sys, remove, rename
      from sys import path
      from optparse import OptionParser
@@ -19,6 +20,7 @@ except:
      print(""" Could not load some user defined  module functions""")
      print(""" Make sure your typed 'source MetaPathwaysrc'""")
      print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 
@@ -28,8 +30,6 @@ usage= sys.argv[0] + """ --list <samples_in_a_file> --folder <folders with sampl
 def fprintf(file, fmt, *args):
    file.write(fmt % args)
    
-   
-
 def printf(fmt, *args):
    sys.stdout.write(fmt % args)
    sys.stdout.flush()
@@ -64,10 +64,7 @@ def valid_arguments(opts, args):
     if opts.folder == None :
         print('ERROR: Missing processed samples folder')
         state = False
-
-
     return state
-
 
 
 def read_list(listfile):
@@ -140,12 +137,14 @@ def read_stats_txt(sample, folder):
         lines = [ x.strip() for x in fh.readlines()]
 
     stats = {}
-    for line in lines:
-       for reg in regs:
+    for reg in regs:
+       for line in lines:
           res = reg[1].search(line)
           if res:
              fields = line.split('\t')
              stats[reg[0]]=fields[2]
+       if reg[0] not in stats:
+             stats[reg[0]]=0
     fh.close()
              
     try:
@@ -160,16 +159,13 @@ def read_stats_txt(sample, folder):
        stats['PERCENT_ANNOT_FROM_COG'] = "%.2f" %( float(stats['ANNOT_FROM_COG'])/float( stats['NUM_AMINO (AFTER QC)'])*100.00)
        stats['PERCENT_ANNOT_FROM_Kegg'] = "%.2f" %( float(stats['ANNOT_FROM_Kegg'])/float( stats['NUM_AMINO (AFTER QC)'])*100.00)
 
-       stats['PERCENT_RATIO1'] = "%.2f" %( float(stats['ANNOT_FROM_COG'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
-       stats['PERCENT_RATIO2'] = "%.2f" %( float(stats['ANNOT_FROM_MetaCyc'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
-       stats['PERCENT_RATIO3'] = "%.2f" %( float(stats['ANNOT_FROM_EggNog'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
-       stats['PERCENT_RATIO4'] = "%.2f" %( float(stats['ANNOT_FROM_Kegg'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
-
-
+       #stats['PERCENT_RATIO1'] = "%.2f" %( float(stats['ANNOT_FROM_COG'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
+       #stats['PERCENT_RATIO2'] = "%.2f" %( float(stats['ANNOT_FROM_MetaCyc'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
+       #stats['PERCENT_RATIO3'] = "%.2f" %( float(stats['ANNOT_FROM_EggNog'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
+       #stats['PERCENT_RATIO4'] = "%.2f" %( float(stats['ANNOT_FROM_Kegg'])/ float(stats['ANNOT_FROM_RefSeq'])*100 )
     except:
-       print("Error in sample", sample)
-       pass
-       #sys.exit(0)
+       print(traceback.print_exc(10))
+       sys.exit(0)
 
     #if float(stats['PERCENT_ORFS_ANNOTATED']) < 30:
     #  print sample, float(stats['PERCENT_ORFS_ANNOTATED']) 
@@ -228,25 +224,25 @@ regs=[]
 
 def print_stats(samples, statsdata):
     stats = {}    
-    stats['PERCENT_RATIOS1'] =[]
+    #stats['PERCENT_RATIOS1'] =[]
     stats['PERCENT_RATIOS2'] =[]
     stats['PERCENT_RATIOS3'] =[]
     stats['PERCENT_RATIOS4'] =[]
 
     
-    for sample in samples:
-       stats['PERCENT_RATIOS1'].append(float(statsdata[sample]['PERCENT_RATIO1']))
-       stats['PERCENT_RATIOS2'].append(float(statsdata[sample]['PERCENT_RATIO2']))
-       stats['PERCENT_RATIOS3'].append(float(statsdata[sample]['PERCENT_RATIO3']))
-       stats['PERCENT_RATIOS4'].append(float(statsdata[sample]['PERCENT_RATIO4']))
+    #for sample in samples:
+    #   stats['PERCENT_RATIOS1'].append(float(statsdata[sample]['PERCENT_RATIO1']))
+    #   stats['PERCENT_RATIOS2'].append(float(statsdata[sample]['PERCENT_RATIO2']))
+    #   stats['PERCENT_RATIOS3'].append(float(statsdata[sample]['PERCENT_RATIO3']))
+    #   stats['PERCENT_RATIOS4'].append(float(statsdata[sample]['PERCENT_RATIO4']))
 
     metrics ={}
-    metrics['PERCENT_RATIOS1_AVG'] = scipy.mean(stats['PERCENT_RATIOS1'])
+    #metrics['PERCENT_RATIOS1_AVG'] = scipy.mean(stats['PERCENT_RATIOS1'])
     metrics['PERCENT_RATIOS2_AVG'] = scipy.mean(stats['PERCENT_RATIOS2'])
     metrics['PERCENT_RATIOS3_AVG'] = scipy.mean(stats['PERCENT_RATIOS3'])
     metrics['PERCENT_RATIOS4_AVG'] = scipy.mean(stats['PERCENT_RATIOS4'])
 
-    metrics['PERCENT_RATIOS1_STD'] = scipy.std(stats['PERCENT_RATIOS1'])
+    #metrics['PERCENT_RATIOS1_STD'] = scipy.std(stats['PERCENT_RATIOS1'])
     metrics['PERCENT_RATIOS2_STD'] = scipy.std(stats['PERCENT_RATIOS2'])
     metrics['PERCENT_RATIOS3_STD'] = scipy.std(stats['PERCENT_RATIOS3'])
     metrics['PERCENT_RATIOS4_STD'] = scipy.std(stats['PERCENT_RATIOS4'])
@@ -265,7 +261,7 @@ def print_stats(samples, statsdata):
        vals =[]
        flag = False
        count = 0
-       if abs( float(statsdata[sample]['PERCENT_RATIO1']) - metrics['PERCENT_RATIOS1_AVG'] ) >  a*metrics['PERCENT_RATIOS1_STD']:
+       if False and  abs( float(statsdata[sample]['PERCENT_RATIO1']) - metrics['PERCENT_RATIOS1_AVG'] ) >  a*metrics['PERCENT_RATIOS1_STD']:
           vals.append('COG')
           count += 1
           flag = True
@@ -316,22 +312,22 @@ def setup_fields():
               ['NUM_CONTIGS (AFTER QC)', re.compile(r'1005\tNumber of')],
               ['NUM_AMINO (BEFORE QC)', re.compile(r'2000\tNumber of translated')],
               ['NUM_AMINO (AFTER QC)', re.compile(r'2005\tNumber')],
-              ['HITS_IN_COG', re.compile(r'hits in COG-14-2016-10-20')],
-              ['HITS_IN_MetaCyc', re.compile(r'hits in metacyc-2016-10-31')],
-              ['HITS_IN_Kegg', re.compile(r'hits in kegg-uniprot-2016-10-20')], 
-              ['HITS_IN_EggNog', re.compile(r'hits in eggnog-v4-2016-10-30')], 
-              ['HITS_IN_RefSeq', re.compile(r'hits in refseq-2016-10-06-rel-78')],
-              ['ANNOT_FROM_COG', re.compile(r'Protein Annotations from COG-14-2016-10-20')],
-              ['ANNOT_FROM_MetaCyc', re.compile(r'Protein Annotations from metacyc-2016-10-31')],
-              ['ANNOT_FROM_Kegg', re.compile(r'Protein Annotations from kegg-uniprot-2016-10-20')],
-              ['ANNOT_FROM_EggNog', re.compile(r'Protein Annotations from eggnog-v4-2016-10-30')],
-              ['ANNOT_FROM_RefSeq', re.compile(r'Protein Annotations from refseq-2016-10-06-rel-78')],
+              ['HITS_IN_COG', re.compile(r'hits in COG')],
+              ['HITS_IN_MetaCyc', re.compile(r'hits in metacyc')],
+              ['HITS_IN_Kegg', re.compile(r'hits in kegg')], 
+              ['HITS_IN_EggNog', re.compile(r'hits in eggnog')], 
+              ['HITS_IN_RefSeq', re.compile(r'hits in refseq')],
+              ['ANNOT_FROM_COG', re.compile(r'Protein Annotations from COG')],
+              ['ANNOT_FROM_MetaCyc', re.compile(r'Protein Annotations from metacyc')],
+              ['ANNOT_FROM_Kegg', re.compile(r'Protein Annotations from kegg')],
+              ['ANNOT_FROM_EggNog', re.compile(r'Protein Annotations from eggnog')],
+              ['ANNOT_FROM_RefSeq', re.compile(r'Protein Annotations from refseq')],
          #     ['ORFS_ANNOTATED', re.compile(r'Note sure what Protein Annotations from refseq-2016-10-06-rel-78')],
               ['PERCENT_ANNOT_FROM_COG', re.compile(r'Is calculated COG')],
               ['PERCENT_ANNOT_FROM_MetaCyc', re.compile(r'Is calculated MetaCyc')],
               ['PERCENT_ANNOT_FROM_Kegg', re.compile(r'Is calculated Kegg')],
               ['PERCENT_ANNOT_FROM_EggNog', re.compile(r'Is calculated EggNog')],
-              ['PERCENT_ANNOT_FROM_RefSeq', re.compile(r'Is calculated refseq-2016-10-06-rel-78')],
+              ['PERCENT_ANNOT_FROM_RefSeq', re.compile(r'Is calculated refseq')],
               ['NUM_PWYS', re.compile(r'Not supposed to match anything')],
               ['ORFS_ANNOTATED', re.compile(r'Number of ORFS Annotated in Total') ],
               ['ORFS_UNANNOTATED', re.compile(r'No supposed to match') ],
@@ -353,7 +349,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
        sys.exit(0)
 
     setup_fields()
-    samples =read_list(opts.listfile) 
+    samples = read_list(opts.listfile) 
 
     statsdata = read_sample(samples, opts.folder)
 

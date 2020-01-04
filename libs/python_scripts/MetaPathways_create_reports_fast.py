@@ -467,16 +467,16 @@ def isWithinCutoffs(data, cutoffs):
   return True
 
 
-def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results, pickorfs):
+def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results, pickorfs, callnum=0):
     fields = ['target', 'q_length', 'bitscore', 'bsr', 'expect', 'identity', 'ec', 'query' ]
     fields.append('product')
 
     try:
+      hits = 0
       for data in blastparser:
-        if re.search(r'Xrrefseq', dbname):
-           print  'refseq process',  data
+        if re.search(r'xxrefseq', dbname) and callnum==2:
+           print('refseq process',  data)
 
-        first = first + 1  
         if  data!=None and isWithinCutoffs(data, cutoffs) :
             #if dbname=='refseq-nr-2014-01-18':
             #      print  'refseq process',  data
@@ -496,7 +496,6 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
             if not shortORFId in pickorfs:
                 continue
 
-
         #        blastparser.rewind()
         #        return None
 
@@ -504,9 +503,9 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
             if not shortORFId in annotation_results:
                 annotation_results[shortORFId] = []
 
-            #if dbname=='refseq-nr-2014-01-18':
-                  #print  annotation
             annotation_results[shortORFId].append(annotation)
+            #if callnum==2 and 'refseq' in dbname:
+            #   print(shortORFId, annotation)
     except:
        print  traceback.print_exc()
        
@@ -1020,13 +1019,13 @@ def main(argv, errorlogger = None,  runstatslogger = None):
     lca = LCAComputation(opts.ncbi_taxonomy_map, opts.ncbi_megan_map)
     lca.setParameters(opts.lca_min_score, opts.lca_top_percent, opts.lca_min_support)
 
-    if opts.accession_to_taxon_map:
-       lca.load_accession_to_taxon_map(opts.accession_to_taxon_map)
+    print(opts.accession_to_taxon_map)
+    #if opts.accession_to_taxon_map:
+    #   lca.load_accession_to_taxon_map(opts.accession_to_taxon_map)
 
     blastParsers={}
     for dbname, blastoutput in zip( database_names, input_blastouts):
         blastParsers[dbname] =  BlastOutputTsvParser(dbname, blastoutput + '.tmp')
-        #print dbname, blastoutput + '.tmp'
         blastParsers[dbname].setMaxErrorsLimit(5)
         blastParsers[dbname].setErrorAndWarningLogger(errorlogger)
 
@@ -1053,9 +1052,8 @@ def main(argv, errorlogger = None,  runstatslogger = None):
           #if True:
             try:
                results_dictionary[dbname]={}
-              # blastParsers[dbname].rewind()
-               process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs)
-
+               eprintf("Scanning database : %s...", dbname)
+               process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs, callnum=1)
 
                lca.set_results_dictionary(results_dictionary)
                lca.compute_min_support_tree(opts.input_annotated_gff, pickorfs, dbname = dbname )
@@ -1066,12 +1064,17 @@ def main(argv, errorlogger = None,  runstatslogger = None):
                insert_error(errorcode)
                traceback.print_exc()
 
+    for dbname in results_dictionary.keys():
+          print("number of collected in block  hits in {}: {}".format(dbname, len(results_dictionary[dbname].keys())))
     # this loop determines the actual/final taxonomy of each of the ORFs 
     # taking into consideration the min support
+    blastParsers={}
+    for dbname, blastoutput in zip(database_names, input_blastouts):
+        blastParsers[dbname] =  BlastOutputTsvParser(dbname, blastoutput + '.tmp')
+
     filePermTypes= {}
     start = 0
     outputfile = open( opts.output_dir + PATHDELIM + opts.sample_name + '.ORF_annotation_table.txt', 'w')
-
 
     short_to_long_dbnames = {}
     for dbname in database_names:
@@ -1091,7 +1094,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
       if results:
           short_to_long_dbnames['cazy'] = dbname
 
-    standard_dbs = ['cog', 'seed', 'kegg', 'cazy']
+    standard_dbs = ['cog', 'seed', 'kegg', 'cazy' ]
     standard_db_maps = [opts.input_cog_maps, opts.input_seed_maps, opts.input_kegg_maps, opts.input_cazy_maps]
     field_to_description = {}
     hierarchical_map = {}
@@ -1109,6 +1112,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
             raise
             pass
 
+
     while start < Length:
        pickorfs= {}
        last =  min(Length, start + _stride)
@@ -1122,13 +1126,17 @@ def main(argv, errorlogger = None,  runstatslogger = None):
             try:
                results_dictionary[dbname]={}
                eprintf("Processing database : %s...", dbname)
-               process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs)
+               process_parsed_blastoutput(dbname, blastParsers[dbname], opts, results_dictionary[dbname], pickorfs, callnum=2)
                eprintf("done\n")
             except:
                traceback.print_exc()
                eprintf("ERROR: %s\n", dbname)
                pass
            # print dbname + ' ' + str(len(results_dictionary[dbname]))
+
+       
+       for dbname in results_dictionary.keys():
+          print("number of collected hits in {}: {}".format(dbname, len(results_dictionary[dbname].keys())))
 
        eprintf("Num orfs processed  : %s\n", str(start))
 
@@ -1155,6 +1163,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
     for dbname, blastoutput in zip( database_names, input_blastouts):
         try:
            remove( blastoutput + '.tmp')
+           pass
         except:
            pass
 
@@ -1195,7 +1204,7 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
 
     orf_dict = {}
     for dbname in results.keys():
-      print dbname, len(results[dbname].keys())
+      print("number of hits in {}: {}".format(dbname, len(results[dbname].keys())))
       for orfname in results[dbname]:
 
          for orf in results[dbname][orfname]:
@@ -1240,6 +1249,11 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
               orf_dict[orf['query']][dbname] =  product
               continue
 
+           _results = re.search(r'refseq', dbname, re.I)
+           if _results:
+              orf_dict[orf['query']][dbname] =  product
+              continue
+
            _results = re.search(r'seed', dbname, re.I)
            if _results:
               orf_dict[orf['query']][dbname] =  seed_id(product)
@@ -1266,7 +1280,6 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
          database_maps['cog'] = dbname
          continue
          
-
        _results = re.search(r'kegg', dbname, re.I)
        if _results:
          database_maps['kegg'] = dbname
@@ -1295,32 +1308,34 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
 
        database_maps[dbname] = dbname
 
-
+    print('database maps', database_maps)
     std_dbnames = ['cog', 'kegg', 'seed', 'cazy', 'metacyc', 'refseq'] 
     dbnames = std_dbnames
 
-    headers = ["#  ORF_ID", "CONTIG_ID"]
+    headers = ["ORF_ID", "CONTIG_ID"]
     for std_dbname in std_dbnames:
        headers.append(std_dbname.upper())
 
     for dbname in sorted(results.keys()):
        non_std =True
-       for std_dbname in std_dbnames:
-          if re.search(std_dbname, dbname, re.I):
-             non_std =False
-             
-       if non_std:
-         dbnames.append(dbname)
-         headers.append(std_dbname)
 
+       for std_dbname in std_dbnames:
+          if re.search(std_dbname, dbname.lower(),  re.I):
+            """none of the std had a match"""
+            non_std = False 
+
+       if non_std:
+          dbnames.append(dbname)
+          headers.append(std_dbname)
 
     sampleName = None
     for orfn in orf_dict:
        #if orfn=='2_0':
-       #  print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
+         #print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
        #_keys =  orf_dict[orfn].keys()
        #_results = re.search(r'cog', dbname, re.I)
 
+       
        if 'cog' in database_maps and  database_maps['cog'] in orf_dict[orfn]:
           cogFn = orf_dict[orfn][database_maps['cog']]
        else:
@@ -1365,8 +1380,10 @@ def print_orf_table(results, orfToContig,  output_dir,  outputfile, compact_outp
 
        row = [ orfName, contigName ]
        for dbname in dbnames:
+        # print(dbname)
          if dbname in database_maps and database_maps[dbname] in orf_dict[orfn]:
            row.append(orf_dict[orfn][database_maps[dbname]])
+        #   print("\t" + orf_dict[orfn][database_maps[dbname]])
          else:
            row.append("")
 

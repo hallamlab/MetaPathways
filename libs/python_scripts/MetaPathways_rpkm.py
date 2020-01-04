@@ -135,7 +135,6 @@ def indexForBWA(bwaExec, contigs,  indexfile):
 
 
 def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
-
     num_threads =  int(multiprocessing.cpu_count()*0.8)
     if num_threads < 1:
        num_threads = 1
@@ -149,8 +148,8 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
           cmd = "%s mem -t %d %s %s %s > %s"  %(bwaExec, num_threads, indexFile,  readFiles[0], readFiles[1], bwaOutputTmp )
 
        if len(readFiles) == 1:
-          res0 = re.search(r'_[1-2].fastq',readFiles[0])
-          res1 = re.search(r'_[1-2].b\d+.fastq',readFiles[0])
+          res0 = re.search(r'_[1-2].(fastq|fastq[.]gz)',readFiles[0])
+          res1 = re.search(r'_[1-2].b\d+.(fastq|fastq[.]gz)',readFiles[0])
           if res0 or res1:
              cmd = "%s mem -t %d -p -o %s  %s %s "%(bwaExec, num_threads, bwaOutputTmp, indexFile,  readFiles[0])
           else:
@@ -160,7 +159,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile,  _readFiles, bwaFolder) :
        if result[0]==0:
           rename(bwaOutputTmp, bwaOutput)
        else:
-          eprintf("ERROR:\t Error file processing read files %s\n", readFiles)
+          eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
           status = False
        count += 1
     return status
@@ -179,8 +178,6 @@ def runMicrobeCensus(microbeCensusExec, microbeCensusOutput,  sample_name, readF
        command_frags = [microbeCensusExec, ','.join(readfiles), microbeCensusOutput + ".tmp"]
 
        result = getstatusoutput(' '.join(command_frags))
-       print ' '.join(command_frags)
-
        if result[0]==0:
           pass
           rename(microbeCensusOutput+".tmp", microbeCensusOutput)
@@ -249,6 +246,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     # read the input sam and fastq  files
     samFiles = getSamFiles(options.readsdir, options.sample_name)
     readFiles = getReadFiles(options.readsdir, options.sample_name)
+
     if not  samFiles:
         samFiles = getSamFiles(options.bwaFolder, options.sample_name)
 
@@ -277,23 +275,21 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
            #exit_process("ERROR\tMissing read files!\n")
     
         # run the microbe Census  if not computed already
-        if not path.exists(options.microbecensusoutput):
-            microbeCensusStatus = runMicrobeCensus("run_microbe_census.py", options.microbecensusoutput, options.sample_name, readFiles, options.readsdir) 
-            if microbeCensusStatus:
-               print 'Successfully ran MicrobeCensus!'
-            else:
-               eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
-               if errorlogger:
-                  errorlogger.eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
-                  insert_error(10)
-               return 255
-
-
-
-        genome_equivalent = read_genome_equivalent(options.microbecensusoutput)
+#        if not path.exists(options.microbecensusoutput):
+#            microbeCensusStatus = runMicrobeCensus("run_microbe_census.py", options.microbecensusoutput, options.sample_name, readFiles, options.readsdir) 
+#            if microbeCensusStatus:
+#               print 'Successfully ran MicrobeCensus!'
+#            else:
+#               eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
+#               if errorlogger:
+#                  errorlogger.eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
+#                  insert_error(10)
+#               return 255
+#
+#
+#
+#        genome_equivalent = read_genome_equivalent(options.microbecensusoutput)
         #bwaRunSuccess = True
-
-       
         bwaRunSuccess = runUsingBWA(options.bwaExec, options.sample_name,  bwaIndexFile, readFiles, options.bwaFolder) 
         #bwaRunSuccess = True
 
@@ -307,17 +303,9 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
            return 255
            #exit_process("ERROR\tFailed to run BWA!\n")
            # END of running BWA
-
            # make sure you get the latest set of sam file after the bwa
-        samFiles = getSamFiles(options.bwaFolder, options.sample_name)
-
     # make sure you get the latest set of sam file after the bwa
-    samFiles = getSamFiles(options.readsdir, options.sample_name)
-
-    if not samFiles:
-       eprintf("ERROR\tSam files not created for RPMK run!\n")
-       insert_error(10)
-       return 255
+    #samFiles = getSamFiles(options.readsdir, options.sample_name)
 
     print 'Running RPKM'
     if not path.exists(options.rpkmExec):
@@ -332,20 +320,19 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
   
     command =  [
                   "%s --contigs-file %s"  %(options.rpkmExec, options.contigs),
-                  "--multireads" ,
-                  "--read-counts", 
-                  "--genome_equivalent %0.10f" %(genome_equivalent)
+                  "--multireads" #
+               #   "--read-counts", 
+               #   "--genome_equivalent %0.10f" %(genome_equivalent)
                ]
 
     if options.output:
-       command.append("--ORF-RPKM %s" %(options.output))
+       command.append("--ORF-RPKM %s" %(options.output + ".tmp"))
        command.append("--stats %s" %(options.stats))
 
     if options.orfgff:
-       command += " --ORFS %s" %(options.orfgff)
+       command.append(" --ORFS {}".format(options.orfgff))
 
     samFiles = getSamFiles(options.bwaFolder, options.sample_name)
-    print 'rpkm running'
 
     if not samFiles:
        return 0
@@ -358,20 +345,17 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     try:
        command1 = copy.copy(command)
 
-       command1.append("--type 1")
-       rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command1))
-       rename(options.output, options.output + ".read_counts.txt")
+       #command1.append("--type 1")
+       #rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command1))
+       #rename(options.output, options.output + ".read_counts.txt")
 
        command2 = copy.copy(command)
-       command2.append("--type 2")
+       #command2.append("--type 2")
        rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command2)) 
-       rename(options.output, options.output + ".rpkg.txt")
+       rename(options.output + ".tmp", options.output)
     except:
        rpkmstatus = 1
        pass
-
-    if rpkmstatus:
-        print 'Successfully ran RPKM!'
 
     if rpkmstatus!=0:
        eprintf("ERROR\tRPKM calculation was unsuccessful\n")
@@ -384,7 +368,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
 def runRPKMCommand(runcommand = None):
     if runcommand == None:
       return False
-
+    #print(runcommand)
     result = getstatusoutput(runcommand)
     if result[1]:
        print result[1]
