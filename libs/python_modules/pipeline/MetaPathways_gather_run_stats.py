@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, fprintf, eprintf, exit_process
      from libs.python_modules.utils.sysutil import pathDelim
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwaysrc\""""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+     print(""" """)
      sys.exit(3)
 
 PATHDELIM = pathDelim()
@@ -390,7 +390,7 @@ def main(argv, errorlogger = None):
     (opts, args) = parser.parse_args(argv)
 
     if not valid_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
     
     sample_name = opts.sample_name
@@ -464,7 +464,7 @@ def main(argv, errorlogger = None):
            
            statsfilename = open(stats_file_name, 'w')
         except:
-           print "ERRROR : Cannot open stats file format " + stats_file_name 
+           print("ERRROR : Cannot open stats file format " + stats_file_name)
            sys.exit(0)
           
         for pair in results:

@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.sysutil import getstatusoutput
      from libs.python_modules.annotate.sequence import genbank, fasta
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwaysrc\""""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+     print(""" """)
      sys.exit(3)
 
 
@@ -41,7 +41,7 @@ def check_arguments(opts, args):
         return False
       
     if len(opts.source) != len(opts.target):
-         print "The nuber of sources and targets should be the same"
+         print("The nuber of sources and targets should be the same")
          return False
     return True
 
@@ -63,7 +63,7 @@ def copy_faa_gff_orf_prediction( source_files, target_files) :
 def main(argv): 
     (opts, args) = parser.parse_args()
     if not check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
     copy_faa_gff_orf_prediction( opts.source, opts.target) 
 

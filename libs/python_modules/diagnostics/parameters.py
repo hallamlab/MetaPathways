@@ -12,7 +12,6 @@ __status__ = "Release"
 
 try:
     from shutil import rmtree
-    from StringIO import StringIO
     from os import getenv, makedirs, path, remove
     from operator import itemgetter
     from os.path import abspath, exists, dirname, join, isdir
@@ -20,7 +19,7 @@ try:
     from optparse import make_option
     import re, sys, os, traceback
 except:
-    print "Cannot load some modules"
+    print("Cannot load some modules")
     sys.exit(0)
    
 
@@ -36,7 +35,7 @@ class Parameters():
         try:
             self.file = self.initializeExpectations()
         except IOError:
-            print "ERROR : Cannot  initialize \"Configuration\" in file " + sys.argv[0]
+            print("ERROR : Cannot  initialize \"Configuration\" in file " + sys.argv[0])
 
 
     def isValid1(self, key1):
@@ -148,7 +147,7 @@ class Parameters():
 
 if __name__=="__main__":
      v =  Parameters()
-     print v.isValid1('metapaths_steps')
-     print v.isValid1('mtapaths_steps')
-     print v.getValidValues1('metapaths_steps')
-     print v.getValidValues2('INPUT', 'format')
+     print(v.isValid1('metapaths_steps'))
+     print(v.isValid1('mtapaths_steps'))
+     print(v.getValidValues1('metapaths_steps'))
+     print(v.getValidValues2('INPUT', 'format'))

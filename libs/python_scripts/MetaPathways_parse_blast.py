@@ -21,9 +21,9 @@ try:
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
      from libs.python_modules.utils.errorcodes import *
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc' """)
+     print(""" """)
      sys.exit(3)
 
 
@@ -110,24 +110,24 @@ def createParser():
 
 def check_arguments(opts, args):
     if len(opts.input_blastout) == 0:
-         print "There sould be at least one blastoutput file"  
+         print("There sould be at least one blastoutput file")
          return False
 
     if len(opts.database_name) == 0:
-         print "There sould be at least one database name"  
+         print("There sould be at least one database name")
          return False
 
     if len(opts.database_map) == 0:
-         print "There sould be at least one database map file name"  
+         print("There sould be at least one database map file name")
          return False
 
     if len(opts.input_blastout) != len(opts.database_name) or len(opts.input_blastout) !=  len(opts.database_map) :
-         print "The number of database names, blastoutputs and database map file should be equal"
+         print("The number of database names, blastoutputs and database map file should be equal")
          return False
 
 
     if opts.refscore_file == None:
-       print "Must specify the refscore"
+       print("Must specify the refscore")
        return False
 
     return True
@@ -140,7 +140,7 @@ def create_query_dictionary(blastoutputfile, query_dictionary, algorithm, errorl
        try:
           blastoutfh = open( blastoutputfile,'r')
        except:
-          print "ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse "
+          print("ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse ")
           return
   
        try:
@@ -169,7 +169,7 @@ def create_query_dictionary(blastoutputfile, query_dictionary, algorithm, errorl
 
 def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger= None):
        if not query_dictionary:
-          print "WARNING : empty query dictionary in parse B/LAST"
+          print("WARNING : empty query dictionary in parse B/LAST")
 
           if errorlogger:
             errologger.write("WARNING : empty query dictionary in parse B/LAST\n")
@@ -273,7 +273,7 @@ class BlastOutputParser(object):
         try:
             self.create_refBitScores()
         except:
-            print traceback.print_exc(10)
+            print(traceback.print_exc(10))
             exit_process( "Error while reading from  B/LAST refscore file " + self.refscore_file )
         try:
            create_dictionary(database_mapfile, self.annot_map, query_dictionary)
@@ -338,7 +338,7 @@ class BlastOutputParser(object):
           i += 1
         self.size = len(self.lines)
        
-    def next(self):
+    def __next__(self):
         if self.i % self.Size ==0:
            self.refillBuffer()
 
@@ -547,7 +547,7 @@ def process_blastoutput(dbname, blastoutput,  mapfile, refscore_file, opts, erro
              name =  result.group(1)
              uniques[name] =True
         except:
-           print 'data is : ', data, '\n'
+           print('data is : ', data, '\n')
            return count, len(uniques)
 
         for field in fields:
@@ -565,7 +565,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     global parser
     (opts, args) = parser.parse_args(argv)
     if not check_arguments(opts, args):
-       print usage
+       print (sage)
        sys.exit(0)
     
     if errorlogger:

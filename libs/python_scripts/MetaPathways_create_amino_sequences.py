@@ -12,9 +12,9 @@ try:
      import logging.handlers
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 
@@ -100,8 +100,8 @@ def get_translation_table(num):
 def files_exist( files ):
      for file in files:
         if not path.exists(file):
-           print 'Could not read File ' +  file
-           print 'Please make sure these sequences are in the \"blastDB\" folder'
+           print('Could not read File ' +  file)
+           print('Please make sure these sequences are in the \"blastDB\" folder')
            sys.exit(3)
            return False
      return True
@@ -187,7 +187,7 @@ def process_gff_file(gff_file_name, output_amino_file_name, output_nuc_file_name
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
-        print "Cannot read file " + gff_file_name + " !"
+        print("Cannot read file " + gff_file_name + " !")
 
      sample_name= re.sub('.gff', '', gff_file_name)
      gff_lines = gfffile.readlines()
@@ -402,7 +402,7 @@ def process_sequence_file(sequence_file_name,  seq_dictionary):
      try:
         sequencefile = open(sequence_file_name, 'r')
      except IOError:
-        print "Cannot read file " + sequence_file_name + " !"
+        print("Cannot read file " + sequence_file_name + " !")
 
      sequence_lines = sequencefile.readlines()
      
@@ -500,12 +500,12 @@ def main(argv, errorlogger = None, runstatslogger = None):
     #print options
 
     if not path.exists(options.gff_file):
-        print "gff file does not exist"
+        print("gff file does not exist")
         insert_error(errorcode)
         return(1,'')
 
     if not path.exists(options.nucleotide_sequences):
-        print "nucloetide sequences file does not exist"
+        print("nucloetide sequences file does not exist")
         insert_error(errorcode)
         return(1,'')
 

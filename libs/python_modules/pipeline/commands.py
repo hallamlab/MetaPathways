@@ -11,19 +11,17 @@ __status__ = "Release"
 """Contains general utility code for the metapaths project"""
 
 try:
+    import re, sys, os, traceback
     from shutil import rmtree
-    from StringIO import StringIO
     from os import getenv, makedirs, path, remove
     from operator import itemgetter
     from os.path import abspath, exists, dirname, join, isdir
     from collections import defaultdict
     from optparse import make_option
-    import re, sys, os, traceback
 except:
-    print "Cannot load some modules"
+    print("Cannot load some modules")
     sys.exit(0)
    
-
 class Command():
 
     inputs = []

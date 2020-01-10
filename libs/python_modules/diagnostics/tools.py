@@ -14,7 +14,7 @@ try:
     from shutil import rmtree
     from optparse import make_option
 except:
-    print "Cannot load some modules"
+    print("Cannot load some modules")
     sys.exit(0)
    
 
@@ -32,7 +32,7 @@ class Tools():
         try:
             self.file = self.initializeTools()
         except IOError:
-            print "ERROR : Cannot  initialize \"Configuration\" in file " + sys.argv[0]
+            print("ERROR : Cannot  initialize \"Configuration\" in file " + sys.argv[0])
 
 
     def isValid1(self, key1):

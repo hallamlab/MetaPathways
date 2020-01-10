@@ -15,10 +15,10 @@ try:
    from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 PATHDELIM=pathDelim()
@@ -179,7 +179,7 @@ def  _execute_LAST(options, logger = None):
        args += [ options.last_query ]
 
     result =None
-    print ' '.join(args)
+    print(' '.join(args))
     try:
        result = getstatusoutput(' '.join(args) )
        rename(options.last_o + ".tmp", options.last_o) 

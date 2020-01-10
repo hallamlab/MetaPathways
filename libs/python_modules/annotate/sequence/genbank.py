@@ -5,9 +5,9 @@ import datetime
 import textwrap
 import sys
 
-from __init__ import (SequenceRecordParser, SequenceRecordSerializer,
+from libs.python_modules.annotate.sequence.__init__ import (SequenceRecordParser, SequenceRecordSerializer,
                       SequenceRecord, SequenceFactory, Feature)
-import location
+import libs.python_modules.annotate.sequence.location
 
 class GenBankRecordParser(SequenceRecordParser):
     """Parses a GenBank record from a string or file."""

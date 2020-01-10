@@ -11,7 +11,6 @@ __status__ = "Release"
 """Contains general utility code for the metapaths project"""
 
 from shutil import rmtree
-from StringIO import StringIO
 from os import getenv, makedirs, _exit
 from operator import itemgetter
 from os.path import split, splitext, abspath, exists, dirname, join, isdir
@@ -221,7 +220,7 @@ class GffFileParser(object):
         try:
             self.gff_file = open( gff_filename,'r')
         except AttributeError:
-            print "Cannot read the map file for database :" + dbname
+            print("Cannot read the map file for database :" + dbname)
             sys.exit(0)
 
     def __iter__(self):
@@ -379,8 +378,6 @@ class Job:
 
 
 def parse_command_line_parameters(script_info, argv):
-    print script_info 
-    print argv
     opts = []
     return opts
 class TreeMissingError(IOError):
@@ -467,83 +464,6 @@ class FunctionWithParams(object):
         f.write(self.formatResult(result))
         f.close()
 
-    def getOtuTable(self, otu_source):
-        """Returns parsed OTU table from putative OTU source."""
-        
-        #if we have a string starting with #, assume it's an OTU file,
-        #otherwise assume it's a path
-        # if 4-tuple, just return it
-        if type(otu_source) == type((1,3,4,44)):
-            return otu_source
-        if hasattr(otu_source, 'startswith') and otu_source.startswith('#'):
-            try:
-                return parse_otu_table(StringIO(otu_source))
-            except (TypeError, ValueError), e:
-                raise OtuMissingError, \
-                    "Tried to read OTUs from string starting with # but got "+e
-        else:
-            try:
-                otu_file = open(otu_source, 'U')
-            except (TypeError, IOError):
-                raise OtuMissingError, \
-                    "Couldn't read OTU file at path: %s" % otu_source
-            result = parse_otu_table(otu_file)
-            otu_file.close()
-            return result
-
-    def getTree(self, tree_source):
-        """Returns parsed tree from putative tree source"""
-        if isinstance(tree_source, PhyloNode):
-            tree = tree_source    #accept tree object directly for tests
-        elif tree_source:
-            try:
-                f = open(tree_source, 'U')
-            except (TypeError, IOError):
-                raise TreeMissingError, \
-                    "Couldn't read tree file at path: %s" % tree_source
-            tree = parse_newick(f, PhyloNode)
-            f.close()
-        else:
-            raise TreeMissingError, str(self.Name) + \
-                " is a phylogenetic metric, but no tree was supplied."
-        return tree
-
-    def getData(self, data_source):
-        """Returns data from putative source, which could be a path"""
-        if isinstance(data_source, str):
-            try:
-                return eval(data_source)
-            except (NameError, SyntaxError):
-                try:
-                    data_f = open(data_source, 'U')
-                    data = data_f.read()
-                    data_f.close()
-                    try:
-                        return eval(data)
-                    except (NameError, SyntaxError, TypeError):
-                        pass
-                    return data
-                except (IOError, NameError, TypeError):
-                    pass
-        #if we got here, either we didn't get a string or we couldn't read
-        #the data source into any other kind of object
-        return data_source
-
-    def getAlignment(self, aln_source):
-        """Returns parsed alignment from putative alignment source"""
-        if isinstance(aln_source, Alignment):
-            aln = aln_source
-        elif aln_source:
-            try:
-                aln = LoadSeqs(aln_source, Aligned=True)
-            except (TypeError, IOError, AssertionError):
-                raise AlignmentMissingError, \
-                    "Couldn't read alignment file at path: %s" % aln_source
-        else:
-            raise AlignmentMissingError, str(self.Name) + \
-                " requires an alignment, but no alignment was supplied."
-        return aln
-
     def __call__ (self, result_path=None, log_path=None,\
         *args, **kwargs):
         """Returns the result of calling the function using the params dict.
@@ -551,7 +471,7 @@ class FunctionWithParams(object):
         Parameters:
         [fill in on a per-application basis]
         """
-        print """Function with parameters"""
+        print("""Function with parameters""")
         result = self.getResult(*args, **kwargs)
         if log_path:
             self.writeLog(log_path)
@@ -681,108 +601,6 @@ def split_fasta_on_sample_ids_to_files(seqs,output_dir):
     return None
 
      
-def raise_error_on_parallel_unavailable(qiime_config=None):
-    """Raise error if no parallel QIIME bc user hasn't set jobs_to_start
-    """
-    if qiime_config == None:
-        qiime_config = load_qiime_config()
-    if 'jobs_to_start' not in qiime_config or \
-       int(qiime_config['jobs_to_start']) < 2:
-       raise RuntimeError,\
-        "Parallel QIIME is not available. (Have you set"+\
-        " jobs_to_start to greater than 1 in your qiime_config?"
-        
-def matrix_stats(headers_list, distmats):
-    """does, mean, median, stdev on a series of (dis)similarity matrices
-    
-    takes a series of parsed matrices (list of headers, list of numpy 2d arrays)
-    headers must are either row or colunm headers (those must be identical)
-    outputs headers (list), means, medians, stdevs (all numpy 2d arrays)
-    """
-    
-    if len(set(map(tuple,headers_list))) > 1:
-        raise ValueError("error, not all input matrices have"+\
-          " identical column/row headers")
-        
-    all_mats = numpy.array(distmats) # 3d numpy array: mtx, row, col
-    means = numpy.mean(all_mats, axis=0)
-    medians = numpy.median(all_mats, axis=0)
-    stdevs = numpy.std(all_mats, axis=0)
-    
-    return deepcopy(headers_list[0]), means, medians, stdevs
-
-def _flip_vectors(jn_matrix, m_matrix):
-    """transforms PCA vectors so that signs are correct"""
-    m_matrix_trans = m_matrix.transpose()
-    jn_matrix_trans = jn_matrix.transpose()
-    new_matrix= zeros(jn_matrix_trans.shape, float)
-    for i, m_vector in enumerate(m_matrix_trans):
-        jn_vector = jn_matrix_trans[i]
-        disT = list(m_vector - jn_vector)
-        disT = sum(map(abs, disT))
-        jn_flip = jn_vector*[-1]
-        disF = list(m_vector - jn_flip)
-        disF = sum(map(abs, disF))
-        if disT > disF:
-            new_matrix[i] = jn_flip
-        else:
-            new_matrix[i] = jn_vector
-    return new_matrix.transpose()
-
-def IQR(x):
-    """calculates the interquartile range of x
-
-    x can be a list or an array
-    
-    returns min_val and  max_val of the IQR"""
-
-    x.sort()
-    #split values into lower and upper portions at the median
-    odd = len(x) % 2
-    midpoint = int(len(x)/2)
-    if odd:
-        low_vals = x[:midpoint]
-        high_vals = x[midpoint+1:]
-    else: #if even
-        low_vals = x[:midpoint]
-        high_vals = x[midpoint:]
-    #find the median of the low and high values
-    min_val = median(low_vals)
-    max_val = median(high_vals)
-    return min_val, max_val
-
-def matrix_IQR(x):
-    """calculates the IQR for each column in an array
-    """
-    num_cols = x.shape[1]
-    min_vals = zeros(num_cols)
-    max_vals = zeros(num_cols)
-    for i in range(x.shape[1]):
-        col = x[:, i]
-        min_vals[i], max_vals[i] = IQR(col)
-    return min_vals, max_vals
-
-def idealfourths(data, axis=None):
-    """This function returns an estimate of the lower and upper quartiles of the data along
-    the given axis, as computed with the ideal fourths. This function was taken
-    from scipy.stats.mstat_extra.py (http://projects.scipy.org/scipy/browser/trunk/scipy/stats/mstats_extras.py?rev=6392)
-    """
-    def _idf(data):
-        x = data.compressed()
-        n = len(x)
-        if n < 3:
-            return [numpy.nan,numpy.nan]
-        (j,h) = divmod(n/4. + 5/12.,1)
-        qlo = (1-h)*x[j-1] + h*x[j]
-        k = n - j
-        qup = (1-h)*x[k] + h*x[k-1]
-        return [qlo, qup]
-    data = numpy.sort(data, axis=axis).view(MaskedArray)
-    if (axis is None):
-        return _idf(data)
-    else:
-        return apply_along_axis(_idf, axis, data)
-
 def isarray(a):
     """
     This function tests whether an object is an array
@@ -1094,15 +912,11 @@ def create_metapaths_configuration(filename, folder):
                      default = os.environ['METAPATHWAYS_PATH'] + PATHDELIM + '/regtests'
                      
                      target = default + PATHDELIM + 'pathway-tools'
-                     print target
                      if not os.path.exists(target):
-                         print 'create'
                          os.mkdir(target)
                      target = target + PATHDELIM + 'pathway-tools'
                      if not os.path.exists(target):
                          touch(target)
-
-                     print CONFIG_VARIABLE
                   else:
                      eprintf("%-10%:\tSet shell essential variable PTOOLS_DIR as 'export PTOOLS_DIR=<path>'\n" %('INFO') )
 
@@ -1110,7 +924,6 @@ def create_metapaths_configuration(filename, folder):
 
                setVariables[VARIABLE]= default
                line = line.replace('<' + VARIABLE + '>', default)
-               print line
 
                eprintf("INFO: Setting default value for \"%s\" as \"%s\"\n" %( CONFIG_VARIABLE, line))
                eprintf("      To set other values :\n")

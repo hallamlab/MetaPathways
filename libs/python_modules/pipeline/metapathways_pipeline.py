@@ -17,14 +17,13 @@ try:
       from libs.python_modules.utils.sysutil import getstatusoutput
       from libs.python_modules.utils.pathwaytoolsutils import *
 
-      from libs.python_modules.grid.BlastGrid import *
       import libs.python_scripts  as python_scripts
 
 except:
-      print """ Could not load some user defined  module functions"""
-      print """ Make sure your typed \"source MetaPathwaysrc\" """
-      print """ """
-      print traceback.print_exc(10)
+      print(""" Could not load some user defined  module functions""")
+      print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+      print(""" """)
+      print(traceback.print_exc(10))
       sys.exit(3)
 
 
@@ -88,7 +87,7 @@ def execute_tasks(s, verbose = False, block = 0):
 
     for c in contextBlock:
         if c.status=='stop':
-           print "Stopping!"
+           print ("Stopping!")
            s.stepslogger.write('%s\t%s\n' %(c.name, "STOPPED"))
            return (0,'')
 
@@ -171,7 +170,7 @@ def execute(s, c):
     return result
 
 def print_to_stdout(s):
-    print s
+    print(s)
     
 def no_status_updates(s):
     pass

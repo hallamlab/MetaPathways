@@ -292,7 +292,7 @@ def check_config_settings(config_settings, file, globalerrorlogger = None):
          if not path.isdir( config_settings['METAPATHWAYS_PATH'] + PATHDELIM + config_settings[key]) :
             eprintf("ERROR: Path for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n", key, file)  
             eprintf("ERROR: 4.Currently it is set to \"%s\"\n",  config_settings['METAPATHWAYS_PATH'] + PATHDELIM + config_settings[key] )  
-            print  config_settings['METAPATHWAYS_PATH'], config_settings[key] 
+            print(config_settings['METAPATHWAYS_PATH'], config_settings[key])
             if globalerrorlogger!=None:
                globalerrorlogger.write("ERROR\tPath for \"%s\" is NOT set properly (or missing) in configuration file \"%s\"\n" %(key, file))
                globalerrorlogger.write("Currently it is set to \"%s\"\n" %( config_settings[key]))  
@@ -413,9 +413,9 @@ def  checkMissingParam_values(params, choices, logger = None):
          if (not params[category][parameter]) and\
             ( (category in reqdCategoryParams) and\
                (parameter in reqdCategoryParams[category]) and   reqdCategoryParams[category][parameter]) :
-            print category, parameter
-            print reqdCategoryParams
-            print reqdCategoryParams[category]
+            print(category, parameter)
+            print(reqdCategoryParams)
+            print(reqdCategoryParams[category])
             eprintf('ERROR: Empty parameter %s of type %s\n'  %(parameter, category))
             eprintf('Please select at least one database for %s\n'  %(category))
             if logger!=None:
@@ -520,7 +520,7 @@ def run_metapathways(samplesData, output_dir, all_samples_output_dir, globallogg
          try:
             execute_tasks(s, verbose = command_line_params['verbose'], block = 0)    
          except:
-            print traceback.print_exc(10)
+            print(traceback.print_exc(10))
             pass
 
        for input_file in sorted_samplesData_keys:

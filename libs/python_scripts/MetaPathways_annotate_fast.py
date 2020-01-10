@@ -26,7 +26,7 @@ except:
     print(""" Could not load some user defined  module functions""")
     print(""" Make sure your typed 'source MetaPathwaysrc'""")
     print(""" """)
-    print traceback.print_exc(10)
+    print(traceback.print_exc(10))
     sys.exit(3)
 
 
@@ -247,11 +247,11 @@ class GffFileParser(object):
           #print self.orf_dictionary
           i += 1
 
-       self.orfs = self.orf_dictionary.keys()
+       self.orfs = list(self.orf_dictionary.keys())
        self.size = len(self.orfs)
        self.i = 0
 
-    def next(self):
+    def __next__(self):
         if self.i == self.size:
            self.refillBuffer()
 
@@ -262,7 +262,8 @@ class GffFileParser(object):
         #print self.i
         if self.i < self.size:
            self.i = self.i + 1
-           return self.orfs[self.i-1]
+           tmp = self.i -1
+           return self.orfs[tmp]
        
 
 
@@ -353,7 +354,6 @@ def write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, res
    except:
       eprintf("ERROR : Failure to annotate in contig %s\n", contig)
       #print orf_dictionary[contig]
-      print traceback.print_exc(10)
       insert_error(errorcode)
       exit_process()
 
@@ -798,7 +798,7 @@ class BlastOutputTsvParser(object):
     def __iter__(self):
         return self
     count = 0 
-    def next(self):
+    def __next__(self):
         if self.i < self.size:
            
            try:
@@ -820,8 +820,6 @@ class BlastOutputTsvParser(object):
               self.i = self.i + 1
               return self.data
            except:
-              print self.lines[self.i]
-              print traceback.print_exc(10)
               sys.exit(0)
               return None
         else:
@@ -913,7 +911,6 @@ def read_contig_lengths(contig_map_file, contig_lengths):
      try:
         mapfile = open(contig_map_file, 'r')
      except IOError:
-        print "Cannot read file " + contig_map_file + " !"
         insert_error(errorcode)
         return
 
@@ -958,7 +955,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
     (opts, args) = parser.parse_args(argv)
 
     if not check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     results_dictionary={}
@@ -972,7 +969,6 @@ def main(argv, errorlogger =None, runstatslogger = None):
         try:
            database_names, input_blastouts, weight_dbs = getBlastFileNames(opts) 
         except:
-           print traceback.print_exc(10)
            insert_error(errorcode)
            pass
     else:
@@ -984,7 +980,6 @@ def main(argv, errorlogger =None, runstatslogger = None):
     priority = 6000
     count_annotations = {}
     
-    print ''
     for dbname, blastoutput, weight in zip(database_names, input_blastouts, weight_dbs): 
         results_dictionary[dbname]={}
         dbname_weight[dbname] = weight
@@ -995,7 +990,7 @@ def main(argv, errorlogger =None, runstatslogger = None):
         priority += 1
 
     for dbname in results_dictionary: 
-      print dbname, len(results_dictionary[dbname].keys())
+      print(dbname, len(results_dictionary[dbname].keys()))
       for seqname in results_dictionary[dbname]: 
          count_annotations[seqname] = True      
     count = len(count_annotations)

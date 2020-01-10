@@ -2,9 +2,9 @@
 
 import textwrap
 
-from __init__ import (SequenceRecordParser, SequenceRecordSerializer,
+from libs.python_modules.annotate.sequence.__init__ import (SequenceRecordParser, SequenceRecordSerializer,
                       SequenceRecord, SequenceFactory, Feature)
-import location
+import libs.python_modules.annotate.sequence.location
 
 class FastaRecordParser(SequenceRecordParser):
     """Parses a FASTA record from a string."""

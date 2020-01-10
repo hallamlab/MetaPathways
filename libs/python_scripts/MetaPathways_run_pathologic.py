@@ -21,10 +21,10 @@ try:
    from libs.python_modules.utils.pathwaytoolsutils import *
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 PATHDELIM=pathDelim()
@@ -206,7 +206,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
            StopPathwayTools()
 
        except:
-           print traceback.print_exc(10)
+           print(traceback.print_exc(10))
            eprintf("ERROR\tFailed to run extract pathways for %s : \n" %(options.sample_name))
            eprintf("INFO\tKill any other PathwayTools instance running on the machine and try again")
            if errorlogger:
@@ -303,13 +303,13 @@ def  ExtractPathway_WTD(options):
 
         except:
             insert_error(9)
-            print """
+            print("""
             Problem connecting to Pathway Tools. Check the /tmp/ptools-socket file.
-            """
+            """)
     except:
-        print """
+        print("""
         Problem calculating WTD via Pathway Tools. Check the /tmp/ptools-socket file.
-        """
+        """)
         insert_error(9)
 
     # get LCA per pathway
@@ -367,7 +367,7 @@ def  ExtractPathway_WTD(options):
                         C_neg.append(dist)  # add to negative list
                         C_neg_taxa.append([ expected[0], pwy_lca[pwy][0] ])
                 else:
-                    print "Not a valid distance"
+                    print("Not a valid distance")
                     continue
         else:
             # no expected taxonomy, set to root
@@ -398,7 +398,7 @@ def  ExtractPathway_WTD(options):
     try:
         out = open(table_out_tmp, "w")
     except:
-        print "Had problems opening file: " + options.table_out
+        print("Had problems opening file: " + options.table_out)
         insert_error(9)
 
     # write appropreate header
@@ -431,7 +431,7 @@ def  ExtractPathway_WTD(options):
         out.close() # close file
         rename(table_out_tmp, options.table_out)
     except:
-        print "Had problems closing file: " + options.table_out
+        print("Had problems closing file: " + options.table_out)
         insert_error(9)
 
 
@@ -439,7 +439,7 @@ def  ExtractPathway_WTD(options):
 def runPathologicCommand(runcommand = None):
     if runcommand == None:
       return False
-    print runcommand
+    #print runcommand
     result = getstatusoutput(runcommand)
     return result[0]
 
@@ -479,7 +479,7 @@ def process_organism_file(filel):
      try:
          orgfile = open(filel,'r')
      except IOError:
-         print "ERROR : Cannot open organism file" + str(filel)
+         print("ERROR : Cannot open organism file" + str(filel))
          return 
 
      lines = orgfile.readlines()
@@ -516,12 +516,12 @@ def process_organism_file(filel):
 
 def write_new_file(lines, output_file):
     
-    print "Fixing file " + output_file 
+    print("Fixing file " + output_file )
     try:
        outputfile = open(output_file,'w')
        pass
     except IOError:
-         print "ERROR :Cannot open output file "  + output_file
+         print("ERROR :Cannot open output file "  + output_file)
          insert_error(9)
    
     for line in lines:

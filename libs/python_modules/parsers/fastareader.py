@@ -25,12 +25,12 @@ class FastaReader():
         try:
             self.file = open(fasta_filename, 'r')
         except IOError:
-            print "Cannot open fasta file " + fasta_filename
+            print("Cannot open fasta file " + fasta_filename)
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.stop:
           raise StopIteration
         

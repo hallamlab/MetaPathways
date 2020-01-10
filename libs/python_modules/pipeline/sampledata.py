@@ -21,7 +21,7 @@ try:
     from libs.python_modules.utils.sysutil import pathDelim
     from libs.python_modules.utils.utils import *
 except:
-    print "Cannot load some modules"
+    print("Cannot load some modules")
     sys.exit(0)
    
 PATHDELIM = pathDelim()

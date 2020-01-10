@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.sysutil import getstatusoutput
      from libs.python_modules.annotate.sequence import genbank, fasta
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 
@@ -44,7 +44,7 @@ parser.add_option("--input-gff", dest="input_gff",
 def check_arguments(opts, args):
 
     if opts.input_gbk==None:
-         print "A genbank file should be specified"  
+         print("A genbank file should be specified")
          return False
 
     return True
@@ -98,9 +98,9 @@ def insert_orf_into_dict(line, contig_dict):
          attributes['start'] =  int(fields[3])
          attributes['end'] =  int(fields[4])
      except:
-         print line
-         print fields
-         print attributes
+         print(line)
+         print(fields)
+         print(attributes)
          sys.exit(0)
 
      try:
@@ -124,7 +124,7 @@ def load_gff_file_to_dictionary(gff_file_name, gff_dict):
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
-        print "Cannot read file " + gff_file_name + " !"
+        print("Cannot read file " + gff_file_name + " !")
 
      gff_lines = gfffile.readlines()
      gff_beg_pattern = re.compile("^#")
@@ -176,7 +176,7 @@ def read_template_header(headers,  template_header):
 def main(argv): 
     (opts, args) = parser.parse_args()
     if not check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     headers={} 
@@ -209,7 +209,7 @@ def process_gbk_file(input_gbk, output_gbk, headers, gff_dictionary):
         
         record.locus = tag +  str(count)
         if count%1000==0:
-           print 'Count = ' + str(count)
+           print('Count = ' + str(count))
         
         if headers and 'REFERENCES' in headers:
            record.references_ = headers['REFERENCES']

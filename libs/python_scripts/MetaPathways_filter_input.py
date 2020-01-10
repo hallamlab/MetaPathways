@@ -20,9 +20,9 @@ try:
      from libs.python_modules.parsers.fastareader  import FastaReader
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 PATHDELIM = pathDelim()
@@ -73,19 +73,19 @@ file names "samplename".qced.faa. These amino acid sequences can be used in
 def valid_arguments(opts, args):
     state = True
     if opts.input_fasta == None :
-        print 'ERROR: Missing input fasta file'
+        print('ERROR: Missing input fasta file')
         state = False
 
     if opts.output_fasta == None :
-        print 'ERROR: Missing output fasta file'
+        print('ERROR: Missing output fasta file')
         state = False
 
     if opts.min_length == None :
-        print 'ERROR: Missing minimum sequence length'
+        print('ERROR: Missing minimum sequence length')
         state = False
 
     if opts.log_file == None :
-        print 'ERROR: Missing a log filename'
+        print('ERROR: Missing a log filename')
         state = False
 
     return state
@@ -179,7 +179,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     (opts, args) = parser.parse_args(argv)
 
     if not valid_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     min_length = opts.min_length
@@ -235,6 +235,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     allNames= dict()
     outputStr = ""
     outputLines = []
+    print(opts.input_fasta)
     fastareader= FastaReader(opts.input_fasta)
 
     """ process one fasta sequence at a time """
@@ -255,7 +256,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
         if length > stats[MAX_LENGTH][BEFORE] : 
             stats[MAX_LENGTH][BEFORE] = length
 
-        if length < MIN_LENGTH:
+        if length < min_length:
             stats[NUMSEQ_SHORTER][BEFORE] += 1
 
         stats[AVG_LENGTH][BEFORE]  =  stats[AVG_LENGTH][BEFORE] + length

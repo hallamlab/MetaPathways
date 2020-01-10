@@ -2,11 +2,15 @@
 
 try:
     #from python_modules.LCAComputation import *
-    from LCAComputation import *
-    from os import sys
+    import traceback
+    import sys
+    from libs.python_modules.taxonomy.LCAComputation import *
 except:
-    print """ Could not load some user defined  module functions"""
-    sys.exit(3)
+
+   print(""" Could not load some user defined  module functions""")
+   print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+   print(traceback.print_exc(10))
+   sys.exit(3)
 
 
 class MeganTree:
@@ -67,7 +71,7 @@ class MeganTree:
     def createTree(self, id):
         if not id in self.parent_to_child: 
            if id=='1':
-              print self.parent_to_child
+              print(self.parent_to_child)
               sys.exit(0)
            self.output +=  str(self.lca.translateIdToName(id)) + "}" +  str(self.children_at_leaf[id])
            #self.output +=  id + ":" +  str(0)

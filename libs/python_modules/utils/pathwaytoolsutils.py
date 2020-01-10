@@ -177,7 +177,7 @@ class PythonCyc:
         self.send_query(functiondef)
 
         result = self.retrieve_results()
-        print result, 'loaded definition'
+        print(result, 'loaded definition')
 
 
 
@@ -186,7 +186,7 @@ class PythonCyc:
         self.send_query(functiondef)
 
 
-        print  'creating flat files'
+        print('creating flat files')
         function1="""create-flat-files-for-current-kb"""
         self.send_query(self.wrap_query(function1))
 
@@ -199,7 +199,7 @@ class PythonCyc:
    #     self.send_query(self.wrap_query(functiondef))
 
         result = self.retrieve_results()
-        print result, 'done dumping out'
+        print(result, 'done dumping out')
         if result=='NIL':
             return []
 
@@ -249,7 +249,7 @@ class PythonCyc:
             result = self.call_func(function)
             return result
         except:
-            print frame, slot_name
+            print(frame, slot_name)
             _exit(0)
 
 
@@ -260,7 +260,7 @@ class PythonCyc:
             result = self.call_func_that_returns_string(function)
             return result
         except:
-            print frame, slot_name
+            print(frame, slot_name)
             _exit(0)
 
     def call_func_that_returns_string(self, function):
@@ -302,13 +302,13 @@ class PythonCyc:
              self.sendStartSignal()
              time.sleep(self.TIME)
              if trial > 5:
-               print "Failed to Start pathway-tools"
+               print("Failed to Start pathway-tools")
                return False
              else:
                 trial += 1
         except:
-            print traceback.print_exc(10) 
-            print "Failed to Start pathway-tools"
+            print(traceback.print_exc(10) )
+            print("Failed to Start pathway-tools")
             return False
         return True
 
@@ -321,7 +321,7 @@ class PythonCyc:
              self.sendStopSignal()
              time.sleep(self.TIME)
              if trial > 5:
-               print "Failed to stop pathway-tools"
+               print("Failed to stop pathway-tools")
                if self.removeSocketFile():
                   return True
                else:
@@ -329,7 +329,7 @@ class PythonCyc:
              else:
                 trial += 1
         except:
-            print traceback.print_exc(10) 
+            print(traceback.print_exc(10))
             return False
 
 #                self.getOrganismList()
@@ -489,5 +489,5 @@ if __name__=="__main__":
     try:
         pythonCyc.stopPathwayTools()
     except:
-        print "nothing to stop"
+        print("nothing to stop")
 

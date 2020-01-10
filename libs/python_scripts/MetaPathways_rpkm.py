@@ -17,10 +17,10 @@ try:
    from libs.python_modules.utils.pathwaytoolsutils import *
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 
@@ -294,7 +294,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
         #bwaRunSuccess = True
 
         if bwaRunSuccess:
-           print 'Successfully ran bwa!'
+           print('Successfully ran bwa!')
         else:
            eprintf("ERROR\tCannot successfully run BWA for file %s!\n", options.contigs)
            if errorlogger:
@@ -307,7 +307,7 @@ def main(argv, errorlogger = None, runcommand = None, runstatslogger = None):
     # make sure you get the latest set of sam file after the bwa
     #samFiles = getSamFiles(options.readsdir, options.sample_name)
 
-    print 'Running RPKM'
+    print('Running RPKM')
     if not path.exists(options.rpkmExec):
        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
        if errorlogger:
@@ -371,7 +371,7 @@ def runRPKMCommand(runcommand = None):
     #print(runcommand)
     result = getstatusoutput(runcommand)
     if result[1]:
-       print result[1]
+       print(result[1])
     return result[0]
 
 
@@ -417,7 +417,7 @@ def process_organism_file(filel):
      try:
          orgfile = open(filel,'r')
      except IOError:
-         print "ERROR : Cannot open organism file" + str(filel)
+         print("ERROR : Cannot open organism file" + str(filel))
          insert_error(10)
          return 
 
@@ -454,12 +454,12 @@ def process_organism_file(filel):
 
 def write_new_file(lines, output_file):
     
-    print "Fixing file " + output_file 
+    print("Fixing file " + output_file)
     try:
        outputfile = open(output_file,'w')
        pass
     except IOError:
-         print "ERROR :Cannot open output file "  + output_file
+         print("ERROR :Cannot open output file "  + output_file)
    
     for line in lines:
        fprintf(outputfile, "%s\n", line)

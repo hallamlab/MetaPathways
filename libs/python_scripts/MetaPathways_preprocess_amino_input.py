@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
      from libs.python_modules.parsers.fastareader  import FastaReader
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 PATHDELIM = pathDelim()
@@ -75,23 +75,23 @@ files to conform  to the format as in the case of nucleotide sequences input:
 def valid_arguments(opts, args):
     state = True
     if opts.input_fasta == None :
-        print 'ERROR: Missing input fasta file'
+        print('ERROR: Missing input fasta file')
         state = False
 
     if opts.output_fasta == None :
-        print 'ERROR: Missing dummy output fasta file'
+        print('ERROR: Missing dummy output fasta file')
         state = False
 
     if opts.output_faa == None :
-        print 'ERROR: Missing amino acid sequences  fasta file'
+        print('ERROR: Missing amino acid sequences  fasta file')
         state = False
 
     if opts.output_fna == None :
-        print 'ERROR: Missing ORF sequences  fasta file'
+        print('ERROR: Missing ORF sequences  fasta file')
         state = False
 
     if opts.log_file == None :
-        print 'ERROR: Missing a log filename'
+        print('ERROR: Missing a log filename')
         state = False
 
     return state
@@ -135,7 +135,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     (opts, args) = parser.parse_args(argv)
 
     if not valid_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     min_length = 0

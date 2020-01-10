@@ -1,15 +1,13 @@
 #!/usr/bin/python
-
 from __future__ import division
 try:
      import sys, traceback, re
      import math
      from   libs.python_modules.utils.metapathways_utils  import fprintf, printf, GffFileParser, getShortORFId
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \'source MetaPathwaysrc\'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed \'source MetaPathwaysrc\'""")
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 
@@ -303,7 +301,7 @@ class LCAComputation:
                 for orf in  gffreader.orf_dictionary[contig]:
                     shortORFId = getShortORFId(orf['id'])
                     if re.search(r'Xrefseq', dbname):
-                       print  'refseq',  contig , shortORFId, self.tax_dbname
+                       print( 'refseq',  contig , shortORFId, self.tax_dbname)
 
                     #print shortORFId, orf['id']
 
@@ -318,7 +316,7 @@ class LCAComputation:
                    
                     if self.tax_dbname in self.results_dictionary:
                         if re.search(r'Xrefseq', dbname):
-                              print  'hit',  len(self.results_dictionary[self.tax_dbname])
+                              print('hit',  len(self.results_dictionary[self.tax_dbname]))
                               print(self.results_dictionary[self.tax_dbname].keys())
 
                         if shortORFId in self.results_dictionary[self.tax_dbname]:
@@ -355,7 +353,7 @@ class LCAComputation:
         except:
             import traceback
             traceback.print_exc()
-            print "ERROR : Cannot read annotated gff file "
+            print( "ERROR : Cannot read annotated gff file ")
 
 
     ## Weighted Taxonomic Distnace (WTD)

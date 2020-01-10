@@ -26,9 +26,9 @@ try:
     from libs.python_modules.utils.pathwaytoolsutils import PythonCyc
     from libs.python_modules.utils.sysutil import getstatusoutput
 except:
-    print """ Could not load some user defined  module functions"""
-    print """ Make sure your typed \"source MetaPathwaysrc\""""
-    print """ """
+    print(""" Could not load some user defined  module functions""")
+    print(""" Make sure your typed \"source MetaPathwaysrc\" """)
+    print(""" """)
     sys.exit(3)
 
 
@@ -70,22 +70,22 @@ def createParser():
 def check_arguments(opts, args):
     # standard options
     if opts.table_out == None:
-        print "Table file name should be provided"
+        print("Table file name should be provided")
         return False
     if opts.pgdb_name == None:
-        print "PGDB name should be provided"
+        print("PGDB name should be provided")
         return False
     if opts.pathway_tools == None:
-        print "The pathway tools executable name should be provided"
+        print("The pathway tools executable name should be provided")
         return False
 
     # wtd options
     if hasattr(opts, 'wtd'):
         if opts.annotation_table == None:
-            print "Need to specify annotation-table and ncbi-taxonomy-map for WTD"
+            print("Need to specify annotation-table and ncbi-taxonomy-map for WTD")
             return False
         if opts.ncbi_tree == None:
-            print "Need to specify annotation-table and ncbi-taxonomy-map for WTD"
+            print("Need to specify annotation-table and ncbi-taxonomy-map for WTD")
             return False
 
     return True
@@ -133,7 +133,7 @@ def main(argv):
     (opts, args) = parser.parse_args()
 
     if not check_arguments(opts, args):
-        print usage
+        print(usage)
         sys.exit(0)
 
     # place to store list of expected taxonomic range(s)
@@ -142,7 +142,7 @@ def main(argv):
     if opts.wtd and not os.path.isfile(serialized_metacyc_taxa_ranges):
         # get MetaCyc's expected taxonomic range(s) and serialize for later use in /tmp
         try:
-            print 'Getting MetaCyc Expected Taxonomic Range(s)'
+            print('Getting MetaCyc Expected Taxonomic Range(s)')
 
             # connect to Pathway Tools
             cyc = PythonCyc()
@@ -167,9 +167,9 @@ def main(argv):
             # close Pathway Tools
             cyc.stopPathwayTools()
         except:
-            print """
+            print( """
             Problem connecting to Pathway Tools. Check the /tmp/ptools-socket file.
-            """
+            """)
     else:
         # read expected taxonomic range from serialized file
         exepected_taxa_in = open(serialized_metacyc_taxa_ranges ,"r")
@@ -185,7 +185,7 @@ def main(argv):
                 megan_map[ fields[0] ] = fields[1]
 
     # get ORF to taxa map from annotation_table
-    print "Getting ORF to Taxa Map from AnnotationTable"
+    print("Getting ORF to Taxa Map from AnnotationTable")
     orf_lca = {}
     with open(opts.annotation_table) as f:
         for line in f:
@@ -211,14 +211,14 @@ def main(argv):
 
         cyc.stopPathwayTools()
     except:
-        print """
+        print("""
         Problem connecting to Pathway Tools. Check the /tmp/ptools-socket file.
-        """
+        """)
 
     # get LCA per pathway
     pwy_lca = {}
     # load NCBI taxonomy map
-    print "Loading NCBI Taxonomy Map"
+    print("Loading NCBI Taxonomy Map")
     lca = LCAComputation([ opts.ncbi_tree ])
     lca.setParameters(opts.lca_min_score, opts.lca_top_percent, opts.lca_min_support)
 
@@ -260,7 +260,7 @@ def main(argv):
                             C_neg.append(dist)  # add to negative list
                             C_neg_taxa.append([ expected[0], pwy_lca[pwy][0] ])
                     else:
-                        print "Not a valid distance"
+                        print("Not a valid distance")
                         continue
             else:
                 # no expected taxonomy, set to root
@@ -290,7 +290,7 @@ def main(argv):
     try:
         out = open(opts.table_out, "w")
     except:
-        print "Had problems opening file: " + opts.table_out
+        print("Had problems opening file: " + opts.table_out)
 
     # write appropreate header
     if opts.wtd:
@@ -326,7 +326,7 @@ def main(argv):
     try:
         out.close() # close file
     except:
-        print "Had problems closing file: " + opts.table_out
+        print("Had problems closing file: " + opts.table_out)
 
 if __name__ == "__main__":
     createParser()

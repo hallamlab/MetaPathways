@@ -98,7 +98,7 @@ class Params:
           return self.params[key1][key2]
 
       def print_key_values(self):
-          print self.params
+          print(self.params)
        
 
 
@@ -107,7 +107,7 @@ class Configs:
 
       configs = None 
       def __init__(self, configs):
-         for key, value in configs.iteritems():  
+         for key, value in configs.items():  
              setattr(self, key, value)
 
 
@@ -1397,7 +1397,7 @@ class ContextCreator:
                      else:
                         setattr(self.configs, item, executable)
                   else:
-                     print "ERROR: Missing configuration parameter %s in config file" %(item)
+                     print("ERROR: Missing configuration parameter %s in config file" %(item))
                      error =True
 
 

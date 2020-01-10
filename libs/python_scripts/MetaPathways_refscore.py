@@ -19,9 +19,9 @@ try:
      from libs.python_modules.utils.sysutil import getstatusoutput, pathDelim
      from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
      sys.exit(3)
 
 PATHDELIM = pathDelim()
@@ -71,7 +71,7 @@ class FastaReader():
         try:
             self.file = open(fasta_filename, 'r')
         except IOError:
-            print "Cannot open fasta file " + fasta_filename
+            print("Cannot open fasta file " + fasta_filename)
 
     def __iter__(self):
         return self
@@ -79,7 +79,7 @@ class FastaReader():
     def close(self):
          self.file.close()
 
-    def next(self):
+    def __next__(self):
         if self.stop:
           raise StopIteration
 
@@ -145,13 +145,13 @@ def add_last_refscore_to_file(blast_table_out, refscore_file, allNames):
        line=line.rstrip()
        fields = line.split('\t')
        if len(fields) != 12:
-          print 'Error in the blastout file'
+          print('Error in the blastout file')
           sys.exit(1)
        if fields[6].rstrip()==fields[1].rstrip():
       #    fprintf(refscore_file, "%s\t%s\n",fields[0], fields[11])
           refscores[fields[1]]=fields[0]
 
-    for key, value in refscores.iteritems():
+    for key, value in refscores.items():
        allNames[key] = True
        fprintf(refscore_file, "%s\t%s\n",key, value)
 
@@ -167,13 +167,13 @@ def add_blast_refscore_to_file(blast_table_out, refscore_file, allNames):
        line=line.rstrip()
        fields = line.split('\t')
        if len(fields) != 12:
-          print 'Error in the blastout file'
+          print('Error in the blastout file')
           sys.exit(1)
        if fields[0].rstrip()==fields[1].rstrip():
       #    fprintf(refscore_file, "%s\t%s\n",fields[0], fields[11])
           refscores[fields[0]]=fields[11]
 
-    for key, value in refscores.iteritems():
+    for key, value in refscores.items():
        allNames[key] = True
        fprintf(refscore_file, "%s\t%s\n",key, value)
 
@@ -182,7 +182,7 @@ def add_blast_refscore_to_file(blast_table_out, refscore_file, allNames):
 
 # write the refscores
 def write_refscores(refscore_file, refscores, compact_output=False):
-    for key, value in refscores.iteritems():
+    for key, value in refscores.items():
        orfid = key
        if compact_output:
           orfid  = ShortenORFId(key)
@@ -230,7 +230,7 @@ def getrefscore(seq):
 
 def compute_refscores(sequences_subset, refscore_file, compact_output=False):
     refscores ={} 
-    for key, value in sequences_subset.iteritems():
+    for key, value in sequences_subset.items():
        refscores[key] = getrefscore(value)
     write_refscores(refscore_file, refscores, compact_output=compact_output)
 
@@ -243,13 +243,13 @@ def add_blast_refscore_to_file(blast_table_out, refscore_file, allNames):
        line=line.rstrip()
        fields = line.split('\t')
        if len(fields) != 12:
-          print 'Error in the blastout file'
+          print('Error in the blastout file')
           sys.exit(1)
        if fields[0].rstrip()==fields[1].rstrip():
       #    fprintf(refscore_file, "%s\t%s\n",fields[0], fields[11])
           refscores[fields[0]]=fields[11]
 
-    for key, value in refscores.iteritems():
+    for key, value in refscores.items():
        allNames[key] = True
        fprintf(refscore_file, "%s\t%s\n",key, value)
 
@@ -300,7 +300,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
     global parser
     (opts, args) = parser.parse_args(argv)
     if check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
     input_fasta = opts.input_fasta

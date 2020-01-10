@@ -16,10 +16,10 @@ try:
    from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 PATHDELIM=pathDelim()

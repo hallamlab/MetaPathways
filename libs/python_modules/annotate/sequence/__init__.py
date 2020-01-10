@@ -2,7 +2,7 @@
 
 import datetime
 import re
-import location
+import libs.python_modules.annotate.sequence.location as location
 
 # Sequences
 
@@ -136,10 +136,8 @@ class SequenceRecord(object):
                 and qualifiers['locus_tag'] and qualifiers['translation']):
                 
                 # Generate a sequence and source feature
-                print qualifiers['translation']
                 sequence = AminoAcidSequence(''.join(qualifiers['translation']))
-                feature = Feature('source',
-                                  location.Location([location.Coordinates(location.Coordinate(1),
+                feature = Feature('source', location.Location([location.Coordinates(location.Coordinate(1),
                                                                           location.Coordinate(len(sequence)))]))
 
                 # Create the record

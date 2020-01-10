@@ -19,13 +19,12 @@ try:
      
      from libs.python_modules.utils import metapathways_utils
      from libs.python_modules.utils.utils import *
-     from libs.python_modules.utils.metapathways_utils  import parse_command_line_parameters, eprintf, halt_process, exit_process, WorkflowLogger, generate_log_fp
-     from libs.python_modules.parsers.parse  import parse_metapaths_parameters, parse_parameter_file
+     from libs.python_modules.utils.metapathways_utils  import  eprintf, halt_process, exit_process, WorkflowLogger, generate_log_fp
+     from libs.python_modules.parsers.parse  import parse_metapaths_parameters
      from libs.python_modules.pipeline.metapathways_pipeline import print_commands, print_to_stdout, no_status_updates
      from libs.python_modules.utils.sysutil import pathDelim
      from libs.python_modules.pipeline.metapathways import run_metapathways, get_parameter, read_pipeline_configuration
      from libs.python_modules.annotate import *
-     from libs.python_modules.grid.blast_using_grid import blast_in_grid
 
      from libs.python_modules.diagnostics.parameters import *
      from libs.python_modules.diagnostics.diagnoze import *
@@ -33,8 +32,7 @@ try:
 except:
    print(""" Could not load some user defined  module functions""")
    print(""" Make sure your typed \"source MetaPathwaysrc\" """)
-   print()
-   #print traceback.print_exc(10)
+   print(traceback.print_exc(10))
    sys.exit(3)
 
 
@@ -235,7 +233,7 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
              input_files[input_file] = shortname
 
     paired_input = {} 
-    for key, value in input_files.iteritems():
+    for key, value in input_files.items():
        paired_input[input_dir + PATHDELIM + key] = path.abspath(output_dir) + PATHDELIM + value
 
     return paired_input
@@ -360,6 +358,7 @@ def main(argv):
               "       run with the option \"-r  overwrite\" to force overwrite it." )
         sys.exit(2)
 
+    print("metapathways0")
         
     if verbose:
         status_update_callback = print_to_stdout

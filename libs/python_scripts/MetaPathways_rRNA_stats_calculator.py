@@ -11,10 +11,10 @@ try:
    from libs.python_modules.utils.sysutil import getstatusoutput
    from libs.python_modules.utils.errorcodes import error_message, get_error_list, insert_error
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
-     print traceback.print_exc(10)
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(""" """)
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 PATHDELIM=pathDelim()
@@ -30,8 +30,8 @@ def printf(fmt, *args):
 def files_exist( files ):
     for file in files:
        if not path.exists(file):
-          print 'Could not read File ' +  file 
-          print 'Please make sure these sequences are in the \"blastDB\" folder'
+          print('Could not read File ' +  file )
+          print('Please make sure these sequences are in the \"blastDB\" folder')
           sys.exit(3)
           return False
     return True
@@ -137,7 +137,7 @@ def append_taxonomic_information(databaseSequences, table, params):
      try:
         tax_seqs = open(databaseSequences, 'r')
      except IOError:
-        print "Cannot read file " + tax_maps + " !"
+        print("Cannot read file " + tax_maps + " !")
         sys.exit(3)
        
 

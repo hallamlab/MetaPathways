@@ -11,23 +11,23 @@ __status__ = "Release"
 """Contains general utility code for the metapaths project"""
 
 try:
+    import traceback, sys
+    import os, traceback, shutil
     from shutil import rmtree
-    from StringIO import StringIO
     from os import getenv, makedirs, path, remove
     from operator import itemgetter
     from os.path import abspath, exists, dirname, join, isdir
     from collections import defaultdict
     from optparse import make_option
     from glob import glob
-    import sys, os, traceback, shutil
 
     from libs.python_modules.utils.sysutil import pathDelim
     from libs.python_modules.parsers.fastareader  import FastaReader
 except:
-    print """ Could not load some user defined  module functions"""
-    print """ Make sure your typed \'source MetaPathwaysrc\'"""
-    print """ """
-    print traceback.print_exc(10)
+    print(""" Could not load some user defined  module functions""")
+    print(""" Make sure your typed \'source MetaPathwaysrc\' """)
+    print(""" """)
+    print(traceback.print_exc(10))
     sys.exit(3)
 
 
@@ -101,7 +101,6 @@ def isFastaFile(filename):
       fp.close()
     except:
        eprintf("ERROR:\tCannot open filee " + filename)
-       print traceback.print_exc(10)
        return False
 
     if seenNamePatt==False:
@@ -141,7 +140,6 @@ def isGenbank(filename):
 
     except:
        eprintf("ERROR:\tCannot open filex " + filename)
-       print traceback.print_exc(10)
        return False
 
 
@@ -243,7 +241,7 @@ def remove_files(dir, filenames):
         if path.exists(dir + PATHDELIM + file):
          remove(dir + PATHDELIM + file)
       except IOError:
-         print "Cannot remove file  " + dir + PATHDELIM + file + " !"
+         print("Cannot remove file  " + dir + PATHDELIM + file + " !")
          sys.exit(0)
 
 
@@ -262,13 +260,13 @@ def create_splits(outputdir, listfilename, input_filename, maxMBytes,   maxSize,
            remove_files(outputdir, listfilenames)
            listfile.close()
      except IOError:
-        print "Cannot read file " +  listfilename + " !"
+        print("Cannot read file " +  listfilename + " !")
         sys.exit(0)
 
      try:
         listfile = open(listfilename, 'w')
      except IOError:
-        print "Cannot read file " + listfilename + " !"
+        print("Cannot read file " + listfilename + " !")
         sys.exit(0)
 
 
@@ -439,7 +437,7 @@ class FastaReader():
         try:
             self.file = open(fasta_filename, 'r')
         except IOError:
-            print "Cannot open fasta file " + fasta_filename
+            print("Cannot open fasta file " + fasta_filename)
 
     def __iter__(self):
         return self

@@ -14,16 +14,16 @@ try:
     import sys
     from shutil import rmtree
     from optparse import make_option
-    from parameters import *
-    from configuration import *
-    from tools import *
+    from libs.python_modules.diagnostics.parameters import *
+    from libs.python_modules.diagnostics.configuration import *
+    from libs.python_modules.diagnostics.tools import *
     from libs.python_modules.utils.sysutil import pathDelim, getstatusoutput
     from libs.python_modules.utils.utils import *
     from libs.python_modules.utils.errorcodes import *
     from libs.python_modules.utils.metapathways_utils import  fprintf
     from os import path, _exit, rename , remove
 except:
-    print "Cannot load some modules"
+    print("Cannot load some modules")
     sys.exit(0)
    
 PATHDELIM = pathDelim()
@@ -74,7 +74,7 @@ def staticDiagnose(configs, params, logger = None ):
     
     message = checkbinaries(configs)
     if message:
-       print message
+       print(message)
        return False
 
 
@@ -298,7 +298,7 @@ def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger 
          eprintf("INFO\tCommand to format \"%s\"\n", cmd)
          logger.printf("INFO\tCommand to format \"%s\"\n", cmd)
 
-     print 'COMMAND: ', cmd
+     print('COMMAND: ', cmd)
      result= getstatusoutput(cmd)
      temp_fileList = glob(_temp_formatted_db + '*') 
 
@@ -508,8 +508,8 @@ def matchToolsFromConfigs(configs, tools, logger = None ):
     """
     executables = {}
     """ iterate through each config key """
-    for config_key, config_value in configs.iteritems():
-       for param_step, placeHolder in tools.iteritems(): 
+    for config_key, config_value in configs.items():
+       for param_step, placeHolder in tools.items(): 
          if param_step in tools:
            for script in tools[param_step]['exec']: 
 
@@ -532,7 +532,7 @@ def getRequiredTools(params, configs,  tools, configuration):
     if not 'metapaths_steps' in params:
        return None
 
-    for key, value in params['metapaths_steps'].iteritems():
+    for key, value in params['metapaths_steps'].items():
         if value in [  'skip', 'redo', 'yes' ]:
 
            if not key in tools:
@@ -541,7 +541,7 @@ def getRequiredTools(params, configs,  tools, configuration):
 
            if type(tools[key]['exec'][key]) is dict: 
               for execname in tools[key]['exec']: 
-                 print execname
+                 print(execname)
           
            #if not tools[key]['exec'] in configs:
               #print "ERROR : Exec in " + tools[key]['exec']  + " is missing in class Configuration file!"
@@ -573,7 +573,7 @@ def _checkParams(params, paramsAccept, logger = None, errors= None):
         return
 
     """  make sure that every parameter in the params is valid recursively """
-    for key, value in params.iteritems(): 
+    for key, value in params.items(): 
         if type(paramsAccept) is dict:
            if len(key) and key in paramsAccept:
                _checkParams(params[key], paramsAccept[key], logger= logger, errors = errors)
@@ -587,7 +587,7 @@ def checkParams(params, logger = None):
     paramsAccept = _paramsAccept.getAcceptableParameters() 
     errors = {}
 
-    for key, value in params.iteritems(): 
+    for key, value in params.items(): 
        if key in paramsAccept:
           _checkParams(params[key], paramsAccept[key], logger = logger, errors = errors)
 

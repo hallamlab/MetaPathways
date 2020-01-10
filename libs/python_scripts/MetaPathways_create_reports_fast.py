@@ -24,9 +24,9 @@ try:
      from libs.python_modules.utils.errorcodes import *
 
 except:
-     print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed 'source MetaPathwaysrc'"""
-     print """ """
+     print(""" Could not load some user defined  module functions""")
+     print(""" Make sure your typed 'source MetaPathwaysrc'""")
+     print(traceback.print_exc(10))
      sys.exit(3)
 
 
@@ -155,23 +155,23 @@ def check_arguments(opts, args):
     return True
 
     if len(opts.input_blastout) == 0:
-         print "There sould be at least one blastoutput file"
+         print("There sould be at least one blastoutput file")
          return False
 
     if len(opts.database_name) == 0:
-         print "There sould be at least one database name"
+         print("There sould be at least one database name")
          return False
 
     if len(opts.input_blastout) != len(opts.database_name)  :
-         print "The number of database names, blastoutputs files should be equal"
+         print("The number of database names, blastoutputs files should be equal")
          return False
 
     if opts.input_annotated_gff == None:
-       print "Must specify the input annotated gff file"
+       print("Must specify the input annotated gff file")
        return False
 
     if opts.output_dir == None:
-       print "Must specify the output dir"
+       print("Must specify the output dir")
        return False
 
     return True
@@ -180,7 +180,7 @@ def process_gff_file(gff_file_name, orf_dictionary):
      try:
         gfffile = open(gff_file_name, 'r')
      except IOError:
-        print "Cannot read file " + gff_file_name + " !"
+        print("Cannot read file " + gff_file_name + " !")
 
      gff_lines = gfffile.readlines()
      gff_beg_pattern = re.compile("^#")
@@ -361,7 +361,7 @@ class BlastOutputTsvParser(object):
              k += 1
 
         except AttributeError:
-           print "Cannot read the map file for database :" + dbname
+           print("Cannot read the map file for database :" + dbname)
            sys.exit(0)
 
     def setMaxErrorsLimit(self, max):
@@ -460,7 +460,7 @@ def isWithinCutoffs(data, cutoffs):
     if data['bsr'] < cutoffs.min_bsr:
        return False
   except:
-     print traceback.print_exc()
+     print(traceback.print_exc())
     # print cutoffs
      sys.exit(0)
 
@@ -507,7 +507,7 @@ def process_parsed_blastoutput(dbname, blastparser, cutoffs, annotation_results,
             #if callnum==2 and 'refseq' in dbname:
             #   print(shortORFId, annotation)
     except:
-       print  traceback.print_exc()
+       print (traceback.print_exc())
        
 
     #if dbname=='refseq-nr-2014-01-18':
@@ -702,7 +702,7 @@ def  add_counts_to_hierarchical_map(hierarchical_map, orthology_count):
           add_counts_to_hierarchical_map(hierarchical_map[key], orthology_count)
   except:
       traceback.print_exc()
-      print len(hierarchical_map[key])
+      print(len(hierarchical_map[key]))
       sys.exit(0)
 
 def get_list_of_queries(annotated_gff):
@@ -748,7 +748,7 @@ def writeParsedLines(fieldmapHeaderline, parsedLines, list, names, outputfilenam
     try:
       outputfile = open(outputfilename, 'w')
     except OSError:
-      print "ERROR: Cannot create sequence file : " + outputfilename
+      print("ERROR: Cannot create sequence file : " + outputfilename)
       sys.exit(0)
 
     outputStr=fieldmapHeaderline + "\n"
@@ -972,7 +972,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
     global opts_global
     opts_global = opts
     if not check_arguments(opts, args):
-       print usage
+       print(usage)
        sys.exit(0)
 
 
@@ -1003,7 +1003,7 @@ def main(argv, errorlogger = None,  runstatslogger = None):
         try:
            database_names, input_blastouts, weight_dbs = getBlastFileNames(opts)
         except:
-           print traceback.print_exc(10)
+           print(traceback.print_exc(10))
            pass
     else:
         database_names = opts.database_name
@@ -1178,7 +1178,7 @@ def process_subsys2peg_file(subsystems2peg, subsystems2peg_file):
      try:
          orgfile = open(subsystems2peg_file,'r')
      except IOError:
-         print "Cannot open " + str(subsystems2peg_file)
+         print("Cannot open " + str(subsystems2peg_file))
          insert_error(errorcode)
      lines = orgfile.readlines()
      orgfile.close()
@@ -1190,7 +1190,7 @@ def process_subsys2peg_file(subsystems2peg, subsystems2peg_file):
         orgfile.close()
      except:
          insert_error(errorcode)
-         print "Cannot close " + str(subsystems2peg_file)
+         print("Cannot close " + str(subsystems2peg_file))
 
 
 

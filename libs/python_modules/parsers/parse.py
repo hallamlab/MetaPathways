@@ -9,7 +9,6 @@ __version__ = "2.0.1"
 __maintainer__ = "HallamLab"
 __status__ = "Release"
 
-from string import strip
 from collections import defaultdict
 from copy import deepcopy
 import os, re
@@ -37,9 +36,7 @@ def parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
         try:
             lines = open(lines,'U')
         except IOError:
-            raise QiimeParseError,\
-             ("A string was passed that doesn't refer "
-              "to an accessible filepath.")
+            raise ("A string was passed that doesn't refer " "to an accessible filepath.")
         
     if strip_quotes:
         if suppress_stripping:
@@ -77,9 +74,9 @@ def parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
         else:
             mapping_data.append(map(strip_f, line.split('\t')))
     if not header:
-        raise QiimeParseError, "No header line was found in mapping file."
+        raise ("No header line was found in mapping file.")
     if not mapping_data:
-        raise QiimeParseError, "No data found in mapping file."
+        raise ("No data found in mapping file.")
     
     return mapping_data, header, comments
 
@@ -120,7 +117,7 @@ def parse_prefs_file(prefs_string):
     try:
         prefs = dict(eval(prefs_string))
     except TypeError:
-        raise QiimeParseError, "Invalid prefs file. Prefs file must contain a valid prefs dictionary."
+        raise("Invalid prefs file. Prefs file must contain a valid prefs dictionary.")
     return prefs
     
 
@@ -131,9 +128,8 @@ def group_by_field(table, name):
     """
     try:
         col_index = table[0].index(name)
-    except ValueError, e:
-        raise ValueError, "Couldn't find name %s in headers: %s" % \
-            (name, table[0])
+    except ValueError:
+        raise (alueError, "Couldn't find name %s in headers: %s" % (name, table[0]))
     result = defaultdict(list)
     for row in table[1:]:
         header, state = row[0], row[col_index]
@@ -182,7 +178,7 @@ def parse_bootstrap_support(lines):
 
 
 
-def fields_to_dict(lines, delim='\t', strip_f=strip):
+def fields_to_dict(lines, delim='\t'):
     """makes a dict where first field is key, rest are vals."""
     result = {}
     for line in lines:
@@ -227,9 +223,11 @@ def parse_metapaths_parameters(filename):
             #    value = None
             #else:
             #    pass
+                if script_id not in result:
+                    result[script_id] ={}
+
                 result[script_id][parameter_id] = value
             except :
-                print("ERROR: " + line)
                 result[script_id] = {parameter_id:value}
     filep.close()
     #result['filename'] = filename
