@@ -29,6 +29,20 @@ The MetaPathways Python codebase as well as the compiled GUI binaries for Mac OS
 Please see the [MetaPathways v2.5 wiki](https://github.com/hallamlab/metapathways2/wiki) for more installation details.
 
 A template [MetaPathways_DBs.zip (**Updated: October 2014**)](https://www.dropbox.com/s/ye3kpve041e0r39/MetaPathways_DBs.zip?dl=0) contains starter protein and taxonomic databases
+### Installation steps and information
+
+   * The folder with the script where MetaPathways.py is referred to as METAPATHWAYS_FOLDER
+   * copy over the files template_config.txt and tempalate_params.txt to the folder METAPATHWAYS_FOLDER
+   * the LAST, BLAST and other third party exectables should be in a subfolder in METAPATHWAYS_FOLDER
+   * the formatted databases should be in a separate folder, we refer to it as METAPATHWAYS_DB folder
+   * the template_config.txt files should be pointed to the the actual folders
+   * the tempalte_params.txt is use while running the pipeline
+   * before running the script the user must run "source <METAPATHWAYS_FOLDER>/MetaPathwaysrc
+   
+   
+
+
+
 
 ## Citation
 
