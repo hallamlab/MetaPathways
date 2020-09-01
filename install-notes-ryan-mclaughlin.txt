@@ -1,0 +1,142 @@
+# Notes for installing and running MP 3.0
+
+######################################################################
+######################## Clone from BitBucket ########################
+######################################################################
+
+git clone --recurse-submodules https://McGlock@bitbucket.org/BCB2/metapathways_engcyc.git
+
+######################################################################
+
+
+
+######################################################################
+########################## Create Conde Env ##########################
+######################################################################
+
+conda create -n mpath3_demo python=3
+conda activate mpath3_demo
+
+######################################################################
+
+
+
+######################################################################
+######################## Install Dependencies ########################
+######################################################################
+MP_HOME=~/dev/metapathways_engcyc
+
+# BLAST
+conda install -c bioconda blast
+cp ~/anaconda3/envs/mpath3_demo/bin/blastn ${MP_HOME}/executables/linux/
+cp ~/anaconda3/envs/mpath3_demo/bin/blastp ${MP_HOME}/executables/linux/
+cp ~/anaconda3/envs/mpath3_demo/bin/makeblastdb ${MP_HOME}/executables/linux/
+
+
+# Create directory to store binaries
+mkdir ${MP_HOME}/executables/linux
+
+### Build some binaires that are packaged with MP 3.0 ###
+### BWA
+cd ${MP_HOME}/executables/source/bwa
+make
+cp bwa ${MP_HOME}/executables/linux/
+
+### FAST
+cd ${MP_HOME}/executables/source/FAST
+make
+cp fastal ${MP_HOME}/executables/linux/
+cp fastdb ${MP_HOME}/executables/linux/
+
+### Prodigal
+cd ${MP_HOME}/executables/source/prodigal
+make
+cp prodigal ${MP_HOME}/executables/linux/
+
+### RPKM
+cd ${MP_HOME}/executables/source/rpkm
+make
+cp rpkm ${MP_HOME}/executables/linux/
+
+### t-RNAScan
+cd ${MP_HOME}/executables/source/trnascan
+make
+cp trnascan-1.4 ${MP_HOME}/executables/linux/
+
+######################################################################
+
+
+######################################################################
+#################### Edit Config and Params files ####################
+######################################################################
+
+# Templates located in ${MP_HOME}/resources/
+# Stored in ${MP_HOME}/config/
+
+######################################################################
+
+
+######################################################################
+############################## Run Demo ##############################
+######################################################################
+source ~/dev/metapathways_engcyc/MetaPathwaysrc
+
+mkdir ~/Projects/MP3_Demo
+cd ~/Projects/MP3_Demo
+
+~/dev/metapathways_engcyc/MetaPathways.py -i ~/dev/metapathways_engcyc/regtests/input/B1.fasta -o B1_MPout/ -p template_param.txt -c template_config.txt
+
+# NOTE: PATHOLOGIC INPUT Failed!
+# Go to `./libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py` line 889
+# Comment out `and  plain_or_gz_file_exists(options.protein_sequences):`
+# Re-Run all.
+
+~/dev/metapathways_engcyc/MetaPathways.py -i ~/dev/metapathways_engcyc/regtests/input/B2.fas -o B2_MPout/ -p template_param.txt -c template_config.txt
+
+~/dev/metapathways_engcyc/MetaPathways.py -i ~/dev/metapathways_engcyc/regtests/input/B3.fasta -o B3_MPout/ -p template_param.txt -c template_config.txt
+
+# PATHOLOGIC gets skipped.
+# Try running this:
+/home/ryan/dev/metapathways_engcyc//libs/python_scripts/MetaPathways_run_pathologic.py --reactions /home/ryan/Projects/MP3_Demo/B3_MPout/B3/results//annotation_table//B3.metacyc.orf.annots.txt --ptoolsExec /home/ryan/pathway-tools/pathway-tools -i /home/ryan/Projects/MP3_Demo/B3_MPout/B3/ptools// -p /home/ryan/ptools-local/pgdbs/user/b3cyc -s B3 --wtd --annotation-table /home/ryan/Projects/MP3_Demo/B3_MPout/B3/results//annotation_table//B3.functional_and_taxonomic_table.txt                 --ncbi-tree /home/ryan/dev/MetaPathways_DBs///ncbi_tree/ncbi_taxonomy_tree.txt --ncbi-megan-map /home/ryan/dev/MetaPathways_DBs///ncbi_tree/ncbi.map --output-pwy-table /home/ryan/Projects/MP3_Demo/B3_MPout/B3/results//pgdb//b3.pwy.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################
+
+
+
+
+
+
+1. git clone from Engcyc BitBucket
+2. example data in MP/regtests
+3. Use A1.fasta
+4. Set MP Path:
+	source MP/MetaPathwaysrc
+5. Main script is MetaPathways.py
+6. MetaPathways.py -i ../input/ -o ../output/ -p [parameter_file] -c [config_file]
+7. Template config and params are in MP/resources
+8. yes = run if not run
+   skip = don't run
+   redo = re-run no matter what
+9. MP executables are in MP/executables/
+10. `-v` prints out all individual commands
+11. make a ghost (place-holder) of pathway-tools exec
+12. inputs are only assembled (meta)genomes
+13. for RPKM you needs a `reads` directory in input dir containing PE `_R1.fastq.gz` `_R2.fastq.gz`
+	they can be gzipped or not
+	must be fastqs
+14. MakeFile is not functional
+
+
