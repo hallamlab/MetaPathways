@@ -29,8 +29,8 @@ TMPDIR ?= /tmp
 docker-start:
 	sudo systemctl start docker
 
-docker-build:
-	sudo docker build -t taltman/metapathways:taltman_dev .
+docker-build: pre-docker-builds
+	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
 
 docker-run:
 	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/darth:maul bash 
@@ -83,8 +83,9 @@ GIT_SUBMODULE_UPDATE=gitupdate
 # Alias for target 'all', for compliance with FogDog deliverables standard:
 
 #all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
-all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) METAPATHWAYS_DB_FETCH 
-#all: PTOOLS_FETCH
+all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
+pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
+
 
 install-without-ptools: all METAPATHWAYS_DB_FETCH
 
@@ -209,3 +210,11 @@ no-ptools-unit-test:
 	touch executables/linux/ptools
 	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
 	time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
+
+docker-test:
+	cp $(CURDIR)/regtests/input/A1.fasta /tmp
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/functional/formatted
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/taxonomic/formatted
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/formatted
+	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
+	sudo docker run -it -v /tmp:/input taltman/metapathways:taltman_dev /root/mp_repo/MetaPathways.py -i /input/A1.fasta -o /input/A1_MP_out/ -p /root/mp_repo/resources/docker_param.txt -c /root/mp_repo/resources/docker_config.txt
