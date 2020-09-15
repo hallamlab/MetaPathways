@@ -21,7 +21,7 @@ try:
      from metapathways.utils.utils import *
      from metapathways.utils.metapathways_utils  import  eprintf, halt_process, exit_process, WorkflowLogger, generate_log_fp
      from metapathways.parsers.parse  import parse_metapaths_parameters
-     from metapathways.pipeline.metapathways_pipeline import print_commands, print_to_stdout, no_status_updates
+     from metapathways.pipeline.execution import print_commands, print_to_stdout, no_status_updates
      from metapathways.utils.sysutil import pathDelim
      from metapathways.pipeline.metapathways import run_metapathways, get_parameter, read_pipeline_configuration
      from metapathways.annotate import *
@@ -98,10 +98,6 @@ def createParser():
                       action="store_true", dest="block_mode", default=True,
                       help="processes the samples by blocking the stages before and after functional search [default off]")
 
-    parser.add_option("-d", "--delay", dest="delay", type='int',  default=0,
-                      help="number of seconds to sleep once the run is done")
-    
-    
     parser.add_option("-P", "--print-only",
                       action="store_true", dest="print_only", default=False,
                       help="print only  the commands [default False]")
@@ -109,8 +105,6 @@ def createParser():
     parser.add_option("-s", "--subset", dest="sample_subset", action="append", default=[],
                       help="Processes only samples in the list  subset specified [ -s sample1 -s sample2 ]" )
     
-    parser.add_option("--runid", dest="runid",  default="",
-                      help="Any string to represent the runid [ default Empty string ]" )
 
 
 
@@ -302,7 +296,7 @@ def environment_variables_defined():
     
     return status
 
-def main(argv):
+def process(argv):
     global parser
 
     (opts, args) = parser.parse_args()
@@ -409,7 +403,6 @@ def main(argv):
     #stop on in valid samples
     if not halt_on_invalid_input(input_output_list, filetypes, sample_subset):
        globalerrorlogger.printf("ERROR\tInvalid inputs found. Check for file with bad format or characters!\n")
-       halt_process(opts.delay)
 
     # make sure the sample files are found
     report_missing_filenames(input_output_list, sample_subset, logger=globalerrorlogger)
@@ -437,7 +430,6 @@ def main(argv):
     # PART1 before the blast
 
     block_mode = opts.block_mode
-    runid = opts.runid
 
     try:
          # load the sample information 
@@ -477,7 +469,6 @@ def main(argv):
                    run_type = run_type, 
                    config_settings = config_settings,
                    block_mode = block_mode,
-                   runid = runid
               )
          else: 
               eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",sQuote(input_fp) )
@@ -495,11 +486,16 @@ def main(argv):
     #halt_process(opts.delay)
     #halt_process(3, verbose=opts.verbose)
 
+def main():
+    createParser()
+    process(sys.argv[1:])    
+    sys.exit(get_recent_error())
+    halt_process(1)
+    
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
-
-    main(sys.argv[1:])    
+    process(sys.argv[1:])    
     sys.exit(get_recent_error())
     halt_process(1)
     

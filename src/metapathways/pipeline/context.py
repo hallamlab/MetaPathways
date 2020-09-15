@@ -21,7 +21,7 @@ try:
 except:
     print("Cannot load some modules")
     sys.exit(0)
-   
+
 PATHDELIM = pathDelim()
 
 
@@ -42,43 +42,37 @@ class Context:
     def isOutputAvailable(self):
         return doFilesExist(self.outputs.values(), gz=True)
 
-    def isInputAvailable(self, errorlogger = None):
+    def isInputAvailable(self, errorlogger=None):
         status = True
         for file in self.inputs.values():
-            if not doesFileExist(file) and not doesFileExist(file +'.gz'):
-                if errorlogger!=None:
-                   errorlogger.printf("#STEP\t%s\n", self.name)
-                   errorlogger.printf("ERROR\tMissing input %s\n", file)
+            if not doesFileExist(file) and not doesFileExist(file + ".gz"):
+                if errorlogger != None:
+                    errorlogger.printf("#STEP\t%s\n", self.name)
+                    errorlogger.printf("ERROR\tMissing input %s\n", file)
                 status = False
         return status
 
-
-
-    def getMissingList(self, errorlogger = None):
+    def getMissingList(self, errorlogger=None):
         missingList = []
         status = True
         for file in self.inputs.values():
             if not doesFileExist(file):
                 missingList.append(file)
-                if errorlogger!=None:
-                   errorlogger.printf("ERROR\tMissing input %s\n", file)
+                if errorlogger != None:
+                    errorlogger.printf("ERROR\tMissing input %s\n", file)
                 status = False
         return missingList
 
-
-
-
-    def removeOutput(self, errorlogger = None):
-        annotationPATT = re.compile(r'annotation_table')
+    def removeOutput(self, errorlogger=None):
+        annotationPATT = re.compile(r"annotation_table")
         for item in self.outputs.values():
-           if not path.exists(item):
-              continue
+            if not path.exists(item):
+                continue
 
-           if path.isdir(item):
-              if annotationPATT.search(item):
-                 pass
-              else:
-                 rmtree(item)
-           else:
-              remove(item)
-
+            if path.isdir(item):
+                if annotationPATT.search(item):
+                    pass
+                else:
+                    rmtree(item)
+            else:
+                remove(item)

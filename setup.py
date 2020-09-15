@@ -16,35 +16,37 @@ CLASSIFIERS = [
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
-    name = "MetaPathways",
-    version = "3.5.0",
-    author = "Kishori Mohan Konwar",
-    author_email = "kishori82@gmail.com",
-    description = ("MetaPathways is a modular pipeline to build PGDBs"\
-                   " from Metagenomic sequences."),
-    license = "MIT",
-    keywords = "metagenomics pipeline",
-    url = "http://packages.python.org/",
-    package_dir = {"": "src"},
-    packages = ["metapathways", 
-                "metapathways/pipeline",
-                "metapathways/test", 
-                "metapathways/utils",
-                "metapathways/taxonomy",
-                "metapathways/parsers",
-                "metapathways/scripts",
-                "metapathways/annotate",
-                "metapathways/diagnostics"
+    name="MetaPathways",
+    version="3.5.0",
+    author="Kishori Mohan Konwar",
+    author_email="kishori82@gmail.com",
+    description=(
+        "MetaPathways is a modular pipeline to build PGDBs"
+        " from Metagenomic sequences."
+    ),
+    license="MIT",
+    keywords="metagenomics pipeline",
+    url="http://packages.python.org/",
+    package_dir={"": "src"},
+    packages=[
+        "metapathways",
+        "metapathways/pipeline",
+        "metapathways/test",
+        "metapathways/utils",
+        "metapathways/taxonomy",
+        "metapathways/parsers",
+        "metapathways/scripts",
+        "metapathways/annotate",
+        "metapathways/diagnostics",
     ],
-    py_modules = ['metapathways/modules'],
-    scripts = ['bin/compress_by_ec'],
+    py_modules=["metapathways/modules"],
+    scripts=["bin/compress_by_ec"],
     entry_points={
-        "console_scripts": [
-            "MetaPathways = metapathways." + "MetaPathways:main"
-         ]
+        "console_scripts": ["MetaPathways = metapathways." + "MetaPathways:main"]
     },
-    long_description=read('README.md'),
+    long_description=read("README.md"),
     include_package_data=True,
-    classifiers = CLASSIFIERS
+    classifiers=CLASSIFIERS,
 )

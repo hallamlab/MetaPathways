@@ -21,8 +21,9 @@ try:
 except:
     print("Cannot load some modules")
     sys.exit(0)
-   
-class Command():
+
+
+class Command:
 
     inputs = []
     outputs = []
@@ -33,19 +34,18 @@ class Command():
         pass
 
 
-class Commands():
+class Commands:
     """Contains the list of commands for different steps of the pipeline """
 
     commands = {}
 
-
     def __init__(self):
         pass
 
-
     def addCommand(self, stepName, command):
         self.commands[stepName] = command
-        return True 
+        return True
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     pass
