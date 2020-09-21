@@ -20,6 +20,7 @@ try:
     from collections import defaultdict
     from optparse import make_option
     from glob import glob
+    import types
 
     from metapathways.utils.sysutil import pathDelim
     from metapathways.parsers.fastareader import FastaReader
@@ -47,6 +48,8 @@ def eprintf(fmt, *args):
 
 PATHDELIM = pathDelim()
 
+class someclass(object):
+   pass
 
 def which(program):
     import os

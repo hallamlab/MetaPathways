@@ -292,301 +292,6 @@ def write_run_parameters_file(fileName, parameters):
     paramFile.close()
 
 
-# checks if the necessary files, directories  and executables really exis.or not
-def check_config_settings(config_settings, file, globalerrorlogger=None):
-    essentialItems = ["METAPATHWAYS_PATH", "EXECUTABLES_DIR", "RESOURCES_DIR"]
-    missingItems = []
-
-    for key, value in config_settings.items():
-        # these are not files or executables
-
-        if key in ["NUM_CPUS", "FORMATTED_DB_SIZE"]:
-            continue
-
-        if (
-            key in ["FORMATDB_EXECUTABLE", "BLASTP_EXECUTABLE", "BLASTN_EXECUTABLE"]
-            and value == ""
-        ):
-            continue
-
-        # make sure  MetaPathways directory is present
-        if key in ["METAPATHWAYS_PATH"]:
-            if not path.isdir(config_settings[key]):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf('ERROR: 1.Currently it is set to "%s"\n', config_settings[key])
-
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        '       Currently it is set to "%s". Please correct it and try again.\n'
-                        % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        # make sure  REFDB directories are present
-        if key in ["REFDBS"]:
-            if not path.isdir(config_settings[key]):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf('ERROR: 2.Currently it is set to "%s"\n', config_settings[key])
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        'Currently it is set to "%s". Please correct it and try again.\n'
-                        % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        # make sure EXECUTABLES_DIR directories are present
-        if key in ["EXECUTABLES_DIR"]:
-            if not path.isdir(
-                config_settings["METAPATHWAYS_PATH"] + PATHDELIM + config_settings[key]
-            ):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf('ERROR: 3.Currently it is set to "%s"\n', config_settings[key])
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        'Currently it is set to "%s". Please correct the path.\n'
-                        % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        if key in ["ACCESSION_TO_TAXONID"]:
-            if not path.isfile(
-                config_settings["REFDBS"]
-                + PATHDELIM
-                + "ncbi_tree"
-                + PATHDELIM
-                + config_settings[key]
-            ):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf(
-                    'ERROR: 7.Currently it is set to "%s"\n',
-                    config_settings["REFDBS"]
-                    + PATHDELIM
-                    + "ncbi_tree"
-                    + PATHDELIM
-                    + config_settings[key],
-                )
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        'Currently it is set to "%s". Please correct the path to compute LCA with accession id translation.\n'
-                        % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        # make sure RESOURCES_DIR directories are present
-        if key in ["RESOURCES_DIR"]:
-            if not path.isdir(
-                config_settings["METAPATHWAYS_PATH"] + PATHDELIM + config_settings[key]
-            ):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf(
-                    'ERROR: 4.Currently it is set to "%s"\n',
-                    config_settings["METAPATHWAYS_PATH"]
-                    + PATHDELIM
-                    + config_settings[key],
-                )
-                print(config_settings["METAPATHWAYS_PATH"], config_settings[key])
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        'Currently it is set to "%s"\n' % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        # make sure  MetaPaths directory is present
-        if key in ["PYTHON_EXECUTABLE", "PATHOLOGIC_EXECUTABLE"]:
-            if not path.isfile(config_settings[key]):
-                eprintf(
-                    'ERROR: Path for "%s" is NOT set properly (or missing)  in configuration file "%s"\n',
-                    key,
-                    file,
-                )
-                eprintf('ERROR: 5.Currently it is set to "%s"\n', config_settings[key])
-                if globalerrorlogger != None:
-                    globalerrorlogger.write(
-                        'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                        % (key, file)
-                    )
-                    globalerrorlogger.write(
-                        'Currently it is set to "%s"\n' % (config_settings[key])
-                    )
-                missingItems.append(key)
-            continue
-
-        # ignore pgdb folder for now
-        if key in ["PGDB_FOLDER"]:
-            continue
-
-        # check if the desired file exists. if not, then print a message
-        if not path.isfile(
-            config_settings["METAPATHWAYS_PATH"] + PATHDELIM + value
-        ) and not path.isfile(
-            config_settings["METAPATHWAYS_PATH"]
-            + PATHDELIM
-            + config_settings["EXECUTABLES_DIR"]
-            + PATHDELIM
-            + value
-        ):
-            eprintf(
-                'ERROR:Path for "%s" is NOT set properly (or missing) in configuration file "%s"\n',
-                key,
-                file,
-            )
-            eprintf(
-                '6.Currently it is set to "%s"\n',
-                config_settings["METAPATHWAYS_PATH"]
-                + PATHDELIM
-                + config_settings["EXECUTABLES_DIR"]
-                + PATHDELIM
-                + value,
-            )
-            if globalerrorlogger != None:
-                globalerrorlogger.write(
-                    'ERROR\tPath for "%s" is NOT set properly (or missing) in configuration file "%s"\n'
-                    % (key, file)
-                )
-                globalerrorlogger.write(
-                    'Currently it is set to "%s"\n'
-                    % (config_settings["METAPATHWAYS_PATH"] + value)
-                )
-            missingItems.append(key)
-            continue
-
-    stop_execution = False
-    for item in missingItems:
-        if item in essentialItems:
-            eprintf(
-                "ERROR\t Essential field in setting %s is missing in configuration file!\n",
-                item,
-            )
-            if globalerrorlogger != None:
-                globalerrorlogger.write(
-                    "ERROR\tEssential field in setting %s is missing in configuration file!\n"
-                    % (item)
-                )
-            stop_execution = True
-
-    if stop_execution == True:
-        eprintf(
-            "ERROR: Terminating execution due to missing essential  fields in configuration file!\n"
-        )
-        if globalerrorlogger != None:
-            globalerrorlogger.write(
-                "ERROR\tTerminating execution due to missing essential  fields in configuration file!\n"
-            )
-        exit_process()
-
-
-# This function reads the pipeline configuration file and sets the
-# paths to differenc scripts and executables the pipeline call
-def read_pipeline_configuration(file, globallogger):
-    patternKEYVALUE = re.compile(r"^([^\t\s]+)[\t\s]+\'(.*)\'")
-    try:
-        configfile = open(file, "r")
-    except IOError:
-        eprintf("ERROR :Did not find pipeline config %s!\n", file)
-        globalerrorlogger.write("ERROR\tDid not find pipeline config %s!\n" % (file))
-    else:
-        lines = configfile.readlines()
-
-    config_settings = {}
-    for line in lines:
-        if not re.match("#", line) and len(line.strip()) > 0:
-            line = line.strip()
-            result = patternKEYVALUE.search(line)
-
-            try:
-                if len(result.groups()) == 2:
-                    fields = result.groups()
-                else:
-                    eprintf(
-                        "     The following line in your config settings files is not set up yet\n"
-                    )
-                    eprintf(
-                        "     Please rerun the pipeline after setting up this line\n"
-                    )
-                    eprintf("     Error in line : %s\n", line)
-                    globalerrorlogger(
-                        "WARNING\t\n"
-                        + "     The following line in your config settings files is not set up yet\n"
-                        + "     Please rerun the pipeline after setting up this line\n"
-                        + "     Error in line : %s\n" % (line)
-                    )
-
-                    exit_process()
-            except:
-                eprintf(
-                    "     The following line in your config settings files is not set up yet\n"
-                )
-                eprintf("     Please rerun the pipeline after setting up this line\n")
-                eprintf("     Error ine line : %s\n", line)
-                globalerrorlogger(
-                    "WARNING\t\n"
-                    + "     The following line in your config settings files is not set up yet\n"
-                    + "     Please rerun the pipeline after setting up this line\n"
-                    + "     Error in line : %s\n" % (line)
-                )
-                exit_process()
-
-            if PATHDELIM == "\\":
-                config_settings[fields[0]] = re.sub(r"/", r"\\", fields[1])
-            else:
-                config_settings[fields[0]] = re.sub(r"\\", "/", fields[1])
-
-    config_settings["METAPATHWAYS_PATH"] = (
-        config_settings["METAPATHWAYS_PATH"] + PATHDELIM
-    )
-    config_settings["REFDBS"] = config_settings["REFDBS"] + PATHDELIM
-
-    check_config_settings(config_settings, file, globallogger)
-    config_settings["configuration_file"] = file
-
-    return config_settings
-
-
 # check for empty values in parameter settings
 def checkMissingParam_values(params, choices, logger=None):
     reqdCategoryParams = {
@@ -709,15 +414,34 @@ def run_metapathways(
     globallogger,
     command_line_params,
     params,
-    metapaths_config,
     status_update_callback,
-    config_file,
     run_type,
     config_settings=None,
     block_mode=False,
 ):
 
     runid = 'random'
+
+    print(config_settings)
+
+#GBK_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_parse_genbank.py'
+#GFF_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_input_gff.py'
+#PREPROCESS_INPUT 'libs/python_scripts/MetaPathways_filter_input.py'
+#PREPROCESS_AMINOS 'libs/python_scripts/MetaPathways_preprocess_amino_input.py'
+#ORF_PREDICTION 'libs/python_scripts/MetaPathways_orf_prediction.py'
+#ORF_TO_AMINO 'libs/python_scripts/MetaPathways_create_amino_sequences.py'
+#COMPUTE_REFSCORES 'libs/python_scripts/MetaPathways_refscore.py'
+#FUNC_SEARCH 'libs/python_scripts/MetaPathways_func_search.py'
+#PARSE_FUNC_SEARCH 'libs/python_scripts/MetaPathways_parse_blast.py'
+##ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast_metacyc.py'
+#ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast.py'
+#GENBANK_FILE 'libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py'
+#CREATE_ANNOT_REPORTS 'libs/python_scripts/MetaPathways_create_reports_fast.py'
+#RUN_PATHOLOGIC 'libs/python_scripts/MetaPathways_run_pathologic.py'
+#SCAN_rRNA 'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
+#SCAN_tRNA 'libs/python_scripts/MetaPathways_tRNA_scan.py'
+#RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
+
     jobcreator = JobCreator(params, config_settings)
 
     sorted_samplesData_keys = sorted(samplesData.keys())

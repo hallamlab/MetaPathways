@@ -44,14 +44,13 @@ def halt_process(secs=4, verbose=False):
     _exit(0)
 
 
-def exit_process(message=None, delay=0, logger=None):
+def exit_process(message=None, logger=None):
     if message != None:
         eprintf("ERROR\t%s", message + "\n")
         eprintf("ERROR\tExiting the Python code\n")
     if logger:
         logger.printf("ERROR\tExiting the Python code\n")
         logger.printf("ERROR\t" + message + "\n")
-    time.sleep(delay)
     _exit(0)
 
 
@@ -883,24 +882,11 @@ def create_metapaths_parameters(filename, folder):
     default_filename = (
         folder + PATHDELIM + "resources" + PATHDELIM + "template_param.txt"
     )
-    try:
-        filep = open(default_filename, "r")
-    except:
-        eprintf(
-            "ERROR: cannot open the default  parameter file " + sQuote(default_filename)
-        )
-        exit_process(
-            "ERROR: cannot open the default parameter file " + sQuote(default_filename),
-            errorCode=0,
-        )
 
-    lines = filep.readlines()
-    with open(filename, "w") as newfile:
-        for line in lines:
+    with open(default_filename, "r") as filep, open(filename, "w") as newfile:
+        for line in filep.readlines():
             fprintf(newfile, "%s", line)
 
-    filep.close()
-    # result['filename'] = filename
     return True
 
 
@@ -908,95 +894,3 @@ def touch(fname, times=None):
     with open(fname, "a"):
         os.utime(fname, times)
 
-
-def create_metapaths_configuration(filename, folder):
-    """ creates a cofiguration file from the default """
-    variablePATT = re.compile(r"<([a-zA-Z0-9_]*)>")
-    default_filename = (
-        folder + PATHDELIM + "resources" + PATHDELIM + "template_config.txt"
-    )
-    try:
-        filep = open(default_filename, "r")
-    except:
-        eprintf(
-            "ERROR: cannot open the default config file " + sQuote(default_filename)
-        )
-        exit_process(
-            "ERROR: cannot open the default config file " + sQuote(default_filename),
-            errorCode=0,
-        )
-
-    setVariables = {}
-    lines = filep.readlines()
-    with open(filename, "w") as newfile:
-        for line in lines:
-            line = line.strip()
-            result = variablePATT.search(line)
-            if result:
-                VARIABLE = result.group(1)
-                CONFIG_VARIABLE = [x for x in line.split(" ") if x.strip()][0]
-
-                if VARIABLE in setVariables:
-                    line = line.replace("<" + VARIABLE + ">", setVariables[VARIABLE])
-                elif VARIABLE in os.environ:
-                    line = line.replace("<" + VARIABLE + ">", os.environ[VARIABLE])
-                else:
-                    default = ""
-                    if VARIABLE == "METAPATHWAYS_PATH":
-                        default = folder + PATHDELIM
-
-                    if VARIABLE == "METAPATHWAYS_DB":
-                        if "METAPATHWAYS_PATH" in os.environ:
-                            default = (
-                                os.environ["METAPATHWAYS_PATH"]
-                                + PATHDELIM
-                                + "databases/"
-                            )
-                        else:
-                            eprintf(
-                                "%-10s:\tSet required environment variable METAPATHWAYS_DB as 'export METAPATHWAYS_DB=<path>'\n"
-                                % ("INFO")
-                            )
-
-                    if VARIABLE == "PTOOLS_DIR":
-                        if "METAPATHWAYS_PATH" in os.environ:
-                            default = (
-                                os.environ["METAPATHWAYS_PATH"]
-                                + PATHDELIM
-                                + "/regtests"
-                            )
-
-                            target = default + PATHDELIM + "pathway-tools"
-                            if not os.path.exists(target):
-                                os.mkdir(target)
-                            target = target + PATHDELIM + "pathway-tools"
-                            if not os.path.exists(target):
-                                touch(target)
-                        else:
-                            eprintf(
-                                "%-10%:\tSet shell essential variable PTOOLS_DIR as 'export PTOOLS_DIR=<path>'\n"
-                                % ("INFO")
-                            )
-
-                    setVariables[VARIABLE] = default
-                    line = line.replace("<" + VARIABLE + ">", default)
-
-                    eprintf(
-                        'INFO: Setting default value for "%s" as "%s"\n'
-                        % (CONFIG_VARIABLE, line)
-                    )
-                    eprintf("      To set other values :\n")
-                    eprintf(
-                        '                       1.  remove file "%s"\n' % (filename)
-                    )
-                    eprintf(
-                        '                       2.  set the shell variable "%s"\n'
-                        % (VARIABLE)
-                    )
-                    eprintf("                       3.  rerun command\n")
-
-            fprintf(newfile, "%s\n", line)
-
-    filep.close()
-    # result['filename'] = filename
-    return True

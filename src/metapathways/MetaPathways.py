@@ -23,7 +23,7 @@ try:
      from metapathways.parsers.parse  import parse_metapaths_parameters
      from metapathways.pipeline.execution import print_commands, print_to_stdout, no_status_updates
      from metapathways.utils.sysutil import pathDelim
-     from metapathways.pipeline.metapathways import run_metapathways, get_parameter, read_pipeline_configuration
+     from metapathways.pipeline.metapathways import run_metapathways, get_parameter
      from metapathways.annotate import *
 
      from metapathways.diagnostics.parameters import *
@@ -54,7 +54,6 @@ PATHDELIM =  str(pathDelim())
 #print sys.path
 
 #config = load_config()
-metapaths_config = """config/template_config.txt""";
 metapaths_param = """config/template_param.txt""";
 
 script_info={}
@@ -89,6 +88,9 @@ def createParser():
                              '\n(b)\'overlay\' -- recomputes the steps that are not present \n' +
                              '\n(d)\'safe\' -- safe mode does not run on an existing run folder\n')
 
+    parser.add_option("-d", "--refdir", dest="refdb_dir", default=None,
+                      help="location of the reference DB [REQUIRED]")
+    
     #ith out of order completion \ time-stamps in the \'workflow_log.txt\' 
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
@@ -279,22 +281,9 @@ def report_missing_filenames(input_output_list, sample_subset, logger=None):
              logger.printf("ERROR\tCannot file input for sample %s!\n", sample_in_subset)
 
 # main function
-
 def sigint_handler(signum, frame):
     eprintf("Received TERMINATION signal\n")
     exit_process()
-
-
-def environment_variables_defined():
-    variables = ['METAPATHWAYS_DB']
-    status =True
-    for variable in variables:
-      if not variable in os.environ:
-         eprintf("%-10s:Environment variable %s not defined! Please set %s as \'export %s=<value>\'\n" %('ERROR', variable, variable,variable))
-         if variables in ['METAPATHWAYS_DB']:
-           status=False
-    
-    return status
 
 def process(argv):
     global parser
@@ -325,11 +314,6 @@ def process(argv):
 #    else:
 #       force_remove_dir=False
 
-    if opts.config_file:
-       config_file= opts.config_file
-    else:
-       config_file = cmd_folder + PATHDELIM + metapaths_config
-    
 
     # try to load the parameter file    
     try:
@@ -406,28 +390,64 @@ def process(argv):
 
     # make sure the sample files are found
     report_missing_filenames(input_output_list, sample_subset, logger=globalerrorlogger)
-
-
-    #check the pipeline configuration
-
-    if not path.exists(config_file):
-        eprintf("%-10s: No config file %s found!\n" %('WARNING', config_file))
-        eprintf("%-10s: Creating a config file %s!\n" %('INFO', config_file))
-        if not environment_variables_defined():
-           sys.exit(0)
-        create_metapaths_configuration(config_file, cmd_folder)
-
-    config_settings = read_pipeline_configuration(config_file, globalerrorlogger)
-
-
     parameter =  Parameters()
-    if not staticDiagnose(config_settings, params, logger = globalerrorlogger):
+
+    config = someclass()
+    config.refdb_dir = opts.refdb_dir
+    if not staticDiagnose(params, config,  logger = globalerrorlogger):
         eprintf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
         globalerrorlogger.printf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
         return 
     
     samplesData = {}
     # PART1 before the blast
+
+    configs = {
+        "PREPROCESS_INPUT"     : "MetaPathways_filter_input",
+        "PREPROCESS_AMINOS"    : "MetaPathways_preprocess_amino_input",
+        "ORF_PREDICTION"       : "MetaPathways_orf_prediction",
+        "ORF_TO_AMINO"         : "MetaPathways_create_amino_sequences",
+        "FUNC_SEARCH"          : "MetaPathways_func_search",
+        "PARSE_FUNC_SEARCH"    : "MetaPathways_parse_blast",
+        "COMPUTE_REFSCORES"    : "python_scripts/MetaPathways_refscore",
+        "ANNOTATE_ORFS"        : "MetaPathways_annotate_fast",
+        "CREATE_ANNOT_REPORTS" : "MetaPathways_create_reports_fast",
+        "GENBANK_FILE"         : "MetaPathways_create_genbank_ptinput_sequin",
+        "SCAN_rRNA"            : "MetaPathways_rRNA_stats_calculator",
+        "SCAN_tRNA"            : "MetaPathways_tRNA_scan",
+        "RPKM_CALCULATION"     : "MetaPathways_rpkm", 
+        # executable
+        "RESOURCES_DIR"        : "resources",
+        "BLASTP_EXECUTABLE"    : 'blastp',
+        "BLASTN_EXECUTABLE"    : 'blastn',
+        "BWA_EXECUTABLE"       : 'bwa',
+        "LASTDB_EXECUTABLE"    : 'fastdb',
+        "LAST_EXECUTABLE"      : 'fastal',
+        "PRODIGAL_EXECUTABLE"  : 'prodigal',
+        "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
+        "RPKM_EXECUTABLE"      : 'rpkm',
+        "NUM_CPUS"             : 4,
+        "REFDBS"               : opts.refdb_dir
+    }
+
+#GBK_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_parse_genbank.py'
+#GFF_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_input_gff.py'
+#PREPROCESS_INPUT 'libs/python_scripts/MetaPathways_filter_input.py'
+#PREPROCESS_AMINOS 'libs/python_scripts/MetaPathways_preprocess_amino_input.py'
+#ORF_PREDICTION 'libs/python_scripts/MetaPathways_orf_prediction.py'
+#ORF_TO_AMINO 'libs/python_scripts/MetaPathways_create_amino_sequences.py'
+#COMPUTE_REFSCORES 'libs/python_scripts/MetaPathways_refscore.py'
+#FUNC_SEARCH 'libs/python_scripts/MetaPathways_func_search.py'
+#PARSE_FUNC_SEARCH 'libs/python_scripts/MetaPathways_parse_blast.py'
+##ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast_metacyc.py'
+#ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast.py'
+#GENBANK_FILE 'libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py'
+#CREATE_ANNOT_REPORTS 'libs/python_scripts/MetaPathways_create_reports_fast.py'
+#RUN_PATHOLOGIC 'libs/python_scripts/MetaPathways_run_pathologic.py'
+#SCAN_rRNA 'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
+#SCAN_tRNA 'libs/python_scripts/MetaPathways_tRNA_scan.py'
+#RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
+
 
     block_mode = opts.block_mode
 
@@ -461,14 +481,12 @@ def process(argv):
                    sample_output_dir,
                    output_dir,
                    globallogger = globalerrorlogger,
-                   command_line_params=command_line_params,
-                   params=params,
-                   metapaths_config=metapaths_config,
-                   status_update_callback=status_update_callback,
-                   config_file=config_file,
+                   command_line_params = command_line_params,
+                   params = params,
+                   status_update_callback = status_update_callback,
+                   config_settings = configs,
                    run_type = run_type, 
-                   config_settings = config_settings,
-                   block_mode = block_mode,
+                   block_mode = block_mode
               )
          else: 
               eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",sQuote(input_fp) )

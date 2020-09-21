@@ -6,40 +6,15 @@ regtests*
 redhat
 rpkm_c
 *.o
-<<<<<<< HEAD
-executables/source/bwa-0.7.7/*
-executables/source/rpkm/*
-executables/source/LAST-Plus/*
-executables/source/prodigal.v2_00/
-executables/source/trnascan/
-executables/source/FAST/*
+binaries/*/*
 *.pyc
 *.swp
 .idea*
 *.DS_Store
 *.o
-executables/*/trnascan-1.4
-executables/*/lastal+
-executables/*/lastdb+
-executables/*/bwa
-executables/*/prodigal
-executables/*/rpkm
 
-executables/linux/trnascan-1.4
-executables/linux/lastal+
-executables/linux/lastdb+
-executables/linux/bwa
-executables/linux/prodigal
 
-executables/source/LAST-Plus/last-merge-batches+
-executables/source/LAST-Plus/last-split+
-executables/source/bwa-0.7.7/libbwa.a
-executables/source/prodigal.v2_00/prodigal
-executables/source/MicrobeCensus
-executables/source/LAST-Plus
-executables/ubuntu/*
-executables/linux/*
-executables/macosx/*
+
 regtests/output/*
 regtests/input/beaver.fasta
 regtests/input/reads/beaver*
@@ -50,3 +25,6 @@ config/template_config.txt
 config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
+
+dist/*
+src/MetaPathways.egg-info/*

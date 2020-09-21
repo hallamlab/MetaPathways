@@ -25,6 +25,7 @@ class Configuration:
 
     acceptableConfiguration = {}
     missingErrors = {}
+   
 
     def __init__(self):
         try:

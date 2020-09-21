@@ -16,7 +16,6 @@ try:
     from optparse import make_option
     from metapathways.diagnostics.parameters import *
     from metapathways.diagnostics.configuration import *
-    from metapathways.diagnostics.tools import *
     from metapathways.utils.sysutil import pathDelim, getstatusoutput
     from metapathways.utils.utils import *
     from metapathways.utils.errorcodes import *
@@ -29,7 +28,7 @@ except:
 PATHDELIM = pathDelim()
 
 
-def staticDiagnose(configs, params, logger=None):
+def staticDiagnose(params, config = None, logger=None):
     """
     Diagnozes the pipeline basedon the configs and params for
     binaries, scripts and resources
@@ -45,37 +44,25 @@ def staticDiagnose(configs, params, logger=None):
     configuration = _configuration.getConfiguration()
 
     """ the place holders for the tools required to make the run """
-    _tools = Tools()
-    tools = _tools.getTools()
-
-    """ load the actual executables """
-    executables = matchToolsFromConfigs(configs, tools, logger=logger)
-
-    """ make sure all the executables exist """
-    executablesExist(executables, configs, logger=logger)
-
     parameters = Parameters()
-
-    # print  parameters.getRunSteps()
-    """ check if the required set of executables exists """
-    # missingList = checkRequiredExecutables(parameters.getRunSteps(), _tools, params, configs, logger =logger)
 
     """ check if the required standard databases exists """
 
     #    print  parameters.getRunSteps( activeOnly = True)
     if not checkForRequiredDatabases(
-        tools, params, configs, "functional", logger=logger
-    ):
+        params, config, "functional", logger=logger):
         insert_error(17)
         return False
 
     if not checkForRequiredDatabases(
-        tools, params, configs, "taxonomic", logger=logger
-    ):
+        params, config, "taxonomic", logger=logger):
         insert_error(17)
         return False
 
-    message = checkbinaries(configs)
+    """ make sure all the executables exist """
+    executables = [ 'fastal', 'fastdb', 'rpkm' ]
+    message, ok = checkbinaries(executables)
+
     if message:
         print(message)
         return False
@@ -83,80 +70,18 @@ def staticDiagnose(configs, params, logger=None):
     return True
 
 
-def checkbinaries(configs):
+def checkbinaries(executables):
+    message = ""
+    ok = True
+    cmd_exists = lambda x: shutil.which(x) is not None
+    for executable in executables:
+        if not cmd_exists(executable):
+            message = "'" + executable + "'" + " is missing.\n"
+            ok = False
 
-    message = None
-    executables_dir = "---"
-    if "METAPATHWAYS_PATH" in configs:
-        executables_dir = configs["METAPATHWAYS_PATH"]
+    return message, ok
 
-    if "EXECUTABLES_DIR" in configs:
-        executables_dir += PATHDELIM + configs["EXECUTABLES_DIR"]
-    else:
-        executables_dir += PATHDELIM + "---"
-
-    if not path.exists(executables_dir):
-        message = (
-            "ERROR\tMissing executables folder under 'MetaPathways_Python/executables' it set to "
-            + executables_dir
-        )
-        return message
-
-    binaries = {}
-    binaries["LASTDB_EXECUTABLE"] = ["-h"]
-    binaries["LAST_EXECUTABLE"] = ["-h"]
-
-    binaries["FORMATDB_EXECUTABLE"] = ["-help"]
-    binaries["BLASTP_EXECUTABLE"] = ["-h"]
-    binaries["BLASTN_EXECUTABLE"] = ["-h"]
-
-    binaries["PRODIGAL_EXECUTABLE"] = ["-h"]
-    binaries["SCAN_tRNA_EXECUTABLE"] = ["-h"]
-    binaries["RPKM_EXECUTABLE"] = ["-h"]
-
-    status = {}
-    error = False
-    for name in binaries.keys():
-
-        if (
-            name in ["FORMATDB_EXECUTABLE", "BLASTP_EXECUTABLE", "BLASTN_EXECUTABLE"]
-            and configs[name] == ""
-        ):
-            continue
-
-        if not name in configs:
-            status[name] = "BINARY UNSPECIFIED"
-            error = True
-            continue
-
-        executable = executables_dir + PATHDELIM + configs[name]
-
-        if not executable.strip():
-            status[name] = "BINARY UNSPECIFIED"
-            error = True
-            continue
-
-        if not path.exists(executable):
-            status[name] = "BINARY MISSING"
-            error = True
-            continue
-
-        result = getstatusoutput(" ".join([executable] + binaries[name]))
-
-    message = False
-    if error:
-        message = "ERROR\tOS Specific executables check failed\n\n"
-        message += "\tFOLDER :" + executables_dir + "\n\n"
-        message += '\tFIX    : Please correct the location for "OS Specific Executables" in the Setup tab\n'
-        message += '\t       : Alternatively, you can update the EXECUTABLES_DIR key in the config file "config/template_config.txt"\n\n'
-
-        for name in status.keys():
-            message += "\t" + name + "  :  " + status[name] + "\n"
-
-    return message
-
-
-def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
+def checkForRequiredDatabases(params, config,  dbType, logger=None):
     """checks the
     -- database folder structure
     -- checks for raw sequences
@@ -167,12 +92,6 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
     if dbType == "functional":
         dbtype = get_parameter(params, "annotation", "dbtype", default="high")
         dbstring = ""
-        if dbtype == "high":
-            dbstring = get_parameter(params, "annotation", "dbs_high", default="")
-        elif dbtype == "custom":
-            dbstring = get_parameter(params, "annotation", "dbs_custom", default="")
-        elif dbtype == "all":
-            dbstring = get_parameter(params, "annotation", "dbs", default="")
         _algorithm = get_parameter(params, "annotation", "algorithm", default=None)
 
     if dbType == "taxonomic":
@@ -190,15 +109,13 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
     if not dbs:
         return True
 
-    refdbspath = configs["REFDBS"]
-
     """ checks refdb path """
-    if not check_if_refDB_path_valid(refdbspath, logger=logger):
+    if not check_if_refDB_path_valid(config.refdb_dir, logger=logger):
         return False
 
     """ checks raw sequences for dbtype functional/taxonimic """
     if isRefDBNecessary(params, dbType):
-        if not check_for_raw_sequences(dbs, refdbspath, dbType, logger=logger):
+        if not check_for_raw_sequences(dbs, config.refdb_dir, dbType, logger=logger):
             insert_error(17)
             return False
 
@@ -214,9 +131,9 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
                 algorithm = None
 
             """ is db formatted ? """
-            if not isDBformatted(
-                db, refdbspath, dbType, seqType, algorithm, logger=logger
-            ):
+            if not isDBformatted(db, config.refdb_dir, dbType, seqType, \
+                algorithm, logger=logger
+                ):
                 """ if note formatted then format it """
                 eprintf(
                     "WARNING\tTrying to format %s  database %s\n", seqType, sQuote(db)
@@ -225,28 +142,9 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
                     "WARNING\tTrying to format %s database %s \n", seqType, sQuote(db)
                 )
 
-                if not formatDB(
-                    tools,
-                    db,
-                    refdbspath,
-                    seqType,
-                    dbType,
-                    algorithm,
-                    configs,
-                    logger=logger,
-                ):
-                    return False
+                return False
 
-            dbMapFile = (
-                configs["REFDBS"]
-                + PATHDELIM
-                + dbType
-                + PATHDELIM
-                + "formatted"
-                + PATHDELIM
-                + db
-                + "-names.txt"
-            )
+
             seqFilePath = configs["REFDBS"] + PATHDELIM + dbType + PATHDELIM + db
             """ check for dbmapfile """
 
@@ -285,148 +183,6 @@ def checkForRequiredDatabases(tools, params, configs, dbType, logger=None):
                 )
 
     return True
-
-
-def createMapFile(seqFilePath, dbMapFile):
-    """ Creates the dbMapFile from sequence file seqFilePath """
-    try:
-        mapfile = open(dbMapFile, "w")
-        seqFile = open(seqFilePath, "r")
-        for line in seqFile:
-            if re.match(r">", line):
-                fprintf(mapfile, "%s\n", line.strip())
-        seqFile.close()
-        mapfile.close()
-    except:
-        return False
-    return True
-
-
-def formatDB(tools, db, refdbspath, seqType, dbType, algorithm, configs, logger=None):
-    """ Formats the sequences for the specified algorithm """
-    EXECUTABLES_DIR = (
-        configs["METAPATHWAYS_PATH"] + PATHDELIM + configs["EXECUTABLES_DIR"]
-    )
-    formatdb_executable = ""  # EXECUTABLES_DIR + PATHDELIM + tools['FUNC_SEARCH']['exec']['BLAST']['FORMATDB_EXECUTABLE']
-    if seqType == "prot" and algorithm == "LAST":
-        formatdb_executable = (
-            EXECUTABLES_DIR
-            + PATHDELIM
-            + tools["FUNC_SEARCH"]["exec"]["LAST"]["LASTDB_EXECUTABLE"]
-        )
-
-    if seqType == "nucl" or algorithm == "BLAST":
-        if configs["FORMATDB_EXECUTABLE"]:
-            formatdb_executable = (
-                EXECUTABLES_DIR
-                + PATHDELIM
-                + tools["FUNC_SEARCH"]["exec"]["BLAST"]["FORMATDB_EXECUTABLE"]
-            )
-        else:
-            formatdb_executable = which("makeblastdb")
-            if formatdb_executable == None:
-                eprintf('ERROR\tCannot find makeblastdb to format "%s"\n', db)
-                logger.printf('ERROR\tCannot find makeblastdb to format "%s"\n', db)
-                return False
-
-    formatted_db = (
-        refdbspath + PATHDELIM + dbType + PATHDELIM + "formatted" + PATHDELIM + db
-    )
-    raw_sequence_file = refdbspath + PATHDELIM + dbType + PATHDELIM + db
-
-    _temp_formatted_db = formatted_db + "__temp__"
-
-    """ format with 4GB file size """
-    cmd = ""
-    if seqType == "nucl" or algorithm == "BLAST":
-        cmd = "%s -dbtype %s -max_file_sz 2000000000  -in %s -out %s" % (
-            formatdb_executable,
-            seqType,
-            raw_sequence_file,
-            _temp_formatted_db,
-        )
-
-        # cmd='%s -dbtype %s -max_file_sz 20267296  -in %s -out %s' %(formatdb_executable, seqType, raw_sequence_file, _temp_formatted_db)
-
-    formatted_db_size = 4000000000
-    if "FORMATTED_DB_SIZE" in configs and configs["FORMATTED_DB_SIZE"].isdigit():
-        formatted_db_size = int(configs["FORMATTED_DB_SIZE"])
-
-    if seqType == "prot" and algorithm == "LAST":
-        # dirname = os.path.dirname(raw_sequence_file)
-        cmd = ""
-        if seqType == "prot":
-            cmd = "%s -s %s -p -c %s  %s" % (
-                formatdb_executable,
-                formatted_db_size,
-                _temp_formatted_db,
-                raw_sequence_file,
-            )
-
-        #         if seqType=="nucl":
-        #            cmd='%s -s %s -c %s  %s' %(formatdb_executable, formatted_db_size,  _temp_formatted_db, raw_sequence_file)
-
-        eprintf('INFO\tCommand to format "%s"\n', cmd)
-        logger.printf('INFO\tCommand to format "%s"\n', cmd)
-
-    print("COMMAND: ", cmd)
-    result = getstatusoutput(cmd)
-    temp_fileList = glob(_temp_formatted_db + "*")
-
-    _formatted_db_pal = _temp_formatted_db + ".pal"
-    if algorithm == "BLAST" and path.exists(_formatted_db_pal):
-        try:
-
-            formatted_db_pal = formatted_db + ".pal"
-            if seqType == "nucl":
-                formatted_db_pal = formatted_db + ".nal"
-
-            _openpal = open(_formatted_db_pal, "r")
-            openpal = open(formatted_db_pal, "w")
-            lines = _openpal.readlines()
-            tempPATT = re.compile(r"__temp__")
-            for line in lines:
-                _result = tempPATT.search(line)
-                modline = line.strip()
-                if _result:
-                    modline = re.sub("__temp__", "", modline)
-                fprintf(openpal, "%s\n", modline)
-            openpal.close()
-            _openpal.close()
-            remove(_formatted_db_pal)
-        except:
-            return False
-
-    try:
-        temp_fileList = glob(_temp_formatted_db + "*")
-        for tempFile in temp_fileList:
-            file = re.sub("__temp__", "", tempFile)
-            rename(tempFile, file)
-    except:
-        return False
-
-    if result[0] == 0:
-        eprintf(
-            "INFO\tFormatted database %s successfully for %s\n",
-            sQuote(db),
-            sQuote(algorithm),
-        )
-        logger.printf(
-            "INFO\tFormatted database %s successfully for %s\n",
-            sQuote(db),
-            sQuote(algorithm),
-        )
-        return True
-    else:
-        eprintf(
-            "INFO\tFailed to Format database %s for %s\n", sQuote(db), sQuote(algorithm)
-        )
-        eprintf("INFO\tReason for failure %s\n", result[1])
-        logger.printf("INFO\tReason for failure %s\n", result[1])
-        logger.printf(
-            "INFO\tFailed to Format database %s for %s\n", sQuote(db), sQuote(algorithm)
-        )
-        return False
 
 
 def isRefDBNecessary(params, dbType):
@@ -562,116 +318,6 @@ def get_parameter(params, category, field, default=None):
         else:
             return default
     return default
-
-
-def checkRequiredExecutables(steps, tools, params, configs, logger=None):
-    """  check the required executables in the steps """
-    missingList = []
-    for step in steps:
-        missingList += executablesExist(
-            tools.getExecutables(step, params), configs, logger
-        )
-
-    return missingList
-
-
-def executablesExist(executables, configs, logger=None):
-    missingList = []
-    names = executables.keys()
-
-    for name in names:
-        script = executables[name]
-
-        if name != "PATHOLOGIC_EXECUTABLE" and path.exists(
-            configs["METAPATHWAYS_PATH"] + PATHDELIM + script
-        ):
-            executables[name] = configs["METAPATHWAYS_PATH"] + PATHDELIM + script
-            continue
-
-        if name != "PATHOLOGIC_EXECUTABLE" and path.exists(
-            configs["METAPATHWAYS_PATH"]
-            + PATHDELIM
-            + configs["EXECUTABLES_DIR"]
-            + PATHDELIM
-            + script
-        ):
-
-            executables[name] = (
-                configs["METAPATHWAYS_PATH"]
-                + PATHDELIM
-                + configs["EXECUTABLES_DIR"]
-                + PATHDELIM
-                + script
-            )
-            continue
-
-        if name == "PATHOLOGIC_EXECUTABLE" and path.exists(script):
-            # print "FIX ME: diagnoze"
-            eprintf(
-                "INFO     :if you do not wish to install the Pathway-Tools and  run the ePGDB building step \n"
-                + '\tyou might want to create the place holder file by using the "touch %s" (%s) \n',
-                script,
-                name,
-            )
-            continue
-
-        eprintf("ERROR\tscript %s for %s not found\n", script, name)
-        logger.printf("ERROR\tscript %s for %s not found\n", script, name)
-        missingList.append(script)
-
-    return missingList
-
-
-def matchToolsFromConfigs(configs, tools, logger=None):
-    """iterate througs each of the configs item and fill it to
-    to the actual value in the tools
-    """
-    executables = {}
-    """ iterate through each config key """
-    for config_key, config_value in configs.items():
-        for param_step, placeHolder in tools.items():
-            if param_step in tools:
-                for script in tools[param_step]["exec"]:
-
-                    """ does not have alternatives """
-                    if not type(tools[param_step]["exec"][script]) is dict:
-                        if config_key == script:
-                            tools[param_step]["exec"][script] = config_value
-                            executables[script] = config_value
-                    else:
-                        """ go a level deeper """
-                        for sub_script in tools[param_step]["exec"][script]:
-                            if config_key == sub_script:
-                                tools[param_step]["exec"][script][
-                                    sub_script
-                                ] = config_value
-                                executables[sub_script] = config_value
-
-    return executables
-
-
-def getRequiredTools(params, configs, tools, configuration):
-    if not "metapaths_steps" in params:
-        return None
-
-    for key, value in params["metapaths_steps"].items():
-        if value in ["skip", "redo", "yes"]:
-
-            if not key in tools:
-                # print "ERROR : " + key + " is missing in class Tools file!"
-                continue
-
-            if type(tools[key]["exec"][key]) is dict:
-                for execname in tools[key]["exec"]:
-                    print(execname)
-
-            # if not tools[key]['exec'] in configs:
-            # print "ERROR : Exec in " + tools[key]['exec']  + " is missing in class Configuration file!"
-            #   tools[key]['exec'] = None
-            #   continue
-
-            # print configs[tools[key]['exec']]
-            # tools[key]['exec'] = [ configs[tools[key]['exec']] ]
 
 
 def _checkParams(params, paramsAccept, logger=None, errors=None):

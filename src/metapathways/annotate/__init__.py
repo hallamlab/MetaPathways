@@ -1,8 +1,7 @@
 """This module defines classes for working with sequences and records."""
-
 import datetime
 import re
-import metapathways.annotate.location as location
+from metapathways.annotate import location
 
 # Sequences
 

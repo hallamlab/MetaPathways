@@ -234,11 +234,9 @@ class SampleData:
         checkOrCreateFolder(self.output_results)
         checkOrCreateFolder(self.output_results_annotation_table_dir)
         checkOrCreateFolder(self.output_results_megan_dir)
-        checkOrCreateFolder(self.output_results_sequin_dir)
         checkOrCreateFolder(self.output_results_rpkm_dir)
         checkOrCreateFolder(self.output_fasta_pf_dir)
         checkOrCreateFolder(self.output_results_pgdb_dir)
-        checkOrCreateFolder(self.output_results_biom_dir)
         checkOrCreateFolder(self.output_results_rRNA_dir)
         checkOrCreateFolder(self.output_results_tRNA_dir)
 

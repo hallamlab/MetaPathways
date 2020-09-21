@@ -21,7 +21,8 @@ try:
         printf,
     )
     from metapathways.utils.sysutil import getstatusoutput
-    from metapathways.annotate import genbank, fasta
+    from metapathways.annotate.genbank import *
+    from metapathways.annotate.fasta import *
 except:
     print(""" Could not load some user defined  module functions""")
     print(""" Make sure your typed \"source MetaPathwaysrc\" """)

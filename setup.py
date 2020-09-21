@@ -2,11 +2,14 @@ import os
 from setuptools import setup
 
 CLASSIFIERS = [
-    "Development Status :: 3 - Beta",
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.0+",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3.5",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
@@ -19,7 +22,7 @@ def read(fname):
 
 setup(
     name="MetaPathways",
-    version="3.5.0",
+    version="3.1.3",
     author="Kishori Mohan Konwar",
     author_email="kishori82@gmail.com",
     description=(
@@ -29,6 +32,7 @@ setup(
     license="MIT",
     keywords="metagenomics pipeline",
     url="http://packages.python.org/",
+    download_url = "https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
     package_dir={"": "src"},
     packages=[
         "metapathways",
@@ -49,4 +53,5 @@ setup(
     long_description=read("README.md"),
     include_package_data=True,
     classifiers=CLASSIFIERS,
+    python_requires='>3.5.2'
 )

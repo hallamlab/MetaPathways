@@ -208,38 +208,29 @@ def parse_metapaths_parameters(filename):
     def return_empty_dict():
         return dict()
 
-    try:
-        filep = open(filename, "r")
-    except:
-        eprintf("ERROR: cannot open the parameter file " + sQuote(filename))
-        exit_process(
-            "ERROR: cannot open the parameter file " + sQuote(filename), errorCode=0
-        )
-
-    result = {}
-
-    lines = filep.readlines()
-    for line in lines:
-        line = line.strip()
-        if line and not line.startswith("#"):
-            fields = line.split()
-            try:
-                script_id, parameter_id = fields[0].split(":")
-                value = ",".join([x.strip() for x in fields[1:]])
-                value = re.sub(",,", ",", value)
-                # if value.upper() == 'FALSE' or value.upper() == 'NONE':
-                #    continue
-                # elif value.upper() == 'TRUE':
-                #    value = None
-                # else:
-                #    pass
-                if script_id not in result:
-                    result[script_id] = {}
-
-                result[script_id][parameter_id] = value
-            except:
-                result[script_id] = {parameter_id: value}
-    filep.close()
+    with open(filename, "r") as filep:
+        result = {}
+    
+        lines = filep.readlines()
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                fields = line.split()
+                try:
+                    script_id, parameter_id = fields[0].split(":")
+                    value = ",".join([x.strip() for x in fields[1:]])
+                    value = re.sub(",,", ",", value)
+                    # if value.upper() == 'FALSE' or value.upper() == 'NONE':
+                    #    continue
+                    # elif value.upper() == 'TRUE':
+                    #    value = None
+                    # else:
+                    #    pass
+                    if script_id not in result:
+                        result[script_id] = {}
+                    result[script_id][parameter_id] = value
+                except KeyError:
+                    result[script_id] = {parameter_id: value}
     # result['filename'] = filename
     return result
 
