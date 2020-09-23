@@ -1,5 +1,5 @@
-.. metapathways documentation master file, created by
-   sphinx-quickstart on Thu Sep 10 08:27:42 2020.
+.. MetaPathways documentation master file, created by
+   sphinx-quickstart on Wed Sep 23 13:09:29 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -8,14 +8,15 @@ Welcome to MetaPathways's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-   getting_started
-   installation
-   running_metapathways
-   output_structure
-   visualizing_results
-   references
+   :caption: Documentation
 
+   manual/overview
+   manual/install
+   manual/configuration
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API References
 
 
 Indices and tables
