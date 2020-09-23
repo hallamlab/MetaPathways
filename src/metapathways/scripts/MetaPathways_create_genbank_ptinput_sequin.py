@@ -17,20 +17,20 @@ try:
     import logging.handlers
     import re
     from glob import glob
-    from libs.python_modules.utils.errorcodes import *
-    from libs.python_modules.utils.utils import *
-    from libs.python_modules.utils.metapathways_utils import (
+    from metapathways.utils.errorcodes import *
+    from metapathways.utils.utils import *
+    from metapathways.utils.metapathways_utils import (
         ShortenORFId,
         ShortentRNAId,
         ShortenrRNAId,
         ContigID,
     )
-    from libs.python_modules.utils.sysutil import (
+    from metapathways.utils.sysutil import (
         pathDelim,
         genbankDate,
         getstatusoutput,
     )
-    from libs.python_modules.parsers.parse import parse_parameter_file
+    from metapathways.parsers.parse import parse_parameter_file
 except:
     print (""" Could not load some user defined  module functions""")
     print (""" Make sure your typed 'source MetaPathwaysrc'""")
@@ -191,7 +191,6 @@ def process_gff_file(
         insert_orf_into_dict(line, contig_dict)
 
     if "gbk" in output_filenames:
-        print ("gbk")
         write_gbk_file(
             output_filenames["gbk"],
             contig_dict,
@@ -234,8 +233,8 @@ def write_ptinput_files(
 
         reducedpffile = open(output_dir_name + "/tmp.reduced.txt", "w")
     except:
-        print "cannot create the pathway tools files"
-        print "perhaps there is already a folder " + output_dir_name
+        print("cannot create the pathway tools files")
+        print("perhaps there is already a folder " + output_dir_name)
         traceback.print_exc(file=sys.stdout)
 
     count = 0
@@ -779,7 +778,7 @@ def process_sequence_file(sequence_file_name, seq_dictionary, shortorfid=False):
     try:
         sequencefile = open(sequence_file_name, "r")
     except IOError:
-        print "Cannot read file " + sequence_file_name + " !"
+        print("Cannot read file " + sequence_file_name + " !")
 
     sequence_lines = sequencefile.readlines()
     sequencefile.close()
@@ -940,17 +939,14 @@ def main(argv, errorlogger=None, runstatslogger=None):
     # Parse options (many!)
     # TODO: Create option groups
     # filtering options
-
     global parser, errorcode
     options, args = parser.parse_args(argv)
-
     if not (
         options.gff_file
         or options.nucleotide_sequences
         or options.protein_sequences
         or options.output
     ):
-        print help
         sys.exit(0)
 
     if not options.gff_file:
@@ -959,12 +955,10 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
     if not options.gbk_file and not options.ptinput_file:
         eprintf("ERROR:No genbank or ptools input is specified\n")
-
         insert_error(errorcode)
         return (1, "")
 
     if not path.exists(options.gff_file):
-        print "gff file does not exist"
         eprintf("ERROR\tGFF file %s  not found\n", options.gff_file)
         errorlogger.printf("ERROR\tGFF file %s  not found\n", options.gff_file)
         sys.exit(0)
@@ -1022,9 +1016,9 @@ def MetaPathways_create_genbank_ptinput_sequin(
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
     except:
+        errorlogger.printf(traceback.print_exc(10))
         insert_error(errorcode)
     return (0, "")
-
 
 if __name__ == "__main__":
     createParser()

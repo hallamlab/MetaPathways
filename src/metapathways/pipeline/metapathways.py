@@ -419,29 +419,7 @@ def run_metapathways(
     config_settings=None,
     block_mode=False,
 ):
-
     runid = 'random'
-
-    print(config_settings)
-
-#GBK_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_parse_genbank.py'
-#GFF_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_input_gff.py'
-#PREPROCESS_INPUT 'libs/python_scripts/MetaPathways_filter_input.py'
-#PREPROCESS_AMINOS 'libs/python_scripts/MetaPathways_preprocess_amino_input.py'
-#ORF_PREDICTION 'libs/python_scripts/MetaPathways_orf_prediction.py'
-#ORF_TO_AMINO 'libs/python_scripts/MetaPathways_create_amino_sequences.py'
-#COMPUTE_REFSCORES 'libs/python_scripts/MetaPathways_refscore.py'
-#FUNC_SEARCH 'libs/python_scripts/MetaPathways_func_search.py'
-#PARSE_FUNC_SEARCH 'libs/python_scripts/MetaPathways_parse_blast.py'
-##ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast_metacyc.py'
-#ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast.py'
-#GENBANK_FILE 'libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py'
-#CREATE_ANNOT_REPORTS 'libs/python_scripts/MetaPathways_create_reports_fast.py'
-#RUN_PATHOLOGIC 'libs/python_scripts/MetaPathways_run_pathologic.py'
-#SCAN_rRNA 'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
-#SCAN_tRNA 'libs/python_scripts/MetaPathways_tRNA_scan.py'
-#RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
-
     jobcreator = JobCreator(params, config_settings)
 
     sorted_samplesData_keys = sorted(samplesData.keys())

@@ -52,10 +52,9 @@ def print_commands(commands, status_update_callback, logger):
     #        logger.write('# %s command\n%s\n\n' % e)
 
 
-def execute_pipeline_stage(
-    pipeline_command, extra_command=None, errorlogger=None, runstatslogger=None
-):
-
+def execute_pipeline_stage(pipeline_command, \
+     extra_command=None, errorlogger=None, runstatslogger=None):
+    
     argv = [x.strip() for x in pipeline_command.split()]
 
     funcname = re.sub(r".py$", "", argv[0])
@@ -66,10 +65,8 @@ def execute_pipeline_stage(
         methodtocall = getattr(getattr(python_scripts, funcname), funcname)
         if extra_command == None:
             result = methodtocall(
-                args, errorlogger=errorlogger, runstatslogger=runstatslogger
-            )
+                args, errorlogger=errorlogger, runstatslogger=runstatslogger)
         else:
-            #           print extra_command
             result = methodtocall(
                 args,
                 errorlogger=errorlogger,
@@ -114,6 +111,7 @@ def execute_tasks(s, verbose=False, block=0):
                     result = execute(s, c)
                 except:
                     s.errorlogger.printf("ERROR\t%s\n", result[1])
+                    eprintf(traceback.print_exc(10))
                     result[0] = 1
 
                 if result[0] == 0:
@@ -141,6 +139,7 @@ def execute_tasks(s, verbose=False, block=0):
                         result = execute(s, c)
                     except:
                         s.errorlogger.printf("ERROR\t%s\n", result[1])
+                        eprintf(traceback.print_exc(10))
                         result[0] = 1
 
                     if result[0] == 0:
@@ -185,7 +184,6 @@ def execute(s, c):
             )
     except:
         pass
-
     return result
 
 

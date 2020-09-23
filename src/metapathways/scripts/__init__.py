@@ -13,3 +13,4 @@ import metapathways.scripts.MetaPathways_func_search
 import metapathways.scripts.MetaPathways_tRNA_scan
 import metapathways.scripts.MetaPathways_rpkm
 import metapathways.scripts.MetaPathways_preprocess_amino_input
+import metapathways.scripts.MetaPathways_create_genbank_ptinput_sequin

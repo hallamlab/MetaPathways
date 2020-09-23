@@ -65,5 +65,5 @@ metapaths_steps:SCAN_rRNA yes
 metapaths_steps:SCAN_tRNA yes
 metapaths_steps:ANNOTATE_ORFS yes
 metapaths_steps:CREATE_ANNOT_REPORTS yes
-metapaths_steps:BUILD_PGDB skip
+metapaths_steps:PATHOLOGIC_INPUT skip
 metapaths_steps:COMPUTE_RPKM yes

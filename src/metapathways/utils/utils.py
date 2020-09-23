@@ -442,7 +442,7 @@ def doesFileExist(fileName):
         return True
 
 
-def does_plain_or_gz_FileExist(fileName):
+def plain_or_gz_file_exists(fileName):
     if path.exists(fileName) or path.exists(fileName + ".gz"):
         return True
     return False

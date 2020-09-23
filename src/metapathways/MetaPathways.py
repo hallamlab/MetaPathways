@@ -80,16 +80,13 @@ def createParser():
                       help='the input fasta file/input dir [REQUIRED]')
     parser.add_option('-p','--parameter_fp', dest="parameter_fp", 
                        help='path to the parameter file [REQUIRED]')
-    parser.add_option("-c", "--config_filer", dest="config_file", 
-                      help='pipeline_configuratin file [example : \"MetaPathways/template_config.txt\"]')
+    parser.add_option("-d", "--dirref", dest="refdb_dir", 
+                      help="location of the reference DB [REQUIRED]")
     parser.add_option('-r','--run-type', dest="run_type", default='safe',
                        choices=['safe', 'overlay', 'overwrite','dry-run'], 
                        help= '\n(a) \'overwrite\' -- wipes out the previous runs with the same name\n'+
                              '\n(b)\'overlay\' -- recomputes the steps that are not present \n' +
                              '\n(d)\'safe\' -- safe mode does not run on an existing run folder\n')
-
-    parser.add_option("-d", "--refdir", dest="refdb_dir", default=None,
-                      help="location of the reference DB [REQUIRED]")
     
     #ith out of order completion \ time-stamps in the \'workflow_log.txt\' 
     parser.add_option("-v", "--verbose",
@@ -134,7 +131,6 @@ def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlog
    input_sample_list = input_output_list.keys()
    for sample_name in input_sample_list:
       short_sample_name = derive_sample_name(sample_name) 
-    #  print short_sample_name, len(short_sample_name)
       if len(short_sample_name) > 35:
          eprintf("ERROR\tSample name %s must not be longer than 35 characters!\n",short_sample_name)
          if globalerrorlogger:
@@ -304,16 +300,12 @@ def process(argv):
     print_only = opts.print_only
 
     sample_subset = removeSuffix(opts.sample_subset)
-
     run_type = opts.run_type.strip()
-
-
     '''no need to remove the whole directory'''
 #    if run_type == 'overwrite':
 #       force_remove_dir=True
 #    else:
 #       force_remove_dir=False
-
 
     # try to load the parameter file    
     try:
@@ -336,8 +328,6 @@ def process(argv):
               "       run with the option \"-r  overwrite\" to force overwrite it." )
         sys.exit(2)
 
-    print("metapathways0")
-        
     if verbose:
         status_update_callback = print_to_stdout
     else:
@@ -421,33 +411,14 @@ def process(argv):
         "BLASTP_EXECUTABLE"    : 'blastp',
         "BLASTN_EXECUTABLE"    : 'blastn',
         "BWA_EXECUTABLE"       : 'bwa',
-        "LASTDB_EXECUTABLE"    : 'fastdb',
-        "LAST_EXECUTABLE"      : 'fastal',
+        "LASTDB_EXECUTABLE"    : 'lastdb+',
+        "LAST_EXECUTABLE"      : 'lastal+',
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
         "RPKM_EXECUTABLE"      : 'rpkm',
         "NUM_CPUS"             : 4,
         "REFDBS"               : opts.refdb_dir
     }
-
-#GBK_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_parse_genbank.py'
-#GFF_TO_FNA_FAA_GFF 'libs/python_scripts/MetaPathways_input_gff.py'
-#PREPROCESS_INPUT 'libs/python_scripts/MetaPathways_filter_input.py'
-#PREPROCESS_AMINOS 'libs/python_scripts/MetaPathways_preprocess_amino_input.py'
-#ORF_PREDICTION 'libs/python_scripts/MetaPathways_orf_prediction.py'
-#ORF_TO_AMINO 'libs/python_scripts/MetaPathways_create_amino_sequences.py'
-#COMPUTE_REFSCORES 'libs/python_scripts/MetaPathways_refscore.py'
-#FUNC_SEARCH 'libs/python_scripts/MetaPathways_func_search.py'
-#PARSE_FUNC_SEARCH 'libs/python_scripts/MetaPathways_parse_blast.py'
-##ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast_metacyc.py'
-#ANNOTATE_ORFS 'libs/python_scripts/MetaPathways_annotate_fast.py'
-#GENBANK_FILE 'libs/python_scripts/MetaPathways_create_genbank_ptinput_sequin.py'
-#CREATE_ANNOT_REPORTS 'libs/python_scripts/MetaPathways_create_reports_fast.py'
-#RUN_PATHOLOGIC 'libs/python_scripts/MetaPathways_run_pathologic.py'
-#SCAN_rRNA 'libs/python_scripts/MetaPathways_rRNA_stats_calculator.py'
-#SCAN_tRNA 'libs/python_scripts/MetaPathways_tRNA_scan.py'
-#RPKM_CALCULATION 'libs/python_scripts/MetaPathways_rpkm.py'
-
 
     block_mode = opts.block_mode
 
