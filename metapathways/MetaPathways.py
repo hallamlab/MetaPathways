@@ -278,7 +278,6 @@ def process(argv):
     input_fp = opts.input_fp 
     output_dir = path.abspath(opts.output_dir)
     verbose = opts.verbose
-    print_only = opts.print_only
 
     sample_subset = removeSuffix(opts.sample_subset)
     run_type = opts.run_type.strip()
