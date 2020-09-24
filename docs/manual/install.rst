@@ -49,26 +49,43 @@ Next we install ``trnascan-1.4``, ``rpkm``, ``prodigal``, ``FAST`` and ``bwa``
 
 Download the source code as
   
-  ``$ wget --version``
+  ``$ wget https://github.com/kishori82/MetaPathways_Python.3.0/raw/kmk-develop/c_cpp_sources.1.0.tar.gz``
 
-untar the files, make and install
+untar the files, make and install, which takes a few minutes 
 
-::
-   tar -zxvf 
+   ``$ tar -zxvf c_cpp_sources.1.0.tar.gz``
 
-   cd 
-   make 
-   sudo make install
-   sudo make uninstall
+   ``$ cd c_cpp_sources``
+
+   ``$ make`` 
+
+   ``$ sudo make install``
+
+NOTE: if you would like to unstall then type
+   
+   ``$ sudo make uninstall``
 
 
-ncbi-blast
+Install ``ncbi-blast+`` locally
+
+Download page
+
+https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+
+Ubuntu/Debian
+
+  ``$ sudo apt-get install ncbi-blast+``
 
 
 Reference Sequences
 ===================
 
-Create the reference folders as
+Create the following reference folder structure under a folder. Here we use the 
+example name ``MetaPathways_DBs``
+
+``$ mkdir -p MetaPathways_DBs/taxonomic/formatted``
+``$ mkdir -p MetaPathways_DBs/functional/formatted``
+``$ mkdir -p MetaPathways_DBs/ncbi_tree``
 
 ::
 
@@ -76,17 +93,24 @@ Create the reference folders as
    ├── functional
    │   ├── formatted
    ├── functional_categories
+   ├── ncbi_tree
    └── taxonomic
        └── formatted
 
-`CreateDBFolderStructure  -d  <name of a folder path>`
+Download and unzip  the NCBI taxonomy file to the ``MetaPathways_DBs/ncbi_tree`` folder
+
+``$ cd MetaPathways_DBs/ncbi_tree``
+``$ wget https://github.com/kishori82/MetaPathways_Python.3.0/raw/kmk-develop/data/refdata/ncbi_taxonomy_tree.txt.gz``
+``$ gunzip ncbi_taxonomy_tree.txt.gz``
+
+and we should see the following structure 
 ::
 
    MetaPathways_DBs/
    ├── functional
    │   ├── formatted
    ├── functional_categories
-   │   ├── ncbi.map
+   ├── ncbi_tree
    │   ├── ncbi_taxonomy_tree.txt
    └── taxonomic
        └── formatted
@@ -94,13 +118,28 @@ Create the reference folders as
 Functional Reference 
 ++++++++++++++++++++
 
+The functional references are protein reference sequences used for functional and taxonomic
+annotation. Any set of protein references in the FASTA format can be used, e.g., we show 
+a few lines
 
-Taxonomic Reference 
-+++++++++++++++++++
+::
+
+  >WP_096046812.1 hypothetical protein [Sulfurospirillum sp. JPD-1]
+  MSKKAFLFLILLVMSLQSLLVACGGSCLECHSKLRPYINDQNHAILNECITCHNQPSKNGQCGRDCFDCHSQEKVYAQKDVNAHQELKT
+  CGTCHKEKVDFTTPKQSIISNQQNLIHLFK
+  >WP_096046815.1 hypothetical protein [Sulfurospirillum sp. JPD-1]
+  MKKLLIILALISRLIAEDSSDLDEIKEEDIPKILSIIKDGTKEHLPMMLDDYTTLVDIVSVNNAIEYRNRINSANEHVKTILKADKGTLI
+  KTTFDNNKSYLCSDYETRSLLKKGAVFIYVFYDMNNAELFKFSIQEKDCQ
+  >WP_016244176.1 hypothetical protein [Escherichia coli]
+  MTDITDRHTLRRMSWSELFTAAQEAEFQRDYERARIVWSFALHVATTTINKNLSIAHIRRCDTLLHKSKTVPGNNTGGRSVCLRPQHPRR 
+  ...........
 
 
 Formatting Reference Sequences
 ++++++++++++++++++++++++++++++
+
+ For the purpose of demonstration we walk you through the process of preparing a
+ small set of protein reference sequences from the NCBI Refseq protein databases.
 
 
 FAST
@@ -111,3 +150,5 @@ BLAST
 -----
 
 
+Taxonomic Reference 
++++++++++++++++++++
