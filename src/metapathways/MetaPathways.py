@@ -4,9 +4,10 @@ from __future__ import division
 __author__ = "Kishori M Konwar Niels W Hanson"
 __copyright__ = "Copyright 2014, MetaPathways"
 __credits__ = [""]
-__version__ = "1.0"
+__version__ = "3.5.0"
 __maintainer__ = "Kishori M Konwar Niels W Hanson"
 __status__ = "Release"
+
 
 #from  libs.starcluster.test import  teststarcluster as sctest
 #import sys
@@ -40,19 +41,6 @@ cmd_folder = path.abspath(path.split(inspect.getfile( inspect.currentframe() ))[
 
 PATHDELIM =  str(pathDelim())
 
-#print cmd_folder
-#if not sys.platform.startswith('win'):
-#    res =getstatusoutput('source  '+ cmd_folder +'/'+'.metapathsrc')
-#    if( int(res[0])==0 ): 
-#       print 'Ran ' + cmd_folder +'/'+'.metapathsrc ' + ' file successfully!'
-#    else:
-#       print 'Error : ' + res[1] 
-#       print 'while running  ' + cmd_folder +'/'+'.metapathsrc ' + ' file!'
-
-#sys.path.insert(0,cmd_folder + "/metapathways/")
-#sys.path.insert(1, cmd_folder + "/libs/")
-#print sys.path
-
 #config = load_config()
 metapaths_param = """config/template_param.txt""";
 
@@ -67,8 +55,8 @@ script_info['script_description'] = \
 script_info['script_usage'] = []
 
 
-usage=  sys.argv[0] + """ -i input_dir -o output_dir -p parameters.txt
-For more options:  ./MetaPathways.py -h"""
+usage=  """Metapathways -i input_dir -o output_dir -p parameters.txt
+          \t for more options:  ./MetaPathways.py -h"""
 
 parser = None
 def createParser():
@@ -93,15 +81,10 @@ def createParser():
                       action="store_true", dest="verbose", default=False,
                       help="print lots of information on the stdout [default]")
     
-    parser.add_option("-b", "--block-mode",
-                      action="store_true", dest="block_mode", default=True,
-                      help="processes the samples by blocking the stages before and after functional search [default off]")
-
-    parser.add_option("-P", "--print-only",
-                      action="store_true", dest="print_only", default=False,
-                      help="print only  the commands [default False]")
+    parser.add_option("--version", action="store_true", dest="version", default=False,
+                      help="print MetaPathways version")
     
-    parser.add_option("-s", "--subset", dest="sample_subset", action="append", default=[],
+    parser.add_option("-s", "--samples", dest="sample_subset", action="append", default=[],
                       help="Processes only samples in the list  subset specified [ -s sample1 -s sample2 ]" )
     
 
@@ -276,21 +259,19 @@ def report_missing_filenames(input_output_list, sample_subset, logger=None):
           if logger:
              logger.printf("ERROR\tCannot file input for sample %s!\n", sample_in_subset)
 
-# main function
-def sigint_handler(signum, frame):
-    eprintf("Received TERMINATION signal\n")
-    exit_process()
 
 def process(argv):
     global parser
 
     (opts, args) = parser.parse_args()
+    if opts.version:
+       print("MetaPathways: Version " + __version__)
+       sys.exit(0)
+
     if valid_arguments(opts, args):
        print(usage)
        sys.exit(0)
 
-    signal.signal(signal.SIGINT, sigint_handler)
-    signal.signal(signal.SIGTERM, sigint_handler)
 
     eprintf("%-10s:%s\n" %('COMMAND', sys.argv[0] + ' ' +  ' '.join(argv)) )
     # initialize the input directory or file
@@ -420,11 +401,11 @@ def process(argv):
         "REFDBS"               : opts.refdb_dir
     }
 
-    block_mode = opts.block_mode
+    block_mode = True
 
     try:
          # load the sample information 
-         print("RUNNING MetaPathways version 3.5")
+         print("RUNNING MetaPathways Version " + __version__)
          if len(input_output_list): 
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]

@@ -28,3 +28,11 @@ regtests/template_param.txt
 
 dist/*
 src/MetaPathways.egg-info/*
+
+build/*
+docs/_build/*
+docs/_templates/*
+docs/_static/*
+docs/_build/*/*
+docs/_templates/*/*
+docs/_static/*/*
