@@ -12,7 +12,7 @@ Welcome to MetaPathways's documentation!
 
    manual/overview
    manual/install
-   manual/configuration
+   manual/processing
 
 .. toctree::
    :maxdepth: 2

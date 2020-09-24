@@ -33,7 +33,7 @@ setup(
     keywords="metagenomics pipeline",
     url="http://packages.python.org/",
     download_url = "https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
-    package_dir={"": "src"},
+    package_dir={"": "."},
     packages=[
         "metapathways",
         "metapathways/pipeline",

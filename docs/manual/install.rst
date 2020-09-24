@@ -140,14 +140,27 @@ Formatting Reference Sequences
 
  For the purpose of demonstration we walk you through the process of preparing a
  small set of protein reference sequences from the NCBI Refseq protein databases.
+ Download the example protein reference sequence file `refseq-mini.fasta.gz`
+ to the functional folder as follows
 
+``$ cd MetaPathways_DBs/functional``
+``$ wget https://github.com/kishori82/MetaPathways_Python.3.0/raw/kmk-develop/data/refdata/refseq-mini.fasta.gz``
+``$ gunzip refseq-mini.fasta.gz``
+
+rename to remove the `fasta` suffix
+
+``$ mv refseq-mini.fasta  refseq-mini``
+``$ cat refseq-mini | grep ">" > formatted/refseq-mini-names.txt``
 
 FAST
 ----
 
-
 BLAST
 -----
+Format the database for `blastp` as follows:
+   ``$ cd MetaPathways_DBs/functional``
+   ``$ makeblastdb -dbtype prot -in refseq-mini -out formatted/refseq-mini``
+
 
 
 Taxonomic Reference 
