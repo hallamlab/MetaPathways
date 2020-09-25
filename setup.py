@@ -22,7 +22,7 @@ def read(fname):
 
 setup(
     name="MetaPathways",
-    version="3.1.4",
+    version="3.5.0",
     author="Kishori Mohan Konwar",
     author_email="kishori82@gmail.com",
     description=(
