@@ -70,13 +70,10 @@ NOTE: if you would like to unstall then type
   $ sudo make uninstall
 
 
-Install ``ncbi-blast+`` locally
+Install ``ncbi-blast+`` locally. Visit the `download page
+<https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download>`_.
 
-Download page
-
-https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download
-
-Ubuntu/Debian
+For Ubuntu/Debian
 ::
 
   $ sudo apt-get install ncbi-blast+
