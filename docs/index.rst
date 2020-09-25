@@ -16,6 +16,15 @@ Welcome to MetaPathways's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Data Exploration
+
+   manual/overview
+   manual/install
+   manual/processing
+
+
+.. toctree::
+   :maxdepth: 2
    :caption: API References
 
 
