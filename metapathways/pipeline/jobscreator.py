@@ -843,8 +843,12 @@ class ContextCreator:
         #  'output_fasta_pf_dir_fasta':s.output_fasta_pf_dir + PATHDELIM +  '0.fasta',
         input_output_gbk  = s.genbank_dir +PATHDELIM + s.sample_name+".gbk"
 
+        """ If we include it this folder then it is deleted in the execution.py during the 
+            <context>.removeOutput call
+            #'output_fasta_pf_dir':s.output_fasta_pf_dir,
+        """
+        #'output_fasta_pf_dir':s.output_fasta_pf_dir,
         context.outputs = {
-          'output_fasta_pf_dir':s.output_fasta_pf_dir,
           'output_fasta_pf_dir_genetic':s.output_fasta_pf_dir + PATHDELIM + 'genetic-elements.dat',
           'output_fasta_pf_dir_organism':s.output_fasta_pf_dir + PATHDELIM +  'organism-params.dat',
           'dummy_ouptut_file':s.output_fasta_pf_dir + PATHDELIM +  s.sample_name + '.dummy.txt',
@@ -864,12 +868,11 @@ class ContextCreator:
 
         cmd = "%s -g %s " %(pyScript, context.inputs['input_annot_gff'])  
 
-
-        """PATHOLOGIC_INPUT"""
+        #"""PATHOLOGIC_INPUT"""
         ptinput_status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
 
         if ptinput_status in ['redo'] or ( ptinput_status in ['yes'] and not s.hasPToolsInput() ):
-            cmd += ' --out-ptinput ' + context.outputs['output_fasta_pf_dir']
+            cmd += ' --out-ptinput ' + s.output_fasta_pf_dir
             cmd += ' -n ' + context.inputs_optional['input_nucleotide_fasta']
             cmd += ' --ncbi-tree ' + context.inputs1['ncbi_tree']
             cmd += ' --taxonomy-table ' + context.inputs1['taxonomy_table']

@@ -12,11 +12,9 @@ __status__ = "Release"
 
 try:
     import os, re
-
     from shutil import rmtree
     from optparse import make_option
     from os import path, _exit, remove
-
     from metapathways.utils.utils import *
 except:
     print("Cannot load some modules")

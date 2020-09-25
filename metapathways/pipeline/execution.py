@@ -8,6 +8,7 @@ try:
     import traceback
     import sys
     from subprocess import Popen, PIPE, STDOUT
+    import os  
     from os import makedirs, listdir, _exit
     from glob import glob
     from optparse import OptionParser
@@ -60,7 +61,6 @@ def execute_pipeline_stage(pipeline_command, \
     funcname = re.sub(r".py$", "", argv[0])
     funcname = re.sub(r"^.*/", "", funcname)
     args = argv[1:]
-
     if hasattr(python_scripts, funcname):
         methodtocall = getattr(getattr(python_scripts, funcname), funcname)
         if extra_command == None:

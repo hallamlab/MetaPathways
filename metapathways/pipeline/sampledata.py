@@ -118,11 +118,9 @@ class SampleData:
         self.output_results_annotation_table_dir = (
             self.output_results + PATHDELIM + "annotation_table" + PATHDELIM
         )
+
         self.output_results_megan_dir = (
             self.output_results + PATHDELIM + "megan" + PATHDELIM
-        )
-        self.output_results_sequin_dir = (
-            self.output_results + PATHDELIM + "sequin" + PATHDELIM
         )
         self.output_results_rpkm_dir = self.output_results + PATHDELIM + "rpkm"
         self.output_fasta_pf_dir = self.output_dir + PATHDELIM + "ptools" + PATHDELIM
@@ -235,7 +233,9 @@ class SampleData:
         checkOrCreateFolder(self.output_results_annotation_table_dir)
         checkOrCreateFolder(self.output_results_megan_dir)
         checkOrCreateFolder(self.output_results_rpkm_dir)
+        eprintf("Creating ========== %s\n", self.output_fasta_pf_dir)
         checkOrCreateFolder(self.output_fasta_pf_dir)
+        eprintf("Creating ======= ============  ===== 3.1 %s\n", path.exists("/home/kishori/mp_output/testsample1/ptools")) 
         checkOrCreateFolder(self.output_results_pgdb_dir)
         checkOrCreateFolder(self.output_results_rRNA_dir)
         checkOrCreateFolder(self.output_results_tRNA_dir)

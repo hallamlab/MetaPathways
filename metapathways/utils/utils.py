@@ -445,8 +445,8 @@ def doesFileExist(fileName):
 def plain_or_gz_file_exists(fileName):
     if path.exists(fileName) or path.exists(fileName + ".gz"):
         return True
-    return False
 
+    return False
 
 # """This module defines classes for working with GenBank records."""
 import re
