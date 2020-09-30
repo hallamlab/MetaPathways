@@ -50,3 +50,5 @@ config/template_config.txt
 config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
+*~
+test

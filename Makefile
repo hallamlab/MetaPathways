@@ -1,3 +1,44 @@
+#### Assumptions:
+## * AWS CLI installed & configured
+## * sudo apt-get install make python2.7
+
+#### Make configuration:
+
+## Use Bash as default shell, and in strict mode:
+SHELL := /bin/bash
+.SHELLFLAGS = -ec
+
+## If the parent env doesn't ste TMPDIR, do it ourselves:
+TMPDIR ?= /tmp
+
+
+## This makes all recipe lines execute within a shared shell process:
+## https://www.gnu.org/software/make/manual/html_node/One-Shell.html#One-Shell
+.ONESHELL:
+
+## If a recipe contains an error, delete the target:
+## https://www.gnu.org/software/make/manual/html_node/Special-Targets.html#Special-Targets
+.DELETE_ON_ERROR:
+
+## This is necessary to make sure that these intermediate files aren't clobbered:
+.SECONDARY:
+
+
+
+### Docker Automation
+docker-start:
+	sudo systemctl start docker
+
+docker-build: pre-docker-builds
+	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
+
+docker-run:
+	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/darth:maul bash 
+
+docker-deploy:
+	sudo docker login
+	sudo docker push taltman/darth:maul
+
 # The location of the expat directory
 CC=gcc  
 LEX=lex  
@@ -20,8 +61,8 @@ CFLAGS=-C
 OS_PLATFORM=linux
 #should be the same as the EXECUTABLES_DIR in the template_config.txt file
 
-NCBI_BLAST=ncbi-blast-2.6.0+-x64-linux.tar.gz
-NCBI_BLAST_VER=ncbi-blast-2.6.0+
+NCBI_BLAST=ncbi-blast-2.10.1+-x64-linux.tar.gz
+NCBI_BLAST_VER=ncbi-blast-2.10.1+
 BINARY_FOLDER=executables/$(OS_PLATFORM)
 
 
@@ -35,13 +76,16 @@ PRODIGAL=$(BINARY_FOLDER)/prodigal
 
 METAPATHWAYS_DB_DEFAULT=../fogdogdatabases
 METAPATHWAYS_DB_TAR=Metapathways_DBs_2016-04.tar.xz
+METAPATHWAYS_DB_URL=https://www.dropbox.com/s/ye3kpve041e0r39/MetaPathways_DBs.zip
+
 
 GIT_SUBMODULE_UPDATE=gitupdate
 # Alias for target 'all', for compliance with FogDog deliverables standard:
 
 #all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
-all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) METAPATHWAYS_DB_FETCH 
-#all: PTOOLS_FETCH
+all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
+pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
+
 
 install-without-ptools: all METAPATHWAYS_DB_FETCH
 
@@ -51,10 +95,16 @@ install-with-ptools: all METAPATHWAYS_DB_FETCH
 METAPATHWAYS_DB_FETCH:
 	@if [ -z $(METAPATHWAYS_DB) ]; then  echo "Variable METAPATHWAYS_DB not set. Set it as export METPATHWAYS_DB=<path>" ;  exit 1; fi
 	@if [ ! -d $(METAPATHWAYS_DB) ]; then  echo "Fetching the database from S3 to $(METAPATHWAYS_DB)....";  mkdir $(METAPATHWAYS_DB); fi
-	@if [ ! -d $(METAPATHWAYS_DB)/functional ]; then  aws s3 sync s3://fogdogdatabases  $(METAPATHWAYS_DB)/; fi
+	@if [ ! -d $(METAPATHWAYS_DB)/functional ]
+	then
+		cd $(METAPATHWAYS_DB)
+		wget $(METAPATHWAYS_DB_URL)
+		unzip MetaPathways_DBs.zip
+		rm MetaPathways_DBs.zip
+	fi
 
 NOT_USED:
-	@if [ ! -d $(METAPATHWAYS_DB) ]; then \ 
+	@if [ ! -d $(METAPATHWAYS_DB) ]; then \
 		mkdir $(METAPATHWAYS_DB); \
 		echo  "Fetching the databases...."  \
 		aws s3 cp s3://wbfogdog/a2ac7fc4db0bfae6c05ca12a5818792d/Metapathways_DBs_2016-04.tar.xz ${METAPATHWAYS_DB}/; \
@@ -128,14 +178,7 @@ $(BINARY_FOLDER):
 	@if [ ! -d $(BINARY_FOLDER) ]; then mkdir $(BINARY_FOLDER); fi
 
 
-mp-regression-tests:
-	./run_regtests.sh
-	@exit $$?
-
-## Top-level test target
-test: test-mp-regression-tests
-
-
+### Utilities:
 clean:
 	$(MAKE) $(CFLAGS) executables/source/trnascan clean
 	$(MAKE) $(CFLAGS) executables/source/rpkm clean
@@ -151,3 +194,27 @@ remove:
 	rm -rf ../$(OS_PLATFORM)/prodigal
 	rm -rf ../$(OS_PLATFORM)/rpkm 
 
+### Testing:
+
+mp-regression-tests:
+	./run_regtests.sh
+	@exit $$?
+
+## Top-level test target
+test: test-mp-regression-tests
+
+no-ptools-unit-test:
+	mkdir -p test
+	source MetaPathwaysrc
+	touch executables/linux/FGS+
+	touch executables/linux/ptools
+	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
+	time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
+
+docker-test:
+	cp $(CURDIR)/regtests/input/A1.fasta /tmp
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/functional/formatted
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/taxonomic/formatted
+	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/formatted
+	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
+	sudo docker run -it -v /tmp:/input taltman/metapathways:taltman_dev /root/mp_repo/MetaPathways.py -i /input/A1.fasta -o /input/A1_MP_out/ -p /root/mp_repo/resources/docker_param.txt -c /root/mp_repo/resources/docker_config.txt
