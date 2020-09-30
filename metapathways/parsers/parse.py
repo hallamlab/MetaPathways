@@ -3,10 +3,10 @@
 
 __author__ = "Kishori Mohan Konwar"
 __copyright__ = "MetaPathways"
-__credits__ = ["Kishori M Konwar", "Nielsh Hanson"]
+__credits__ = ["Kishori M Konwar"]
 __license__ = "L"
-__version__ = "2.0.1"
-__maintainer__ = "HallamLab"
+__version__ = "3.5.0"
+__maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
 from collections import defaultdict

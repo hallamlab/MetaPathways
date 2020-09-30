@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
+"""Contains general utility code for the metapaths project"""
 __author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2013, MetaPathways"
-__credits__ = ["r"]
-__version__ = "1.0"
+__version__ = "3.5.0"
 __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
-
-
-"""Contains general utility code for the metapaths project"""
 
 try:
     import os, re
@@ -233,9 +230,7 @@ class SampleData:
         checkOrCreateFolder(self.output_results_annotation_table_dir)
         checkOrCreateFolder(self.output_results_megan_dir)
         checkOrCreateFolder(self.output_results_rpkm_dir)
-        eprintf("Creating ========== %s\n", self.output_fasta_pf_dir)
         checkOrCreateFolder(self.output_fasta_pf_dir)
-        eprintf("Creating ======= ============  ===== 3.1 %s\n", path.exists("/home/kishori/mp_output/testsample1/ptools")) 
         checkOrCreateFolder(self.output_results_pgdb_dir)
         checkOrCreateFolder(self.output_results_rRNA_dir)
         checkOrCreateFolder(self.output_results_tRNA_dir)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__author__ = "Kishori M Konwar Niels W Hanson"
-__copyright__ = "Copyright 2014, MetaPathways"
+__author__ = "Kishori M Konwar"
+__copyright__ = "Copyright 2020, MetaPathways"
 __credits__ = [""]
 __version__ = "3.5.0"
-__maintainer__ = "Kishori M Konwar Niels W Hanson"
+__maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
 

@@ -2,6 +2,11 @@
 
 """This script run the orf prediction """
 
+__author__ = "Kishori M Konwar"
+__copyright__ = "Copyright 2020, MetaPathways"
+__version__ = "3.5.0"
+__maintainer__ = "Kishori M Konwar"
+__status__ = "Release"
 try:
     import sys, re, csv, traceback
     from os import path, _exit, rename
@@ -25,9 +30,7 @@ try:
 
 except:
     print(""" Could not load some user defined  module functions""")
-    print(""" Make sure your typed 'source MetaPathwaysrc'""")
     print(""" """)
-    print(traceback.print_exc(10))
     sys.exit(3)
 
 PATHDELIM = pathDelim()

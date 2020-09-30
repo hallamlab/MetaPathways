@@ -6,6 +6,12 @@ Oct 26, 2009 by Simon Eng
     Changed the method of outputting statistics.
 """
 
+__author__ = "Kishori M Konwar"
+__copyright__ = "Copyright 2020, MetaPathways"
+__version__ = "3.5.0"
+__maintainer__ = "Kishori M Konwar"
+__status__ = "Release"
+
 try:
     import optparse, csv, re, sys
     from os import path
@@ -17,7 +23,6 @@ try:
     )
 except:
     print(""" Could not load some user defined  module functions""")
-    print(""" Make sure your typed 'source MetaPathwaysrc'""")
     print(""" """)
     sys.exit(3)
 
