@@ -1,8 +1,8 @@
 #!/usr/bin/python
-# File created on Nov 27 Jan 2012
+# File created on Nov 27 Jan 2020
 from __future__ import division
 
-__author__ = "Kishori M Konwar, Niels W. Hanson"
+__author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2013, MetaPathways"
 __credits__ = ["r"]
 __version__ = "1.0"
@@ -160,7 +160,7 @@ def write_new_file(lines, output_file):
 
 def  modify_files(filerenames, source, target):
 
-    for file, newname in filerenames.iteritems():
+    for file, newname in filerenames.items():
         print("<<<<" , file)
         with open(file) as f:
             lines = f.readlines()

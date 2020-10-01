@@ -1323,7 +1323,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 "%s\tProtein Annotations from %s\t%s\n"
                 % (str(priority), dbname, str(count))
             )
-        count_annotations
         priority += 1
 
     for dbname in results_dictionary:

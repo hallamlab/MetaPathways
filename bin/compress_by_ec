@@ -160,7 +160,7 @@ def write_new_file(lines, output_file):
 
 def  modify_files(filerenames, source, target):
 
-    for file, newname in filerenames.iteritems():
+    for file, newname in filerenames.items():
         print("<<<<" , file)
         with open(file) as f:
             lines = f.readlines()

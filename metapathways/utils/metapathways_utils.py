@@ -239,11 +239,11 @@ class GffFileParser(object):
             self.insert_orf_into_dict(line, self.orf_dictionary)
             i += 1
 
-        self.orfs = self.orf_dictionary.keys()
+        self.orfs = list(self.orf_dictionary.keys())
         self.size = len(self.orfs)
         self.i = 0
 
-    def next(self):
+    def __next__(self):
         if self.i == self.size:
             self.refillBuffer()
 
@@ -251,7 +251,6 @@ class GffFileParser(object):
             self.gff_file.close()
             raise StopIteration()
 
-        # print self.i
         if self.i < self.size:
             self.i = self.i + 1
             return self.orfs[self.i - 1]
@@ -706,7 +705,7 @@ def contract_key_value_file(fileName):
     file.close()
 
     file = open(fileName, "w")
-    for key, value in keyValuePairs.iteritems():
+    for key, value in keyValuePairs.items():
         fprintf(file, "%s\t%s\n", key, value)
     file.close()
 

@@ -143,7 +143,7 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
                 return False
 
 
-            seqFilePath = configs["REFDBS"] + PATHDELIM + dbType + PATHDELIM + db
+            seqFilePath = config.refdb_dir + PATHDELIM + dbType + PATHDELIM + db
             """ check for dbmapfile """
 
             if not doesFileExist(dbMapFile):
@@ -154,28 +154,6 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
                 )
                 logger.printf(
                     "WARNING\tDoes not have map file %s for %s\n",
-                    sQuote(dbMapFile),
-                    sQuote(db),
-                )
-                if not createMapFile(seqFilePath, dbMapFile):
-                    eprintf(
-                        "ERROR\tFailed to create map file %s for %s\n",
-                        sQuote(dbMapFile),
-                        sQuote(db),
-                    )
-                    logger.printf(
-                        "ERROR\tFailed to create map file %s for %s\n",
-                        sQuote(dbMapFile),
-                        sQuote(db),
-                    )
-                    return False
-                eprintf(
-                    "INFO\tSuccessfully created  map file %s for %s\n",
-                    sQuote(dbMapFile),
-                    sQuote(db),
-                )
-                logger.printf(
-                    "INFO\tSuccessfully created map file %s for %s\n",
                     sQuote(dbMapFile),
                     sQuote(db),
                 )
@@ -292,7 +270,7 @@ def check_for_raw_sequences(dbs, refdbspath, dbType, logger=None):
     status = True
     for db in dbs:
         fullPath = refdbspath + PATHDELIM + dbType + PATHDELIM + db
-        if not does_plain_or_gz_FileExist(fullPath):
+        if not plain_or_gz_file_exists(fullPath):
             eprintf(
                 "ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType
             )

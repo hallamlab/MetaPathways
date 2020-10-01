@@ -2,8 +2,8 @@
 # File created on Nov 27 Jan 2012
 from __future__ import division
 
-__author__ = "Kishori M Konwar, Niels W. Hanson"
-__copyright__ = "Copyright 2013, MetaPathways"
+__author__ = "Kishori M Konwar"
+__copyright__ = "Copyright 2020, MetaPathways"
 __credits__ = ["r"]
 __version__ = "1.0"
 __maintainer__ = "Kishori M Konwar"
@@ -210,7 +210,7 @@ def  write_0pf_file(sample_data, fout):
         fprintf(fout, "%s\n",line)
 
 def  write_reduced_file(sample_data, fout):
-     for key, value in sample_data['reduced.txt'].iteritems():
+     for key, value in sample_data['reduced.txt'].items():
         fprintf(fout, "%s\t%s\n",key, value)
 
 

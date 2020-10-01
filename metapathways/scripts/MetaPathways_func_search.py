@@ -210,6 +210,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         )
         b = "ERROR\t%s\n" % (message)
         c = "INFO\tDatabase you are searching against may not be formatted correctly (if it was formatted for an earlier version) \n"
+        code = -1
         d = "INFO\tTry removing the files for that database in 'formatted' subfolder for MetaPathways to trigger reformatting \n"
         if options.algorithm == "BLAST":
             e = "INFO\tYou can remove as 'rm %s.*','\n" % (options.blast_db)

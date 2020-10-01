@@ -1464,7 +1464,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                     lca.compute_min_support_tree(
                         opts.input_annotated_gff, pickorfs, dbname=dbname
                     )
-                    for key, taxon in pickorfs.iteritems():
+                    for key, taxon in pickorfs.items():
                         Taxons[key] = taxon
 
                 except:

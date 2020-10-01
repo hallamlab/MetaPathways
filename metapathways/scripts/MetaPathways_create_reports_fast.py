@@ -34,8 +34,7 @@ try:
     from metapathways.utils.errorcodes import *
 
 except:
-    print(""" Could not load some user defined  module functions""")
-    print(""" Make sure your typed 'source MetaPathwaysrc'""")
+    print("""Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
     sys.exit(3)
 
@@ -569,7 +568,7 @@ class BlastOutputTsvParser(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         if self.i % self.SIZE == 0:
             self.refillBuffer()
             if len(self.lines) == 0:
@@ -1008,7 +1007,7 @@ def get_list_of_queries(annotated_gff):
     #      if count%500000==0:
     #         print count
 
-    return orfList.keys()
+    return list(orfList.keys())
 
 
 def Heapify(A, i, S):
@@ -1168,7 +1167,7 @@ def create_sorted_parse_blast_files(
 
     currSize = 0
     parsedLines = {}
-    list = []
+    _list = []
     names = {}
     seqid = 0
     batch = 0
@@ -1184,7 +1183,6 @@ def create_sorted_parse_blast_files(
     blastparser.setErrorAndWarningLogger(errorlogger)
 
     fieldmapHeaderLine = blastparser.getHeaderLine()
-
     for data in blastparser:
         #  query =  getShortORFId(data['query'])
 
@@ -1195,7 +1193,7 @@ def create_sorted_parse_blast_files(
         names[seqid] = query
 
         parsedLines[seqid] = blastparser.getProcessedLine()
-        list.append((seqid, names[seqid]))
+        _list.append((seqid, names[seqid]))
 
         seqid += 1
         currSize += 1
@@ -1205,34 +1203,34 @@ def create_sorted_parse_blast_files(
             writeParsedLines(
                 fieldmapHeaderLine,
                 parsedLines,
-                list,
+                _list,
                 names,
                 sorted_parse_file + "." + str(batch),
             )
             filenames.append(sorted_parse_file + "." + str(batch))
             batch += 1
-            list = []
+            _list = []
             names = {}
             seqid = 0
             parsedLines = {}
 
     if currSize == 0:
-        list.sort(key=lambda tup: tup[1], reverse=False)
+        _list.sort(key=lambda tup: tup[1], reverse=False)
         writeParsedLines(
             fieldmapHeaderLine,
             parsedLines,
-            list,
+            _list,
             names,
             sorted_parse_file + "." + str(batch),
         )
         filenames.append(sorted_parse_file + "." + str(batch))
     else:
         if currSize % size != 0:
-            list.sort(key=lambda tup: tup[1], reverse=False)
+            _list.sort(key=lambda tup: tup[1], reverse=False)
             writeParsedLines(
                 fieldmapHeaderLine,
                 parsedLines,
-                list,
+                _list,
                 names,
                 sorted_parse_file + "." + str(batch),
             )
@@ -1261,8 +1259,8 @@ def create_sorted_parse_blast_files(
     #  sys.exit(0)
 
     # remove the split files
-    for file in filenames:
-        remove(file)
+    for _file in filenames:
+        remove(_file)
 
 
 def getBlastFileNames(opts):
@@ -1367,9 +1365,9 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
     # process in blocks of size _stride
     lca = LCAComputation(opts.ncbi_taxonomy_map, opts.ncbi_megan_map)
+    
     lca.setParameters(opts.lca_min_score, opts.lca_top_percent, opts.lca_min_support)
 
-    print(opts.accession_to_taxon_map)
     # if opts.accession_to_taxon_map:
     #   lca.load_accession_to_taxon_map(opts.accession_to_taxon_map)
 
@@ -1416,7 +1414,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                     lca.compute_min_support_tree(
                         opts.input_annotated_gff, pickorfs, dbname=dbname
                     )
-                    for key, taxon in pickorfs.iteritems():
+                    for key, taxon in pickorfs.items():
                         Taxons[key] = taxon
                 except:
                     eprintf("ERROR: while training for min support tree %s\n", dbname)

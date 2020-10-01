@@ -149,42 +149,41 @@ def get_sample_name(gff_file_name):
 
 def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
     protein_seq_dict, input_filenames, orf_to_taxonid = {},  compact_output=True):
+    
+    gff_file_name = correct_filename_extension(gff_file_name)
+    with gzip.open(gff_file_name, 'r') if gff_file_name.endswith('.gz') \
+        else open(gff_file_name, 'r') as gfffile:
 
-     try:
-        gfffile = open(gff_file_name, 'r')
-     except IOError:
-        print("Cannot read file " + gff_file_name + " !")
-
-     sample_name=get_sample_name(gff_file_name)
-
-     gff_lines = gfffile.readlines()
-     gff_beg_pattern = re.compile("^#")
-     gfffile.close()
-     
-     contig_dict={} 
-     count = 0
-
-     for line in gff_lines:
-        line = line.strip() 
-        if gff_beg_pattern.search(line):
-          continue
-        """  Do not add tRNA """
-        try:
-           insert_orf_into_dict(line, contig_dict)
-        except:
-           eprintf("%s\n", raceback.print_exc(10))
-
-     if "gbk" in output_filenames:
-       write_gbk_file(
-           output_filenames['gbk'], contig_dict, sample_name, \
-           nucleotide_seq_dict, protein_seq_dict
-       )
-
-     if "ptinput" in output_filenames:
-       write_ptinput_files(
-           output_filenames['ptinput'], contig_dict, sample_name, \
-           nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid=orf_to_taxonid
-       )
+        sample_name=get_sample_name(gff_file_name)
+   
+        gff_lines = gfffile.readlines()
+        gff_beg_pattern = re.compile("^#")
+        gfffile.close()
+        
+        contig_dict={} 
+        count = 0
+   
+        for line in gff_lines:
+           line = line.strip() 
+           if gff_beg_pattern.search(line):
+             continue
+           """  Do not add tRNA """
+           try:
+              insert_orf_into_dict(line, contig_dict)
+           except:
+              eprintf("%s\n", raceback.print_exc(10))
+   
+        if "gbk" in output_filenames:
+          write_gbk_file(
+              output_filenames['gbk'], contig_dict, sample_name, \
+              nucleotide_seq_dict, protein_seq_dict
+          )
+   
+        if "ptinput" in output_filenames:
+          write_ptinput_files(
+              output_filenames['ptinput'], contig_dict, sample_name, \
+              nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid=orf_to_taxonid
+          )
 
 # this function creates the pathway tools input files
 def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_seq_dict, \
@@ -713,37 +712,36 @@ def wrap(prefix, start, end, string):
     return output
 
 def process_sequence_file(sequence_file_name,  seq_dictionary, shortorfid=False):
-     try:
-        sequencefile = open(sequence_file_name, 'r')
-     except IOError:
-        print("Cannot read file " + sequence_file_name + " !")
+     sequence_file_name = correct_filename_extension(sequence_file_name)
 
-     sequence_lines = sequencefile.readlines()
-     sequencefile.close()
-     fragments= []
-     name=""
-
-#     count = 0
-     seq_beg_pattern = re.compile(">(\S+)")
-     for line in sequence_lines:
-        line = line.strip() 
-        res = seq_beg_pattern.search(line)
-        if res:
-          if len(name) > 0:
+     with gzip.open(sequence_file_name, 'rt') if sequence_file_name.endswith('.gz') \
+         else open(sequence_file_name, 'r') as sequencefile:
+    
+         sequence_lines = sequencefile.readlines()
+         sequencefile.close()
+         fragments= []
+         name=""
+    
+         seq_beg_pattern = re.compile(">(\S+)")
+         for line in sequence_lines:
+            line = line.strip() 
+            res = seq_beg_pattern.search(line)
+            if res:
+              if len(name) > 0:
+                 sequence=''.join(fragments)
+                 seq_dictionary[name]=sequence
+                 fragments = []
+              if shortorfid:
+                 name=get_sequence_number(line)
+              else:
+                 name=res.group(1)
+            else:
+              fragments.append(line)
+    
+         # add the final sequence
+         if len(name) > 0:
              sequence=''.join(fragments)
              seq_dictionary[name]=sequence
-             fragments = []
-          if shortorfid:
-             name=get_sequence_number(line)
-          else:
-             name=res.group(1)
-        else:
-          fragments.append(line)
-
-    #add the final sequence
-     if len(name) > 0:
-         sequence=''.join(fragments)
-         seq_dictionary[name]=sequence
      
 #        if count > 1000:
 #           sys.exit(0)
@@ -763,6 +761,7 @@ def read_taxons_for_orfs(ncbi_taxonomy_tree, taxonomy_table):
         ncbi_taxonomy_tree = ncbi_taxonomy_tree + ".gz"
 
     name_to_taxonid = {}
+    ncbi_taxonomy_tree = correct_filename_extension(ncbi_taxonomy_tree)
     with gzip.open(ncbi_taxonomy_tree, 'rt') if ncbi_taxonomy_tree.endswith(".gz") \
         else open(ncbi_taxonomy_tree, 'r') as f:
         
@@ -775,13 +774,17 @@ def read_taxons_for_orfs(ncbi_taxonomy_tree, taxonomy_table):
     tax_PATT = re.compile(r'(\d+)')
     orf_to_taxonid = {}
     tax_col = 0
-    with open(taxonomy_table, 'r') as f:
+
+    taxonomy_table = correct_file_extension(taxonomy_table)
+    with gzip.open(taxonomy_table, 'rt') if taxonomy_table.endswith('.gz') \
+        else open(taxonomy_table, 'r') as ftaxin:
+
         fields = [ x.strip() for x in f.readline().strip().split('\t') ]
         for i in range(0, len(fields)):
            if fields[i]=='taxonomy':
               tax_col =i
         
-        for _line in f:
+        for _line in ftaxin:
            fields = [ x.strip() for x in _line.split('\t') ]
            if len(fields) > tax_col:
               res = tax_PATT.search(fields[tax_col])

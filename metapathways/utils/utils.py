@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+""" This module has functions that are used as general utils
+ 
 
+"""
 __author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2020, MetaPathways"
 __version__ = "3.5.0"
@@ -10,8 +12,13 @@ __status__ = "Release"
 """Contains general utility code for the metapaths project"""
 
 try:
-    import traceback, sys
-    import os, traceback, shutil
+    import traceback
+    import sys
+    import os
+    import traceback
+    import shutil
+    import types
+    import re
     from shutil import rmtree
     from os import getenv, makedirs, path, remove
     from operator import itemgetter
@@ -19,7 +26,6 @@ try:
     from collections import defaultdict
     from optparse import make_option
     from glob import glob
-    import types
 
     from metapathways.utils.sysutil import pathDelim
     from metapathways.parsers.fastareader import FastaReader
@@ -41,6 +47,20 @@ def eprintf(fmt, *args):
     sys.stderr.write(fmt % args)
     sys.stderr.flush()
 
+
+def correct_filename_extension(file_name):
+    if path.exists(file_name):    
+        return file_name
+
+    if file_name.endswith('.gz'): 
+        if path.exists(re.sub(r'.gz$', '', file_name, flags=re.IGNORECASE)): 
+            return re.sub(r'.gz$', '', file_name,  flags=re.IGNORECASE)
+    else: 
+        for ext in [".gz", ".gZ", ".Gz", ".GZ"]:
+           if path.exists(file_name + ext): 
+               if path.exists(file_name + ext): 
+                   return file_name + ext
+    return file_name
 
 PATHDELIM = pathDelim()
 

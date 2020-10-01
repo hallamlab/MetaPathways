@@ -21,7 +21,7 @@ annotation:algorithm BLAST
 # e.g. blast or last, for fogdob BLAST only
 
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc
-annotation:dbs refseq-mini
+annotation:dbs refseq-small-sample
 
 annotation:min_bsr 0.4
 annotation:max_evalue 0.000001
@@ -30,7 +30,7 @@ annotation:min_length 45
 annotation:max_hits 5
 
 # rRNA annotation parameters 
-rRNA:refdbs 
+rRNA:refdbs  silva-lsu-small-sample silva-ssu-small-sample
 #SILVA_128_SSURef_tax_silva,SILVA_128_LSURef_tax_silva, GREENGENES_gg16S_13_5
 
 rRNA:max_evalue 0.000001
@@ -53,6 +53,6 @@ metapaths_steps:PARSE_FUNC_SEARCH redo
 metapaths_steps:SCAN_rRNA redo
 metapaths_steps:SCAN_tRNA redo
 metapaths_steps:ANNOTATE_ORFS redo
-metapaths_steps:CREATE_ANNOT_REPORTS yes
+metapaths_steps:CREATE_ANNOT_REPORTS redo
 metapaths_steps:PATHOLOGIC_INPUT redo
 metapaths_steps:COMPUTE_RPKM yes

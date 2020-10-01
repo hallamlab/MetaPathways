@@ -2,7 +2,7 @@
 # File created on Nov 27 Jan 2012
 from __future__ import division
 
-__author__ = "Kishori M Konwar, Niels W. Hanson"
+__author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2013, MetaPathways"
 __credits__ = ["r"]
 __version__ = "1.0"
@@ -17,8 +17,6 @@ try:
      from glob import glob
 except:
      print """ Could not load some user defined  module functions"""
-     print """ Make sure your typed \"source MetaPathwayrc\""""
-     print """ """
      sys.exit(3)
 
 
@@ -179,7 +177,7 @@ def write_new_file(lines, output_file):
 def  modify_and_rename_files(filerenames, source, target):
 
 
-    for file, newname in filerenames.iteritems():
+    for file, newname in filerenames.items():
         if len(source)>0 and  source!=target:
             with open(file) as f:
                lines = f.readlines()

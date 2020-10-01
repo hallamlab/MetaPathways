@@ -187,7 +187,7 @@ def get_best_match( productdict, subsystems = None, minMatchScore = 80):
      maxScore = 0
      maxMatch = None
      maxFail= ( 1 - minMatchScore) + 1
-     for key, value in subsystems.iteritems(): 
+     for key, value in subsystems.items(): 
          score =  computescore(productdict, value, maxFail) 
          if score > maxScore and score > minMatchScore: 
              maxScore = score 

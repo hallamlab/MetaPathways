@@ -55,7 +55,7 @@ class MeganTree:
         return self.parent_to_child
 
     def computeParentToChildrenMap(self):
-        for id, pid in self.child_to_parent.iteritems():
+        for id, pid in self.child_to_parent.items():
             if not pid[0] in self.parent_to_child:
                 self.parent_to_child[pid[0]] = [[], pid[1]]
             self.parent_to_child[pid[0]][0].append(id)

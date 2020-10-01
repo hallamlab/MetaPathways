@@ -2,8 +2,13 @@
 from __future__ import division
 
 try:
-    import sys, traceback, re
+    import sys
+    import traceback
+    import re
+    import gzip
     import math
+
+    from metapathways.utils.utils import *
     from metapathways.utils.metapathways_utils import (
         fprintf,
         printf,
@@ -12,7 +17,6 @@ try:
     )
 except:
     print(""" Could not load some user defined  module functions""")
-    print(""" Make sure your typed \'source MetaPathwaysrc\'""")
     print(traceback.print_exc(10))
     sys.exit(3)
 
@@ -24,44 +28,46 @@ def copyList(a, b):
 class LCAComputation:
     begin_pattern = re.compile("#")
 
-    # a readable taxon name to numeric string id map as ncbi
-    name_to_id = {}
-
-    # a readable taxon ncbi tax id to name map
-    id_to_name = {}
-
-    # this is the tree structure in a id to parent map, you can traverse it to go to the root
-    taxid_to_ptaxid = {}
-
-    lca_min_score = 50  # an LCA parameter for min score for a hit to be considered
-    lca_top_percent = 10  # an LCA param to confine the hits to within the top hits score upto the top_percent%
-    lca_min_support = (
-        5  # a minimum number of reads in the sample to consider a taxon to be present
-    )
-    results_dictionary = None
-    tax_dbname = "refseq"
-
-    megan_map = {}  # hash between NCBI ID and taxonomic name name
-
-    accession_to_taxon_map = {}  # hash between gi and taxon name
-
     # initialize with the ncbi tree file
     def __init__(self, filenames, megan_map=None):
+         # a readable taxon name to numeric string id map as ncbi
+        self.name_to_id = {}
+        # a readable taxon ncbi tax id to name map
+        self.id_to_name = {}
+        # this is the tree structure in a id to parent map, you can traverse it to go to the root
+        self.taxid_to_ptaxid = {}
+    
+        self.lca_min_score = 50  # an LCA parameter for min score for a hit to be considered
+        self.lca_top_percent = 10  # an LCA param to confine the hits to within the top hits score upto the top_percent%
+        self.lca_min_support = (
+            5  # a minimum number of reads in the sample to consider a taxon to be present
+        )
+        self.results_dictionary = None
+        self.tax_dbname = "refseq"
+        self.megan_map = {}  # hash between NCBI ID and taxonomic name name
+        self.accession_to_taxon_map = {}  # hash between gi and taxon name
+
+  
         for filename in filenames:
+            filename_ = correct_filename_extension(filename)
             self.loadtreefile(filename)
-            # print filename,  len(self.taxid_to_ptaxid.keys())
         if megan_map:
             self.load_megan_map(megan_map)
 
     def load_megan_map(self, megan_map_file):
-        with open(megan_map_file) as file:
-            for line in file:
+        megan_map_file = correct_filename_extension(megan_map_file) 
+        with gzip.open(megan_map_file, 'rt') if megan_map_file.endswith('.gz') \
+            else open(megan_map_file, 'r') as meganfin:
+
+            for line in meganfin:
                 fields = line.split("\t")
-                fields = map(str.strip, fields)
+                fields = list(map(str.strip, fields))
                 self.megan_map[fields[0]] = fields[1]
 
     def load_accession_to_taxon_map(self, accession_to_taxon_file):
-        with open(accession_to_taxon_file) as file:
+        accession_to_taxon_file = correct_filename_extension(accession_to_taxon_file)
+        with gzip.open(accession_to_taxon_file, 'rt') if accession_to_taxon_file.endswith('.gz') \
+                else open(accession_to_taxon_file, 'r') as file:
             for line in file:
                 fields = line.split("\t")
                 fields = map(str.strip, fields)
@@ -69,7 +75,6 @@ class LCAComputation:
 
     def get_preferred_taxonomy(self, ncbi_id):
         ncbi_id = str(ncbi_id)
-
         if ncbi_id in self.megan_map:
             exp_lin = self.get_lineage(ncbi_id)
             exp_lin.reverse()
@@ -85,25 +90,26 @@ class LCAComputation:
         # think about this
         return None
 
-    def loadtreefile(self, filename):
-        taxonomy_file = open(filename, "r")
-        lines = taxonomy_file.readlines()
-        taxonomy_file.close()
+    def loadtreefile(self, tree_filename):
+        tree_filename = correct_filename_extension(tree_filename) 
+        with gzip.open(tree_filename, 'rt') if tree_filename.endswith('.gz') \
+            else open(tree_filename, 'r') as taxonomy_file:
 
-        for line in lines:
-            if self.begin_pattern.search(line):
-                continue
-            fields = [x.strip() for x in line.rstrip().split("\t")]
-            if len(fields) != 3:
-                continue
-            if str(fields[0]) not in self.id_to_name:
-                self.name_to_id[str(fields[0])] = str(fields[1])
-            self.id_to_name[str(fields[1])] = str(fields[0])
-            # the taxid to ptax map has for each taxid a corresponding 3-tuple
-            # the first location is the pid, the second is used as a counter for
-            # lca while a search is traversed up the tree and the third is used for
-            # the min support
-            self.taxid_to_ptaxid[str(fields[1])] = [str(fields[2]), 0, 0]
+            lines = taxonomy_file.readlines()
+            for line in lines:
+                if self.begin_pattern.search(line):
+                    continue
+                fields = [x.strip() for x in line.rstrip().split("\t")]
+                if len(fields) != 3:
+                    continue
+                if str(fields[0]) not in self.id_to_name:
+                    self.name_to_id[str(fields[0])] = str(fields[1])
+                self.id_to_name[str(fields[1])] = str(fields[0])
+                # the taxid to ptax map has for each taxid a corresponding 3-tuple
+                # the first location is the pid, the second is used as a counter for
+                # lca while a search is traversed up the tree and the third is used for
+                # the min support
+                self.taxid_to_ptaxid[str(fields[1])] = [str(fields[2]), 0, 0]
 
     def setParameters(self, min_score, top_percent, min_support):
         self.lca_min_score = min_score
