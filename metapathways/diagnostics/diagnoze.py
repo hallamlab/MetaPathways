@@ -143,9 +143,8 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
                 return False
 
 
-            seqFilePath = config.refdb_dir + PATHDELIM + dbType + PATHDELIM + db
-            """ check for dbmapfile """
-
+            """ check for dbMapFile """
+            dbMapFile = config.refdb_dir + PATHDELIM + dbType + PATHDELIM + "formatted" + PATHDELIM + db + "-names.txt" 
             if not doesFileExist(dbMapFile):
                 eprintf(
                     "WARNING\tDoes not have map file %s for %s\n",

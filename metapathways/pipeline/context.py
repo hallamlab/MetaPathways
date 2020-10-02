@@ -42,13 +42,18 @@ class Context:
 
     def isInputAvailable(self, errorlogger=None):
         status = True
-        for file in self.inputs.values():
-            if not doesFileExist(file) and not doesFileExist(file + ".gz"):
+        status_messages = []
+        for key, _file in self.inputs.items():
+            if not doesFileExist(_file) and not doesFileExist(_file + ".gz"):
                 if errorlogger != None:
                     errorlogger.printf("#STEP\t%s\n", self.name)
-                    errorlogger.printf("ERROR\tMissing input %s\n", file)
+                    errorlogger.printf("ERROR\tMissing input %s\n", _file)
                 status = False
-        return status
+                status_messages.append([key, _file, '[MISSING]'])
+            else:
+                status_messages.append([key, _file, '[AVAILABLE]'])
+
+        return status, status_messages
 
     def getMissingList(self, errorlogger=None):
         missingList = []

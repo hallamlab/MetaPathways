@@ -988,7 +988,6 @@ class ContextCreator:
         readFiles = getReadFiles(rpkm_input, s.sample_name)
 
 
-        inputFile = 'no sam or fastq files to process [OPTIONAL]'
 
         if samFiles:
             inputFile = samFiles[0] 
@@ -1003,12 +1002,13 @@ class ContextCreator:
                            'rpkm_input':rpkm_input,
                            'output_gff': output_gff,
                            'output_fas':output_fas,
-                           'rpkmExec': rpkmExec,
-                           'bwaExec': bwaExec,
                            'bwaFolder': bwaFolder,
-                           'inputFile': inputFile
                          }
 
+        context1.inputs = {
+                           'rpkmExec': rpkmExec,
+                           'bwaExec': bwaExec,
+                         }
         context1.outputs = {
                            'rpkm_output': rpkm_output
                           }
@@ -1022,10 +1022,10 @@ class ContextCreator:
 
         #cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
         cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
-              % (pyScript, context.inputs['output_fas'], context.inputs['rpkmExec'],\
+              % (pyScript, context.inputs['output_fas'], context1.inputs['rpkmExec'],\
                  context.inputs['rpkm_input'], context.inputs['output_gff'],\
                context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
-               context.inputs['bwaFolder'], context.inputs['bwaExec'])
+               context.inputs['bwaFolder'], context1.inputs['bwaExec'])
 
         context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM') 
 

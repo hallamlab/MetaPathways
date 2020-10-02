@@ -119,16 +119,17 @@ def getSamFiles(readdir, sample_name):
 
     if _samFiles:
         samFiles = _samFiles
-
     return samFiles
-
 
 def getReadFiles(readdir, sample_name):
     """This function finds the set of fastq files that has the reads"""
-    fastqFiles = []
     _fastqfiles = glob(
-        readdir + PATHDELIM + sample_name + "*.[fF][aA][Ss][Tt][qQ][gz.]*"
+       readdir + PATHDELIM + sample_name + "*.[fF][aA][Ss][Tt][qQ]"
     )
+
+    #_fastqfiles = glob(
+    #   readdir + PATHDELIM + sample_name + "*.[fF][aA][Ss][Tt][qQ][.gG][zZ]"
+    #)
 
     fastqfiles = []
     for _f in _fastqfiles:

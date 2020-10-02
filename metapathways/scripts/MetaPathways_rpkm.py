@@ -3,12 +3,18 @@
 """This script run the pathologic """
 
 try:
-    import copy, optparse, sys, re, csv, traceback
+    import copy
+    import optparse
+    import sys
+    import re
+    import csv
+    import traceback
+    import multiprocessing
+    import shutil
+
     from os import path, _exit, rename
     import logging.handlers
     from glob import glob
-    import multiprocessing
-
     from metapathways.utils.errorcodes import *
     from metapathways.utils.sysutil import pathDelim
     from metapathways.utils.metapathways_utils import (
@@ -19,19 +25,15 @@ try:
         getReadFiles,
     )
     from metapathways.utils.sysutil import getstatusoutput
-
     from metapathways.utils.pathwaytoolsutils import *
 
 except:
     print(""" Could not load some user defined  module functions""")
-    print(""" Make sure your typed 'source MetaPathwaysrc'""")
-    print(""" """)
     print(traceback.print_exc(10))
     sys.exit(3)
 
 
 PATHDELIM = pathDelim()
-
 
 def fprintf(file, fmt, *args):
     file.write(fmt % args)
@@ -218,6 +220,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, _readFiles, bwaFolder):
             eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
             status = False
         count += 1
+
     return status
 
 
@@ -286,12 +289,13 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         insert_error(10)
         return 255
 
-    if not (options.rpkmExec != None and path.exists(options.rpkmExec)):
+    cmd_exists = lambda x: shutil.which(x) is not None
+    if not (options.rpkmExec != None and cmd_exists(options.rpkmExec)):
         parser.error("ERROR\tThe RPKM executable is missing")
         insert_error(10)
         return 255
 
-    if not (options.bwaExec != None and path.exists(options.bwaExec)):
+    if not (options.bwaExec != None and cmd_exists(options.bwaExec)):
         parser.error("ERROR\tThe BWA executable is missing")
         insert_error(10)
         return 255
@@ -311,110 +315,50 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         insert_error(10)
         return 255
 
-    # read the input sam and fastq  files
-    samFiles = getSamFiles(options.readsdir, options.sample_name)
     readFiles = getReadFiles(options.readsdir, options.sample_name)
 
-    if not samFiles:
-        samFiles = getSamFiles(options.bwaFolder, options.sample_name)
+    # index for BWA
+    bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
+    indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile)
+    # indexSuccess=True
 
-    genome_equivalent = 1
-    if not samFiles and readFiles:
-        if not readFiles:
-            eprintf(
-                "ERROR\tCannot find the read files not found for sample %s!\n",
-                options.sample_name,
+    if not indexSuccess:
+        eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
+        if errorlogger:
+            errorlogger.eprintf(
+                "ERROR\tCannot index the preprocessed file %s!\n", options.contigs
             )
-            eprintf(
-                "ERROR\tMetaPathways need to have the sample names in the format %s.fastq or (%s_1.fastq and %s_2.fastq) !\n",
-                options.sample_name,
-                options.sample_name,
-                options.sample_name,
-            )
-            if errorlogger:
-                errorlogger.eprintf(
-                    "ERROR\tCannot find the read files not found for sample %s!\n",
-                    options.sample_name,
-                )
-                errorlogger.eprintf(
-                    "ERROR\tMetaPathways need to have the sample names in the format %s.fastq or (%s_1.fastq and %s_2.fastq) !\n",
-                    options.sample_name,
-                    options.sample_name,
-                    options.sample_name,
-                )
-                insert_error(10)
-                return 255
+            insert_error(10)
+        return 255
+        # exit_process("ERROR\tMissing read files!\n")
 
-        # index for BWA
-        bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
-        indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile)
-        # indexSuccess=True
+    # run BWA
+    bwaRunSuccess = runUsingBWA(
+        options.bwaExec,
+        options.sample_name,
+        bwaIndexFile,
+        readFiles,
+        options.bwaFolder,
+    )
+    # bwaRunSuccess = True
 
-        if not indexSuccess:
-            eprintf("ERROR\tCannot index the preprocessed file %s!\n", options.contigs)
-            if errorlogger:
-                errorlogger.eprintf(
-                    "ERROR\tCannot index the preprocessed file %s!\n", options.contigs
-                )
-                insert_error(10)
-            return 255
-            # exit_process("ERROR\tMissing read files!\n")
-
-        # run the microbe Census  if not computed already
-        #        if not path.exists(options.microbecensusoutput):
-        #            microbeCensusStatus = runMicrobeCensus("run_microbe_census.py", options.microbecensusoutput, options.sample_name, readFiles, options.readsdir)
-        #            if microbeCensusStatus:
-        #               print 'Successfully ran MicrobeCensus!'
-        #            else:
-        #               eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
-        #               if errorlogger:
-        #                  errorlogger.eprintf("ERROR\tCannot successfully run MicrobeCensus for file %s!\n", options.contigs)
-        #                  insert_error(10)
-        #               return 255
-        #
-        #
-        #
-        #        genome_equivalent = read_genome_equivalent(options.microbecensusoutput)
-        # bwaRunSuccess = True
-        bwaRunSuccess = runUsingBWA(
-            options.bwaExec,
-            options.sample_name,
-            bwaIndexFile,
-            readFiles,
-            options.bwaFolder,
+    if bwaRunSuccess:
+        print("Successfully ran bwa!")
+    else:
+        eprintf(
+            "ERROR\tCannot successfully run BWA for file %s!\n", options.contigs
         )
-        # bwaRunSuccess = True
-
-        if bwaRunSuccess:
-            print("Successfully ran bwa!")
-        else:
-            eprintf(
+        if errorlogger:
+            errorlogger.eprintf(
                 "ERROR\tCannot successfully run BWA for file %s!\n", options.contigs
             )
-            if errorlogger:
-                errorlogger.eprintf(
-                    "ERROR\tCannot successfully run BWA for file %s!\n", options.contigs
-                )
-                insert_error(10)
-            return 255
-            # exit_process("ERROR\tFailed to run BWA!\n")
+            insert_error(10)
+        return 255
+          # exit_process("ERROR\tFailed to run BWA!\n")
             # END of running BWA
             # make sure you get the latest set of sam file after the bwa
     # make sure you get the latest set of sam file after the bwa
     # samFiles = getSamFiles(options.readsdir, options.sample_name)
-
-    print("Running RPKM")
-    if not path.exists(options.rpkmExec):
-        eprintf("ERROR\tRPKM executable %s not found!\n", options.rpkmExec)
-        if errorlogger:
-            errorlogger.printf(
-                "ERROR\tRPKM executable %s not found!\n", options.rpkmExec
-            )
-        insert_error(10)
-        return 255
-        # exit_process("ERROR\tRPKM executable %s not found!\n" %(options.rpkmExec))
-
-    # command to build the RPKM
 
     command = [
         "%s --contigs-file %s" % (options.rpkmExec, options.contigs),
@@ -471,21 +415,6 @@ def runRPKMCommand(runcommand=None):
     result = getstatusoutput(runcommand)
     if result[1]:
         print(result[1])
-    return result[0]
-
-
-def runBIOMCommand(infile, outfile, biomExec="biom"):
-    commands = [
-        biomExec,
-        " convert",
-        "-i",
-        infile,
-        "-o",
-        outfile,
-        '--table-type="Table"',
-        "--to-hdf5",
-    ]
-    result = getstatusoutput(" ".join(commands))
     return result[0]
 
 

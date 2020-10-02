@@ -104,7 +104,8 @@ def execute_tasks(s, verbose=False, block=0):
 
         if c.status in ["redo"]:
             c.removeOutput(s)
-            if c.isInputAvailable(errorlogger=s.errorlogger):
+            status, status_messages = c.isInputAvailable(errorlogger=s.errorlogger)
+            if status:
                 s.stepslogger.write("%s\t%s\n" % (c.name, "RUNNING"))
                 result = [0, "Error while executing step " + c.name]
                 try:
@@ -126,12 +127,16 @@ def execute_tasks(s, verbose=False, block=0):
                 if verbose:
                     missingList = c.getMissingList(errorlogger=s.errorlogger)
                     printMissingList(missingList)
-
                 s.stepslogger.write("%s\t%s\n" % (c.name, "MISSING_INPUT"))
+
+            if verbose:
+                for status_message in status_messages:
+                   eprintf("\t{}\t{}\t{}\n".format(status_message[0], status_message[1], status_message[2]))
 
         elif c.status in ["yes"]:
             if not c.isOutputAvailable():
-                if c.isInputAvailable(errorlogger=s.errorlogger):
+                status, status_messages = c.isInputAvailable(errorlogger=s.errorlogger)
+                if status:
                     s.stepslogger.write("%s\t%s\n" % (c.name, "RUNNING"))
 
                     result = [0, "Error while executing  step " + c.name]
@@ -155,9 +160,15 @@ def execute_tasks(s, verbose=False, block=0):
                         printMissingList(missingList)
 
                     s.stepslogger.write("%s\t%s\n" % (c.name, "SKIPPED"))
+
+                if verbose:
+                   for status_message in status_messages:
+                       eprintf("\t{}\t{}\t{}\n".format(status_message[0], status_message[1], status_message[2]))
+
             else:
                 eprintf("..... Already Computed!\n")
                 s.stepslogger.write("%s\t%s\n" % (c.name, "ALREADY_COMPUTED"))
+
 
         elif c.status in ["skip"]:
             eprintf("..... Skipping!\n")
