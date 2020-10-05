@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 CLASSIFIERS = [
     "Development Status :: 2 - Pre-Alpha",
@@ -13,45 +13,37 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# string in below ...
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 setup(
-    name="MetaPathways",
-    version="3.1.6",
-    author="Kishori Mohan Konwar",
-    author_email="kishori82@gmail.com",
-    description=(
+    name = "MetaPathways",
+    version = "3.1.6",
+    author =  "Kishori Mohan Konwar",
+    author_email = "kishori82@gmail.com",
+    description = (
         "MetaPathways is a modular pipeline to build PGDBs"
         " from Metagenomic sequences."
     ),
-    license="MIT",
-    keywords="metagenomics pipeline",
+
+    license = "MIT",
+    keywords = "metagenomics pipeline",
     url="http://packages.python.org/",
     download_url = "https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
-    package_dir={"": "."},
-    packages=[
-        "metapathways",
-        "metapathways/pipeline",
-        "metapathways/test",
-        "metapathways/utils",
-        "metapathways/taxonomy",
-        "metapathways/parsers",
-        "metapathways/scripts",
-        "metapathways/annotate",
-        "metapathways/diagnostics",
-    ],
-    py_modules=["metapathways/modules"],
-    scripts=["bin/compress_by_ec"],
-    entry_points={
-        "console_scripts": ["MetaPathways = metapathways." + "MetaPathways:main"]
+    packages = find_packages(),
+    scripts = ["bin/compress_by_ec"],
+    install_requires =  ["pyfastx"],
+    entry_points = {
+        "console_scripts": ['MetaPathways=metapathways.pipeline:main',
+                            'TestMP=metapathways.pipeline:main']
     },
-    long_description=read("README.md"),
-    include_package_data=True,
-    classifiers=CLASSIFIERS,
+    long_description  =  read("README.md"),
+    include_package_data = True,
+    classifiers = CLASSIFIERS,
+    extras_require = {
+            'test': ['pytest', 'pytest-cov'],
+    },
     python_requires='>3.5.2'
 )
+
