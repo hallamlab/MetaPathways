@@ -21,9 +21,9 @@ try:
     from os.path import split, splitext, join, dirname, abspath
     from datetime import datetime
 
-    import sysutil as sysutils
-    import general_utils as gutils
-    import scripts as python_scripts
+    from metapathways import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import scripts as python_scripts
 
 except:
     print(""" Could not load some user defined  module functions""")

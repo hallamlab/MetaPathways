@@ -35,8 +35,7 @@ setup(
     scripts = ["bin/compress_by_ec"],
     install_requires =  ["pyfastx"],
     entry_points = {
-        "console_scripts": ['MetaPathways=metapathways.pipeline:main',
-                            'TestMP=metapathways.pipeline:main']
+        "console_scripts": ['MetaPathways=metapathways.pipeline:main' ]
     },
     long_description  =  read("README.md"),
     include_package_data = True,

@@ -15,11 +15,11 @@ try:
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
 
-    import sysutil as sysutils
-    import general_utils as gutils
-    import metapathways_utils as mputils
-    import sysutil as sysutils
-    import errorcodes as errormod
+    from metapathways import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import metapathways_utils as mputils
+    from metapathways import sysutil as sysutils
+    from metapathways import errorcodes as errormod
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

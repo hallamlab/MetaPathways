@@ -19,11 +19,11 @@ try:
     from optparse import make_option
     from os import path, _exit, rename, remove
 
-    import parameters as paramsmod
-    import configuration as configmod
-    import sysutil as sysutils
-    import general_utils as gutils
-    import errorcodes as errormod
+    from metapathways import parameters as paramsmod
+    from metapathways import configuration as configmod
+    from metapathways import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import errorcodes as errormod
 except:
     print("Cannot load some modules")
     print(traceback.print_exc(10))

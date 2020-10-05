@@ -19,9 +19,9 @@ try:
     from optparse import make_option
     from os import path, _exit
 
-    import sysutil as sysutils
-    import general_utils as gutils
-    import context as contextmod
+    from metapathways import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import context as contextmod
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

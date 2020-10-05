@@ -25,9 +25,9 @@ try:
     from datetime import datetime
     from optparse import OptionParser
 
-    import sysutil as sysutils
-    import general_utils as gutils
-    import errorcodes as errormod
+    from metapathways import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import errorcodes as errormod
 except:
    print("""Could not load some user defined  module functions""")
    print(traceback.print_exc(10))

@@ -23,8 +23,8 @@ try:
     from collections import defaultdict
     from optparse import make_option
 
-    import sysutil as sysutils
-    import fastareader as fastreadrmod
+    from metapathways import sysutil as sysutils
+    from metapathways import fastareader as fastreadrmod
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

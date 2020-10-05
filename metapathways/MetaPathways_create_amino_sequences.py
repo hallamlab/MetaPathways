@@ -15,8 +15,8 @@ try:
 
     from os import path
 
-    import errorcodes as errormod
-    import general_utils as gutils
+    from metapathways import errorcodes as errormod
+    from metapathways import general_utils as gutils
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

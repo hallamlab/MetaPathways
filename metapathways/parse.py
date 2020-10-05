@@ -12,7 +12,7 @@ try:
     import re
     from collections import defaultdict
     from copy import deepcopy
-    import metapathways_utils as mputils
+
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

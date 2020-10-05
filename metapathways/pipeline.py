@@ -16,15 +16,15 @@ try:
     from os import makedirs, sys, listdir, environ, path, _exit
     from optparse import OptionParser
 
-    import errorcodes as errormod
-    import metapathways_utils  as mputils
-    import parse as parsemod
-    import sysutil as sysutils
-    import metapathways_steps as mpsteps
-    import parameters as paramsmod
-    import diagnoze as diagnoze
-    import sampledata as sampledata
-    import general_utils as gutils
+    from metapathways import errorcodes as errormod
+    from metapathways import metapathways_utils  as mputils
+    from metapathways import parse as parsemod
+    from metapathways import sysutil as sysutils
+    from metapathways import metapathways_steps as mpsteps
+    from metapathways import parameters as paramsmod
+    from metapathways import diagnoze as diagnoze
+    from metapathways import sampledata as sampledata
+    from metapathways import general_utils as gutils
 except:
    print("""Could not load some user defined  module functions""")
    print(traceback.print_exc(10))
@@ -32,7 +32,8 @@ except:
 
 cmd_folder = path.abspath(path.split(inspect.getfile( inspect.currentframe() ))[0])
 
-PATHDELIM =  str(sysutils.pathDelim())
+
+PATHDELIM =  sysutils.pathDelim()
 
 #config = load_config()
 metapaths_param = """config/template_param.txt""";
@@ -429,12 +430,10 @@ def main():
 
 # the main function of metapaths
 if __name__ == "__main__":
-    print('hello')
-    if len(sys.argv) < 4:
-       sys.argv("-h")
-       a=1/0
-    process(sys.argv)
-    sys.exit(errormod.get_recent_error())
-    mputils.halt_process(1)
+    if len(sys.argv) > 1:
+      print('hello')
+      process(sys.argv)
+      sys.exit(errormod.get_recent_error())
+      mputils.halt_process(1)
 
 

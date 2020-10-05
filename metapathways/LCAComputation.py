@@ -13,8 +13,8 @@ try:
     import gzip
     import math
 
-    import general_utils as gutils
-    import metapathways_utils as mputils
+    from metapathways import general_utils as gutils
+    from metapathways import metapathways_utils as mputils
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

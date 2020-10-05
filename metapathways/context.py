@@ -21,8 +21,8 @@ try:
     from optparse import make_option
     from os import path, _exit, remove
 
-    import general_utils as gutils
-    import sysutil as sysutils
+    from metapathways import general_utils as gutils
+    from metapathways import sysutil as sysutils
 except:
     print("Cannot load some modules")
     print(traceback.print_exc(10))

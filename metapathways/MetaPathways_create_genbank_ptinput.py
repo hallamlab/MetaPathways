@@ -20,11 +20,11 @@ try:
 
     from os import makedirs, path, listdir, remove, rename
 
-    import errorcodes as errormod
-    import general_utils as gutils
-    import metapathways_utils as mputils
-    import sysutil as sysutils
-    import parse as parsemod
+    from metapathways import errorcodes as errormod
+    from metapathways import general_utils as gutils
+    from metapathways import metapathways_utils as mputils
+    from metapathways import sysutil as sysutils
+    from metapathways import parse as parsemod
 except:
     print(""" Could not load some user defined  module functions""")
     print(""" """)

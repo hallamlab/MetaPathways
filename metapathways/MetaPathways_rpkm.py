@@ -18,10 +18,10 @@ try:
 
     from os import path, _exit, rename
 
-    import errorcodes as errormod
-    import metapathways_utils as mputils
-    import general_utils as gutils
-    import sysutil as sysutils
+    from metapathways import errorcodes as errormod
+    from metapathways import metapathways_utils as mputils
+    from metapathways import general_utils as gutils
+    from metapathways import sysutil as sysutils
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))

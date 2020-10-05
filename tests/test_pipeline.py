@@ -7,8 +7,8 @@ _test_data_dir = os.path.join(os.path.split(__file__)[0], "data/")
 _test_input_fasta_file = os.path.join(_test_data_dir, "lagoon-sample/input/lagoon-sample.fasta")
 _test_ref_data_dir = os.path.join(_test_data_dir, "ref_data")
 
-def xest_pipeline(tmpdir):
-    from ..metapathways import pipeline 
+def test_pipeline(tmpdir):
+    from metapathways import pipeline 
     _test_sample_name = "lagoon-sample"
     _test_input_fasta_file = os.path.join(_test_data_dir, _test_sample_name, "/input/", _test_sample_name + ".fasta")
 
@@ -20,11 +20,12 @@ def xest_pipeline(tmpdir):
                ]
     #print( pipeline.__dict__['__file__'])
     pipeline.process(commands)
+    assert 1 == 1
 
                            
 def test_filter_input(tmpdir):
-    from ..metapathways import pipeline 
-    from ..metapathways import MetaPathways_filter_input
+    from metapathways import pipeline 
+    from metapathways import MetaPathways_filter_input
     out_folder_name = str(tmpdir)
     _test_sample_name = "lagoon-sample"
     _test_input_fasta_file = '/'.join([_test_data_dir, _test_sample_name, "input", _test_sample_name + ".fasta"])

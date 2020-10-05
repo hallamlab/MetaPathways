@@ -24,13 +24,11 @@ try:
     from os import makedirs, path, listdir, remove, rename, _exit
     from datetime import date
 
-    import general_utils as gutils
-    import sysutil as sysutils
-    import parse as parsemod
-    import execution as execmod
-    import MetaPathways_gather_run_stats as gatherstatmod
-    import metapathways_utils as mputils
-    import jobscreator as jobcreatormod
+    from metapathways import general_utils as gutils
+    from metapathways import sysutil as sysutils
+    from metapathways import execution as execmod
+    from metapathways import metapathways_utils as mputils
+    from metapathways import jobscreator as jobcreatormod
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
