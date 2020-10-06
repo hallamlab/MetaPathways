@@ -27,10 +27,8 @@ except:
 PATHDELIM = sysutils.pathDelim()
 
 usage = __file__ + """ -i input_fasta_file -o output_file """
-parser = None
 
 def createParser():
-    global parser
     epilog = """The amino acid sequences in the orf_prediction folder are used to do a self alignment, which will be used to compute the bit score ratio (BSR) for the hits.  The BSR ratio can be defined at the ratio of a the bit-score between a query and a target sequence to the bitcore when both the query and target sequenes are the query sequence. Usually, a BSR ratio of 0.4 or more is considered as a good hit for protein sequences. Note that BSR ratio is designed in some sense to have a normalized value for the bit-score  since the score is also influenced by the length of the query.
 The results are written to a file  (usually in a folder called blast_results in the MetaPathway pipeline,  into a file named <samplename>.refscore.<algorithm> (where <algorithm> refers to the BLAST or LAST in the context of the pipeline) extension This script can be extended to add other sequence homology search algorithms."""
 
@@ -61,6 +59,8 @@ The results are written to a file  (usually in a folder called blast_results in 
         default=False,
         help="compact output [OPTIONAL]",
     )
+
+    return parser
 
 
 def check_arguments(opts, args):
@@ -340,8 +340,11 @@ def remove_last_index_files(filename):
 SIZE = 10000
 
 def main(argv, errorlogger=None, runstatslogger=None):
-    global parser
+
+    parser = createParser()
+
     (opts, args) = parser.parse_args(argv)
+
     if check_arguments(opts, args):
         print(usage)
         sys.exit(0)
@@ -383,10 +386,8 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
 
 def MetaPathways_refscore(argv, errorlogger=None, runstatslogger=None):
-    createParser()
     if errorlogger:
         errorlogger.write("#STEP\tCOMPUTE_REFSCORE\n")
-
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
     except:
@@ -397,5 +398,5 @@ def MetaPathways_refscore(argv, errorlogger=None, runstatslogger=None):
 
 # the main function of metapaths
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+       main(sys.argv[1:])

@@ -30,13 +30,8 @@ usage = (
     + " -d dbname1 -b blastout_for_database1 -m map_for_database1 [-d dbname2 -b blastout_for_database2 -m map_for_database2 ] "
 )
 
-
-parser = None
 errorcode = 5
-
 def createParser():
-    global parser
-
     epilog = """This script parses BLAST/LAST search results of the amino acid sequences against the reference protein databases, in a tabular format. In the context of MetaPathways these files are available in the in the folder blast_results. The tabular results are put in individual files, one for each of the databases and algorithms combinations. This script parses these results  and uses the hits based on the specified cutoffs for the evalue, bit score ratio, etc the parsed results are put in file named according to the format
 <samplename><dbname><algorithm>out.parsed.txt. These parsed files are in a tabular format and each row contains information about the hits in terms of start, end, query name, match name, bit score ratio, etc."""
 
@@ -213,6 +208,7 @@ def createParser():
         help="k parameter to compute bit score [useful for BSR] ",
     )
     parser.add_option_group(bitscore_params)
+    return parser
 
 
 def check_arguments(opts, args):
@@ -310,11 +306,14 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
         mputils.exit_process("ERROR: Cannot open database map file %s\n" % (databasemapfile))
 
     for line in dbmapfile:
-        if seq_beg_pattern.search(line):
+        
+        if  seq_beg_pattern.search(line):
             words = line.rstrip().split()
             name = words[0].replace(">", "", 1)
+
             if not name in query_dictionary:
                 continue
+
             words.pop(0)
             if len(words) == 0:
                 annotation = "hypothetical protein"
@@ -334,7 +333,7 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
             errorlogger.write(
                 "Try re-running after deleting file : %s\n" % (databasemapfile)
             )
-        mputils.exit_process("no anntations in file :" + databasemapfile)
+        mputils.exit_process("no annotations in file :" + databasemapfile)
 
 
 class BlastOutputParser(object):
@@ -427,6 +426,7 @@ class BlastOutputParser(object):
             )
         try:
             create_dictionary(database_mapfile, self.annot_map, query_dictionary)
+            # clear the dictionary to save memory
             query_dictionary = {}
         except AttributeError:
             gutils.eprintf("Cannot read the map file for database : %s\n" % (dbname))
@@ -754,10 +754,9 @@ def process_blastoutput(
 
     return count, len(uniques)
 
-
 # the main function
 def main(argv, errorlogger=None, runstatslogger=None):
-    global parser
+    parser = createParser()
     (opts, args) = parser.parse_args(argv)
     if not check_arguments(opts, args):
         print(sage)
@@ -801,7 +800,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
 
 def MetaPathways_parse_blast(argv, errorlogger=None, runstatslogger=None):
-    createParser()
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
     except:
@@ -814,4 +812,5 @@ def MetaPathways_parse_blast(argv, errorlogger=None, runstatslogger=None):
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
-    main(sys.argv[1:])
+    if len(sys.len) > 1:
+       main(sys.argv[1:])

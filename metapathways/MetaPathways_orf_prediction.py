@@ -27,32 +27,9 @@ except:
 PATHDELIM = sysutils.pathDelim()
 errorcode = 2
 
-
-def fprintf(file, fmt, *args):
-    file.write(fmt % args)
-
-
-def printf(fmt, *args):
-    sys.stdout.write(fmt % args)
-
-
-def files_exist(files, errorlogger=None):
-    status = True
-    for file in files:
-        if not path.exists(file):
-            if errorlogger:
-                errorlogger.write("ERROR\tCould not find ptools input  file : " + file)
-            status = False
-    return not status
-
-
 usage = sys.argv[0] + """ --algorithm <algorithm> [algorithm dependent options]"""
 
-parser = None
-
-
 def createParser():
-    global parser
 
     epilog = """The preprocessed nucleotide sequences (contigs) are used as input to a gene prediction algorithm, currently prodigal, to detect the gene coding regions.  The output of the prodigal run is a set of untranslated ORFs and the same ORFs translated (into amino acid sequences). The resulting files are available in the 'orf_prediction' folder. The translation is done based on the translation table id provided by the user, by default it 11"""
 
@@ -129,11 +106,11 @@ def createParser():
     )
 
     parser.add_option_group(prodigal_group)
+    return parser
 
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
-    global parser
-
+    parser = createParser()
     options, args = parser.parse_args(argv)
 
     if options.algorithm == "prodigal":
@@ -227,16 +204,15 @@ def _execute_prodigal(options):
 
     result = sysutils.getstatusoutput(" ".join(args))
     rename(options.prod_output + ".tmp", options.prod_output)
+    
     return result[0]
 
 
 def MetaPathways_orf_prediction(
     argv, extra_command=None, errorlogger=None, runstatslogger=None):
-
     global errorcode
     if errorlogger != None:
         errorlogger.write("#STEP\tORF_PREDICTION\n")
-    createParser()
     try:
         main(
             argv,
@@ -251,5 +227,5 @@ def MetaPathways_orf_prediction(
     return (0, "")
 
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1: 
+       main(sys.argv[1:])

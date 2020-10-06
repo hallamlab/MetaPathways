@@ -29,9 +29,7 @@ PATHDELIM = sysutils.pathDelim()
 
 usage = sys.argv[0] + """ -i input -o output [algorithm dependent options]"""
 
-parser = None
 def createParser():
-    global parser
     epilog = """This script is used for running a homology search algorithm such as BLAST or LAST
               on a set of query amino acid sequences against a target of  reference protein sequences.
               Currently it supports the BLASTP and LAST algorithm. Any other homology search algorithm
@@ -156,10 +154,11 @@ def createParser():
 
     parser.add_option_group(last_group)
 
+    return parser
+
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
-    global parser
-
+    parser = createParser()
     options, args = parser.parse_args(argv)
 
     if options.algorithm == "BLAST":
@@ -271,16 +270,16 @@ def _execute_BLAST(options, logger=None):
 
 def MetaPathways_func_search(
     argv, extra_command=None, errorlogger=None, runstatslogger=None):
+
     if errorlogger != None:
         errorlogger.write("#STEP\tFUNC_SEARCH\n")
-    createParser()
     try:
          main(
-            argv,
-            errorlogger = errorlogger,
-            runcommand = extra_command,
-            runstatslogger = runstatslogger,
-        )
+             argv,
+             errorlogger = errorlogger,
+             runcommand = extra_command,
+             runstatslogger = runstatslogger,
+            )
     except:
         errormod.insert_error(4)
         return (1, traceback.print_exc(10))
@@ -288,5 +287,5 @@ def MetaPathways_func_search(
     return (0, "")
 
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])

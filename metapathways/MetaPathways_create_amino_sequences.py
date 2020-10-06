@@ -438,8 +438,6 @@ parser = None
 
 def createParser():
     # Parse options (many!)
-    # TODO: Create option groups
-    global parser
 
     epilog = """The GFF files produced by the gene prediction algorithm, say prodigal, in the ORF Prediction step are used to translate into the amino acid sequences and gff files that contains more detailed information such as orf_length, strand, start and end positions, contig_length, etc. In the pipeline the resulting file is in the orf_prediction folder with the extension .faa """
 
@@ -487,11 +485,13 @@ def createParser():
     )
 
     parser.add_option_group(input_group)
+    
+    return parser
 
 
 def main(argv, errorlogger=None, runstatslogger=None):
     # filtering options
-    global parser
+    parser = createParser()
     options, args = parser.parse_args(argv)
 
     if not (
@@ -554,7 +554,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
 def MetaPathways_create_amino_sequences(argv, errorlogger=None, runstatslogger=None):
     global errorcode
-    createParser()
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
     except:
@@ -564,5 +563,5 @@ def MetaPathways_create_amino_sequences(argv, errorlogger=None, runstatslogger=N
     return (0, "")
 
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1: 
+        main(sys.argv[1:])
