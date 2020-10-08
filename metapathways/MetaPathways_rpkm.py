@@ -58,12 +58,8 @@ usage = (
     + """ -c <contigs> -o <output> -r <reads>  -O <orfgff> --rpkmExec <rpkmexec> """
     + epilog
 )
-parser = None
-
 
 def createParser():
-    global parser
-
     parser = optparse.OptionParser(usage=usage)
 
     # Input options
@@ -114,6 +110,8 @@ def createParser():
     parser.add_option("--bwaExec", dest="bwaExec", default=None, help="BWA Executable")
 
     parser.add_option("--bwaFolder", dest="bwaFolder", default=None, help="BWA Folder")
+
+    return parser
 
 
 def getSamFiles(readdir, sample_name):
@@ -256,7 +254,7 @@ def read_genome_equivalent(microbecensusoutput):
 
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
-    global parser
+    parser = createParser()
 
     options, args = parser.parse_args(argv)
     if not (options.contigs != None and path.exists(options.contigs)):
@@ -486,7 +484,6 @@ def write_new_file(lines, output_file):
 def MetaPathways_rpkm(argv, extra_command=None, errorlogger=None, runstatslogger=None):
     if errorlogger != None:
         errorlogger.write("#STEP\tRPKM_CALCULATION\n")
-    createParser()
     try:
         main(
             argv,
@@ -502,5 +499,5 @@ def MetaPathways_rpkm(argv, extra_command=None, errorlogger=None, runstatslogger
 
 
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])

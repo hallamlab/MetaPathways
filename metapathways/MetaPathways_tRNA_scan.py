@@ -28,18 +28,13 @@ errorcode = 7
 
 help = sys.argv[0] + """ -i input -o output [algorithm dependent options]"""
 
-parser = None
-
 def createParser():
-    global parser
     epilog = """This script is used for scanning for tRNA,  using tRNA-Scan 1.4,
               on the set of metagenomics sample sequences """
     epilog = re.sub(r"\s+", " ", epilog)
-
     parser = OptionParser(usage=help, epilog=epilog)
 
     # Input options
-
     parser.add_option(
         "-o",
         dest="trna_o",
@@ -72,10 +67,11 @@ def createParser():
         default=None,
         help="The tRNA-SCAN 1.4 executable",
     )
+    return parser
 
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
-    global parser
+    parser = createParser()
     options, args = parser.parse_args(argv)
     return _execute_tRNA_Scan(options)
 
@@ -101,6 +97,7 @@ def _execute_tRNA_Scan(options):
 
     if options.trna_F:
         args += ["-F", options.trna_F]
+
     result = sysutils.getstatusoutput(" ".join(args))
 
     if result[0] != 0:
@@ -109,12 +106,10 @@ def _execute_tRNA_Scan(options):
 
 
 def MetaPathways_tRNA_scan(
-    argv, extra_command=None, errorlogger=None, runstatslogger=None
-):
+    argv, extra_command=None, errorlogger=None, runstatslogger=None):
     global errorcode
     if errorlogger != None:
         errorlogger.write("#STEP\ttRNA_SCAN\n")
-    createParser()
 
     try:
         main(
@@ -131,5 +126,5 @@ def MetaPathways_tRNA_scan(
 
 
 if __name__ == "__main__":
-    createParser()
-    result = main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        result = main(sys.argv[1:])

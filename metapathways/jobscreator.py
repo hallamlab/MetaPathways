@@ -578,34 +578,37 @@ class ContextCreator:
             context.inputs1 = { 'dbpath' : dbpath }
             context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
-            cmd1 = ""
+            """ the BLAST part first """
+            blast_cmd = ""
             if True or algorithm == "BLAST":
                 executable = shutil.which('blastn')
                 if executable == None:
                     eprintf("ERROR\tCannot find blastn\n")
                         #logger.printf("ERROR\tCannot find blastn to format\n")
 
-                cmd1 = "%s -outfmt 6 -num_threads 8  -query %s -out %s -db %s -max_target_seqs 5"\
+                blast_cmd = "%s -outfmt 6 -num_threads 8  -query %s -out %s -db %s -max_target_seqs 5"\
                       %(executable, context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             if False and algorithm == "LAST":
-                executable =  self.configs.EXECUTABLES_DIR + PATHDELIM +  self.configs.LAST_EXECUTABLE
-                cmd1 = "%s -f 2 -o %s %s %s"\
+                executable = shutil.which(self.configs.LAST_EXECUTABLE)
+                if executable == None:
+                    eprintf("ERROR\tCannot find blastn\n")
+                        #logger.printf("ERROR\tCannot find blastn to format\n")
+                blast_cmd = "%s -f 2 -o %s %s %s"\
                      %(executable, context.outputs['rRNA_blastout'], context.inputs1['dbpath'], context.inputs['input_fasta'])
 
 
             """ now the scanning part"""
-            cmd2 = "%s -o %s -b %s -e %s -s %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
+            scan_cmd = "%s -o %s -b %s -e %s -s %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
                   bscore_cutoff, eval_cutoff, identity_cutoff)
 
-            cmd2 = cmd2 +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
-            context.commands = [cmd2, cmd1]
+            scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
+            context.commands = [scan_cmd, blast_cmd]
             context.status = self.params.get('metapaths_steps','SCAN_rRNA')
             context.message = self._Message("SCANNING FOR rRNA USING DB " + db)
             contexts.append(context)
 
         return contexts
-
 
     def create_tRNA_scan_statistics(self, s):
         """SCAN_tRNA"""

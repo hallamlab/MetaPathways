@@ -115,40 +115,34 @@ def write_selected_sequences(selected_sequences, output_file_name):
 
 
 def append_taxonomic_information(databaseSequences, table, params):
-    try:
-        tax_seqs = open(databaseSequences, "r")
-    except IOError:
-        print("Cannot read file " + tax_maps + " !")
-        sys.exit(3)
-
-    format = gutils.getFormat(databaseSequences)
-
-    taxmapLines = tax_seqs.readlines()
-    tax_seqs.close()
-
-    taxMapping = {}
-    for line in taxmapLines:
-        if not re.match(">", line):
-            continue
-        line = line.strip()
-        name, taxonomy = getName_and_Taxonomy(line, format)
-        if name:
-            taxMapping[name] = taxonomy
-
-    for key in table:
-        key = str(key)
-        if (
-            int(table[key][5] - table[key][4]) > params["length"]
-            and table[key][0] > params["similarity"]
-            and table[key][1] < params["evalue"]
-            and table[key][2] > params["bitscore"]
-        ):
-            if table[key][3] in taxMapping:
-                table[key].append(taxMapping[table[key][3]])
+    with open(databaseSequences, "r") as tax_seqs:
+        format = gutils.getFormat(databaseSequences)
+        taxmapLines = tax_seqs.readlines()
+        tax_seqs.close()
+    
+        taxMapping = {}
+        for line in taxmapLines:
+            if not re.match(">", line):
+                continue
+            line = line.strip()
+            name, taxonomy = getName_and_Taxonomy(line, format)
+            if name:
+                taxMapping[name] = taxonomy
+    
+        for key in table:
+            key = str(key)
+            if (
+                int(table[key][5] - table[key][4]) > params["length"]
+                and table[key][0] > params["similarity"]
+                and table[key][1] < params["evalue"]
+                and table[key][2] > params["bitscore"]
+            ):
+                if table[key][3] in taxMapping:
+                    table[key].append(taxMapping[table[key][3]])
+                else:
+                    table[key].append("-")
             else:
                 table[key].append("-")
-        else:
-            table[key].append("-")
 
 
 def process_blastout_file(blast_file, database, table, errorlogger=None):
@@ -190,20 +184,12 @@ def process_blastout_file(blast_file, database, table, errorlogger=None):
         ]
 
 
-#     print table
-#     sys.exit(0)
-
-# print blast_file + ' ' + tax_maps + ' ' + database
-
 usage = (
     sys.argv[0]
     + """ -i x.blastout [y.blastout] -d  xdatabase [ydatabase]  -m xtax_maps [ ytax_maps ] -o outputfile -b n -e 0.ddd -s N """
 )
-parser = None
-
 
 def createParser():
-    global parser
 
     epilog = """The input nucleotide sequences are BLASTed against the selected rRNA databases such as  SSU or LSU Silva sequence databases and SSU Greengene database. The hits with high bit scores are flagged as rRNA and the resulting taxonomy from the databases are assigned.  The results from this step are put in the results/rRNA folder, with one tsv file for each rRNA database."""
     epilog = re.sub(r"\s+", " ", epilog)
@@ -311,10 +297,11 @@ def createParser():
 
     parser.add_option_group(process_options)
 
+    return parser
+
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
-    global parser
-
+    parser = createParser()
     options, args = parser.parse_args(argv)
 
     if not len(options.blast_files):
@@ -344,10 +331,10 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     # Incredible sanity check
 
     if not gutils.files_exist(options.blast_files):
-        sys.exit(0)
+        sys.exit(1)
 
     if not gutils.files_exist(options.tax_databases):
-        sys.exit(0)
+        sys.exit(1)
 
     params = {
         "length": int(options.length),
@@ -377,9 +364,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
                 reads[key] = True
 
         dbname = re.sub(r"^.*" + PATHDELIM, "", options.tax_databases[x])
-        runstatslogger.write(
-            "%s\tTaxonomic hits in %s\t%s\n" % (str(priority), dbname, str(len(reads)))
-        )
+        if runstatslogger:
+            runstatslogger.write(
+              "%s\tTaxonomic hits in %s\t%s\n" % (str(priority), dbname, str(len(reads))))
         priority += 1
     outputfile = open(options.output, "w")
     gutils.fprintf(outputfile, "#Similarity cutoff :\t" + str(params["similarity"]) + "\n")
@@ -465,12 +452,9 @@ def runBlastCommandrRNA(runcommand=None):
 
 
 def MetaPathways_rRNA_stats_calculator(
-    argv, extra_command=None, errorlogger=None, runstatslogger=None
-):
+    argv, extra_command=None, errorlogger=None, runstatslogger=None):
     if errorlogger != None:
         errorlogger.write("#STEP\tSTATS_rRNA\n")
-    createParser()
-
     try:
         main(
             argv,
@@ -484,7 +468,6 @@ def MetaPathways_rRNA_stats_calculator(
 
     return (0, "")
 
-
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])

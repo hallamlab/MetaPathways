@@ -18,9 +18,7 @@ Welcome to MetaPathways's documentation!
    :maxdepth: 2
    :caption: Data Exploration
 
-   manual/overview
-   manual/install
-   manual/processing
+   manual/phandi_overview
 
 
 .. toctree::
@@ -34,5 +32,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
- MetaPathways -i tests/data/lagoon-sample/input/  -o mp_output/ -s lagoon-sample -p template_param.txt  -d ~/MetaPathways_DBs/ -v
- pytest --import-mode importlib
+
+.. MetaPathways -i tests/data/lagoon-sample/input/  -o mp_output/ -s lagoon-sample -p template_param.txt  -d ~/MetaPathways_DBs/ -v
+   pytest --import-mode importlib -v

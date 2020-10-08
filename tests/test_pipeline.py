@@ -69,12 +69,16 @@ def xest_pipeline(tmpdir):
     assert 1 == 1
 
                            
-def xest_filter_nuc_input(tmpdir):
+def test_filter_nuc_input(tmpdir):
     from metapathways import pipeline 
     from metapathways import MetaPathways_filter_input
     out_folder_name = str(tmpdir)
     _test_sample_name = "lagoon-sample"
-    _test_input_fasta_file = '/'.join([_test_data_dir, _test_sample_name, "input", _test_sample_name + ".fasta"])
+    _test_input_fasta_file = os.path.join(_test_data_dir, 
+                                          _test_sample_name, 
+                                          "input", 
+                                          _test_sample_name + ".fasta"
+                                         )
 
     os.makedirs(os.path.join(out_folder_name, _test_sample_name, "preprocessed"), exist_ok = True)
     os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
@@ -384,46 +388,6 @@ def test_filter_amino_input(tmpdir):
     assert compare_lines_in_files(output_aminoseq_length, expected_output_aminoseq_length, sort_n_compare = False)
     assert compare_lines_in_files(output_logfile, expected_output_logfile, sort_n_compare = False)
 
-def test_refscores(tmpdir):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_refscore 
-    out_folder_name = str(tmpdir)
-    _test_sample_name = "lagoon-sample"
-
-    faa_input = os.path.join(_test_data_dir, 
-                              _test_sample_name, 
-                              "output",
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".qced.faa"
-                            )
-
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
-
-    output_refscores = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "blast_results", 
-                              _test_sample_name + ".refscores.BLAST"
-                             )
-
-    expected_output_refscores = os.path.join(_test_data_dir, 
-                                             _test_sample_name, 
-                                             "output", 
-                                             _test_sample_name, 
-                                             "blast_results", 
-                                             _test_sample_name + ".refscores.BLAST"
-                                            )
-
-    args = [ "-i", faa_input, 
-             "-o", output_refscores, 
-             "-a", "BLAST",
-           ]
-    MetaPathways_refscore.main(args)
-
-    assert compare_lines_in_files(output_refscores, expected_output_refscores, sort_n_compare = True)
-
 def test_func_search(tmpdir):
     from metapathways import pipeline 
     from metapathways import MetaPathways_func_search 
@@ -476,6 +440,46 @@ def test_func_search(tmpdir):
     MetaPathways_func_search.main(args)
 
     assert compare_lines_in_files(output_blast_results, expected_output_blast_results, sort_n_compare = True)
+
+def test_refscores(tmpdir):
+    from metapathways import pipeline 
+    from metapathways import MetaPathways_refscore 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    faa_input = os.path.join(_test_data_dir, 
+                              _test_sample_name, 
+                              "output",
+                              _test_sample_name, 
+                              "orf_prediction", 
+                              _test_sample_name + ".qced.faa"
+                            )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+
+    output_refscores = os.path.join(out_folder_name, 
+                              _test_sample_name, 
+                              "blast_results", 
+                              _test_sample_name + ".refscores.BLAST"
+                             )
+
+    expected_output_refscores = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output", 
+                                             _test_sample_name, 
+                                             "blast_results", 
+                                             _test_sample_name + ".refscores.BLAST"
+                                            )
+
+    args = [ "-i", faa_input, 
+             "-o", output_refscores, 
+             "-a", "BLAST",
+           ]
+    MetaPathways_refscore.main(args)
+
+    assert compare_lines_in_files(output_refscores, expected_output_refscores, sort_n_compare = True)
 
 def test_parse_blast(tmpdir):
     from metapathways import MetaPathways_parse_blast 
@@ -535,3 +539,245 @@ def test_parse_blast(tmpdir):
 
     MetaPathways_parse_blast.main(args)
     assert compare_lines_in_files(output_parsed_blast_results, expected_output_parsed_blast_results, sort_n_compare = True)
+
+def test_rRNA_stats_calculator(tmpdir):
+    from metapathways import MetaPathways_rRNA_stats_calculator 
+    from metapathways import sysutil as sysutils
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    input_blast_results = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "blast_results", 
+                                        _test_sample_name + ".rRNA.silva-lsu-small-sample.BLASTout"
+                                      )
+
+    ref_blast_db = os.path.join(_test_data_dir, 
+                            "ref_data",
+                            "taxonomic",
+                            "silva-lsu-small-sample"
+                           )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "rRNA"), exist_ok = True)
+
+    output_lsu_rRNA_stats = os.path.join(out_folder_name, 
+                                             _test_sample_name, 
+                                             "results",
+                                             "rRNA", 
+                                             _test_sample_name + ".silva-lsu-small-sample.rRNA.stats.txt"
+                                            )
+
+    expected_output_lsu_rRNA_stats = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output", 
+                                             _test_sample_name, 
+                                             "results",
+                                             "rRNA", 
+                                             _test_sample_name + ".silva-lsu-small-sample.rRNA.stats.txt"
+                                            )
+    args = [ 
+             "-o", output_lsu_rRNA_stats,
+             "-b", "50",
+             "-e", "0.000001",
+             "-s", "20", 
+             "-i", input_blast_results,
+             "-d", ref_blast_db
+           ]
+
+    MetaPathways_rRNA_stats_calculator.main(args)
+    assert compare_lines_in_files(output_lsu_rRNA_stats, expected_output_lsu_rRNA_stats, sort_n_compare = True)
+
+    """ Test the BLAST output """
+    ref_blast_db_formatted = os.path.join(_test_data_dir, 
+                                          "ref_data",
+                                          "taxonomic",
+                                          "formatted",
+                                          "silva-lsu-small-sample"
+                                          )
+
+    input_contigs = os.path.join(_test_data_dir, 
+                                         _test_sample_name, 
+                                         "output", 
+                                         _test_sample_name, 
+                                         'preprocessed', 
+                                         _test_sample_name + ".fasta"
+                                        )
+
+
+    expected_output_blast_results = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "blast_results", 
+                                       _test_sample_name + ".rRNA.silva-lsu-small-sample.BLASTout"
+                                      )
+
+    output_blast_results = os.path.join(out_folder_name, 
+                                        _test_sample_name, 
+                                        "blast_results",
+                                         _test_sample_name + ".rRNA.silva-lsu-small-sample.BLASTout"
+                                       )
+
+    blast_args = [ 
+             "blastn",
+             "-outfmt", "6",
+             "-num_threads", "8",
+             "-query", input_contigs, 
+             "-out",  output_blast_results,
+             "-db", ref_blast_db_formatted,
+             "-max_target_seqs", '5'
+            ]
+
+    result = sysutils.getstatusoutput(' '.join(blast_args))
+    assert compare_lines_in_files(output_blast_results, expected_output_blast_results, sort_n_compare = True)
+
+def test_tRNA_scan(tmpdir):
+    from metapathways import MetaPathways_tRNA_scan 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    input_contigs = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "preprocessed", 
+                                        _test_sample_name + ".fasta"
+                                      )
+
+    TPCsignal = os.path.join(_test_data_dir, "ref_data", "TPCsignal")
+    Dsignal = os.path.join(_test_data_dir, "ref_data", "Dsignal")
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "tRNA"), exist_ok = True)
+
+    output_tRNA_stats = os.path.join(out_folder_name, 
+                                             _test_sample_name, 
+                                             "results",
+                                             "tRNA", 
+                                             _test_sample_name + ".tRNA.stats.txt"
+                                            )
+
+    expected_output_tRNA_stats = os.path.join(_test_data_dir, 
+                                              _test_sample_name, 
+                                              "output", 
+                                              _test_sample_name, 
+                                              "results",
+                                              "tRNA", 
+                                              _test_sample_name + ".tRNA.stats.txt"
+                                             )
+     
+    output_tRNA_fasta = os.path.join(out_folder_name, 
+                                     _test_sample_name, 
+                                     "results",
+                                     "tRNA", 
+                                     _test_sample_name + ".tRNA.fasta"
+                                    )
+
+    expected_output_tRNA_fasta = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output", 
+                                             _test_sample_name, 
+                                             "results",
+                                             "rRNA", 
+                                             _test_sample_name + ".tRNA.fasta"
+                                             )
+     
+    args = [ 
+             "--executable", "trnascan-1.4",
+             "-T", TPCsignal,
+             "-D", Dsignal,
+             "-F", output_tRNA_fasta,
+             "-i", input_contigs,
+             "-o",  output_tRNA_stats
+            ]
+
+    MetaPathways_tRNA_scan.main(args)
+    assert compare_lines_in_files(output_tRNA_stats, expected_output_tRNA_stats, sort_n_compare = True)
+    
+    assert compare_fasta_files(output_tRNA_fasta, expected_output_tRNA_fasta, sort_n_compare = True)
+
+def test_rpkm(tmpdir):
+    from metapathways import MetaPathways_rpkm 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    input_contigs = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "preprocessed", 
+                                        _test_sample_name + ".fasta"
+                                      )
+    input_reads = os.path.join(_test_data_dir, 
+                               _test_sample_name, 
+                               "input", 
+                               "reads" 
+                              )
+
+
+    input_gff = os.path.join(_test_data_dir, 
+                             _test_sample_name, 
+                             "output", 
+                             _test_sample_name, 
+                             "genbank", 
+                             _test_sample_name + ".annot.gff"
+                            )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "rpkm"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "bwa"), exist_ok = True)
+
+    output_orf_rpkm = os.path.join(out_folder_name, 
+                                   _test_sample_name, 
+                                   "results",
+                                   "rpkm", 
+                                   _test_sample_name + ".orf_rpkm.txt"
+                                  )
+
+    expected_output_orf_rpkm = os.path.join(_test_data_dir, 
+                                     _test_sample_name, 
+                                     "output", 
+                                     _test_sample_name, 
+                                     "results",
+                                     "rpkm", 
+                                     _test_sample_name + ".orf_rpkm.txt"
+                                    )
+
+    output_rpkm_stats = os.path.join(out_folder_name, 
+                                     _test_sample_name, 
+                                     "results",
+                                     "rpkm", 
+                                     _test_sample_name + ".orf_rpkm.txt"
+                                    )
+
+    expected_output_rpkm_stats = os.path.join(_test_data_dir, 
+                                              _test_sample_name, 
+                                              "output", 
+                                              _test_sample_name, 
+                                              "results",
+                                              "rpkm", 
+                                              _test_sample_name + ".orf_rpkm.txt"
+                                             )
+     
+    output_bwa_folder = os.path.join(out_folder_name, 
+                                    _test_sample_name, 
+                                    "bwa"
+                                    )
+
+    args = [ 
+             "-c", input_contigs,
+             "--rpkmExec", "rpkm",
+             "--readsdir",  input_reads,
+             "-O", input_gff,
+             "-o", output_orf_rpkm,
+             "--sample_name", 'lagoon-sample',
+             "--stats",  output_rpkm_stats,
+             "--bwaFolder", output_bwa_folder,
+             "--bwaExec", "bwa",
+            ]
+
+    MetaPathways_rpkm.main(args)
+   
+    assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
+    assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
