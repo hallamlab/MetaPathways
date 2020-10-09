@@ -34,9 +34,7 @@ usage = (
 PATHDELIM = sysutils.pathDelim()
 errorcode = 16
 
-parser = None
 def createParser():
-    global parser
 
     epilog = """Report tables summarizing and listing the functional and taxonomic annotation for all the ORFs in a sample are computed.The results are dropped in the folder <output_dir>"""
     epilog = re.sub(r"\s+", " ", epilog)
@@ -261,6 +259,7 @@ def createParser():
     )
     parser.add_option_group(compact_io_options_group)
 
+    return parser
 
 def printlist(list, lim):
     i = 0
@@ -405,6 +404,7 @@ def create_annotation(
                     taxonomy = Taxons[shortORFId]
             else:
                 taxonomy = "root"
+
             product = orf["product"]  # leave product as it is
             # product = re.sub(r'\[{1,2}.+?\]{1,2}','', orf['product']).strip()
             # product = re.sub(r'\[[^\[]+?\]','', orf['product']).strip()
@@ -1282,10 +1282,11 @@ opts_global = ""
 
 # the main function
 def main(argv, errorlogger=None, runstatslogger=None):
-    global parser
+
+    parser = createParser()
+
     (opts, args) = parser.parse_args(argv)
-    global opts_global
-    opts_global = opts
+
     if not check_arguments(opts, args):
         print(usage)
         sys.exit(0)
@@ -1303,12 +1304,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
     gutils.checkOrCreateFolder(opts.output_dir)
 
     output_table_name = (
-        opts.output_dir + PATHDELIM + "functional_and_taxonomic_table.txt"
-    )
-    if path.exists(output_table_name):
-        remove(output_table_name)
-
-    output_table_name = (
         opts.output_dir
         + PATHDELIM
         + opts.sample_name
@@ -1317,12 +1312,15 @@ def main(argv, errorlogger=None, runstatslogger=None):
     if path.exists(output_table_name):
         remove(output_table_name)
 
-    output_table_file = open(output_table_name, "w")
-    gutils.fprintf(
-        output_table_file,
-        "ORF_ID\tORF_length\tstart\tend\tContig_Name\tContig_length\tstrand\tec\ttaxonomy\t     product\n",
-    )
-    output_table_file.close()
+    with open(output_table_name, "w") as output_table_file:
+        gutils.fprintf(
+                       output_table_file,
+                       '\t'.join(["ORF_ID", "ORF_length", "start", "end", 
+                       "Contig_Name", "Contig_length", 
+                       "strand", "ec", "taxonomy", "product"])+"\n"
+        )
+
+
     #    print "memory used  = %s" %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss /1000000)
     listOfOrfs = get_list_of_queries(opts.input_annotated_gff)
     listOfOrfs.sort(key=lambda tup: tup, reverse=False)
@@ -1772,9 +1770,6 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
             else:
                 row.append("")
 
-        #       print '\t'.join(headers)
-        #       print '\t'.join(row)
-
         # fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy)
         if addHeader:
             # fprintf(outputfile, "# %s\n", '\t'.join(headers)_"ORF_ID" + "\t" + "CONTIG_ID" + '\t' + "COG" + '\t' + "KEGG" +'\t' + "SEED" + '\t' + "CAZY" + '\t'+ "METACYC" + '\t' + "REFSEQ" )
@@ -1786,7 +1781,6 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
 
 
 def MetaPathways_create_reports_fast(argv, errorlogger=None, runstatslogger=None):
-    createParser()
     errorlogger.write("#STEP\tCREATE_ANNOT_REPORTS\n")
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
@@ -1799,5 +1793,5 @@ def MetaPathways_create_reports_fast(argv, errorlogger=None, runstatslogger=None
 
 # the main function of metapaths
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])

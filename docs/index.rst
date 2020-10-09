@@ -20,11 +20,9 @@ Welcome to MetaPathways's documentation!
 
    manual/phandi_overview
 
-
 .. toctree::
    :maxdepth: 2
    :caption: API References
-
 
 Indices and tables
 ==================

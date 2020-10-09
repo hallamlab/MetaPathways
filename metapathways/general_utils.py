@@ -477,7 +477,6 @@ import sys
 
 class FastaReader:
     """Parses a GenBank record from a string or file."""
-
     stop = False
     START_PATTERN = re.compile(r"^>")
     name = None

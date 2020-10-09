@@ -158,7 +158,6 @@ import os, signal
 
 TIME = 10
 
-
 def __StopPathwayTools():
     processPATT = re.compile(r"pathway-tools-runtime")
     for line in os.popen("ps xa"):

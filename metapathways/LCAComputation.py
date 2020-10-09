@@ -45,18 +45,18 @@ class LCAComputation:
         self.megan_map = {}  # hash between NCBI ID and taxonomic name name
         self.accession_to_taxon_map = {}  # hash between gi and taxon name
 
-
         for filename in filenames:
             filename_ = gutils.correct_filename_extension(filename)
-            self.loadtreefile(filename)
+            self.loadtreefile(filename_)
+
         if megan_map:
-            self.load_megan_map(megan_map)
+            megan_map_filename = gutils.correct_filename_extension(megan_map)
+            self.load_megan_map(megan_map_filename)
 
     def load_megan_map(self, megan_map_file):
         megan_map_file = gutils.correct_filename_extension(megan_map_file)
         with gzip.open(megan_map_file, 'rt') if megan_map_file.endswith('.gz') \
             else open(megan_map_file, 'r') as meganfin:
-
             for line in meganfin:
                 fields = line.split("\t")
                 fields = list(map(str.strip, fields))
@@ -92,7 +92,6 @@ class LCAComputation:
         tree_filename = gutils.correct_filename_extension(tree_filename)
         with gzip.open(tree_filename, 'rt') if tree_filename.endswith('.gz') \
             else open(tree_filename, 'r') as taxonomy_file:
-
             lines = taxonomy_file.readlines()
             for line in lines:
                 if self.begin_pattern.search(line):

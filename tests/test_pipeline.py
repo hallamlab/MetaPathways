@@ -18,8 +18,13 @@ class Sequence:
         return self.name == other.name and self.seq == other.seq 
   
 
+#    with open(file1, 'r') as fout, open(file2, 'r') as expfout:
 def compare_lines_in_files(file1, file2, sort_n_compare):
-    with open(file1, 'r') as fout, open(file2, 'r') as expfout:
+    with gzip.open(file1, 'r') if file1.endswith('.gz') \
+         else open(file1, 'r') as fout, \
+         gzip.open(file2, 'r') if file2.endswith('.gz') \
+         else open(file2, 'r') as expfout:
+
        if sort_n_compare:
            output_lines = sorted(fout.readlines())
            expected_output_lines = sorted(expfout.readlines())
@@ -540,9 +545,21 @@ def test_parse_blast(tmpdir):
     MetaPathways_parse_blast.main(args)
     assert compare_lines_in_files(output_parsed_blast_results, expected_output_parsed_blast_results, sort_n_compare = True)
 
+
+@pytest.fixture(params=[0, 1], ids=["spam", "ham"])
+def a(request):
+    #print('values', request.param)
+    #print('id', request.ids)
+    return request.param
+
+def test_a(a):
+    pass
+
+
 def test_rRNA_stats_calculator(tmpdir):
     from metapathways import MetaPathways_rRNA_stats_calculator 
     from metapathways import sysutil as sysutils
+
     out_folder_name = str(tmpdir)
     _test_sample_name = "lagoon-sample"
 
@@ -695,8 +712,134 @@ def test_tRNA_scan(tmpdir):
 
     MetaPathways_tRNA_scan.main(args)
     assert compare_lines_in_files(output_tRNA_stats, expected_output_tRNA_stats, sort_n_compare = True)
-    
     assert compare_fasta_files(output_tRNA_fasta, expected_output_tRNA_fasta, sort_n_compare = True)
+
+
+def test_create_reports_fast(tmpdir):
+    print("TODO:Create report fast")
+
+
+def test_annotate_fast(tmpdir):
+    print("TODO:Annotate fast")
+
+
+def test_create_genbank_ptinput(tmpdir):
+    print("TODO:Create genbank")
+
+def test_create_reports_fast(tmpdir):
+    print("TODO:Create report fast")
+    from metapathways import MetaPathways_create_reports_fast 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    input_annot_gff = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "genbank", 
+                                        _test_sample_name + ".annot.gff"
+                                      )
+
+    ref_kegg_maps = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "functional_categories",
+                                   "KO_classification.txt.gz" 
+                                   )
+
+    ref_cog_maps = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "functional_categories",
+                                   "COG_categories.txt.gz" 
+                                   )
+
+    ref_seed_maps = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "functional_categories",
+                                   "SEED_subsystems.txt.gz" 
+                                   )
+
+    ref_cazy_maps = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "functional_categories",
+                                   "CAZY_hierarchy.txt"
+                                   )
+
+    ref_ncbi_tree = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "ncbi_tree",
+                                   "ncbi_taxonomy_tree.txt"
+                                   )
+
+    ref_ncbi_maps = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "ncbi_tree",
+                                   "ncbi.map"
+                                   )
+
+    input_D =  os.path.join(_test_data_dir, 
+                            _test_sample_name, 
+                           "output", 
+                           _test_sample_name, 
+                           "blast_results/") 
+
+    output_dir = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "results",
+                             "annotation_table"
+                             )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "annotation_table"), exist_ok = True)
+
+    output_fun_and_tax = os.path.join(out_folder_name, 
+                                      _test_sample_name, 
+                                      "results",
+                                      "annotation_table",
+                                      _test_sample_name + ".functional_and_taxonomic_table.txt" 
+                                  )
+
+    expected_output_fun_and_tax = os.path.join(_test_data_dir, 
+                                      _test_sample_name, 
+                                      "output", 
+                                      _test_sample_name, 
+                                      "results",
+                                      "annotation_table",
+                                      _test_sample_name + ".functional_and_taxonomic_table.txt" 
+                                  )
+    output_ORF_and_annt = os.path.join(out_folder_name, 
+                                      _test_sample_name, 
+                                      "results",
+                                      "annotation_table",
+                                      _test_sample_name + ".ORF_annotation_table.txt" 
+                                  )
+
+    expected_output_ORF_and_annt = os.path.join(_test_data_dir, 
+                                      _test_sample_name, 
+                                      "output", 
+                                      _test_sample_name, 
+                                      "results",
+                                      "annotation_table",
+                                      _test_sample_name + ".ORF_annotation_table.txt" 
+                                  )
+
+ 
+    args = [ 
+             "--input-annotated-gff", input_annot_gff,
+             "--input-kegg-maps", ref_kegg_maps,
+             "--input-cog-maps", ref_cog_maps,
+             "--input-seed-maps", ref_seed_maps,
+             "--output-dir",  output_dir,
+             "--ncbi-taxonomy-map", ref_ncbi_tree,
+             "--ncbi-megan-map", ref_ncbi_maps,
+             "-D",  input_D,
+             "-s", 'lagoon-sample',
+             "-a",  "BLAST"
+            ]
+
+    MetaPathways_create_reports_fast.main(args)
+
+    assert compare_lines_in_files(output_ORF_and_annt, expected_output_ORF_and_annt, sort_n_compare = True)
+    assert compare_lines_in_files(output_fun_and_tax, expected_output_fun_and_tax, sort_n_compare = True)
+
 
 def test_rpkm(tmpdir):
     from metapathways import MetaPathways_rpkm 
@@ -781,3 +924,6 @@ def test_rpkm(tmpdir):
    
     assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
     assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
+
+
+
