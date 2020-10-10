@@ -29,13 +29,9 @@ usage = (
     sys.argv[0]
     + """ -d dbname1 -b parsed_blastout_for_database1 -w weight_for_database1 [-d dbname2 -b parsed_blastout_for_database2 -w weight_for_database2 ] [ --rRNA_16S  16SrRNA-stats-table ] [ --tRNA tRNA-stats-table ] [ --compact_output ]"""
 )
-parser = None
 
 errrocode = 8
-
-
 def createParser():
-    global parser
     epilog = """Based on the parsed homology search results against reference protein databases,
                tRNA scan results and matches against the LSU and SSU rRNA sequence databases
                annotations for individual ORFs are created.
@@ -217,6 +213,7 @@ def createParser():
         metavar="INPUT",
         help="Unannotated gff file [REQUIRED]",
     )
+    return parser
 
 
 def check_arguments(opts, args):
@@ -1265,7 +1262,7 @@ def getBlastFileNames(opts):
 
 # the main function
 def main(argv, errorlogger=None, runstatslogger=None):
-    global parser
+    parser = createParser()
     (opts, args) = parser.parse_args(argv)
 
     if not check_arguments(opts, args):
@@ -1331,7 +1328,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
 
 def MetaPathways_annotate_fast(argv, errorlogger=None, runstatslogger=None):
-    createParser()
     errorlogger.write("#STEP\tANNOTATE_ORFS\n")
     try:
         main(argv, errorlogger=errorlogger, runstatslogger=runstatslogger)
@@ -1344,5 +1340,5 @@ def MetaPathways_annotate_fast(argv, errorlogger=None, runstatslogger=None):
 
 # the main function of metapaths
 if __name__ == "__main__":
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])

@@ -32,6 +32,56 @@ except:
 
 PATHDELIM = sysutils.pathDelim()
 
+def createParser():
+    epilog = """This script has three functions : (i) The functional and taxonomic annotations created for the individual ORFs are used to create the inputs required by the Pathway-Tools's Pathologic algorithm to build the ePGDBs. The input consists of 4 files that contains functional annotations and sequences with relevant information, this information is used by Pathologic to create the ePGDBs. (ii) It can create a genbank file for the ORFs and their annotationsequi"""
+    epilog = re.sub(r'\s+', ' ', epilog)
+
+    parser = optparse.OptionParser(usage=usage, epilog = epilog)
+
+    # Input options
+
+    input_group = optparse.OptionGroup(parser, 'input options')
+
+    input_group.add_option('-g', '--gff', dest='gff_file',
+                           metavar='GFF_FILE',
+                           help='GFF files, with annotations,  to convert to genbank format')
+
+    input_group.add_option('-n', '--nucleotide', dest='nucleotide_sequences',
+                           metavar='NUCLEOTIDE_SEQUENCE',
+                           help='Nucleotide sequences')
+
+    input_group.add_option('-p', '--protein', dest='protein_sequences',
+                           metavar='PROTEIN_SEQUENCE',
+                           help='Protein sequences')
+
+
+    input_group.add_option('-o', '--output', dest='output',
+                           metavar='OUTPUT', help='Genbank file')
+
+    parser.add_option_group(input_group)
+
+    output_options_group =  optparse.OptionGroup(parser, 'Output Options')
+
+    output_options_group.add_option("--out-gbk", dest="gbk_file", default = None,
+                     help='option to create a genbank file')
+
+    output_options_group.add_option("--ncbi-tree", dest="ncbi_taxonomy_tree",  default=None,
+                       help='add the ncbi taxonomy tree ')
+
+    output_options_group.add_option("--taxonomy-table", dest="taxonomy_table",  default=None,
+                       help='table with taxonomy')
+
+
+    output_options_group.add_option("--out-ptinput", dest="ptinput_file",  default=None,
+                     help='option and directory  to create ptools input files')
+
+    output_options_group.add_option("--compact-output", dest="compact_output",  default=True, action='store_true',
+                     help='option to create compact orfid names')
+
+    parser.add_option_group(output_options_group)
+
+    return parser
+
 def insert_attribute(attributes, attribStr):
      rawfields = re.split('=', attribStr)
      if len(rawfields) == 2:
@@ -727,9 +777,6 @@ def process_sequence_file(sequence_file_name,  seq_dictionary, shortorfid=False)
 
 
 usage =  sys.argv[0] + """ -g gff_files -n nucleotide_sequences -p protein_sequences [--out-gbk gbkfile --out-ptinput ptinputdir]\n"""
-
-parser = None
-
 def read_taxons_for_orfs(ncbi_taxonomy_tree, taxonomy_table):
     num = 20
     if not path.exists(ncbi_taxonomy_tree):
@@ -767,62 +814,11 @@ def read_taxons_for_orfs(ncbi_taxonomy_tree, taxonomy_table):
 
     return orf_to_taxonid
 
-
-def createParser():
-    global parser
-    epilog = """This script has three functions : (i) The functional and taxonomic annotations created for the individual ORFs are used to create the inputs required by the Pathway-Tools's Pathologic algorithm to build the ePGDBs. The input consists of 4 files that contains functional annotations and sequences with relevant information, this information is used by Pathologic to create the ePGDBs. (ii) It can create a genbank file for the ORFs and their annotationsequi"""
-    epilog = re.sub(r'\s+', ' ', epilog)
-
-    parser = optparse.OptionParser(usage=usage, epilog = epilog)
-
-    # Input options
-
-    input_group = optparse.OptionGroup(parser, 'input options')
-
-    input_group.add_option('-g', '--gff', dest='gff_file',
-                           metavar='GFF_FILE',
-                           help='GFF files, with annotations,  to convert to genbank format')
-
-    input_group.add_option('-n', '--nucleotide', dest='nucleotide_sequences',
-                           metavar='NUCLEOTIDE_SEQUENCE',
-                           help='Nucleotide sequences')
-
-    input_group.add_option('-p', '--protein', dest='protein_sequences',
-                           metavar='PROTEIN_SEQUENCE',
-                           help='Protein sequences')
-
-
-    input_group.add_option('-o', '--output', dest='output',
-                           metavar='OUTPUT', help='Genbank file')
-
-    parser.add_option_group(input_group)
-
-    output_options_group =  optparse.OptionGroup(parser, 'Output Options')
-
-    output_options_group.add_option("--out-gbk", dest="gbk_file", default = None,
-                     help='option to create a genbank file')
-
-    output_options_group.add_option("--ncbi-tree", dest="ncbi_taxonomy_tree",  default=None,
-                       help='add the ncbi taxonomy tree ')
-
-    output_options_group.add_option("--taxonomy-table", dest="taxonomy_table",  default=None,
-                       help='table with taxonomy')
-
-
-    output_options_group.add_option("--out-ptinput", dest="ptinput_file",  default=None,
-                     help='option and directory  to create ptools input files')
-
-    output_options_group.add_option("--compact-output", dest="compact_output",  default=True, action='store_true',
-                     help='option to create compact orfid names')
-
-    parser.add_option_group(output_options_group)
-
-
 def main(argv, errorlogger = None, runstatslogger = None):
     # Parse options (many!)
     # TODO: Create option groups
     # filtering options
-    global parser, errorcode
+    parser = createParser()
     options, args = parser.parse_args(argv)
 
     if not(options.gff_file or options.nucleotide_sequences or options.protein_sequences or options.output):
@@ -885,7 +881,6 @@ def main(argv, errorlogger = None, runstatslogger = None):
       gutils.createDummyFile(options.ptinput_file + PATHDELIM + sample_name + ".dummy.txt")
 
 def MetaPathways_create_genbank_ptinput(argv, errorlogger = None, runstatslogger = None):
-    createParser()
     global errorcode
     try:
        main(argv, errorlogger = errorlogger, runstatslogger = runstatslogger)
@@ -896,7 +891,7 @@ def MetaPathways_create_genbank_ptinput(argv, errorlogger = None, runstatslogger
     return (0,'')
 
 if __name__ == '__main__':
-    createParser()
-    main(sys.argv[1:])
+    if len(sys.argv) > 1:
+        main(sys.argv[1:])
 
 

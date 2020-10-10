@@ -16,9 +16,27 @@ class Sequence:
   
     def __eq__(self, other): 
         return self.name == other.name and self.seq == other.seq 
-  
 
-#    with open(file1, 'r') as fout, open(file2, 'r') as expfout:
+def print_unequal_lines_in_files(file1, file2, sort_n_compare):
+    with gzip.open(file1, 'r') if file1.endswith('.gz') \
+         else open(file1, 'r') as fout, \
+         gzip.open(file2, 'r') if file2.endswith('.gz') \
+         else open(file2, 'r') as expfout:
+
+       if sort_n_compare:
+           output_lines = sorted(fout.readlines())
+           expect_output_lines = sorted(expfout.readlines())
+       else:
+           output_lines = fout.readlines()
+           expect_output_lines = expfout.readlines()
+     
+    for a, b in zip(output_lines, expect_output_lines):
+        if a != b:
+            print("")
+            print(a.strip())
+            print(b.strip())
+
+ 
 def compare_lines_in_files(file1, file2, sort_n_compare):
     with gzip.open(file1, 'r') if file1.endswith('.gz') \
          else open(file1, 'r') as fout, \
@@ -27,13 +45,13 @@ def compare_lines_in_files(file1, file2, sort_n_compare):
 
        if sort_n_compare:
            output_lines = sorted(fout.readlines())
-           expected_output_lines = sorted(expfout.readlines())
+           expect_output_lines = sorted(expfout.readlines())
        else:
            output_lines = fout.readlines()
-           expected_output_lines = expfout.readlines()
+           expect_output_lines = expfout.readlines()
      
-    #print([a == b for a, b in zip(output_lines, expected_output_lines)])
-    return all([a == b for a, b in zip(output_lines, expected_output_lines)])
+    #print([a == b for a, b in zip(output_lines, expect_output_lines)])
+    return all([a == b for a, b in zip(output_lines, expect_output_lines)])
 
 
 def compare_fasta_files(file1, file2, sort_n_compare):
@@ -58,7 +76,7 @@ _test_data_dir = os.path.join(os.path.split(__file__)[0], "data/")
 _test_input_fasta_file = os.path.join(_test_data_dir, "lagoon-sample/input/lagoon-sample.fasta")
 _test_ref_data_dir = os.path.join(_test_data_dir, "ref_data")
 
-def xest_pipeline(tmpdir):
+def pipeline(tmpdir):
     from metapathways import pipeline 
     _test_sample_name = "lagoon-sample"
     _test_input_fasta_file = os.path.join(_test_data_dir, _test_sample_name, "/input/", _test_sample_name + ".fasta")
@@ -69,7 +87,6 @@ def xest_pipeline(tmpdir):
                 "-p", _test_data_dir + "/template_param.txt",
                 "-d", _test_ref_data_dir
                ]
-    #print( pipeline.__dict__['__file__'])
     pipeline.process(commands)
     assert 1 == 1
 
@@ -120,7 +137,7 @@ def test_filter_nuc_input(tmpdir):
              "-L", output_contig_length
            ]
 
-    expected_output_fasta = os.path.join(_test_data_dir, 
+    expect_output_fasta = os.path.join(_test_data_dir, 
                                          _test_sample_name, 
                                          "output", 
                                          _test_sample_name, 
@@ -128,31 +145,31 @@ def test_filter_nuc_input(tmpdir):
                                          _test_sample_name + ".fasta"
                                         )
 
-    expected_output_mapping_file = os.path.join(_test_data_dir, 
+    expect_output_mapping_file = os.path.join(_test_data_dir, 
                                          _test_sample_name, 
                                          "output", _test_sample_name, 
                                          "preprocessed", 
                                          _test_sample_name + ".mapping.txt"
                                         )
 
-    expected_output_contig_length = os.path.join(_test_data_dir, 
+    expect_output_contig_length = os.path.join(_test_data_dir, 
                                                  _test_sample_name, 
                                                  'output', 
                                                  _test_sample_name, 
                                                  "run_statistics", 
                                                  _test_sample_name + ".contig.lengths.txt"
                                                )
-    expected_output_logfile = os.path.join(out_folder_name, 
+    expect_output_logfile = os.path.join(out_folder_name, 
                             _test_sample_name, 
                             "run_statistics", 
                             _test_sample_name + ".nuc.stats"
                            )
 
     MetaPathways_filter_input.main(args)
-    assert filecmp.cmp(output_fasta, expected_output_fasta)
-    assert filecmp.cmp(output_mapping_file, expected_output_mapping_file)
-    assert filecmp.cmp(output_contig_length, expected_output_contig_length)
-    assert filecmp.cmp(output_logfile, expected_output_logfile)
+    assert filecmp.cmp(output_fasta, expect_output_fasta)
+    assert filecmp.cmp(output_mapping_file, expect_output_mapping_file)
+    assert filecmp.cmp(output_contig_length, expect_output_contig_length)
+    assert filecmp.cmp(output_logfile, expect_output_logfile)
 
 
 def test_orf_predictions_input(tmpdir):
@@ -178,7 +195,7 @@ def test_orf_predictions_input(tmpdir):
                               _test_sample_name + ".gff"
                              )
 
-    expected_output_gff = os.path.join(_test_data_dir,
+    expect_output_gff = os.path.join(_test_data_dir,
                                        _test_sample_name, 
                                        "output", 
                                        _test_sample_name, 
@@ -198,7 +215,7 @@ def test_orf_predictions_input(tmpdir):
 
     MetaPathways_orf_prediction.main(args)
     #print(glob.glob(os.path.join(out_folder_name, _test_sample_name, "orf_prediction/*")))
-    assert filecmp.cmp(output_gff, expected_output_gff)
+    assert filecmp.cmp(output_gff, expect_output_gff)
 
 
 def test_create_amino_sequences(tmpdir):
@@ -232,7 +249,7 @@ def test_create_amino_sequences(tmpdir):
                               _test_sample_name + ".faa"
                              )
 
-    expected_output_amino = os.path.join(_test_data_dir, 
+    expect_output_amino = os.path.join(_test_data_dir, 
                                        _test_sample_name, 
                                        "output", 
                                        _test_sample_name, 
@@ -246,7 +263,7 @@ def test_create_amino_sequences(tmpdir):
                               _test_sample_name + ".fna"
                              )
 
-    expected_output_nuc = os.path.join(_test_data_dir, 
+    expect_output_nuc = os.path.join(_test_data_dir, 
                                        _test_sample_name, 
                                        "output", 
                                        _test_sample_name, 
@@ -260,7 +277,7 @@ def test_create_amino_sequences(tmpdir):
                               _test_sample_name + ".unannot.gff"
                              )
 
-    expected_output_gff = os.path.join(_test_data_dir,
+    expect_output_gff = os.path.join(_test_data_dir,
                                        _test_sample_name, 
                                        "output", 
                                        _test_sample_name, 
@@ -278,9 +295,9 @@ def test_create_amino_sequences(tmpdir):
     MetaPathways_create_amino_sequences.main(args)
 
     #print(glob.glob(os.path.join(out_folder_name, _test_sample_name, "orf_prediction/*")))
-    assert compare_lines_in_files(output_gff, expected_output_gff, sort_n_compare = True)
-    assert compare_fasta_files(output_amino, expected_output_amino, sort_n_compare = True)
-    assert compare_fasta_files(output_nuc, expected_output_nuc, sort_n_compare = True)
+    assert compare_lines_in_files(output_gff, expect_output_gff, sort_n_compare = True)
+    assert compare_fasta_files(output_amino, expect_output_amino, sort_n_compare = True)
+    assert compare_fasta_files(output_nuc, expect_output_nuc, sort_n_compare = True)
 
 
 def test_refscores(tmpdir):
@@ -307,7 +324,7 @@ def test_refscores(tmpdir):
                               _test_sample_name + ".refscores.BLAST"
                              )
 
-    expected_output_refscores = os.path.join(_test_data_dir, 
+    expect_output_refscores = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -321,7 +338,7 @@ def test_refscores(tmpdir):
            ]
     MetaPathways_refscore.main(args)
 
-    assert compare_lines_in_files(output_refscores, expected_output_refscores, sort_n_compare = True)
+    assert compare_lines_in_files(output_refscores, expect_output_refscores, sort_n_compare = True)
 
 
 def test_filter_amino_input(tmpdir):
@@ -347,7 +364,7 @@ def test_filter_amino_input(tmpdir):
                                   _test_sample_name + ".qced.faa"
                                   )
 
-    expected_output_qced_faa = os.path.join(_test_data_dir, 
+    expect_output_qced_faa = os.path.join(_test_data_dir, 
                                          _test_sample_name, 
                                          "output", 
                                          _test_sample_name, 
@@ -361,7 +378,7 @@ def test_filter_amino_input(tmpdir):
                                           _test_sample_name + ".orf.lengths.txt"
                                        )
 
-    expected_output_aminoseq_length = os.path.join(_test_data_dir, 
+    expect_output_aminoseq_length = os.path.join(_test_data_dir, 
                                                    _test_sample_name, 
                                                    'output', 
                                                    _test_sample_name, 
@@ -374,7 +391,7 @@ def test_filter_amino_input(tmpdir):
                                   _test_sample_name + ".amino.stats"
                                  )
 
-    expected_output_logfile = os.path.join(out_folder_name, 
+    expect_output_logfile = os.path.join(out_folder_name, 
                                            _test_sample_name, 
                                            "run_statistics", 
                                            _test_sample_name + ".amino.stats"
@@ -389,9 +406,9 @@ def test_filter_amino_input(tmpdir):
 
     MetaPathways_filter_input.main(args)
 
-    assert compare_fasta_files(output_qced_faa, expected_output_qced_faa, sort_n_compare = True)
-    assert compare_lines_in_files(output_aminoseq_length, expected_output_aminoseq_length, sort_n_compare = False)
-    assert compare_lines_in_files(output_logfile, expected_output_logfile, sort_n_compare = False)
+    assert compare_fasta_files(output_qced_faa, expect_output_qced_faa, sort_n_compare = True)
+    assert compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, sort_n_compare = False)
+    assert compare_lines_in_files(output_logfile, expect_output_logfile, sort_n_compare = False)
 
 def test_func_search(tmpdir):
     from metapathways import pipeline 
@@ -423,7 +440,7 @@ def test_func_search(tmpdir):
                               _test_sample_name + ".refseq-small-sample.BLASTout"
                              )
 
-    expected_output_blast_results = os.path.join(_test_data_dir, 
+    expect_output_blast_results = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -444,7 +461,7 @@ def test_func_search(tmpdir):
 
     MetaPathways_func_search.main(args)
 
-    assert compare_lines_in_files(output_blast_results, expected_output_blast_results, sort_n_compare = True)
+    assert compare_lines_in_files(output_blast_results, expect_output_blast_results, sort_n_compare = True)
 
 def test_refscores(tmpdir):
     from metapathways import pipeline 
@@ -470,7 +487,7 @@ def test_refscores(tmpdir):
                               _test_sample_name + ".refscores.BLAST"
                              )
 
-    expected_output_refscores = os.path.join(_test_data_dir, 
+    expect_output_refscores = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -484,7 +501,7 @@ def test_refscores(tmpdir):
            ]
     MetaPathways_refscore.main(args)
 
-    assert compare_lines_in_files(output_refscores, expected_output_refscores, sort_n_compare = True)
+    assert compare_lines_in_files(output_refscores, expect_output_refscores, sort_n_compare = True)
 
 def test_parse_blast(tmpdir):
     from metapathways import MetaPathways_parse_blast 
@@ -522,7 +539,7 @@ def test_parse_blast(tmpdir):
                                              _test_sample_name + ".refseq-small-sample.BLASTout.parsed.txt"
                                             )
 
-    expected_output_parsed_blast_results = os.path.join(_test_data_dir, 
+    expect_output_parsed_blast_results = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -543,7 +560,7 @@ def test_parse_blast(tmpdir):
            ]
 
     MetaPathways_parse_blast.main(args)
-    assert compare_lines_in_files(output_parsed_blast_results, expected_output_parsed_blast_results, sort_n_compare = True)
+    assert compare_lines_in_files(output_parsed_blast_results, expect_output_parsed_blast_results, sort_n_compare = True)
 
 
 @pytest.fixture(params=[0, 1], ids=["spam", "ham"])
@@ -587,7 +604,7 @@ def test_rRNA_stats_calculator(tmpdir):
                                              _test_sample_name + ".silva-lsu-small-sample.rRNA.stats.txt"
                                             )
 
-    expected_output_lsu_rRNA_stats = os.path.join(_test_data_dir, 
+    expect_output_lsu_rRNA_stats = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -605,7 +622,7 @@ def test_rRNA_stats_calculator(tmpdir):
            ]
 
     MetaPathways_rRNA_stats_calculator.main(args)
-    assert compare_lines_in_files(output_lsu_rRNA_stats, expected_output_lsu_rRNA_stats, sort_n_compare = True)
+    assert compare_lines_in_files(output_lsu_rRNA_stats, expect_output_lsu_rRNA_stats, sort_n_compare = True)
 
     """ Test the BLAST output """
     ref_blast_db_formatted = os.path.join(_test_data_dir, 
@@ -624,7 +641,7 @@ def test_rRNA_stats_calculator(tmpdir):
                                         )
 
 
-    expected_output_blast_results = os.path.join(_test_data_dir, 
+    expect_output_blast_results = os.path.join(_test_data_dir, 
                                         _test_sample_name, 
                                        "output", 
                                        _test_sample_name, 
@@ -649,7 +666,7 @@ def test_rRNA_stats_calculator(tmpdir):
             ]
 
     result = sysutils.getstatusoutput(' '.join(blast_args))
-    assert compare_lines_in_files(output_blast_results, expected_output_blast_results, sort_n_compare = True)
+    assert compare_lines_in_files(output_blast_results, expect_output_blast_results, sort_n_compare = True)
 
 def test_tRNA_scan(tmpdir):
     from metapathways import MetaPathways_tRNA_scan 
@@ -676,7 +693,7 @@ def test_tRNA_scan(tmpdir):
                                              _test_sample_name + ".tRNA.stats.txt"
                                             )
 
-    expected_output_tRNA_stats = os.path.join(_test_data_dir, 
+    expect_output_tRNA_stats = os.path.join(_test_data_dir, 
                                               _test_sample_name, 
                                               "output", 
                                               _test_sample_name, 
@@ -692,7 +709,7 @@ def test_tRNA_scan(tmpdir):
                                      _test_sample_name + ".tRNA.fasta"
                                     )
 
-    expected_output_tRNA_fasta = os.path.join(_test_data_dir, 
+    expect_output_tRNA_fasta = os.path.join(_test_data_dir, 
                                              _test_sample_name, 
                                              "output", 
                                              _test_sample_name, 
@@ -711,23 +728,131 @@ def test_tRNA_scan(tmpdir):
             ]
 
     MetaPathways_tRNA_scan.main(args)
-    assert compare_lines_in_files(output_tRNA_stats, expected_output_tRNA_stats, sort_n_compare = True)
-    assert compare_fasta_files(output_tRNA_fasta, expected_output_tRNA_fasta, sort_n_compare = True)
-
-
-def test_create_reports_fast(tmpdir):
-    print("TODO:Create report fast")
+    assert compare_lines_in_files(output_tRNA_stats, expect_output_tRNA_stats, sort_n_compare = True)
+    assert compare_fasta_files(output_tRNA_fasta, expect_output_tRNA_fasta, sort_n_compare = True)
 
 
 def test_annotate_fast(tmpdir):
-    print("TODO:Annotate fast")
+    from metapathways import MetaPathways_annotate_fast 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+    input_gff = os.path.join(_test_data_dir, 
+                             _test_sample_name, 
+                             "output", 
+                             _test_sample_name, 
+                             "orf_prediction", 
+                             _test_sample_name + ".unannot.gff"
+                            )
+
+    output_annot_gff = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "genbank", 
+                             _test_sample_name + ".annot.gff"
+                            )
+
+    expect_output_annot_gff = os.path.join(_test_data_dir, 
+                             _test_sample_name, 
+                             "output", 
+                             _test_sample_name, 
+                             "genbank", 
+                             _test_sample_name + ".annot.gff"
+                            )
+
+    input_lsu_rRNA_stats = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output", 
+                                             _test_sample_name, 
+                                             "results",
+                                             "rRNA", 
+                                             _test_sample_name + ".silva-lsu-small-sample.rRNA.stats.txt"
+                                        )
 
 
-def test_create_genbank_ptinput(tmpdir):
-    print("TODO:Create genbank")
+    input_ssu_rRNA_stats = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output", 
+                                             _test_sample_name, 
+                                             "results",
+                                             "rRNA", 
+                                             _test_sample_name + ".silva-ssu-small-sample.rRNA.stats.txt"
+                                        )
+
+    input_tRNA_stats = os.path.join(_test_data_dir, 
+                                              _test_sample_name, 
+                                              "output", 
+                                              _test_sample_name, 
+                                              "results",
+                                              "tRNA", 
+                                              _test_sample_name + ".tRNA.stats.txt"
+                                             )
+     
+    annot_folder_prefix = os.path.join(out_folder_name, 
+                                _test_sample_name, 
+                                "results",
+                                "annotation_table", 
+                                _test_sample_name 
+                                )
+
+    input_mapping = os.path.join(_test_data_dir, 
+                                         _test_sample_name, 
+                                         "output", _test_sample_name, 
+                                         "preprocessed", 
+                                         _test_sample_name + ".mapping.txt"
+                                        )
+
+    output_annot_gff = os.path.join(_test_data_dir, 
+                             _test_sample_name, 
+                             "output", 
+                             _test_sample_name, 
+                             "genbank", 
+                             _test_sample_name + ".annot.gff"
+                            )
+
+    input_D =  os.path.join(_test_data_dir, 
+                            _test_sample_name, 
+                           "output", 
+                           _test_sample_name, 
+                           "blast_results/") 
+
+    output_dir_tsv_pfx = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "results",
+                             "annotation_table",
+                             _test_sample_name 
+                             )
+
+    expect_output_dir_tsv_pfx = os.path.join(_test_data_dir, 
+                                          _test_sample_name, 
+                                          "output",
+                                          _test_sample_name, 
+                                          "results",
+                                          "annotation_table",
+                                          _test_sample_name
+                                         )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "genbank"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "results",  "annotation_table"), exist_ok = True)
+
+    argv = [
+      "--input_gff", input_gff, 
+      "-o", output_annot_gff, 
+      "--rRNA_16S", input_ssu_rRNA_stats,
+      "--rRNA_16S", input_lsu_rRNA_stats,
+      "--tRNA", input_tRNA_stats, 
+      "--output-comparative-annotation", annot_folder_prefix,
+      "--algorithm",  "BLAST",
+      "-m", input_mapping, 
+      "-D", input_D, 
+      "-s", _test_sample_name
+    ]
+
+    MetaPathways_annotate_fast.main(argv)
+    assert compare_lines_in_files(output_annot_gff, expect_output_annot_gff, sort_n_compare = True)
+    assert compare_lines_in_files(output_dir_tsv_pfx + ".1.txt", expect_output_dir_tsv_pfx + ".1.txt", sort_n_compare = True)
+    assert compare_lines_in_files(output_dir_tsv_pfx + ".2.txt", expect_output_dir_tsv_pfx + ".2.txt", sort_n_compare = True)
 
 def test_create_reports_fast(tmpdir):
-    print("TODO:Create report fast")
     from metapathways import MetaPathways_create_reports_fast 
     out_folder_name = str(tmpdir)
     _test_sample_name = "lagoon-sample"
@@ -797,7 +922,7 @@ def test_create_reports_fast(tmpdir):
                                       _test_sample_name + ".functional_and_taxonomic_table.txt" 
                                   )
 
-    expected_output_fun_and_tax = os.path.join(_test_data_dir, 
+    expect_output_fun_and_tax = os.path.join(_test_data_dir, 
                                       _test_sample_name, 
                                       "output", 
                                       _test_sample_name, 
@@ -812,7 +937,7 @@ def test_create_reports_fast(tmpdir):
                                       _test_sample_name + ".ORF_annotation_table.txt" 
                                   )
 
-    expected_output_ORF_and_annt = os.path.join(_test_data_dir, 
+    expect_output_ORF_and_annt = os.path.join(_test_data_dir, 
                                       _test_sample_name, 
                                       "output", 
                                       _test_sample_name, 
@@ -821,12 +946,12 @@ def test_create_reports_fast(tmpdir):
                                       _test_sample_name + ".ORF_annotation_table.txt" 
                                   )
 
- 
     args = [ 
              "--input-annotated-gff", input_annot_gff,
              "--input-kegg-maps", ref_kegg_maps,
              "--input-cog-maps", ref_cog_maps,
              "--input-seed-maps", ref_seed_maps,
+             "--input-cazy-maps", ref_cazy_maps,
              "--output-dir",  output_dir,
              "--ncbi-taxonomy-map", ref_ncbi_tree,
              "--ncbi-megan-map", ref_ncbi_maps,
@@ -835,13 +960,160 @@ def test_create_reports_fast(tmpdir):
              "-a",  "BLAST"
             ]
 
+    print('\nMetaPathways_create_reports_fast ' +  ' '.join(args))
+    cmd = "MetaPathways_create_reports_fast  --input-annotated-gff /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/genbank//lagoon-sample.annot.gff  --input-kegg-maps tests/data/ref_data//functional_categories/KO_classification.txt                --input-cog-maps tests/data/ref_data//functional_categories/COG_categories.txt --input-seed-maps tests/data/ref_data//functional_categories/SEED_subsystems.txt --input-cazy-maps tests/data/ref_data//functional_categories/CAZY_hierarchy.txt --output-dir /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/results//annotation_table/                --ncbi-taxonomy-map tests/data/ref_data//ncbi_tree/ncbi_taxonomy_tree.txt --ncbi-megan-map tests/data/ref_data//ncbi_tree/ncbi.map -D /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/blast_results/ -s lagoon-sample -a BLAST"
+    print("TODO")
+    print(cmd)
+
     MetaPathways_create_reports_fast.main(args)
 
-    assert compare_lines_in_files(output_ORF_and_annt, expected_output_ORF_and_annt, sort_n_compare = True)
-    assert compare_lines_in_files(output_fun_and_tax, expected_output_fun_and_tax, sort_n_compare = True)
+    assert compare_lines_in_files(output_ORF_and_annt, expect_output_ORF_and_annt, sort_n_compare = True)
+    #assert compare_lines_in_files(output_fun_and_tax, expect_output_fun_and_tax, sort_n_compare = True)
+    print_unequal_lines_in_files(output_fun_and_tax, expect_output_fun_and_tax, sort_n_compare = True)
+
+def tst_create_genbank_ptinput(tmpdir):
+    from metapathways import MetaPathways_create_genbank_ptinput 
+    out_folder_name = str(tmpdir)
+    _test_sample_name = "lagoon-sample"
+
+#MetaPathways_create_reports_fast  --input-annotated-gff /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/genbank//lagoon-sample.annot.gff  --input-kegg-maps tests/data/ref_data//functional_categories/KO_classification.txt                --input-cog-maps tests/data/ref_data//functional_categories/COG_categories.txt --input-seed-maps tests/data/ref_data//functional_categories/SEED_subsystems.txt --input-cazy-maps tests/data/ref_data//functional_categories/CAZY_hierarchy.txt --output-dir /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/results//annotation_table/                --ncbi-taxonomy-map tests/data/ref_data//ncbi_tree/ncbi_taxonomy_tree.txt --ncbi-megan-map tests/data/ref_data//ncbi_tree/ncbi.map -D /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/blast_results/ -s lagoon-sample -a BLAST
+ 
+    input_annot_gff = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "genbank", 
+                                        _test_sample_name + ".annot.gff"
+                                      )
+
+    input_preprocess_fasta = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "preprocessed", 
+                                        _test_sample_name + ".fasta"
+                                      )
+
+    input_qced_faa = os.path.join(_test_data_dir, 
+                                        _test_sample_name, 
+                                       "output", 
+                                       _test_sample_name, 
+                                       "orf_prediction", 
+                                        _test_sample_name + ".qced.faa"
+                                      )
+
+    ref_ncbi_tree = os.path.join(_test_data_dir, 
+                                   "ref_data",
+                                   "ncbi_tree",
+                                   "ncbi_taxonomy_tree.txt"
+                                   )
+
+    input_output_fun_and_tax = os.path.join(_test_data_dir, 
+                                      _test_sample_name, 
+                                      "output", 
+                                      _test_sample_name, 
+                                      "results",
+                                      "annotation_table",
+                                      _test_sample_name + ".functional_and_taxonomic_table.txt" 
+                                  )
+
+    output_ptools_dir = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "ptools"
+                             )
+
+    output_ptools_pf = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "ptools",
+                             "0.pf"
+                             )
+
+    expect_output_ptools_pf = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output",
+                                             _test_sample_name, 
+                                             "ptools",
+                                             "0.pf"
+                                            )
+
+    output_ptools_gen_elem = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "ptools",
+                             "genetic-elements.dat"
+                             )
+
+    expect_output_ptools_gen_elem = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output",
+                                             _test_sample_name, 
+                                             "ptools",
+                                             "genetic-elements.dat"
+                                            )
+
+    output_ptools_org_param = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "ptools",
+                             "organism-params.dat"
+                             )
+
+    expect_output_ptools_org_param = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output",
+                                             _test_sample_name, 
+                                             "ptools",
+                                             "organism-params.dat"
+                                            )
+
+    output_ptools_reduced = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "ptools",
+                             "reduced.txt"
+                             )
+
+    expect_output_ptools_reduced = os.path.join(_test_data_dir, 
+                                             _test_sample_name, 
+                                             "output",
+                                             _test_sample_name, 
+                                             "ptools",
+                                             "reduced.txt"
+                                            )
+
+    output_gbk = os.path.join(out_folder_name, 
+                             _test_sample_name, 
+                             "genbank",
+                             _test_sample_name + ".gbk" 
+                             )
+
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "ptools"), exist_ok = True)
+    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "genbank"), exist_ok = True)
+
+    args = [ 
+             "--g", input_annot_gff,
+             "--out-ptinput", output_ptools_dir,
+             "-n", input_preprocess_fasta,
+             "--ncbi-tree", ref_ncbi_tree,
+             "--taxonomy-table", input_output_fun_and_tax,
+             "-p",  input_qced_faa,
+             "--out-gbk",  output_gbk
+            ]
+
+    MetaPathways_create_genbank_ptinput.main(args)
+    #assert compare_lines_in_files(output_ptools_pf, expect_output_ptools_pf, sort_n_compare = True)
+    assert compare_lines_in_files(output_ptools_gen_elem, expect_output_ptools_gen_elem, sort_n_compare = True)
+    assert compare_lines_in_files(output_ptools_org_param, expect_output_ptools_org_param, sort_n_compare = True)
+    #assert compare_lines_in_files(output_ptools_reduced, expect_output_ptools_reduced, sort_n_compare = True)
 
 
-def test_rpkm(tmpdir):
+# MetaPathways_create_genbank_ptinput 
+#-g /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/genbank//lagoon-sample.annot.gff  
+#--out-ptinput /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/ptools/ 
+#-n /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/preprocessed//lagoon-sample.fasta 
+#--ncbi-tree tests/data/ref_data//ncbi_tree/ncbi_taxonomy_tree.txt 
+#--taxonomy-table /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/results//annotation_table//lagoon-sample.functional_and_taxonomic_table.txt 
+#-p /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/orf_prediction//lagoon-sample.qced.faa 
+#--out-gbk /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/genbank//lagoon-sample.gbk
+
+def tet_rpkm(tmpdir):
     from metapathways import MetaPathways_rpkm 
     out_folder_name = str(tmpdir)
     _test_sample_name = "lagoon-sample"
@@ -878,7 +1150,7 @@ def test_rpkm(tmpdir):
                                    _test_sample_name + ".orf_rpkm.txt"
                                   )
 
-    expected_output_orf_rpkm = os.path.join(_test_data_dir, 
+    expect_output_orf_rpkm = os.path.join(_test_data_dir, 
                                      _test_sample_name, 
                                      "output", 
                                      _test_sample_name, 
@@ -894,7 +1166,7 @@ def test_rpkm(tmpdir):
                                      _test_sample_name + ".orf_rpkm.txt"
                                     )
 
-    expected_output_rpkm_stats = os.path.join(_test_data_dir, 
+    expect_output_rpkm_stats = os.path.join(_test_data_dir, 
                                               _test_sample_name, 
                                               "output", 
                                               _test_sample_name, 
@@ -922,8 +1194,8 @@ def test_rpkm(tmpdir):
 
     MetaPathways_rpkm.main(args)
    
-    assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
-    assert compare_lines_in_files(output_rpkm_stats, expected_output_rpkm_stats, sort_n_compare = True)
+    assert compare_lines_in_files(output_rpkm_stats, expect_output_rpkm_stats, sort_n_compare = True)
+    assert compare_lines_in_files(output_rpkm_stats, expect_output_rpkm_stats, sort_n_compare = True)
 
 
 
