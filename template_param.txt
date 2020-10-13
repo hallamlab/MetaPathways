@@ -21,7 +21,7 @@ annotation:algorithm BLAST
 # e.g. blast or last, for fogdob BLAST only
 
 # e.g. annotation:dbs    cog,kegg,refseq,metacyc
-annotation:dbs refseq-small-sample
+annotation:dbs refseq-small-sample, kegg-small-sample, cazy-small-sample metacyc-small-sample
 
 annotation:min_bsr 0.4
 annotation:max_evalue 0.000001

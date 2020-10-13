@@ -274,17 +274,17 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         return 255
 
     if not (options.readsdir != None and path.exists(options.readsdir)):
-        parser.error("ERROR\tThe RPKM directory is missing")
+        parser.error("ERROR\tThe expected RPKM directory \'{}\' is missing.".format(options.readsdir))
         errormod.insert_error(10)
         return 255
 
     if not (options.bwaFolder != None and path.exists(options.bwaFolder)):
-        parser.error("ERROR\tThe BWA directory is missing")
+        parser.error("ERROR\tThe BWA directory is missing.")
         errormod.insert_error(10)
         return 255
 
     if options.sample_name == None:
-        parser.error("ERROR\tThe sample name is missing")
+        parser.error("ERROR\tThe sample name is missing.")
         errormod.insert_error(10)
         return 255
 

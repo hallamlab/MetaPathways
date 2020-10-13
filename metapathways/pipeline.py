@@ -90,20 +90,18 @@ def derive_sample_name(filename):
     shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',shortname, re.IGNORECASE)
     return shortname
 
-
-
 def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlogger = None):
    """ keep only the samples that are specified  before processing  """
-
    shortened_names = {}
-   input_sample_list = input_output_list.keys()
+   input_sample_list = list(input_output_list.keys())
+
    for sample_name in input_sample_list:
       short_sample_name = derive_sample_name(sample_name)
       if len(short_sample_name) > 35:
          gutils.eprintf("ERROR\tSample name %s must not be longer than 35 characters!\n",short_sample_name)
          if globalerrorlogger:
              globalerrorlogger.printf("ERROR\tSample name %s must not be longer than 35 characters!\n",short_sample_name)
-      if not derive_sample_name(sample_name) in sample_subset and  sample_subset:
+      if sample_subset and  not derive_sample_name(sample_name) in sample_subset:
          del input_output_list[sample_name]
 
 
@@ -218,11 +216,7 @@ def halt_on_invalid_input(input_output_list, filetypes, sample_subset):
        if not sampleName in sample_subset:
           continue
 
-
     return True
-
-
-
 
 def report_missing_filenames(input_output_list, sample_subset, logger=None):
     foundFiles = {}

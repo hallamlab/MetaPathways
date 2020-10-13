@@ -13,6 +13,7 @@ try:
     import gc
     import resource
     import glob
+    import gzip
 
     from os import makedirs, sys, remove, path, _exit
     from optparse import OptionParser, OptionGroup
@@ -707,40 +708,37 @@ def beginning_valid_field(line):
 
     return -1
 
-
 # creates an empty hierarchical tree with zeros at the lowest count
 def read_map_file(dbname_map_filename, field_to_description, hierarchical_map):
-    try:
-        map_file = open(dbname_map_filename, "r")
 
+    dbname_map_filename = gutils.correct_filename_extension(dbname_map_filename)
+
+    with gzip.open(dbname_map_filename, 'rt') if dbname_map_filename.endswith('.gz') \
+        else open(dbname_map_filename, 'r') as map_file:
         map_filelines = map_file.readlines()
-    except:
-        gutils.eprintf("ERROR: Cannot open file %s\n", dbname_map_filename)
-        mputils.exit_process()
-
-    tempfields = ["", "", "", "", "", "", ""]
-    for line in map_filelines:
-        pos = beginning_valid_field(line)
-        if pos == -1:
-            continue
-
-        fields = [x.strip() for x in line.split("\t")]
-
-        tempfields[pos] = fields[pos]
-        if len(fields) > pos + 1:
-            field_to_description[fields[pos]] = fields[pos + 1]
-        else:
-            field_to_description[fields[pos]] = fields[pos]
-
-        i = 0
-        temp_hierarchical_map = hierarchical_map
-        while i < pos:
-            temp_hierarchical_map = temp_hierarchical_map[tempfields[i]]
-            i += 1
-
-        temp_hierarchical_map[tempfields[i]] = {}
+    
+        tempfields = ["", "", "", "", "", "", ""]
+        for line in map_filelines:
+            pos = beginning_valid_field(line)
+            if pos == -1:
+                continue
+    
+            fields = [x.strip() for x in line.split("\t")]
+    
+            tempfields[pos] = fields[pos]
+            if len(fields) > pos + 1:
+                field_to_description[fields[pos]] = fields[pos + 1]
+            else:
+                field_to_description[fields[pos]] = fields[pos]
+    
+            i = 0
+            temp_hierarchical_map = hierarchical_map
+            while i < pos:
+                temp_hierarchical_map = temp_hierarchical_map[tempfields[i]]
+                i += 1
+    
+            temp_hierarchical_map[tempfields[i]] = {}
     fill_hierarchy_with_zeroes(hierarchical_map)
-
 
 def fill_hierarchy_with_zeroes(dictionary):
     for key in dictionary.keys():
