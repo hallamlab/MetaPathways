@@ -829,9 +829,10 @@ class ContextCreator:
         cmd = "%s -g %s " %(pyScript, context.inputs['input_annot_gff'])
 
         #"""PATHOLOGIC_INPUT"""
-        ptinput_status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+        context.status = self.params.get('metapaths_steps','PATHOLOGIC_INPUT')
 
-        if ptinput_status in ['redo'] or ( ptinput_status in ['yes'] and not s.hasPToolsInput() ):
+           
+        if context.status in ['redo'] or (context.status in ['yes'] and not s.hasPToolsInput() ):
             cmd += ' --out-ptinput ' + s.output_fasta_pf_dir
             cmd += ' -n ' + context.inputs_optional['input_nucleotide_fasta']
             cmd += ' --ncbi-tree ' + context.inputs1['ncbi_tree']
@@ -840,9 +841,6 @@ class ContextCreator:
             cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
 
         context.message = self._Message("PATHOLOGIC INPUT" )
-
-        #context.status = self.params.get('metapaths_steps','PATHOLOGIC_INPUT')
-        context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
 
         context.commands = [cmd]
         contexts.append(context)

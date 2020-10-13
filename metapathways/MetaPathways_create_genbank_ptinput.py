@@ -219,8 +219,7 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
         #print output_dir_name
         makedirs(output_dir_name)
         genetic_elements_file = open(output_dir_name + "/.tmp.genetic-elements.dat", 'w')
-        reducedpffile = open(output_dir_name + "/tmp.reduced.txt", 'w')
-
+        #reducedpffile = open(output_dir_name + "/tmp.reduced.txt", 'w')
      except:
         print("cannot create the pathway tools files")
         print("perhaps there is already a folder " + output_dir_name)
@@ -275,24 +274,25 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
               sys.exit(0)
 
 
-           if attrib['product']  in first_hits:
-               if attrib['ec'] :
-                 if attrib['ec'] in first_hits[attrib['product']]:
-                     gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
+           #if attrib['product']  in first_hits:
+           #    if attrib['ec'] :
+           #      if attrib['ec'] in first_hits[attrib['product']]:
+           #          gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
 
                     # to  remove redundancy add "continue "
                     # continue
-                 else:
-                     first_hits[attrib['product']]['ec'] =attrib['ec']
-                     first_hits[attrib['product']]['n'] =shortid
-               else:
-                 gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
+           #      else:
+           #          first_hits[attrib['product']]['ec'] =attrib['ec']
+           #          first_hits[attrib['product']]['n'] =shortid
+           #    else:
+           #      gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
                  # to  remove redundancy add "continue "
                  #continue
-           else:
-                first_hits[attrib['product']] = {}
-                first_hits[attrib['product']]['n'] =shortid
-                first_hits[attrib['product']]['ec'] =attrib['ec']
+           #else:
+
+           first_hits[attrib['product']] = {}
+           first_hits[attrib['product']]['n'] =shortid
+           first_hits[attrib['product']]['ec'] =attrib['ec']
 
            if compactid in orf_to_taxonid:
                attrib['taxon'] = orf_to_taxonid[compactid]
@@ -326,8 +326,6 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
 
      if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
-
-     rename(output_dir_name + "/tmp.reduced.txt",output_dir_name + "/reduced.txt")
 
      # Niels: removing annotated.gff from sample_name
      sample_name = re.sub(".annot.gff", '', sample_name)
