@@ -464,11 +464,22 @@ def test_filter_amino_input(tmpdir, sample_name):
     assert compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, sort_n_compare = False)
     assert compare_lines_in_files(output_logfile, expect_output_logfile, sort_n_compare = False)
 
-def test_func_search(tmpdir, sample_name):
+def test_func_search_sample1(tmpdir, sample_name):
+    run_func_search(tmpdir, "refseq-small-sample", sample_name)
+
+@pytest.fixture(params=["refseq-small-sample", "cazy-small-sample", "kegg-small-sample", "metacyc-small-sample"])
+def db_name(request):
+    return request.param
+
+def test_func_search_sample2(tmpdir, db_name):
+    run_func_search(tmpdir, db_name, "lagoon-sample2")
+
+
+def run_func_search(tmpdir, dbname,  test_sample_name):
     from metapathways import pipeline 
     from metapathways import MetaPathways_func_search 
     out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name
+    _test_sample_name = test_sample_name
 
     faa_input = os.path.join(_test_data_dir, 
                               "output",
@@ -481,7 +492,7 @@ def test_func_search(tmpdir, sample_name):
                             "ref_data",
                             "functional",
                             "formatted",
-                            "refseq-small-sample"
+                            dbname
                            )
 
     os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
@@ -490,14 +501,14 @@ def test_func_search(tmpdir, sample_name):
     output_blast_results = os.path.join(out_folder_name, 
                               _test_sample_name, 
                               "blast_results", 
-                              _test_sample_name + ".refseq-small-sample.BLASTout"
+                              _test_sample_name + "." + dbname + ".BLASTout"
                              )
 
     expect_output_blast_results = os.path.join(_test_data_dir, 
                                                "output", 
                                                _test_sample_name, 
                                                "blast_results", 
-                                               _test_sample_name + ".refseq-small-sample.BLASTout"
+                                               _test_sample_name + "." + dbname + ".BLASTout"
                                               )
 
     args = [ "--algorithm", "BLAST", 
