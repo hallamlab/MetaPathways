@@ -98,7 +98,7 @@ def read_pf_file(opts):
              outputlines.append('ANNOT-FILE' + '\t' + annot_file)
              outputlines.append('SEQ-FILE' + '\t' + contig_file)
              outputlines.append('//')
-             fout.write('\n'.join(outputlines))
+             fout.write('\n'.join(outputlines)+'\n')
              
      # copy the organism-params.dat file
      shutil.copy2(opts.input_folder + "/organism-params.dat", opts.output_folder + "/" + "organism-params.dat")
