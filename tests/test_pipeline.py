@@ -564,7 +564,13 @@ def test_refscores(tmpdir, sample_name):
 
     assert compare_lines_in_files(output_refscores, expect_output_refscores, sort_n_compare = True)
 
-def test_parse_blast(tmpdir, sample_name):
+def test_parse_blast1(tmpdir, sample_name):
+    run_parse_blast(tmpdir, "refseq-small-sample", sample_name)
+
+def test_parse_blast2(tmpdir, db_name):
+    run_parse_blast(tmpdir, db_name, "lagoon-sample2")
+
+def run_parse_blast(tmpdir,  db_name, sample_name):
     from metapathways import MetaPathways_parse_blast 
     out_folder_name = str(tmpdir)
     _test_sample_name = sample_name
@@ -573,14 +579,14 @@ def test_parse_blast(tmpdir, sample_name):
                             "ref_data",
                             "functional",
                             "formatted",
-                            "refseq-small-sample-names.txt"
+                            db_name + "-names.txt"
                            )
 
     input_blast_results = os.path.join(_test_data_dir, 
                                        "output", 
                                        _test_sample_name, 
                                        "blast_results", 
-                                        _test_sample_name + ".refseq-small-sample.BLASTout"
+                                        _test_sample_name + "." + db_name + ".BLASTout"
                                       )
 
     input_blast_refscores = os.path.join(_test_data_dir, 
@@ -595,20 +601,20 @@ def test_parse_blast(tmpdir, sample_name):
     output_parsed_blast_results = os.path.join(out_folder_name, 
                                              _test_sample_name, 
                                              "blast_results", 
-                                             _test_sample_name + ".refseq-small-sample.BLASTout.parsed.txt"
+                                             _test_sample_name + "." + db_name + ".BLASTout.parsed.txt"
                                             )
 
     expect_output_parsed_blast_results = os.path.join(_test_data_dir, 
                                              "output", 
                                              _test_sample_name, 
                                              "blast_results", 
-                                             _test_sample_name + ".refseq-small-sample.BLASTout.parsed.txt"
+                                             _test_sample_name + "." + db_name + ".BLASTout.parsed.txt"
                                             )
     args = [ 
              "-b", input_blast_results,
              "-r", input_blast_refscores,
              "-m", ref_blast_db_annots,
-             "-d", "refseq-small-sample",
+             "-d", db_name,
              "-o", output_parsed_blast_results,
              "--min_bsr", "0.4",
              "--min_score", "20",

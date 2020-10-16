@@ -183,7 +183,6 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
 
         gff_lines = gfffile.readlines()
         gff_beg_pattern = re.compile("^#")
-        gfffile.close()
 
         contig_dict={}
         count = 0
@@ -362,8 +361,15 @@ def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
     try:
        gutils.fprintf(pfFile, "ID\t%s\n", shortid)
        gutils.fprintf(pfFile, "NAME\t%s\n", shortid)
-       gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['start'])
-       gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['end'])
+
+       # for orfs no the negative strand the start and the end positions
+       # are reversed
+       if attrib['strand'] == '+':
+           gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['start'])
+           gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['end'])
+       else: # if on the negative strang
+           gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
+           gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
     except:
        pass
 
