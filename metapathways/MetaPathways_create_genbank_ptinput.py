@@ -167,7 +167,7 @@ Fields must be tab-separated. Also, all but the final field in each feature line
 
 def get_sample_name(gff_file_name):
      sample_name= re.sub('.annotated.gff', '', gff_file_name)
-     sample_name= re.sub('.annot.gff', '', gff_file_name) # Niels: somewhere we changed the file name?
+     sample_name= re.sub('.annot.gff', '', gff_file_name)
      sample_name= re.sub(r'.*[/\\]', '', sample_name)
      return sample_name
 
@@ -326,12 +326,12 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
      if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
 
-     # Niels: removing annotated.gff from sample_name
+     # removing annotated.gff from sample_name
      sample_name = re.sub(".annot.gff", '', sample_name)
      sample_name = re.sub('.*/', '', sample_name)
      sample_name = re.sub(r'[\\].', '', sample_name)
 
-     # Niels: trim sample_name to less than 35 characters
+     # trim sample_name to less than 35 characters
      # as it causes PGDB creation to fail
      if (len(sample_name) > 35):
         sample_name = sample_name[0:35]
@@ -365,7 +365,7 @@ def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
        if attrib['strand'] == '+':
            gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['start'])
            gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['end'])
-       else: # if on the negative strang
+       else: # if on the negative strand
            gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
            gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
     except:
