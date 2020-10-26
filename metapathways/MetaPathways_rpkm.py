@@ -117,16 +117,7 @@ def createParser():
 def getSamFiles(readdir, sample_name):
     """This function finds the set of SAM files that has the BWA recruitment information"""
 
-    samFiles = []
-    _samFile = glob.glob(readdir + PATHDELIM + sample_name + ".sam")
-
-    if _samFile:
-        samFiles += _samFile
-
-    _samFiles = glob.glob(readdir + PATHDELIM + sample_name + "_[0-9]*.sam")
-
-    if _samFiles:
-        samFiles += _samFiles
+    samFiles = glob.glob(readdir + PATHDELIM + sample_name + "*.sam")
 
     return samFiles
 
@@ -146,95 +137,44 @@ def indexForBWA(bwaExec, contigs, indexfile):
     return False
 
 
-def runUsingBWA(bwaExec, sample_name, indexFile, _readFiles, bwaFolder):
+def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder):
     num_threads = int(multiprocessing.cpu_count() * 0.8)
     if num_threads < 1:
         num_threads = 1
     status = True
-    count = 0
-    for readFiles in _readFiles:
-        bwaOutput = bwaFolder + PATHDELIM + sample_name + "_" + str(count) + ".sam"
-        bwaOutputTmp = bwaOutput + ".tmp"
-        cmd = "command not prepared"
-        if len(readFiles) == 2:
-            cmd = "%s mem -t %d %s %s %s > %s" % (
+
+    bwaOutput = bwaFolder + PATHDELIM + readgroup + ".sam"
+
+    bwaOutputTmp = bwaOutput + ".tmp"
+    cmd = "command not prepared"
+
+    if len(readFiles) == 2:
+        cmd = "%s mem -t %d %s %s %s -o %s" % (
+            bwaExec,
+            num_threads,
+            indexFile,
+            readFiles[0],
+            readFiles[1],
+            bwaOutputTmp,
+        )
+
+    if len(readFiles) == 1:
+         cmd = "%s mem -t %d  %s %s -o %s " % (
                 bwaExec,
                 num_threads,
                 indexFile,
                 readFiles[0],
-                readFiles[1],
-                bwaOutputTmp,
+                bwaOutputTmp
             )
+    result = sysutils.getstatusoutput(cmd)
 
-        if len(readFiles) == 1:
-            res0 = re.search(r"_[1-2].(fastq|fastq[.]gz)", readFiles[0])
-            res1 = re.search(r"_[1-2].b\d+.(fastq|fastq[.]gz)", readFiles[0])
-            if res0 or res1:
-                cmd = "%s mem -t %d -p -o %s  %s %s " % (
-                    bwaExec,
-                    num_threads,
-                    bwaOutputTmp,
-                    indexFile,
-                    readFiles[0],
-                )
-            else:
-                cmd = "%s mem -t %d -o %s  %s %s " % (
-                    bwaExec,
-                    num_threads,
-                    bwaOutputTmp,
-                    indexFile,
-                    readFiles[0],
-                )
-        result = sysutils.getstatusoutput(cmd)
-
-        if result[0] == 0:
-            rename(bwaOutputTmp, bwaOutput)
-        else:
-            gutils.eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
-            status = False
-        count += 1
-
-    return status
-
-
-def runMicrobeCensus(
-    microbeCensusExec, microbeCensusOutput, sample_name, readFiles, rpkmFolder
-):
-
-    num_threads = int(multiprocessing.cpu_count() * 0.8)
-    if num_threads < 1:
-        num_threads = 1
-    status = True
-
-    readfiles = [",".join(read) for read in readFiles]
-
-    if len(readFiles) == 2:
-        command_frags = [
-            microbeCensusExec,
-            ",".join(readfiles),
-            microbeCensusOutput + ".tmp",
-        ]
-
-        result = sysutils.getstatusoutput(" ".join(command_frags))
-        if result[0] == 0:
-            pass
-            rename(microbeCensusOutput + ".tmp", microbeCensusOutput)
-        else:
-            gutils.eprintf(
-                "ERROR:\tError while running MicrobeCensus on read  files %s\n",
-                readFiles,
-            )
-            status = False
+    if result[0] == 0:
+        rename(bwaOutputTmp, bwaOutput)
     else:
-        gutils.eprintf(
-            "ERROR:\tThe number of read files for MicrobeCensus must be at most 3. Found %d:%s\n",
-            len(readFiles),
-            ",".join(readFiles),
-        )
+        gutils.eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
         status = False
 
     return status
-
 
 def read_genome_equivalent(microbecensusoutput):
     gen_equiv_patt = re.compile(r"genome_equivalents:\s+(.*)$")
@@ -252,6 +192,31 @@ def read_genome_equivalent(microbecensusoutput):
 
     return 1
 
+def getReadFiles(readdir, sample_name):
+    """This function finds the set of fastq files that has the reads"""
+    _fastqfiles = glob.glob(
+       readdir + PATHDELIM + sample_name + "_*"
+    )
+
+    fastqgroups = {}
+    for _fastqfile in _fastqfiles:
+       fastqfile  = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
+       fastqfile  = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
+
+       trimmedfastq = path.basename(re.sub(r'_R[12]$', '', fastqfile))
+       
+       
+       if trimmedfastq not in fastqgroups:
+           fastqgroups[trimmedfastq] = []
+  
+       fastqgroups[trimmedfastq].append(_fastqfile)
+
+    keys = fastqgroups.keys()
+    for key in keys:
+        fastqgroups[key].sort(key = lambda x: x)
+
+    return fastqgroups
+
 
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     parser = createParser()
@@ -260,35 +225,35 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if not (options.contigs != None and path.exists(options.contigs)):
         parser.error("ERROR\tThe contigs file is missing")
         errormod.insert_error(10)
-        return 255
+        return 1
 
     cmd_exists = lambda x: shutil.which(x) is not None
     if not (options.rpkmExec != None and cmd_exists(options.rpkmExec)):
         parser.error("ERROR\tThe RPKM executable is missing")
         errormod.insert_error(10)
-        return 255
+        return 1
 
     if not (options.bwaExec != None and cmd_exists(options.bwaExec)):
         parser.error("ERROR\tThe BWA executable is missing")
         errormod.insert_error(10)
-        return 255
+        return 1
 
     if not (options.readsdir != None and path.exists(options.readsdir)):
         parser.error("ERROR\tThe expected RPKM directory \'{}\' is missing.".format(options.readsdir))
         errormod.insert_error(10)
-        return 255
+        return 1
 
     if not (options.bwaFolder != None and path.exists(options.bwaFolder)):
         parser.error("ERROR\tThe BWA directory is missing.")
         errormod.insert_error(10)
-        return 255
+        return 1
 
     if options.sample_name == None:
         parser.error("ERROR\tThe sample name is missing.")
         errormod.insert_error(10)
-        return 255
+        return 1
 
-    readFiles = mputils.getReadFiles(options.readsdir, options.sample_name)
+    readFiles = getReadFiles(options.readsdir, options.sample_name)
 
     # index for BWA
     bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
@@ -302,72 +267,57 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
                 "\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs
             )
             errormod.insert_error(10)
-        return 255
+        return 1
         # exit_process("ERROR\tMissing read files!\n")
 
     # run BWA
-    bwaRunSuccess = runUsingBWA(
-        options.bwaExec,
-        options.sample_name,
-        bwaIndexFile,
-        readFiles,
-        options.bwaFolder,
-    )
-    # bwaRunSuccess = True
+    
 
-    if bwaRunSuccess:
-        gutils.eprintf("\n\tINFO:\tSuccessfully ran bwa!")
-    else:
-        gutils.eprintf(
-            "\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs
-        )
-        if errorlogger:
-            errorlogger.eprintf(
-                "\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs
-            )
+    for readgroup in readFiles:
+        bwaRunSuccess = runUsingBWA(options.bwaExec,
+                                    options.sample_name,
+                                    bwaIndexFile,
+                                    readgroup,
+                                    readFiles[readgroup],
+                                    options.bwaFolder,
+                                   )
+        # bwaRunSuccess = True
+
+        if bwaRunSuccess:
+            gutils.eprintf("\n\tINFO:\tSuccessfully ran bwa: {}!\n".format(' '.join(readFiles[readgroup])))
+        else:
+            gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
+            if errorlogger:
+                errorlogger.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
             errormod.insert_error(10)
-        return 255
           # exit_process("ERROR\tFailed to run BWA!\n")
             # END of running BWA
             # make sure you get the latest set of sam file after the bwa
+
     # make sure you get the latest set of sam file after the bwa
-    # samFiles = getSamFiles(options.readsdir, options.sample_name)
+    samFiles = getSamFiles(options.bwaFolder, options.sample_name)
 
     command = [
-        "%s --contigs-file %s" % (options.rpkmExec, options.contigs),
-        "--multireads"  #
+        "%s " % (options.rpkmExec)
         #   "--read-counts",
         #   "--genome_equivalent %0.10f" %(genome_equivalent)
     ]
+    if options.orfgff:
+        command.append(" --gff {}".format(options.orfgff))
 
     if options.output:
-        command.append("--ORF-RPKM %s" % (options.output + ".tmp"))
-        command.append("--stats %s" % (options.stats))
+        command.append("--estimate-type ALL")
+        command.append("--out-file %s" % (options.output))
+        command.append("--print-stats")
+        command.append("--stats-out-file %s" % (options.stats))
 
-    if options.orfgff:
-        command.append(" --ORFS {}".format(options.orfgff))
-
-    samFiles = getSamFiles(options.bwaFolder, options.sample_name)
-
-    if not samFiles:
-        return 0
 
     for samfile in samFiles:
-        command.append("-r " + samfile)
+        command.append("--sam " + samfile)
 
     rpkmstatus = 0
-
     try:
-        command1 = copy.copy(command)
-
-        # command1.append("--type 1")
-        # rpkmstatus  = runRPKMCommand(runcommand = ' '.join(command1))
-        # rename(options.output, options.output + ".read_counts.txt")
-
-        command2 = copy.copy(command)
-        # command2.append("--type 2")
-        rpkmstatus = runRPKMCommand(runcommand=" ".join(command2))
-        rename(options.output + ".tmp", options.output)
+        rpkmstatus = runRPKMCommand(runcommand=" ".join(command))
     except:
         rpkmstatus = 1
         pass
@@ -375,7 +325,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if rpkmstatus != 0:
         gutils.eprintf("ERROR\tRPKM calculation was unsuccessful\n")
         errormod.insert_error(10)
-        return 255
+        return 1
         # exit_process("ERROR\tFailed to run RPKM" )
 
     return rpkmstatus
@@ -384,7 +334,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 def runRPKMCommand(runcommand=None):
     if runcommand == None:
         return False
-    # print(runcommand)
+
     result = sysutils.getstatusoutput(runcommand)
     if result[1]:
         print(result[1])

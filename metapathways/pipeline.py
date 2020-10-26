@@ -56,10 +56,13 @@ def createParser():
     parser = OptionParser(usage)
     parser.add_option("-i", "--input_file", dest="input_fp",
                       help='the input fasta file/input dir [REQUIRED]')
+
     parser.add_option("-o", "--output_dir", dest="output_dir",
                       help='the input fasta file/input dir [REQUIRED]')
+
     parser.add_option('-p','--parameter_fp', dest="parameter_fp",
                        help='path to the parameter file [REQUIRED]')
+
     parser.add_option("-d", "--dirref", dest="refdb_dir",
                       help="location of the reference DB [REQUIRED]")
 
@@ -77,11 +80,25 @@ def createParser():
     return parser
 def valid_arguments(opts, args):
     """ checks if the supplied arguments are adequate """
-    if (opts.input_fp == None and opts.output_dir ==None )  or\
-     opts.output_dir == None:
-       return True
-    else:
-       return False
+    isvalid = True
+    if opts.parameter_fp == None:
+       gutils.eprintf("ERROR\tParameter file for run configuration is not providedl\n")
+       isvalid = False
+
+    if opts.output_dir == None:
+       gutils.eprintf("ERROR\tOutput directory is not provided.\n")
+       isvalid = False
+
+    if opts.input_fp == None:
+       gutils.eprintf("ERROR\tInput directory is not provided.\n")
+       isvalid = False
+
+    if opts.refdb_dir == None:
+       gutils.eprintf("ERROR\tThe reference data folder is not provided.\n")
+       isvalid = False
+
+
+    return isvalid
 
 def derive_sample_name(filename):
     basename = path.basename(filename)
@@ -238,7 +255,7 @@ def process(argv):
        print("MetaPathways: Version " + __version__)
        sys.exit(0)
 
-    if valid_arguments(opts, args):
+    if not valid_arguments(opts, args):
        print(usage)
        sys.exit(0)
 
@@ -361,7 +378,7 @@ def process(argv):
         "LAST_EXECUTABLE"      : 'lastal+',
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
-        "RPKM_EXECUTABLE"      : 'rpkm',
+        "RPKM_EXECUTABLE"      : 'metacount',
         "NUM_CPUS"             : 4,
         "REFDBS"               : opts.refdb_dir
     }

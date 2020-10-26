@@ -55,4 +55,4 @@ metapaths_steps:SCAN_tRNA redo
 metapaths_steps:ANNOTATE_ORFS redo
 metapaths_steps:CREATE_ANNOT_REPORTS redo
 metapaths_steps:PATHOLOGIC_INPUT redo
-metapaths_steps:COMPUTE_RPKM redo
+metapaths_steps:COMPUTE_TPM redo

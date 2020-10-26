@@ -923,7 +923,7 @@ class ContextCreator:
 
 
     def create_rpkm_cmd(self, s):
-        """RPKM CALCULATION"""
+        """TPM CALCULATION"""
 
         contexts = []
 
@@ -932,23 +932,22 @@ class ContextCreator:
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        rpkmExec = self.configs.RPKM_EXECUTABLE
 
+        rpkmExec = self.configs.RPKM_EXECUTABLE
         bwaExec = self.configs.BWA_EXECUTABLE
 
 
         '''output'''
         rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_rpkm.txt"
-        microbecensus_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".microbe_census.txt"
         stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
 
         context = contextmod.Context()
         context1 = contextmod.Context()
-        context.name = 'COMPUTE_RPKM'
+        context.name = 'COMPUTE_TPM'
         context.inputs = {
                            'rpkm_input':rpkm_input,
                            'output_gff': output_gff,
-                           'output_fas':output_fas,
+                           'output_fas':  output_fas,
                            'bwaFolder': bwaFolder,
                          }
 
@@ -961,24 +960,25 @@ class ContextCreator:
                           }
 
         context.outputs = {
-                           #'microbecensusoutput': microbecensus_output,
                            'stats_file': stats_file
                           }
 
         pyScript = self.configs.RPKM_CALCULATION
 
-        #cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s -m %s"\
-        cmd = "%s -c %s  --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
-              % (pyScript, context.inputs['output_fas'], context1.inputs['rpkmExec'],\
+        cmd = "%s -c %s --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
+              % (pyScript, context.inputs['output_fas'], 
+                 context1.inputs['rpkmExec'],\
                  context.inputs['rpkm_input'], context.inputs['output_gff'],\
-               context1.outputs['rpkm_output'],  s.sample_name, context.outputs['stats_file'],\
-               context.inputs['bwaFolder'], context1.inputs['bwaExec'])
+                 context1.outputs['rpkm_output'], 
+                 s.sample_name, context.outputs['stats_file'],\
+                 context.inputs['bwaFolder'], context1.inputs['bwaExec']
+                 )
 
-        context.status = self.params.get('metapaths_steps', 'COMPUTE_RPKM')
+        context.status = self.params.get('metapaths_steps', 'COMPUTE_TPM')
 
         context.commands = [cmd]
         contexts.append(context)
-        context.message = self._Message("RUNNING RPKM_CALCULATION")
+        context.message = self._Message("RUNNING TPM_CALCULATION")
         return contexts
 
     def __init__(self, params, configs):
@@ -1016,7 +1016,7 @@ class ContextCreator:
         self.factory['PATHOLOGIC_INPUT'] = self.create_ptinput_cmd
         self.factory['GENBANK_FILE'] = self.create_genbank_file_cmd
         self.factory['CREATE_ANNOT_REPORTS'] = self.create_report_files_cmd
-        self.factory['COMPUTE_RPKM'] = self.create_rpkm_cmd
+        self.factory['COMPUTE_TPM'] = self.create_rpkm_cmd
 
         self.stageList['AMINO-FASTA'] = [
              [ 'PREPROCESS_AMINOS',
@@ -1045,7 +1045,7 @@ class ContextCreator:
               'CREATE_ANNOT_REPORTS',
               "GENBANK_FILE",
               'PATHOLOGIC_INPUT',
-              'COMPUTE_RPKM']
+              'COMPUTE_TPM']
             ]
 
         self.stageList['AMINO-GENBANK-UNANNOT'] = [
