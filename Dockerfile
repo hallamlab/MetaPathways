@@ -37,6 +37,7 @@ COPY MetaPathwaysrc  /root/mp_repo/
 RUN touch /root/mp_repo/executables/linux/FGS+
 RUN touch /root/mp_repo/executables/linux/ptools
 RUN mkdir /root/pgdb_dir
+RUN date
 
 ### EntryPoint source:
 ##RUN . /root/mp_repo/MetaPathwaysrc

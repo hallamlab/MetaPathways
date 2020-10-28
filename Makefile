@@ -33,11 +33,11 @@ docker-build: pre-docker-builds
 	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
 
 docker-run:
-	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/darth:maul bash 
+	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/metapathways:taltman_dev bash 
 
 docker-deploy:
 	sudo docker login
-	sudo docker push taltman/darth:maul
+	sudo docker push taltman/metapathways:taltman_dev
 
 # The location of the expat directory
 CC=gcc  
