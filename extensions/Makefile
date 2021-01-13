@@ -6,15 +6,17 @@ all:
 	make -C FAST
 	make -C trnascan
 	make -C metacount
+	make -C rpkm
 
 .PHOHY: clean
 clean:
 	make -C FAST clean
 	make -C trnascan clean
 	make -C metacount clean
+	make -C rpkm clean
 
 .PHONY: install
-install: bwa/bwa
+install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 #
 	install FAST/fastal $(DESTDIR)$(PREFIX)/bin/
@@ -23,9 +25,12 @@ install: bwa/bwa
 	install trnascan/trnascan-1.4 $(DESTDIR)$(PREFIX)/bin/
 #
 	install metacount/metacount $(DESTDIR)$(PREFIX)/bin/
+#
+	install rpkm/rpkm $(DESTDIR)$(PREFIX)/bin/
 
 .PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/fastal  $(DESTDIR)$(PREFIX)/bin/fastdb
 	rm -f $(DESTDIR)$(PREFIX)/bin/trnascan-1.4
 	rm -f $(DESTDIR)$(PREFIX)/bin/metacount
+	rm -f $(DESTDIR)$(PREFIX)/bin/rpkm
