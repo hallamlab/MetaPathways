@@ -1144,7 +1144,7 @@ def test_create_genbank_ptinput(tmpdir, sample_name):
 #-p /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/orf_prediction//lagoon-sample.qced.faa 
 #--out-gbk /home/kishori/metapathways_engcyc/metapathways/mp_output/lagoon-sample/genbank//lagoon-sample.gbk
 
-def test_rpkm(tmpdir, sample_name):
+def disable_test_rpkm(tmpdir, sample_name):
     from metapathways import MetaPathways_rpkm 
     out_folder_name = str(tmpdir)
     _test_sample_name = sample_name
