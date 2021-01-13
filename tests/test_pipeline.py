@@ -13,6 +13,38 @@ def sample_name(request):
     return request.param
 
 
+def run_func_search(tmp_dir, db_name, test_sample_name) -> (str, str):
+    from metapathways import MetaPathways_func_search
+
+    faa_input = get_test_data(os.path.join("output", test_sample_name, "orf_prediction",
+                                           test_sample_name + ".qced.faa"))
+
+    ref_blast_db = get_test_data(os.path.join("ref_data", "functional", "formatted", db_name))
+
+    os.makedirs(os.path.join(tmp_dir, test_sample_name, "orf_prediction"), exist_ok=True)
+    os.makedirs(os.path.join(tmp_dir, test_sample_name, "blast_results"), exist_ok=True)
+
+    output_blast_results = os.path.join(tmp_dir, test_sample_name, "blast_results",
+                                        test_sample_name + "." + db_name + ".BLASTout")
+
+    expect_output_blast_results = get_test_data(os.path.join("output", test_sample_name, "blast_results",
+                                                             test_sample_name + "." + db_name + ".BLASTout"))
+
+    args = ["--algorithm", "BLAST",
+            "--blast_executable", "blastp",
+            "--num_threads", "4",
+            "--blast_max_target_seqs", "5",
+            "--blast_outfmt", "6",
+            "--blast_query", faa_input,
+            "--blast_evalue", "0.000001",
+            "--blast_db", ref_blast_db,
+            "--blast_out", output_blast_results]
+
+    MetaPathways_func_search.main(args)
+
+    return output_blast_results, expect_output_blast_results
+
+
 class MetaPathwaysTester(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp_dir = "tests/test_output_dir/"
@@ -178,8 +210,8 @@ class MetaPathwaysTester(unittest.TestCase):
 
         input_faa = get_test_data(os.path.join("output", _test_sample, "orf_prediction", _test_sample + ".faa"))
 
-        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok = True)
-        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"), exist_ok = True)
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok=True)
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"), exist_ok=True)
 
         output_qced_faa = os.path.join(self.tmp_dir, _test_sample, "orf_prediction",
                                        _test_sample + ".qced.faa")
@@ -205,72 +237,18 @@ class MetaPathwaysTester(unittest.TestCase):
         MetaPathways_filter_input.main(args)
 
         self.assertTrue(compare_lines_in_files(output_qced_faa, expect_output_qced_faa, sort_n_compare=True))
-        self.assertTrue(compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, sort_n_compare=False))
-        self.assertTrue(compare_lines_in_files(output_logfile, expect_output_logfile, sort_n_compare=False))
+        self.assertTrue(compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, False))
+        self.assertTrue(compare_lines_in_files(output_logfile, expect_output_logfile, False))
         return
 
     def test_run_func_search(self):
-        run_func_search(self.tmp_dir, "refseq-small-sample", self.sample_one)
-        run_func_search(self.tmp_dir, db_name, self.sample_two)
+        out, expected = run_func_search(self.tmp_dir, "refseq-small-sample", self.sample_one)
+        self.assertTrue(compare_lines_in_files(out, expected, sort_n_compare=True))
+        for db_name in ["refseq-small-sample", "cazy-small-sample", "kegg-small-sample", "metacyc-small-sample"]:
+            out, expected = run_func_search(self.tmp_dir, db_name, self.sample_two)
+            self.assertTrue(compare_lines_in_files(out, expected, sort_n_compare=True))
         return
 
-# _test_data_dir = ""
-
-@pytest.fixture(params=["refseq-small-sample", "cazy-small-sample", "kegg-small-sample", "metacyc-small-sample"])
-def db_name(request):
-    return request.param
-
-
-def run_func_search(tmpdir, dbname,  test_sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_func_search 
-    out_folder_name = str(tmpdir)
-    _test_sample_name = test_sample_name
-
-    faa_input = os.path.join(_test_data_dir, 
-                              "output",
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".qced.faa"
-                            )
-
-    ref_blast_db = os.path.join(_test_data_dir, 
-                            "ref_data",
-                            "functional",
-                            "formatted",
-                            dbname
-                           )
-
-    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"), exist_ok = True)
-
-    output_blast_results = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "blast_results", 
-                              _test_sample_name + "." + dbname + ".BLASTout"
-                             )
-
-    expect_output_blast_results = os.path.join(_test_data_dir, 
-                                               "output", 
-                                               _test_sample_name, 
-                                               "blast_results", 
-                                               _test_sample_name + "." + dbname + ".BLASTout"
-                                              )
-
-    args = [ "--algorithm", "BLAST", 
-             "--blast_executable", "blastp", 
-             "--num_threads", "4",
-             "--blast_max_target_seqs", "5",
-             "--blast_outfmt", "6",
-             "--blast_query", faa_input,
-             "--blast_evalue", "0.000001",
-             "--blast_db", ref_blast_db,
-             "--blast_out", output_blast_results,
-           ]
-
-    MetaPathways_func_search.main(args)
-
-    assert compare_lines_in_files(output_blast_results, expect_output_blast_results, sort_n_compare = True)
 
 def test_refscores(tmpdir, sample_name):
     from metapathways import pipeline 
