@@ -1,478 +1,224 @@
 import pytest
-import sys
+import unittest
 import os
+import shutil
 import filecmp
-import re
-import glob
 from functools import total_ordering
+from .testing_utils import compare_lines_in_files, compare_rpkm_stats_in_files, compare_rpkm_values_in_files, get_test_data
+
 
 @total_ordering
-class Sequence:
-    def __init__(self, name, seq): 
-        self.name = name 
-        self.seq =  seq 
-  
-    def __lt__(self, other): 
-        return self.name < other.name or self.seq < other.seq 
-  
-    def __eq__(self, other): 
-        return self.name == other.name and self.seq == other.seq 
-
-def print_unequal_lines_in_files(file1, file2, sort_n_compare):
-    with gzip.open(file1, 'r') if file1.endswith('.gz') \
-         else open(file1, 'r') as fout, \
-         gzip.open(file2, 'r') if file2.endswith('.gz') \
-         else open(file2, 'r') as expfout:
-
-       if sort_n_compare:
-           output_lines = sorted(fout.readlines())
-           expect_output_lines = sorted(expfout.readlines())
-       else:
-           output_lines = fout.readlines()
-           expect_output_lines = expfout.readlines()
-     
-    for a, b in zip(output_lines, expect_output_lines):
-        if a != b:
-            print(">> " + a.strip())
-            print("<< " + b.strip())
-
- 
-def compare_lines_in_files(file1, file2, sort_n_compare):
-    with gzip.open(file1, 'r') if file1.endswith('.gz') \
-         else open(file1, 'r') as fout, \
-         gzip.open(file2, 'r') if file2.endswith('.gz') \
-         else open(file2, 'r') as expfout:
-
-       if sort_n_compare:
-           output_lines = sorted(fout.readlines())
-           expect_output_lines = sorted(expfout.readlines())
-       else:
-           output_lines = fout.readlines()
-           expect_output_lines = expfout.readlines()
-     
-    #print([a == b for a, b in zip(output_lines, expect_output_lines)])
-    return all([a == b for a, b in zip(output_lines, expect_output_lines)])
-
-def compare_rpkm_stats_in_files(file1, file2, sort_n_compare):
-    with gzip.open(file1, 'r') if file1.endswith('.gz') \
-         else open(file1, 'r') as fout, \
-         gzip.open(file2, 'r') if file2.endswith('.gz') \
-         else open(file2, 'r') as expfout:
-
-       if sort_n_compare:
-           output_lines = sorted(fout.readlines())
-           expect_output_lines = sorted(expfout.readlines())
-       else:
-           output_lines = fout.readlines()
-           expect_output_lines = expfout.readlines()
-    
-    for a, b in zip(output_lines, expect_output_lines):
-        if len(a.split(':')) == len(b.split(':')):
-            if len(a.split(':')) > 0:
-                assert(a.split(':')[0].strip() == b.split(':')[0].strip())
-            if len(a.split(':')) > 1:
-                try:
-                    numa =  float(re.sub('%',  '', a.split(':')[1]).strip())
-                    numb =  float(re.sub('%',  '', b.split(':')[1]).strip())
-                    if numb != 0:
-                        assert(numa == pytest.approx(numb, rel = 1e-1) ) 
-                    else:
-                        assert(pytest.approx(numa, 0.1) == 0)
-                except:
-                    pass
-                
-    return True
-
-def compare_rpkm_values_in_files(file1, file2, sort_n_compare):
-    with gzip.open(file1, 'r') if file1.endswith('.gz') \
-         else open(file1, 'r') as fout, \
-         gzip.open(file2, 'r') if file2.endswith('.gz') \
-         else open(file2, 'r') as expfout:
-
-       if sort_n_compare:
-           output_lines = sorted(fout.readlines())
-           expect_output_lines = sorted(expfout.readlines())
-       else:
-           output_lines = fout.readlines()
-           expect_output_lines = expfout.readlines()
-    
-    for a, b in zip(output_lines, expect_output_lines):
-         if "ORF_ID" not in a:
-            numa =  float(a.split('\t')[1].strip())
-            numb =  float(b.split('\t')[1].strip())
-            if  numa != pytest.approx(numb, rel = 1e-1):
-               print('WARNING: mismatch', a, b)
-#        assert(len(a.split('\t')) == len(b.split('\t')))
-#        assert(len(a.split('\t')) == 2)
-#
-#        # header line or the values
-#        if a.split('\t')[1].strip() == 'COUNT':
-#           print(a, b)
-#           assert(a.split('\t')[0].strip() == b.split('\t')[0].strip())
-#        else:
-#            numa =  float(a.split('\t')[1].strip())
-#            numb =  float(b.split('\t')[1].strip())
-#            assert(numa == pytest.approx(numb, rel = 1e-1) ) 
-                
-    return True
-
-
-def compare_fasta_files(file1, file2, sort_n_compare):
-    import pyfastx
-    contents1 = [] 
-    for seq in pyfastx.Fasta(file1):
-       contents1.append(Sequence(seq.name, seq.seq))
-
-    contents2 = [] 
-    for seq in pyfastx.Fasta(file1):
-       contents2.append(Sequence(seq.name, seq.seq))
-    
-    contents1.sort()
-    contents2.sort()
-
-    return all([a == b for a, b in zip(contents1, contents2)])
-    return True
-
-
-
-_test_data_dir = os.path.join(os.path.split(__file__)[0], "data/")
-_test_ref_data_dir = os.path.join(_test_data_dir, "ref_data")
-
-def pipeline(tmpdir, sample_name):
-    from metapathways import pipeline 
-    _test_sample_name =  sample_name
-    _test_input_fasta_file = os.path.join(_test_data_dir, _test_sample_name, "/input/", _test_sample_name + ".fasta")
-
-    commands = ["MetaPathways", "-i",  _test_data_dir + '/' + _test_sample_name + '/input/',
-                "-o", str(tmpdir),
-                "-s", sample_name,
-                "-p", _test_data_dir + "/template_param.txt",
-                "-d", _test_ref_data_dir
-               ]
-    pipeline.process(commands)
-    assert 1 == 1
-
 @pytest.fixture(params=["lagoon-sample", "lagoon-sample2"])
-#@pytest.fixture(params=[ "lagoon-sample2"])
 def sample_name(request):
     return request.param
 
-def test_filter_nuc_input(tmpdir, sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_filter_input
-    out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name 
-    _test_input_fasta_file = os.path.join(_test_data_dir, 
-                                          "input", 
-                                          _test_sample_name + ".fasta"
-                                         )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "preprocessed"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+class MetaPathwaysTester(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp_dir = "tests/test_output_dir/"
+        self.param_file = get_test_data("template_param.txt")
+        self.input_data_dir = get_test_data("input/")
+        self.ref_data_dir = get_test_data("ref_data/")
+        self.sample_one = "lagoon-sample"
+        self.sample_two = "lagoon-sample2"
+        self.test_input_fasta = os.path.join(self.input_data_dir, self.sample_one + ".fasta")
+        # Ensure the outputs are in a clean directory
+        if os.path.isdir(self.tmp_dir):
+            shutil.rmtree(self.tmp_dir)
+        os.mkdir(self.tmp_dir)
+        return
 
-    output_fasta = os.path.join(out_folder_name, 
-                                _test_sample_name, 
-                                "preprocessed", 
-                                _test_sample_name + ".fasta"
-                               )
-    output_mapping_file = os.path.join(out_folder_name, 
-                                       _test_sample_name,
-                                       "preprocessed", 
-                                       _test_sample_name + ".mapping.txt"
-                                      )
+    def tearDown(self) -> None:
+        if os.path.isdir(self.tmp_dir):
+            shutil.rmtree(self.tmp_dir)
+        return
 
-    output_contig_length = os.path.join(out_folder_name, 
-                                        _test_sample_name, 
-                                        "run_statistics", 
-                                        _test_sample_name + ".contig.lengths.txt"
-                                       )
+    def test_pipeline(self):
+        from metapathways import pipeline
 
-    output_logfile = os.path.join(out_folder_name, 
-                                  _test_sample_name, 
-                                  "run_statistics", 
-                                  _test_sample_name + ".nuc.stats"
-                                 )
+        commands = ["MetaPathways",
+                    "-i", self.input_data_dir,
+                    "-o", self.tmp_dir,
+                    "-s", self.sample_one,
+                    "-p", self.param_file,
+                    "-d", self.ref_data_dir]
+        pipeline.process(commands)
 
-    args = [ "--min_length",  "180",
-             "--log_file", output_logfile,
-             "-i", _test_input_fasta_file,
-             "-o", output_fasta,
-             "-M", output_mapping_file,
-             "-t", "nucleotide",
-             "-L", output_contig_length
-           ]
+        tbl_one = os.path.join(self.tmp_dir, self.sample_one, "results", "annotation_table", self.sample_one + ".1.txt")
+        self.assertTrue(os.path.isdir(os.path.join(self.tmp_dir, self.sample_one)))
+        with open(tbl_one) as res_dat:
+            self.assertEqual(161, len(res_dat.readlines()))
+        return
 
-    expect_output_fasta = os.path.join(_test_data_dir, 
-                                         "output", 
-                                         _test_sample_name, 
-                                         'preprocessed', 
-                                         _test_sample_name + ".fasta"
-                                        )
+    def test_filter_nuc_input(self):
+        from metapathways import MetaPathways_filter_input
 
-    expect_output_mapping_file = os.path.join(_test_data_dir, 
-                                         "output", 
-                                         _test_sample_name, 
-                                         "preprocessed", 
-                                         _test_sample_name + ".mapping.txt"
-                                        )
+        # Make the output directories
+        preprocessed_dir = os.path.join(self.tmp_dir, self.sample_one, "preprocessed")
+        run_stats_dir = os.path.join(self.tmp_dir, self.sample_one, "run_statistics")
+        os.makedirs(preprocessed_dir, exist_ok=True)
+        os.makedirs(run_stats_dir, exist_ok=True)
 
-    expect_output_contig_length = os.path.join(_test_data_dir, 
-                                                 'output', 
-                                                 _test_sample_name, 
-                                                 "run_statistics", 
-                                                 _test_sample_name + ".contig.lengths.txt"
-                                               )
-    expect_output_logfile = os.path.join(out_folder_name, 
-                            _test_sample_name, 
-                            "run_statistics", 
-                            _test_sample_name + ".nuc.stats"
-                           )
+        # Intermediate file paths
+        output_fasta = os.path.join(preprocessed_dir, self.sample_one + ".fasta")
+        output_mapping_file = os.path.join(preprocessed_dir, self.sample_one + ".mapping.txt")
+        output_contig_length = os.path.join(run_stats_dir, self.sample_one + ".contig.lengths.txt")
+        output_logfile = os.path.join(run_stats_dir, self.sample_one + ".nuc.stats")
 
-    MetaPathways_filter_input.main(args)
-    assert filecmp.cmp(output_fasta, expect_output_fasta)
-    assert filecmp.cmp(output_mapping_file, expect_output_mapping_file)
-    assert filecmp.cmp(output_contig_length, expect_output_contig_length)
-    assert filecmp.cmp(output_logfile, expect_output_logfile)
+        expect_output_fasta = get_test_data(os.path.join("output", self.sample_one, 'preprocessed',
+                                                         self.sample_one + ".fasta"))
+        expect_output_mapping_file = get_test_data(os.path.join("output", self.sample_one, "preprocessed",
+                                                                self.sample_one + ".mapping.txt"))
+        expect_output_contig_length = get_test_data(os.path.join("output", self.sample_one, "run_statistics",
+                                                                 self.sample_one + ".contig.lengths.txt"))
+        expect_output_logfile = get_test_data(os.path.join("output", self.sample_one, "run_statistics",
+                                                           self.sample_one + ".nuc.stats"))
 
+        args = ["--min_length",  "180",
+                "--log_file", output_logfile,
+                "-i", self.test_input_fasta,
+                "-o", output_fasta,
+                "-M", output_mapping_file,
+                "-t", "nucleotide",
+                "-L", output_contig_length]
 
-def test_orf_predictions_input(tmpdir, sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_orf_prediction
-    out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name 
+        MetaPathways_filter_input.main(args)
+        self.assertTrue(filecmp.cmp(output_fasta, expect_output_fasta))
+        self.assertTrue(filecmp.cmp(output_mapping_file, expect_output_mapping_file))
+        self.assertTrue(filecmp.cmp(output_contig_length, expect_output_contig_length))
+        self.assertTrue(filecmp.cmp(output_logfile, expect_output_logfile))
+        return
 
-    prod_input = os.path.join(_test_data_dir, 
-                              "output",
-                              _test_sample_name, 
-                              "preprocessed", 
-                              _test_sample_name + ".fasta"
-                            )
+    def test_orf_predictions_input(self):
+        from metapathways import MetaPathways_orf_prediction
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+        _test_sample = self.sample_one
+        prod_input = get_test_data(os.path.join("output", _test_sample, 'preprocessed', _test_sample + ".fasta"))
 
-    output_gff = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".gff"
-                             )
+        os.makedirs(os.path.join(self.tmp_dir, _test_sample, "orf_prediction"), exist_ok=True)
+        os.makedirs(os.path.join(self.tmp_dir, _test_sample, "run_statistics"), exist_ok=True)
 
-    expect_output_gff = os.path.join(_test_data_dir,
-                                       "output", 
-                                       _test_sample_name, 
-                                       "orf_prediction", 
-                                       _test_sample_name + ".gff"
-                                        )
+        output_gff = os.path.join(self.tmp_dir, _test_sample, "orf_prediction", _test_sample + ".gff")
+        expect_output_gff = get_test_data(os.path.join("output", _test_sample, "orf_prediction", _test_sample + ".gff"))
 
-    args = [ "--prod_exec", "prodigal", 
-             "--prod_m", 
-             "--prod_p", 'meta',
-             "--prod_f", 'gff',
-             "--prod_g", '11',
-             "--prod_input", prod_input,
-             "--prod_output", output_gff
-           ]
+        args = ["--prod_exec", "prodigal",
+                "--prod_m",
+                "--prod_p", 'meta',
+                "--prod_f", 'gff',
+                "--prod_g", '11',
+                "--prod_input", prod_input,
+                "--prod_output", output_gff]
 
+        MetaPathways_orf_prediction.main(args)
+        self.assertTrue(filecmp.cmp(output_gff, expect_output_gff))
+        return
 
-    MetaPathways_orf_prediction.main(args)
-    #print(glob.glob(os.path.join(out_folder_name, _test_sample_name, "orf_prediction/*")))
-    assert filecmp.cmp(output_gff, expect_output_gff)
+    def test_create_amino_sequences(self):
+        from metapathways import MetaPathways_create_amino_sequences
 
+        _test_sample = self.sample_one
 
-def test_create_amino_sequences(tmpdir, sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_create_amino_sequences 
-    out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name 
+        g_input = get_test_data(os.path.join("output", _test_sample, "orf_prediction", _test_sample + ".gff"))
+        n_input = get_test_data(os.path.join("output", _test_sample, "preprocessed", _test_sample + ".fasta"))
 
-    g_input = os.path.join(_test_data_dir, 
-                              "output",
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".gff"
-                            )
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok=True)
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"), exist_ok=True)
 
-    n_input = os.path.join(_test_data_dir, 
-                              "output",
-                              _test_sample_name, 
-                              "preprocessed", 
-                              _test_sample_name + ".fasta"
-                            )
+        output_amino = os.path.join(self.tmp_dir, _test_sample, "orf_prediction", _test_sample + ".faa")
+        output_nuc = os.path.join(self.tmp_dir, _test_sample, "orf_prediction", _test_sample + ".fna")
+        output_gff = os.path.join(self.tmp_dir, _test_sample, "orf_prediction", _test_sample + ".unannot.gff")
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+        expect_output_amino = get_test_data(os.path.join("output", _test_sample, "orf_prediction",
+                                                         _test_sample + ".faa"))
+        expect_output_nuc = get_test_data(os.path.join("output", _test_sample, "orf_prediction",
+                                                       _test_sample + ".fna"))
+        expect_output_gff = get_test_data(os.path.join("output", _test_sample, "orf_prediction",
+                                                       _test_sample + ".unannot.gff"))
 
-    output_amino = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".faa"
-                             )
+        args = ["-g", g_input,
+                "-n", n_input,
+                "--output_amino", output_amino,
+                "--output_nuc", output_nuc,
+                "--output_gff", output_gff]
 
-    expect_output_amino = os.path.join(_test_data_dir, 
-                                       "output", 
-                                       _test_sample_name, 
-                                       "orf_prediction", 
-                                       _test_sample_name + ".faa"
-                                        )
+        MetaPathways_create_amino_sequences.main(args)
 
-    output_nuc = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".fna"
-                             )
+        self.assertTrue(compare_lines_in_files(output_gff, expect_output_gff, sort_n_compare=True))
+        self.assertTrue(compare_lines_in_files(output_amino, expect_output_amino, sort_n_compare=True))
+        self.assertTrue(compare_lines_in_files(output_nuc, expect_output_nuc, sort_n_compare=True))
+        return
 
-    expect_output_nuc = os.path.join(_test_data_dir, 
-                                       "output", 
-                                       _test_sample_name, 
-                                       "orf_prediction", 
-                                       _test_sample_name + ".fna"
-                                        )
+    def test_refscores(self):
+        from metapathways import MetaPathways_refscore
 
-    output_gff = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".unannot.gff"
-                             )
+        _test_sample = self.sample_one
 
-    expect_output_gff = os.path.join(_test_data_dir,
-                                       "output", 
-                                       _test_sample_name, 
-                                       "orf_prediction", 
-                                       _test_sample_name + ".unannot.gff"
-                                        )
-    args = [ "-g", g_input, 
-             "-n", n_input, 
-             "--output_amino", output_amino,
-             "--output_nuc", output_nuc,
-             "--output_gff", output_gff
-           ]
+        faa_input = get_test_data(os.path.join("output", _test_sample, "orf_prediction", _test_sample + ".qced.faa"))
 
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"))
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"))
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"))
 
-    MetaPathways_create_amino_sequences.main(args)
+        output_refscores = os.path.join(self.tmp_dir, _test_sample, "blast_results", _test_sample + ".refscores.BLAST")
+        expect_output_refscores = get_test_data(os.path.join("output", _test_sample, "blast_results",
+                                                             _test_sample + ".refscores.BLAST"))
 
-    #print(glob.glob(os.path.join(out_folder_name, _test_sample_name, "orf_prediction/*")))
-    assert compare_lines_in_files(output_gff, expect_output_gff, sort_n_compare = True)
-    assert compare_fasta_files(output_amino, expect_output_amino, sort_n_compare = True)
-    assert compare_fasta_files(output_nuc, expect_output_nuc, sort_n_compare = True)
+        args = ["-i", faa_input,
+                "-o", output_refscores,
+                "-a", "BLAST"]
+        MetaPathways_refscore.main(args)
 
+        self.assertTrue(compare_lines_in_files(output_refscores, expect_output_refscores, sort_n_compare=True))
+        return
 
-def test_refscores(tmpdir, sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_refscore 
-    out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name
+    def test_filter_amino_input(self):
+        from metapathways import MetaPathways_filter_input
 
-    faa_input = os.path.join(_test_data_dir, 
-                              _test_sample_name, 
-                              "output",
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".qced.faa"
-                            )
+        _test_sample = self.sample_one
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+        input_faa = get_test_data(os.path.join("output", _test_sample, "orf_prediction", _test_sample + ".faa"))
 
-    output_refscores = os.path.join(out_folder_name, 
-                              _test_sample_name, 
-                              "blast_results", 
-                              _test_sample_name + ".refscores.BLAST"
-                             )
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok = True)
+        os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"), exist_ok = True)
 
-    expect_output_refscores = os.path.join(_test_data_dir, 
-                                             _test_sample_name, 
-                                             "output", 
-                                             _test_sample_name, 
-                                             "blast_results", 
-                                             _test_sample_name + ".refscores.BLAST"
-                                            )
+        output_qced_faa = os.path.join(self.tmp_dir, _test_sample, "orf_prediction",
+                                       _test_sample + ".qced.faa")
+        output_aminoseq_length = os.path.join(self.tmp_dir, _test_sample, "run_statistics",
+                                              _test_sample + ".orf.lengths.txt")
+        output_logfile = os.path.join(self.tmp_dir, _test_sample, "run_statistics",
+                                      _test_sample + ".amino.stats")
 
-    args = [ "-i", faa_input, 
-             "-o", output_refscores, 
-             "-a", "BLAST",
-           ]
-    MetaPathways_refscore.main(args)
+        expect_output_qced_faa = get_test_data(os.path.join("output", _test_sample, 'orf_prediction',
+                                                            _test_sample + ".qced.faa"))
+        expect_output_aminoseq_length = get_test_data(os.path.join("output", _test_sample, "run_statistics",
+                                                                   _test_sample + ".orf.lengths.txt"))
+        expect_output_logfile = os.path.join(self.tmp_dir, _test_sample, "run_statistics",
+                                             _test_sample + ".amino.stats")
 
-    assert compare_lines_in_files(output_refscores, expect_output_refscores, sort_n_compare = True)
+        args = ["--min_length",  "60",
+                "--log_file", output_logfile,
+                "-i", input_faa,
+                "-o", output_qced_faa,
+                "-t", "amino",
+                "-L", output_aminoseq_length]
 
+        MetaPathways_filter_input.main(args)
 
-def test_filter_amino_input(tmpdir, sample_name):
-    from metapathways import pipeline 
-    from metapathways import MetaPathways_filter_input
-    out_folder_name = str(tmpdir)
-    _test_sample_name = sample_name
+        self.assertTrue(compare_lines_in_files(output_qced_faa, expect_output_qced_faa, sort_n_compare=True))
+        self.assertTrue(compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, sort_n_compare=False))
+        self.assertTrue(compare_lines_in_files(output_logfile, expect_output_logfile, sort_n_compare=False))
+        return
 
-    input_faa = os.path.join( _test_data_dir, 
-                              "output", 
-                              _test_sample_name, 
-                              "orf_prediction", 
-                              _test_sample_name + ".faa"
-                            )
+    def test_run_func_search(self):
+        run_func_search(self.tmp_dir, "refseq-small-sample", self.sample_one)
+        run_func_search(self.tmp_dir, db_name, self.sample_two)
+        return
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
-
-    output_qced_faa = os.path.join(out_folder_name, 
-                                   _test_sample_name, 
-                                  "orf_prediction", 
-                                  _test_sample_name + ".qced.faa"
-                                  )
-
-    expect_output_qced_faa = os.path.join(_test_data_dir, 
-                                         "output", 
-                                         _test_sample_name, 
-                                         'orf_prediction', 
-                                         _test_sample_name + ".qced.faa"
-                                        )
-
-    output_aminoseq_length = os.path.join(out_folder_name, 
-                                          _test_sample_name, 
-                                          "run_statistics", 
-                                          _test_sample_name + ".orf.lengths.txt"
-                                       )
-
-    expect_output_aminoseq_length = os.path.join(_test_data_dir, 
-                                                'output', 
-                                                 _test_sample_name, 
-                                                "run_statistics", 
-                                                 _test_sample_name + ".orf.lengths.txt"
-                                                )
-
-    output_logfile = os.path.join(out_folder_name, 
-                                  _test_sample_name, 
-                                  "run_statistics", 
-                                  _test_sample_name + ".amino.stats"
-                                 )
-
-    expect_output_logfile = os.path.join(out_folder_name, 
-                                           _test_sample_name, 
-                                           "run_statistics", 
-                                           _test_sample_name + ".amino.stats"
-                                          )
-    args = [ "--min_length",  "60",
-             "--log_file", output_logfile,
-             "-i", input_faa,
-             "-o", output_qced_faa,
-             "-t", "amino",
-             "-L", output_aminoseq_length
-           ]
-
-    MetaPathways_filter_input.main(args)
-
-    assert compare_fasta_files(output_qced_faa, expect_output_qced_faa, sort_n_compare = True)
-    assert compare_lines_in_files(output_aminoseq_length, expect_output_aminoseq_length, sort_n_compare = False)
-    assert compare_lines_in_files(output_logfile, expect_output_logfile, sort_n_compare = False)
-
-def test_func_search_sample1(tmpdir, sample_name):
-    run_func_search(tmpdir, "refseq-small-sample", sample_name)
+# _test_data_dir = ""
 
 @pytest.fixture(params=["refseq-small-sample", "cazy-small-sample", "kegg-small-sample", "metacyc-small-sample"])
 def db_name(request):
     return request.param
-
-def test_func_search_sample2(tmpdir, db_name):
-    run_func_search(tmpdir, db_name, "lagoon-sample2")
 
 
 def run_func_search(tmpdir, dbname,  test_sample_name):
@@ -495,8 +241,8 @@ def run_func_search(tmpdir, dbname,  test_sample_name):
                             dbname
                            )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"), exist_ok = True)
 
     output_blast_results = os.path.join(out_folder_name, 
                               _test_sample_name, 
@@ -539,9 +285,9 @@ def test_refscores(tmpdir, sample_name):
                               _test_sample_name + ".qced.faa"
                             )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "orf_prediction"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "run_statistics"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "orf_prediction"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "run_statistics"), exist_ok = True)
 
     output_refscores = os.path.join(out_folder_name, 
                               _test_sample_name, 
@@ -596,7 +342,7 @@ def run_parse_blast(tmpdir,  db_name, sample_name):
                                          _test_sample_name + ".refscores.BLAST"
                                         )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"), exist_ok = True)
 
     output_parsed_blast_results = os.path.join(out_folder_name, 
                                              _test_sample_name, 
@@ -649,8 +395,8 @@ def test_rRNA_stats_calculator(tmpdir, sample_name, rna_db):
                             rna_db
                            )
     
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "blast_results"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "rRNA"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "blast_results"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "results",  "rRNA"), exist_ok = True)
 
     output_lsu_rRNA_stats = os.path.join(out_folder_name, 
                                          _test_sample_name, 
@@ -734,7 +480,7 @@ def test_tRNA_scan(tmpdir, sample_name):
     TPCsignal = os.path.join(_test_data_dir, "ref_data", "TPCsignal")
     Dsignal = os.path.join(_test_data_dir, "ref_data", "Dsignal")
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "tRNA"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "results",  "tRNA"), exist_ok = True)
 
     output_tRNA_stats = os.path.join(out_folder_name, 
                                              _test_sample_name, 
@@ -871,8 +617,8 @@ def test_annotate_fast(tmpdir, sample_name):
                                           _test_sample_name
                                          )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "genbank"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "results",  "annotation_table"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one,  "genbank"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one,  "results",  "annotation_table"), exist_ok = True)
 
     argv = [
       "--input_gff", input_gff, 
@@ -953,7 +699,7 @@ def test_create_reports_fast(tmpdir, sample_name):
                              "annotation_table"
                              )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "annotation_table"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "results",  "annotation_table"), exist_ok = True)
 
     output_fun_and_tax = os.path.join(out_folder_name, 
                                       _test_sample_name, 
@@ -1115,8 +861,8 @@ def test_create_genbank_ptinput(tmpdir, sample_name):
                              _test_sample_name + ".gbk" 
                              )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "ptools"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name,  "genbank"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one,  "ptools"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one,  "genbank"), exist_ok = True)
 
     args = [ 
              "--g", input_annot_gff,
@@ -1168,8 +914,8 @@ def test_rpkm(tmpdir, sample_name):
                              _test_sample_name + ".annot.gff"
                             )
 
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "results",  "rpkm"), exist_ok = True)
-    os.makedirs(os.path.join(out_folder_name, _test_sample_name, "bwa"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "results",  "rpkm"), exist_ok = True)
+    os.makedirs(os.path.join(self.tmp_dir, self.sample_one, "bwa"), exist_ok = True)
 
     output_orf_rpkm = os.path.join(out_folder_name, 
                                    _test_sample_name, 
@@ -1223,4 +969,7 @@ def test_rpkm(tmpdir, sample_name):
     assert compare_rpkm_stats_in_files(output_rpkm_stats, expect_output_rpkm_stats, sort_n_compare = True)
     assert compare_rpkm_values_in_files(output_orf_rpkm, expect_output_orf_rpkm, sort_n_compare = True)
 
+
+if __name__ == '__main__':
+    unittest.main()
 
