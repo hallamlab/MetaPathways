@@ -10,8 +10,10 @@ __status__ = "Release"
 try:
     import traceback
     import re
+    import sys
+
     from sequences import SequenceRecordSerializer
-except
+except ImportError:
     print("Cannot load some modules")
     print(traceback.print_exc(10))
     sys.exit(0)

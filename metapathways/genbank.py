@@ -13,6 +13,7 @@ try:
     import textwrap
     import sys
     import location
+
     from metapathways import sequences as sequencemod
 except:
     print(""" Could not load some user defined  module functions""")
@@ -20,10 +21,7 @@ except:
     sys.exit(3)
 
 
-from sequences import ( sequencemod.sequencemod.SequenceRecordParser, sequencemod.sequencemod.SequenceRecordSerializer, sequencemod.SequenceRecord, sequencemod.SequenceFactory, sequencemod.Feature,
-
-
-class GenBankRecordParser(SequenceRecordParser):
+class GenBankRecordParser(sequencemod.SequenceRecordParser):
     """Parses a GenBank record from a string or file."""
 
     ATTRIBUTE_REGEXP = re.compile(r"^[A-Z]+")
@@ -450,7 +448,7 @@ class GenBankRecordParser(SequenceRecordParser):
         raise StopIteration()
 
 
-class GenBankRecordSerializer(SequenceRecordSerializer):
+class GenBankRecordSerializer(sequencemod.SequenceRecordSerializer):
     """Writes a record to the GenBank format."""
 
     ATTRIBUTE_WRAPPER = textwrap.TextWrapper(width=79, subsequent_indent=" " * 12)
