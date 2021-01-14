@@ -48,7 +48,7 @@ def print_unequal_lines_in_files(file1, file2, sort_n_compare):
             print("<< " + b.strip())
 
 
-def compare_lines_in_files(file1, file2, sort_n_compare):
+def compare_lines_in_files(file1, file2, sort_n_compare=True):
     with gzip.open(file1, 'r') if file1.endswith('.gz') \
             else open(file1, 'r') as fout, \
             gzip.open(file2, 'r') if file2.endswith('.gz') \
