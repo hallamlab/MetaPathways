@@ -13,36 +13,33 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 setup(
-    name = "MetaPathways",
-    version = "3.1.6",
-    author =  "Kishori Mohan Konwar",
-    author_email = "kishori82@gmail.com",
-    description = (
+    name="MetaPathways",
+    version="3.1.6",
+    author="Kishori Mohan Konwar",
+    author_email="kishori82@gmail.com",
+    description=(
         "MetaPathways is a modular pipeline to build PGDBs"
         " from Metagenomic sequences."
     ),
-
-    license = "MIT",
-    keywords = "metagenomics pipeline",
+    license="MIT",
+    keywords="metagenomics pipeline",
     url="http://packages.python.org/",
-    download_url = "https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
-    packages = find_packages(),
-    scripts = ["bin/compress_by_ec"],
-    install_requires = ["pyfastx"],
-    entry_points = {
-        "console_scripts": ['MetaPathways=metapathways.pipeline:main' ]
-    },
+    download_url="https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
+    packages=find_packages(),
+    scripts=["bin/compress_by_ec"],
+    install_requires=["pyfastx"],
+    entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),
     include_package_data=True,
     classifiers=CLASSIFIERS,
     extras_require={
-            'test': ['pytest', 'pytest-cov', 'tox'],
+        "test": ["pytest", "pytest-cov", "tox"],
     },
-    python_requires='>3.5.2'
+    python_requires=">3.5.2",
 )
-
