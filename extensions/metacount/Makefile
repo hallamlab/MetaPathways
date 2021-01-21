@@ -3,7 +3,7 @@ CC = g++ -std=c++17 -Wall # -g
 #CC = g++ -Wall 
 CCFLAGS=  #-m64
 
-CFLAGS=-Iparser/include -Lparser
+CFLAGS=-Iparser/include -Iparser/bam -Iparser/general -Lparser
 
 PROG = metacount
 SOURCES= utilities.cpp options.cpp  metacount.cpp core.cpp parser.cpp types.cpp
