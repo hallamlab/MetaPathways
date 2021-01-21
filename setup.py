@@ -33,15 +33,15 @@ setup(
     download_url = "https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
     packages = find_packages(),
     scripts = ["bin/compress_by_ec"],
-    install_requires =  ["pyfastx"],
+    install_requires = ["pyfastx"],
     entry_points = {
         "console_scripts": ['MetaPathways=metapathways.pipeline:main' ]
     },
-    long_description  =  read("README.md"),
-    include_package_data = True,
-    classifiers = CLASSIFIERS,
-    extras_require = {
-            'test': ['pytest', 'pytest-cov'],
+    long_description=read("README.md"),
+    include_package_data=True,
+    classifiers=CLASSIFIERS,
+    extras_require={
+            'test': ['pytest', 'pytest-cov', 'tox'],
     },
     python_requires='>3.5.2'
 )
