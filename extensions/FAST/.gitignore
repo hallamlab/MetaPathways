@@ -1,0 +1,33 @@
+*.o
+TestData/*
+last-merge-batches+
+lastex+
+lastal+
+lastdb+
+last-split+
+a
+*.swp
+core
+CMakeFiles*
+CMakeCache*
+cmake_install*
+cachegrind*
+callgrind*
+massif*
+lastal.d*
+out*
+nohup*
+*.dSYM*
+1
+watch*
+stuff*
+script.sh
+todo
+test*
+big*
+
+# OSX files
+.DS_Store
+
+# Test data
+eppley_test/

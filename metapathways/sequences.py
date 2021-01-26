@@ -10,8 +10,9 @@ try:
     import traceback
     import datetime
     import re
+    import sys
     import location
-except
+except ImportError:
     print("Cannot load some modules")
     print(traceback.print_exc(10))
     sys.exit(0)
