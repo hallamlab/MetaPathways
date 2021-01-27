@@ -1,6 +1,13 @@
 import os
 from setuptools import setup, find_packages
 
+
+package_root = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(package_root, "metapathways", "_version.py")) as fp:
+    k, v = fp.read().strip().split(" = ")
+version = v.strip('"')
+
 CLASSIFIERS = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
@@ -20,7 +27,7 @@ def read(fname):
 
 setup(
     name="MetaPathways",
-    version="3.1.6",
+    version=version,
     author="Kishori Mohan Konwar",
     author_email="kishori82@gmail.com",
     description=(
