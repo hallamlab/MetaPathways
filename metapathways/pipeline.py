@@ -66,6 +66,9 @@ def createParser():
     parser.add_option("-d", "--dirref", dest="refdb_dir",
                       help="location of the reference DB [REQUIRED]")
 
+    parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
+                      help="max number of cores to use in multhreaded steps [DEFAULT 1]")
+
     #ith out of order completion \ time-stamps in the \'workflow_log.txt\'
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
@@ -75,7 +78,7 @@ def createParser():
                       help="print MetaPathways version")
 
     parser.add_option("-s", "--samples", dest="sample_subset", action="append", default=[],
-                      help="Processes only samples in the list  subset specified [ -s sample1 -s sample2 ]" )
+                      help="process only specific samples [-s sample1 -s sample2]" )
 
     return parser
 def valid_arguments(opts, args):
@@ -379,7 +382,7 @@ def process(argv):
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
         "RPKM_EXECUTABLE"      : 'metacount',
-        "NUM_CPUS"             : 4,
+        "NUM_CPUS"             : opts.num_cpus,
         "REFDBS"               : opts.refdb_dir
     }
 
