@@ -563,6 +563,8 @@ class ContextCreator:
         pyScript = self.configs.SCAN_rRNA
 
         algorithm  = s.algorithm.upper()
+        num_threads = self.configs.NUM_CPUS
+
         for db in refrRNArefDBs:
             '''inputs'''
             dbpath = self.configs.REFDBS + PATHDELIM + 'taxonomic' + PATHDELIM + 'formatted' + PATHDELIM + db
@@ -586,8 +588,8 @@ class ContextCreator:
                     eprintf("ERROR\tCannot find blastn\n")
                         #logger.printf("ERROR\tCannot find blastn to format\n")
 
-                blast_cmd = "%s -outfmt 6 -num_threads 8  -query %s -out %s -db %s -max_target_seqs 5"\
-                      %(executable, context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
+                blast_cmd = "%s -outfmt 6 -num_threads %s  -query %s -out %s -db %s -max_target_seqs 5"\
+                      %(executable, str(num_threads), context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             if False and algorithm == "LAST":
                 executable = shutil.which(self.configs.LAST_EXECUTABLE)
