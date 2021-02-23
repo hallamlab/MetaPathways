@@ -619,8 +619,10 @@ class ContextCreator:
 
         '''inputs'''
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        TPCsignal = self.configs.RESOURCES_DIR + PATHDELIM + 'TPCsignal'
-        Dsignal = self.configs.RESOURCES_DIR+ PATHDELIM + 'Dsignal'
+        import pkg_resources
+
+        TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
+        Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
 
         '''outputs'''
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
