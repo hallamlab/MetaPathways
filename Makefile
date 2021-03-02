@@ -39,6 +39,17 @@ docker-deploy:
 	sudo docker login
 	sudo docker push taltman/metapathways:taltman_dev
 
+
+### Conda Packaging
+##
+## Install conda build tools:
+conda-build-init:
+	conda install --yes conda-build
+
+conda-install-deps:
+	conda install --yes -c bioconda blast prodigal bwa
+
+
 # The location of the expat directory
 CC=gcc  
 LEX=lex  
