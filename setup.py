@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 package_root = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(package_root, "metapathways", "_version.py")) as fp:
-    k, v = fp.read().strip().split(" = ")
+    _, v = fp.read().strip().split(" = ")
 version = v.strip('"')
 
 CLASSIFIERS = [
