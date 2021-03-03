@@ -183,8 +183,7 @@ workflows:
           executor: python38
           toxenv: "coverage-py38"
           persist_coverage: true
-
-      - coverage
+      - coverage:
           requires:
             - build
             - test
