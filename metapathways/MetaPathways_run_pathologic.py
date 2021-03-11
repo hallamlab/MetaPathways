@@ -126,7 +126,7 @@ The resulting ePGDB is in the ~/ptools-local/pgdbs/user folder. They can be view
         dest="lca_min_score",
         type="float",
         default=20,
-        help="minimum BLAST/LAST score to consider as for LCA rule",
+        help="minimum BLAST/FAST score to consider as for LCA rule",
     )
 
     wtd_options_group.add_option(

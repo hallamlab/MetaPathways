@@ -377,8 +377,8 @@ def process(argv):
         "BLASTP_EXECUTABLE"    : 'blastp',
         "BLASTN_EXECUTABLE"    : 'blastn',
         "BWA_EXECUTABLE"       : 'bwa',
-        "LASTDB_EXECUTABLE"    : 'lastdb+',
-        "LAST_EXECUTABLE"      : 'lastal+',
+        "FASTDB_EXECUTABLE"    : 'lastdb+',
+        "FAST_EXECUTABLE"      : 'lastal+',
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
         "RPKM_EXECUTABLE"      : 'metacount',
@@ -394,7 +394,7 @@ def process(argv):
          if len(input_output_list):
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]
-                algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='LAST').upper()
+                algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
 
                 s = sampledata.SampleData()
                 s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)

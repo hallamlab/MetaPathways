@@ -30,7 +30,7 @@ usage = __file__ + """ -i input_fasta_file -o output_file """
 
 def createParser():
     epilog = """The amino acid sequences in the orf_prediction folder are used to do a self alignment, which will be used to compute the bit score ratio (BSR) for the hits.  The BSR ratio can be defined at the ratio of a the bit-score between a query and a target sequence to the bitcore when both the query and target sequenes are the query sequence. Usually, a BSR ratio of 0.4 or more is considered as a good hit for protein sequences. Note that BSR ratio is designed in some sense to have a normalized value for the bit-score  since the score is also influenced by the length of the query.
-The results are written to a file  (usually in a folder called blast_results in the MetaPathway pipeline,  into a file named <samplename>.refscore.<algorithm> (where <algorithm> refers to the BLAST or LAST in the context of the pipeline) extension This script can be extended to add other sequence homology search algorithms."""
+The results are written to a file  (usually in a folder called blast_results in the MetaPathway pipeline,  into a file named <samplename>.refscore.<algorithm> (where <algorithm> refers to the BLAST or FAST in the context of the pipeline) extension This script can be extended to add other sequence homology search algorithms."""
 
     epilog = re.sub(r"[ \t\f\v]+", " ", epilog)
     parser = OptionParser(usage=usage, epilog=epilog)
@@ -48,7 +48,7 @@ The results are written to a file  (usually in a folder called blast_results in 
         "-a",
         "--algorithm",
         dest="algorithm",
-        choices=["BLAST", "LAST"],
+        choices=["BLAST", "FAST"],
         default="BLAST",
         help="the algorithm used for computing homology [DEFAULT: BLAST]",
     )
@@ -301,7 +301,7 @@ def _old_compute_refscores(
     allNames,
     algorithm,
 ):
-    if algorithm == "LAST":
+    if algorithm == "FAST":
         format_db_last(formatdb_executable, seq_subset_file)
         last_table_out = seq_subset_file.name + ".lastout"
         last_against_itself(blast_executable, seq_subset_file, last_table_out)

@@ -84,7 +84,7 @@ class Parameters:
             },
             "quality_control": {"delete_replicates": {"yes": True, "no": True}},
             "orf_prediction": {"algorithm": {"prodigal": True, "FGS+": True}},
-            "annotation": {"algorithm": {"LAST": True, "BLAST": True}},
+            "annotation": {"algorithm": {"FAST": True, "BLAST": True}},
             # e.g. blast or last
             # annotation:dbs metacyc-v4-2011-07-03,refseq-nr-2014-01-18,COG_2013-12-27,kegg-pep-2011-06-18,seed-2014-01-30
             # rRNA annotation parameters

@@ -126,7 +126,7 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
         for db in dbs:
             algorithm = ""
             if dbType == "taxonomic":
-                algorithm = _algorithm
+                algorithm = 'BLAST'
                 seqType = "nucl"
             elif dbType == "functional":
                 algorithm = _algorithm
@@ -312,17 +312,17 @@ def _checkParams(params, paramsAccept, logger=None, errors=None):
     if not type(params) is dict and type(paramsAccept) is dict:
         # print  'type ',  params, paramsAccept,  (not params in paramsAccept), (len(paramsAccept.keys())!=0)
         try:
-            if (not params in paramsAccept) and len(paramsAccept.keys()) != 0:
+            if (not params in paramsAccept) and len(paramsAccept.keys())!=0:
                 errors[params] = False
                 choices = ", ".join(paramsAccept.keys())
                 gutils.eprintf(
-                    "ERROR\tValue for key %s, in param file,  is not set propertly must be one of %s \t %s\n",
+                    "ERROR\tValue for key %s, in param file, is not set propertly must be one of %s\t%s\n",
                     gutils.sQuote(params),
                     gutils.sQuote(choices),
                     __name__,
                 )
                 logger.printf(
-                    "ERROR\tValue for key %s, in param file,  is not set propertly must be one of %s\t%s\n",
+                    "ERROR\tValue for key %s, in param file, is not set propertly must be one of %s\t%s\n",
                     gutils.sQuote(params),
                     gutils.sQuote(choices),
                     __name__,
@@ -362,13 +362,13 @@ def getSuffixes(algorithm, seqType):
     """
 
     suffixes = {}
-    suffixes["LAST"] = {}
+    suffixes["FAST"] = {}
     suffixes["BLAST"] = {}
     suffixes["BLAST"]["nucl"] = ["nhr", "nsq", "nin"]
     suffixes["BLAST"]["prot"] = ["phr", "psq", "pin"]
 
-    suffixes["LAST"]["nucl"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
-    suffixes["LAST"]["prot"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
+    suffixes["FAST"]["nucl"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
+    suffixes["FAST"]["prot"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
 
     if not algorithm in suffixes:
         return None

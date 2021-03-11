@@ -1,4 +1,4 @@
-"""Parses the BLAST/LAST results """
+"""Parses the BLAST/FAST results """
 
 __author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2020, MetaPathways"
@@ -77,7 +77,7 @@ def createParser():
         "-a",
         "--algorithm",
         dest="algorithm",
-        choices=["BLAST", "LAST"],
+        choices=["BLAST", "FAST"],
         default="BLAST",
         help="the algorithm used for computing homology [DEFAULT: BLAST]",
     )
@@ -248,7 +248,7 @@ def create_query_dictionary(
         blastoutfh = open(blastoutputfile, "r")
     except:
         print(
-            "ERROR : cannot open B/LAST output file " + blastoutputfile + " to parse "
+            "ERROR : cannot open BLAST/FAST output file " + blastoutputfile + " to parse "
         )
         return
 
@@ -263,35 +263,35 @@ def create_query_dictionary(
                     if not words[1] in query_dictionary:
                         query_dictionary[words[1]] = True
 
-                if algorithm == "LAST":
+                if algorithm == "FAST":
                     if not words[1] in query_dictionary:
                         query_dictionary[words[1]] = True
         blastoutfh.close()
     except:
         gutils.eprintf(
-            "\nERROR : while reading  B/LAST output file "
+            "\nERROR : while reading  BLAST/FAST output file "
             + blastoutputfile
             + " to parse "
-            + "        : make sure B/LAST ing was done for the particular database"
+            + "        : make sure BLAST/FAST ing was done for the particular database"
         )
 
         if errorlogger:
             errorlogger.write(
-                "\nERROR : while reading  B/LAST output file %s to parse\n"
+                "\nERROR : while reading  BLAST/FAST output file %s to parse\n"
                 % (blastoutputfile)
             )
             errorlogger.write(
-                "      : make sure B/LAST ing was done for the particular database\n"
+                "      : make sure BLAST/FAST ing was done for the particular database\n"
             )
         pass
 
 
 def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=None):
     if not query_dictionary:
-        print("WARNING : empty query dictionary in parse B/LAST")
+        print("WARNING : empty query dictionary in parse BLAST/FAST")
 
         if errorlogger:
-            errologger.write("WARNING : empty query dictionary in parse B/LAST\n")
+            errologger.write("WARNING : empty query dictionary in parse BLAST/FAST\n")
         return
 
     seq_beg_pattern = re.compile(">")
@@ -402,27 +402,27 @@ class BlastOutputParser(object):
             self.blastoutputfile = open(self.blastoutput, "r")
         except:
             gutils.eprintf(
-                "\nERROR : cannot open B/LAST output file "
+                "\nERROR : cannot open BLAST/FAST output file "
                 + blastoutput
                 + " to parse "
-                + '      : make sure "B/LAST"ing was done for the particular database'
+                + '      : make sure "BLAST/FAST"ing was done for the particular database'
             )
 
             if self.error_and_warning_logger:
                 self.error_and_warning_logger.write(
-                    "ERROR : cannot open B/LAST output file %s %s to parse \n"
-                    + '      : make sure "B/LAST"ing was done for '
+                    "ERROR : cannot open BLAST/FAST output file %s %s to parse \n"
+                    + '      : make sure "BLAST/FAST"ing was done for '
                     + "the particular database" % (blastoutput)
                 )
             errormod.insert_error(5)
-            mputils.exit_process("Cannot open B/LAST output file " + blastoutput)
+            mputils.exit_process("Cannot open BLAST/FAST output file " + blastoutput)
 
         try:
             self.create_refBitScores()
         except:
             print(traceback.print_exc(10))
             mputils.exit_process(
-                "Error while reading from  B/LAST refscore file " + self.refscore_file
+                "Error while reading from  BLAST/FAST refscore file " + self.refscore_file
             )
         try:
             create_dictionary(database_mapfile, self.annot_map, query_dictionary)
@@ -468,12 +468,12 @@ class BlastOutputParser(object):
             words[10] = 0.0  # evalue
             words[11] = temp[0]
         except:
-            gutils.eprintf("ERROR : Invalid B/LAST output file %s \n" % (self.blastoutput))
+            gutils.eprintf("ERROR : Invalid BLAST/FAST output file %s \n" % (self.blastoutput))
             if self.error_and_warning_logger:
                 self.error_and_warning_logger.write(
-                    "ERROR : Invalid B/LAST output file" % (self.blastoutput)
+                    "ERROR : Invalid BLAST/FAST output file" % (self.blastoutput)
                 )
-            mputils.exit_process("ERROR : Invalid B/LAST output file %s " % (self.blastoutput))
+            mputils.exit_process("ERROR : Invalid BLAST/FAST output file %s " % (self.blastoutput))
 
     def refillBuffer(self):
         i = 0
@@ -506,7 +506,7 @@ class BlastOutputParser(object):
 
             """shorten the ORF id"""
             words[0] = mputils.ShortenORFId(words[0])
-            # if  self.opts.algorithm =='LAST':
+            # if  self.opts.algorithm =='FAST':
             if self.needToPermute:
                 self.permuteForLAST(words)
 
@@ -766,7 +766,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         errorlogger.write("#STEP\tPARSE_BLAST\n")
 
     if opts.Lambda == None or opts.k == None:
-        if opts.algorithm == "LAST":
+        if opts.algorithm == "FAST":
             opts.Lambda = 0.300471
             opts.k = 0.103946
 
