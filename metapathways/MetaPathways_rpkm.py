@@ -149,7 +149,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s -o %s" % (
+        cmd = "%s mem -t %d %s %s %s | samtools sort -o %s -" % (
             bwaExec,
             num_threads,
             indexFile,
@@ -159,19 +159,20 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s -o %s " % (
+         cmd = "%s mem -t %d  %s %s | samtools sort -o %s -" % (
                 bwaExec,
                 num_threads,
                 indexFile,
                 readFiles[0],
                 bwaOutputTmp
             )
+    print(cmd)
     result = sysutils.getstatusoutput(cmd)
 
     if result[0] == 0:
         rename(bwaOutputTmp, bwaOutput)
     else:
-        gutils.eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
+        gutils.eprintf("ERROR:\tError in file processing read files %s\n", readFiles)
         status = False
 
     return status
@@ -263,7 +264,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if not indexSuccess:
         gutils.eprintf("\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs)
         if errorlogger:
-            errorlogger.eprintf(
+            gutils.eprintf(
                 "\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs
             )
             errormod.insert_error(10)
@@ -288,7 +289,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         else:
             gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
             if errorlogger:
-                errorlogger.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
+                gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
             errormod.insert_error(10)
           # exit_process("ERROR\tFailed to run BWA!\n")
             # END of running BWA
