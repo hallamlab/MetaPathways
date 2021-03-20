@@ -149,7 +149,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s | samtools sort -o %s -" % (
+        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -o %s -" % (
             bwaExec,
             num_threads,
             indexFile,
@@ -159,7 +159,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s | samtools sort -o %s -" % (
+         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -o %s -" % (
                 bwaExec,
                 num_threads,
                 indexFile,
@@ -432,7 +432,7 @@ def write_new_file(lines, output_file):
     outputfile.close()
 
 
-def MetaPathways_rpkm(argv, extra_command=None, errorlogger=None, runstatslogger=None):
+def MetaPathways_tpm(argv, extra_command=None, errorlogger=None, runstatslogger=None):
     if errorlogger != None:
         errorlogger.write("#STEP\tRPKM_CALCULATION\n")
     try:

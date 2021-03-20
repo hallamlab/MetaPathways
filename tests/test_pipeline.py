@@ -946,7 +946,7 @@ class MetaPathwaysTester(unittest.TestCase):
         return
 
     def disable_test_rpkm(self):
-        from metapathways import MetaPathways_rpkm
+        from metapathways import MetaPathways_tpm
 
         _test_sample_name = self.sample_one
 
@@ -1031,7 +1031,7 @@ class MetaPathwaysTester(unittest.TestCase):
             "bwa",
         ]
 
-        MetaPathways_rpkm.main(args)
+        MetaPathways_tpm.main(args)
 
         self.assertTrue(
             compare_rpkm_stats_in_files(

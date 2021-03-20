@@ -64,7 +64,7 @@ def staticDiagnose(params, config = None, logger=None):
         return False
 
     """ make sure all the executables exist """
-    executables = [ 'fastal', 'fastdb', 'rpkm' ]
+    executables = [ 'fastal', 'fastdb', 'metacount', 'samtools' ]
     message, ok = checkbinaries(executables)
 
     if message:

@@ -371,7 +371,7 @@ def process(argv):
         "GENBANK_FILE"         : "MetaPathways_create_genbank_ptinput",
         "SCAN_rRNA"            : "MetaPathways_rRNA_stats_calculator",
         "SCAN_tRNA"            : "MetaPathways_tRNA_scan",
-        "RPKM_CALCULATION"     : "MetaPathways_rpkm",
+        "RPKM_CALCULATION"     : "MetaPathways_tpm",
         # executable
         "RESOURCES_DIR"        : "resources",
         "BLASTP_EXECUTABLE"    : 'blastp',
