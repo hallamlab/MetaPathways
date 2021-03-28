@@ -38,9 +38,13 @@ sudo docker rm $(sudo docker ps -a -q)
 sudo docker save 8a97ee4387da -o pt_v24.5.docker.tar
 sudo docker save 5626849d1b6f -o mp_v3.5.docker.tar
 sudo chmod 777 *.tar
-singularity build pt_v24.5.simg docker-archive://pt_v24.5.docker.tar
 singularity build mp_v3.5.simg docker-archive://mp_v3.5.docker.tar
 
+### Test MP3 Singularity
+singularity exec --bind /mnt mp_v3.5.simg MetaPathways -i /home/ryan/PycharmProjects/metapathways_engcyc/tests/data/input/lagoon-sample2.fasta -o dockertest/ -p /home/ryan/PycharmProjects/metapathways_engcyc/template_param.txt -d /home/ryan/PycharmProjects/metapathways_engcyc/tests/data/ref_data/ -v
+
+### PTools doesn't work as a singularity image
+#singularity build pt_v24.5.simg docker-archive://pt_v24.5.docker.tar
 
 
 ### Danger, You're entering a hazzardous area
