@@ -34,6 +34,15 @@ sudo docker push quay.io/mcglock/pt_v24.5
 ### Clear all containers
 sudo docker rm $(sudo docker ps -a -q)
 
+### Convert the Docker images into Singularity files
+sudo docker save 8a97ee4387da -o pt_v24.5.docker.tar
+sudo docker save 5626849d1b6f -o mp_v3.5.docker.tar
+sudo chmod 777 *.tar
+singularity build pt_v24.5.simg docker-archive://pt_v24.5.docker.tar
+singularity build mp_v3.5.simg docker-archive://mp_v3.5.docker.tar
+
+
+
 ### Danger, You're entering a hazzardous area
 ### Deletes all images (Deletes EVERYTHING!!!)
 #sudo docker rmi $(sudo docker images -q)
