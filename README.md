@@ -41,6 +41,8 @@ A template [MetaPathways_DBs.zip (**Updated: October 2014**)](https://www.dropbo
    
    
 
+## Run Tests
+pytest --import-mode importlib -v
 
 
 
