@@ -33,7 +33,7 @@ docker-build: pre-docker-builds
 	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
 
 docker-run:
-	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/metapathways:taltman_dev bash 
+	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/metapathways:taltman_dev bash 
 
 docker-deploy:
 	sudo docker login
@@ -47,7 +47,8 @@ conda-build-init:
 	conda install --yes conda-build
 
 conda-install-deps:
-	conda install --yes -c bioconda blast prodigal bwa
+	conda install --yes -c bioconda blast prodigal bwa snakemake
+
 
 
 # The location of the expat directory

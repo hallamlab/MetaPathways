@@ -17,17 +17,10 @@ ENV PYTHONPATH=/root/mp_repo:/root/mp_repo/libs
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make #python3 #zlib1g-dev
 
-<<<<<<< HEAD
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3-pip
 #RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget
 RUN DEBIAN_FRONTEND=noninteractive pip3 install metapathways
-=======
-#RUN mkdir $METAPATHWAYS_DB						      
-#RUN cd $METAPATHWAYS_DB
-#RUN wget $MP_DB_URI
-
-#RUN git clone --recurse-submodules https://taltman1@bitbucket.org/BCB2/metapathways_engcyc.git
->>>>>>> c796fa62db2b2b6e220829d0ec94e8c01cc90e40
 
 ### Copying the repo files into the Docker image:
 COPY executables     /root/mp_repo/executables/
@@ -44,6 +37,10 @@ RUN touch /root/mp_repo/executables/linux/FGS+
 RUN touch /root/mp_repo/executables/linux/ptools
 RUN mkdir /root/pgdb_dir
 RUN date
+
+
+## Set up Conda:
+RUN make conda-install-deps 
 
 ### EntryPoint source:
 ##RUN . /root/mp_repo/MetaPathwaysrc
