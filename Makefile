@@ -29,7 +29,7 @@ TMPDIR ?= /tmp
 docker-start:
 	sudo systemctl start docker
 
-docker-build: pre-docker-builds
+docker-build: #pre-docker-builds
 	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
 
 docker-run:
@@ -96,7 +96,7 @@ GIT_SUBMODULE_UPDATE=gitupdate
 
 #all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
 all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
-pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
+#pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
 
 
 install-without-ptools: all METAPATHWAYS_DB_FETCH
