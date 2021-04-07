@@ -14,7 +14,7 @@ ENV PYTHONPATH=/root/mp_repo:/root/mp_repo/libs
 
 ### Install apt dependencies
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make #python3 #zlib1g-dev
 
 
@@ -36,7 +36,6 @@ COPY MetaPathwaysrc  /root/mp_repo/
 RUN touch /root/mp_repo/executables/linux/FGS+
 RUN touch /root/mp_repo/executables/linux/ptools
 RUN mkdir /root/pgdb_dir
-RUN date
 
 
 ## Set up Conda:
