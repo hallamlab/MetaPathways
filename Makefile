@@ -11,6 +11,10 @@ SHELL := /bin/bash
 ## If the parent env doesn't ste TMPDIR, do it ourselves:
 TMPDIR ?= /tmp
 
+## Users can override this variable from the command line,
+## to install MP binaries somewhere other than /usr/local,
+## if they lack root privileges:
+DESTDIR ?= /usr/local
 
 ## This makes all recipe lines execute within a shared shell process:
 ## https://www.gnu.org/software/make/manual/html_node/One-Shell.html#One-Shell
@@ -53,7 +57,19 @@ conda-install-deps:
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
+### Build & Install Extensions
+##
+##
 
+extensions-build:
+	$(MAKE) -C extensions clean
+	$(MAKE) -C extensions
+
+extensions-install:
+	mkdir -p $(DESTDIR)/bin
+	cp extensions/FAST/fast*            $(DESTDIR)/bin
+	cp extensions/metacount/metacount   $(DESTDIR)/bin
+	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
 # The location of the expat directory
 CC=gcc  
