@@ -30,7 +30,7 @@ RUN make -C mp_repo conda-install-deps
 #COPY executables     /root/mp_repo/executables/
 COPY extensions	      /root/mp_repo/extensions/
 COPY resources       /root/mp_repo/resources/
-COPY libs            /root/mp_repo/libs/
+#COPY libs            /root/mp_repo/libs/
 #COPY MetaPathways.py /root/mp_repo/
 #COPY MetaPathwaysrc  /root/mp_repo/
 
