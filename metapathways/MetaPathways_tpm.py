@@ -166,7 +166,6 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
                 readFiles[0],
                 bwaOutputTmp
             )
-    print(cmd)
     result = sysutils.getstatusoutput(cmd)
 
     if result[0] == 0:
