@@ -45,14 +45,14 @@ ptools_input:compact_mode yes
 # pipeline execution flags
 # e.g. yes, skip, redo
 
-metapaths_steps:PREPROCESS_INPUT redo
-metapaths_steps:ORF_PREDICTION redo
-metapaths_steps:FILTER_AMINOS redo
-metapaths_steps:FUNC_SEARCH redo
-metapaths_steps:PARSE_FUNC_SEARCH redo
-metapaths_steps:SCAN_rRNA redo
-metapaths_steps:SCAN_tRNA redo
-metapaths_steps:ANNOTATE_ORFS redo
-metapaths_steps:CREATE_ANNOT_REPORTS redo
-metapaths_steps:PATHOLOGIC_INPUT redo
-metapaths_steps:COMPUTE_TPM redo
+metapaths_steps:PREPROCESS_INPUT yes
+metapaths_steps:ORF_PREDICTION yes
+metapaths_steps:FILTER_AMINOS yes
+metapaths_steps:FUNC_SEARCH yes
+metapaths_steps:PARSE_FUNC_SEARCH yes
+metapaths_steps:SCAN_rRNA yes
+metapaths_steps:SCAN_tRNA yes
+metapaths_steps:ANNOTATE_ORFS yes
+metapaths_steps:CREATE_ANNOT_REPORTS yes
+metapaths_steps:PATHOLOGIC_INPUT yes
+metapaths_steps:COMPUTE_TPM yes
