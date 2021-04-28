@@ -12,6 +12,10 @@ binaries/*/*
 .idea*
 *.DS_Store
 *.o
+extensions/FAST/fastal
+extensions/FAST/fastdb
+extensions/metacount/metacount
+extensions/trnascan/trnascan-1.4
 
 
 
@@ -25,6 +29,7 @@ config/template_config.txt
 config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
+
 
 dist/*
 src/MetaPathways.egg-info/*
