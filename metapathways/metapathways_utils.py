@@ -892,13 +892,12 @@ def ShortenContigId(_contigname):
 
 def create_metapaths_parameters(filename, folder):
     """ creates a parameters file from the default """
-    default_filename = (
-        folder + PATHDELIM + "resources" + PATHDELIM + "template_param.txt"
-    )
-
-    with open(default_filename, "r") as filep, open(filename, "w") as newfile:
-        for line in filep.readlines():
-            gutils.fprintf(newfile, "%s", line)
+    import pkg_resources
+    default_filename = pkg_resources.resource_filename('resources', 'template_param.txt')
+    if not os.path.exists(filename):
+        with open(default_filename, "r") as filep, open(filename, "w") as newfile:
+            for line in filep.readlines():
+                gutils.fprintf(newfile, "%s", line)
 
     return True
 

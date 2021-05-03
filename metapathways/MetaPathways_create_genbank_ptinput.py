@@ -224,104 +224,105 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
         print("perhaps there is already a folder " + output_dir_name)
         traceback.print_exc(file=sys.stdout)
 
-     count =0
-     outputStr=""
-
-     # iterate over every contig sequence
-     first_hits = {}
-     if compact_output:
-        prefix = 'O_'
-     else:
-        prefix = sample_name + '_'
-
-     countError = 0
-     for key in contig_dict:
-        first = True
-        if count %10000 == 0:
-           #print "count " + str(count)
-           #outputfile.write(outputStr)
-           outputStr=""
-        count+=1
-
-        for attrib in contig_dict[key]:
-           id  =  attrib['id']
-           shortid=""
-           compactid = ""
-
-           if attrib['feature']=='CDS':
-              shortid  =  prefix + mputils.ShortenORFId(attrib['id'])
-              compactid =  mputils.ShortenORFId(attrib['id'])
-
-           if attrib['feature']=='rRNA':
-              shortid  =  prefix + mputils.ShortenrRNAId(attrib['id'])
-              compactid =  mputils.ShortenrRNAId(attrib['id'])
-
-           if attrib['feature']=='tRNA':
-              shortid  =  prefix + mputils.ShortentRNAId(attrib['id'])
-              compactid =  mputils.ShortentRNAId(attrib['id'])
-
-
-           try:
-              protein_seq = protein_seq_dict[id]
-           except:
-              protein_seq = ""
-           try:
-              if attrib['product']=='hypothetical protein':
-                 continue
-           except:
-              print(attrib)
-              sys.exit(0)
-
-
-           #if attrib['product']  in first_hits:
-           #    if attrib['ec'] :
-           #      if attrib['ec'] in first_hits[attrib['product']]:
-           #          gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
-
-                    # to  remove redundancy add "continue "
-                    # continue
-           #      else:
-           #          first_hits[attrib['product']]['ec'] =attrib['ec']
-           #          first_hits[attrib['product']]['n'] =shortid
-           #    else:
-           #      gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
-                 # to  remove redundancy add "continue "
-                 #continue
-           #else:
-
-           first_hits[attrib['product']] = {}
-           first_hits[attrib['product']]['n'] =shortid
-           first_hits[attrib['product']]['ec'] =attrib['ec']
-
-           if compactid in orf_to_taxonid:
-               attrib['taxon'] = orf_to_taxonid[compactid]
-
-           write_to_pf_file(output_dir_name, shortid, attrib, compact_output=True)
-
-           # append to the gen elements file
-           if compact_output==False:
-              append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
-        #endfor
-
-
-        #write the sequence now only once per contig
-        try:
-           contig_seq =  nucleotide_seq_dict[key]
-        except:
-           #print nucleotide_seq_dict.keys()[0]
-           if countError < 10:
-              gutils.printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
-              countError += 1
-              if countError == 10:
-                gutils.printf("...................................................................\n")
-           continue
-
-        fastaStr=wrap("",0,62, contig_seq)
-
-           #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
-        if compact_output==False:
-           write_input_sequence_file(output_dir_name, shortid, fastaStr)
-     #endif
+     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
+         count =0
+         outputStr=""
+    
+         # iterate over every contig sequence
+         first_hits = {}
+         if compact_output:
+            prefix = 'O_'
+         else:
+            prefix = sample_name + '_'
+    
+         countError = 0
+         for key in contig_dict:
+            first = True
+            if count %10000 == 0:
+               #print "count " + str(count)
+               #outputfile.write(outputStr)
+               outputStr=""
+            count+=1
+    
+            for attrib in contig_dict[key]:
+               id  =  attrib['id']
+               shortid=""
+               compactid = ""
+    
+               if attrib['feature']=='CDS':
+                  shortid  =  prefix + mputils.ShortenORFId(attrib['id'])
+                  compactid =  mputils.ShortenORFId(attrib['id'])
+    
+               if attrib['feature']=='rRNA':
+                  shortid  =  prefix + mputils.ShortenrRNAId(attrib['id'])
+                  compactid =  mputils.ShortenrRNAId(attrib['id'])
+    
+               if attrib['feature']=='tRNA':
+                  shortid  =  prefix + mputils.ShortentRNAId(attrib['id'])
+                  compactid =  mputils.ShortentRNAId(attrib['id'])
+    
+    
+               try:
+                  protein_seq = protein_seq_dict[id]
+               except:
+                  protein_seq = ""
+               try:
+                  if attrib['product']=='hypothetical protein':
+                     continue
+               except:
+                  print(attrib)
+                  sys.exit(0)
+    
+    
+               #if attrib['product']  in first_hits:
+               #    if attrib['ec'] :
+               #      if attrib['ec'] in first_hits[attrib['product']]:
+               #          gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
+    
+                        # to  remove redundancy add "continue "
+                        # continue
+               #      else:
+               #          first_hits[attrib['product']]['ec'] =attrib['ec']
+               #          first_hits[attrib['product']]['n'] =shortid
+               #    else:
+               #      gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
+                     # to  remove redundancy add "continue "
+                     #continue
+               #else:
+    
+               first_hits[attrib['product']] = {}
+               first_hits[attrib['product']]['n'] =shortid
+               first_hits[attrib['product']]['ec'] =attrib['ec']
+    
+               if compactid in orf_to_taxonid:
+                   attrib['taxon'] = orf_to_taxonid[compactid]
+    
+               write_to_pf_file(output_dir_name, shortid, attrib, pfFile,  compact_output=True)
+    
+               # append to the gen elements file
+               if compact_output==False:
+                  append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+            #endfor
+    
+    
+            #write the sequence now only once per contig
+            try:
+               contig_seq =  nucleotide_seq_dict[key]
+            except:
+               #print nucleotide_seq_dict.keys()[0]
+               if countError < 10:
+                  gutils.printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
+                  countError += 1
+                  if countError == 10:
+                    gutils.printf("...................................................................\n")
+               continue
+    
+            fastaStr=wrap("",0,62, contig_seq)
+    
+               #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
+            if compact_output==False:
+               write_input_sequence_file(output_dir_name, shortid, fastaStr)
+         #endif
 
      if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
@@ -346,16 +347,8 @@ def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_se
      rename(output_dir_name + "/.tmp.genetic-elements.dat", output_dir_name + "/genetic-elements.dat")
 
 
-pfFile = None
 
-def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
-    global pfFile
-    if compact_output:
-       if pfFile==None:
-          pfFile = open(output_dir_name + "/" + "0.pf", 'w')
-    else:
-       pfFile = open(output_dir_name + "/" + shortid + ".pf", 'w')
-
+def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
     try:
        gutils.fprintf(pfFile, "ID\t%s\n", shortid)
        gutils.fprintf(pfFile, "NAME\t%s\n", shortid)
@@ -424,11 +417,6 @@ def write_to_pf_file(output_dir_name, shortid, attrib, compact_output):
     if attrib['feature']=='rRNA':
        gutils.fprintf(pfFile, "PRODUCT-TYPE\trRNA\n")
     gutils.fprintf(pfFile, "//\n")
-
-    if compact_output:
-       pass
-    else:
-       pfFile.close()
 
 
 def  create_product_attributes(product) :
