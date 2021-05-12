@@ -26,7 +26,7 @@ config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
 
-tests/data/output/*
+
 
 dist/*
 src/MetaPathways.egg-info/*
