@@ -54,10 +54,10 @@ Step 4. Now to extract the pgdb from the pgdb.tar file we built,
         the output in the terminal window. Also you should see the socket file <user-output-folder>/tmp/ptools-socket.
          Now, open another terminal and make sure your pgdb is avaiable by listing them 
         as 
-            sudo python extract_pathways.py -s <user-output-folder>/tmp/ptools-socket -l
+            sudo python extract_pathways.py -s <user-output-folder>/ptools-socket -l
         make sure your pgdb is listed. Important to know that pgdb names are sample_name turned into lowercase
         If you see your pgdb you can extract as
-            sudo python extract_pathways.py -s <user-output-folder>/tmp/ptools-socket -p sample_name > sample_name.pwy.txt
+            sudo python extract_pathways.py -s <user-output-folder>/ptools-socket -p sample_name > sample_name.pwy.txt
 
 Step 5: If you want to extract additional pgdb you can either kill the docker running in Step 4 and start the steps above
 
