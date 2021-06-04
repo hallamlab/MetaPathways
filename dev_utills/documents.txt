@@ -38,7 +38,7 @@ Step 3. To build a pgdb, say the 0.pf file, for a sample name "sample_name"
         like the output to go into a folder, say name "/home/login/output/pgdbs" 
         Then to build the pgdb and put the pgdb output as a pgdb.tar folder in the 
         output folder as 
-           run-pathway-tools-and-copy-pgdb.sh /home/login/input/sample_name /home/login/output/pgdbs
+           ./build-pgdb-with-ptools-in-docker.sh  /home/login/input/sample_name /home/login/output/pgdbs
         once it is run the results are  in the output folder
 
 Step 4. Now to extract the pgdb we built, first we start the docker as 

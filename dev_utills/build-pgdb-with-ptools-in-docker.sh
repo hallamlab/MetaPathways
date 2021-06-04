@@ -10,6 +10,7 @@ rm -rf ${inpath}/tmp
 docker run \
     -v ${inpath}:/data \
     -v ${outpath}:/output \
+    -v ${PWD}:/code \
     quay.io/mcglock/pt_v24.5 \
-    run-pathway-tools-and-copy-pgdb.sh \
+    /code/run-pathway-tools-and-copy-pgdb.sh \
     -patho /data -no-taxonomic-pruning -no-web-cel-overview -tip
