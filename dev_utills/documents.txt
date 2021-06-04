@@ -41,7 +41,10 @@ Step 3. To build a pgdb, say the 0.pf file, for a sample name "sample_name"
            ./build-pgdb-with-ptools-in-docker.sh  /home/login/input/sample_name /home/login/output/pgdbs
         once it is run the results are  in the output folder
 
-Step 4. Now to extract the pgdb we built, first we start the docker as 
+Step 4. Now to extract the pgdb from the pgdb.tar file we built, 
+             tar -xvf pgdb.tar
+
+       first we start the docker as 
            extract-pgdb-with-ptools-in-docker.sh <user-pgdb-folder> <user-output-folder>
         <user-pgdb-folder> is the folder where the pgdb folders are located, e.g., sample_namecyc. 
              This sample_namecyc is in the pgdb.tar file in the previous step 
