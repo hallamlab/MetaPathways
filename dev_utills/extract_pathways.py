@@ -147,7 +147,7 @@ class PythonCyc:
             _data = self.soc.recv(1024)
             if not _data:
                 break
-            _data = _data.strip()
+            _data = _data.decode().strip()
             if _data != None:
                 results.append(_data)
         return "".join(results)
@@ -188,7 +188,6 @@ class PythonCyc:
         return _organisms
 
     def sendStopSignal(self):
-        print('exiting')
         self.soc.send("(exit)".encode())
         time.sleep(10)
 
@@ -299,7 +298,6 @@ class PythonCyc:
             result = self.call_func_that_returns_string(function)
             return result
         except:
-            print(frame, slot_name)
             _exit(0)
 
     def call_func_that_returns_string(self, function):
@@ -448,14 +446,17 @@ class PythonCyc:
 
             for rxn in totalrxns:
                 unique_rxns[rxn] = 1
+            try:
+                pathway_common_name = self.get_slot_value(pathway, "common-name")
+            except:
+                print('failed to import common name')
 
-            pathway_common_name = self.get_slot_value(pathway, "common-name")
             if not pathway_common_name:
                 pathway_common_name = "?"
 
+
             num_reactions = len(totalrxns)
             num_predicted_orfs = len(mygenes)
-
             num_covered_rxns = 0
             num_genes = 0
             orf_strings = {}
