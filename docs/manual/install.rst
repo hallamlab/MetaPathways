@@ -51,18 +51,31 @@ Install Binaries
 
 Next we install ``trnascan-1.4``, ``rpkm``, ``prodigal``, ``FAST`` and ``bwa``
 
-Download the source code as
-::
-  
- $ wget https://github.com/kishori82/MetaPathways_Python.3.0/raw/kmk-develop/c_cpp_sources.1.0.tar.gz
+..
+   Download the source code as
+   ::
 
-untar the files, make and install, which takes a few minutes 
+    $ wget https://github.com/kishori82/MetaPathways_Python.3.0/raw/kmk-develop/c_cpp_sources.1.0.tar.gz
+
+   untar the files, make and install, which takes a few minutes 
+   ::
+
+     $ tar -zxvf c_cpp_sources.1.0.tar.gz
+     $ cd c_cpp_sources
+     $ make`
+     $ sudo make install
+
+::
+   make extensions-build
+   make extensions-install
+
+NOTE: If you lack the privileges to install these binaries system-wide, then you will need to pass the ``DESTDIR`` environment variable when calling ``make``:
 ::
 
-  $ tar -zxvf c_cpp_sources.1.0.tar.gz
-  $ cd c_cpp_sources
-  $ make`
-  $ sudo make install
+   $ make DESTDIR=/home/username extensions-install
+
+In this example, ``make`` will install the binaries into ``/home/username/bin``, so you must have the requisite permissions to modify the ``/home/username`` directory. It will create the ``bin`` directory if it does not already exist, and copy the binaries there.
+
 
 NOTE: if you would like to unstall then type
 ::

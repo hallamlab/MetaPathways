@@ -12,6 +12,10 @@ binaries/*/*
 .idea*
 *.DS_Store
 *.o
+extensions/FAST/fastal
+extensions/FAST/fastdb
+extensions/metacount/metacount
+extensions/trnascan/trnascan-1.4
 
 
 

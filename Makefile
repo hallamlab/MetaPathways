@@ -11,6 +11,10 @@ SHELL := /bin/bash
 ## If the parent env doesn't ste TMPDIR, do it ourselves:
 TMPDIR ?= /tmp
 
+## Users can override this variable from the command line,
+## to install MP binaries somewhere other than /usr/local,
+## if they lack root privileges:
+DESTDIR ?= /usr/local
 
 ## This makes all recipe lines execute within a shared shell process:
 ## https://www.gnu.org/software/make/manual/html_node/One-Shell.html#One-Shell
@@ -29,15 +33,15 @@ TMPDIR ?= /tmp
 docker-start:
 	sudo systemctl start docker
 
-docker-build: pre-docker-builds
+docker-build: #pre-docker-builds
 	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
 
 docker-run:
-	sudo docker run -it --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/darth:maul bash 
+	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/metapathways:taltman_dev bash 
 
 docker-deploy:
 	sudo docker login
-	sudo docker push taltman/darth:maul
+	sudo docker push taltman/metapathways:taltman_dev
 
 
 ### Conda Packaging
@@ -47,8 +51,25 @@ conda-build-init:
 	conda install --yes conda-build
 
 conda-install-deps:
-	conda install --yes -c bioconda blast prodigal bwa
+	conda install --yes -n base -c conda-forge mamba
+	mamba install --yes -c conda-forge curl
+	mamba install --yes -c bioconda blast prodigal bwa
+	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
+
+### Build & Install Extensions
+##
+##
+
+extensions-build:
+	$(MAKE) -C extensions clean
+	$(MAKE) -C extensions
+
+extensions-install:
+	mkdir -p $(DESTDIR)/bin
+	cp extensions/FAST/fast*            $(DESTDIR)/bin
+	cp extensions/metacount/metacount   $(DESTDIR)/bin
+	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
 # The location of the expat directory
 CC=gcc  
@@ -95,7 +116,7 @@ GIT_SUBMODULE_UPDATE=gitupdate
 
 #all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
 all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
-pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
+#pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
 
 
 install-without-ptools: all METAPATHWAYS_DB_FETCH

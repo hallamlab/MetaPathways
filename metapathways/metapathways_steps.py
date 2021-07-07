@@ -6,7 +6,6 @@ do the homology search in separate machines, manually
 
 __author__ = "Kishori M Konwar"
 __copyright__ = "Copyright 2020, MetaPathways"
-__version__ = "3.5.0"
 __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 

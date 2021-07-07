@@ -2,7 +2,6 @@
 
 __author__ = "Kishori Mohan Konwar"
 __copyright__ = "MetaPathways"
-__version__ = "3.5.0"
 __maintainer__ = "Kishori M Konwar"
 __status__ = "Release"
 
