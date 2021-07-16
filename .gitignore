@@ -12,6 +12,10 @@ binaries/*/*
 .idea*
 *.DS_Store
 *.o
+.snakemake
+.tox
+executables-DELETE-ME
+test
 extensions/FAST/fastal
 extensions/FAST/fastdb
 extensions/metacount/metacount
