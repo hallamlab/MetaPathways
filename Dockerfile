@@ -39,6 +39,12 @@ RUN mkdir /opt/pgdb_dir
 RUN make -C mp_repo extensions-build
 RUN make -C mp_repo extensions-install
 
+
+## Copy over Snakemake file & config file:
+COPY Snakefile /opt/mp_repo/
+COPY snakemake_config.yaml /opt/mp_repo
+
+
 ## Make things work for Singularity by relaxing the permissions:
 RUN chmod -R 755 /opt/mp_repo
 RUN chmod -R 755 /opt/conda
