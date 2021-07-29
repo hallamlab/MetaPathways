@@ -120,8 +120,14 @@ rule fetch_metacyc_db:
 
 
 rule fetch_refseq_via_update_blastdb:
+    input:
+	config["ref_db_dir"] + '/Dsignal'
+    params:
+	target_dir = config["ref_db_dir"]
     output:
+	config["ref_db_dir"] + '/functional/refseq_protein.00'
     shell:
         """
+	cd {params.target_dir}/functional
         update_blastdb.pl --decompress --blastdb_version 5 refseq_protein
         """

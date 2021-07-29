@@ -16,7 +16,7 @@ extensions/FAST/fastal
 extensions/FAST/fastdb
 extensions/metacount/metacount
 extensions/trnascan/trnascan-1.4
-
+.snakemake
 
 
 regtests/output/*
