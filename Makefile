@@ -29,19 +29,31 @@ DESTDIR ?= /usr/local
 
 
 
-### Docker Automation
+### Container Automation
 docker-start:
 	sudo systemctl start docker
 
 docker-build: #pre-docker-builds
-	sudo docker build --network=host -t taltman/metapathways:taltman_dev .
+	sudo docker build --network=host -t quay.io/hallamlab/metapathways:dev .
 
 docker-run:
-	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output taltman/metapathways:taltman_dev bash 
+	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output quay.io/hallamlab/metapathways:dev bash 
 
 docker-deploy:
-	sudo docker login
-	sudo docker push taltman/metapathways:taltman_dev
+	sudo docker login quay.io
+	sudo docker push quay.io/hallamlab/metapathways:dev
+
+singularity-local-build:
+	sudo /usr/local/bin/singularity build test.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+
+singularity-local-shell:
+	singularity shell test.sif
+
+singularity-docker-build:
+	sudo /usr/local/bin/singularity build --docker-login test.sif docker://quay.io/hallamlab/metapathways:dev
+
+singularity-docker-shell:
+	singularity shell --docker-login docker://quay.io/hallamlab/metapathways:dev
 
 
 ### Conda Packaging

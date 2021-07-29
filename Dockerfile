@@ -2,11 +2,11 @@ FROM continuumio/miniconda3
 
 MAINTAINER Tomer Altman, Altman Analytics LLC
 
-Workdir /root
+Workdir /opt
 
 ### Definitions:
 
-ENV PYTHONPATH=/root/mp_repo:/root/mp_repo/libs
+ENV PYTHONPATH=/opt/mp_repo:/opt/mp_repo/libs
 
 
 ### Install apt dependencies
@@ -17,32 +17,37 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
 						      zlib1g-dev \
 						      python3-pip \
 						      wget
+
+# Install MetaPathways:
 RUN pip3 install metapathways
 
 ## COPY over Makefile:
-COPY Makefile        /root/mp_repo/
+COPY Makefile        /opt/mp_repo/
 
 ## Set up Conda:
 RUN make -C mp_repo conda-install-deps 
 
 
 ### Copying the repo files into the Docker image:
-#COPY executables     /root/mp_repo/executables/
-COPY extensions	      /root/mp_repo/extensions/
-COPY resources       /root/mp_repo/resources/
-#COPY libs            /root/mp_repo/libs/
-#COPY MetaPathways.py /root/mp_repo/
-#COPY MetaPathwaysrc  /root/mp_repo/
+COPY extensions	     /opt/mp_repo/extensions/
+COPY resources       /opt/mp_repo/resources/
+COPY tests           /opt/mp_repo/tests/
 
-
-#RUN touch /root/mp_repo/executables/linux/FGS+
-#RUN touch /root/mp_repo/executables/linux/ptools
-RUN mkdir /root/pgdb_dir
+RUN mkdir /opt/pgdb_dir
 
 ## Compile & Install Extensions:
 RUN make -C mp_repo extensions-build
 RUN make -C mp_repo extensions-install
 
+
+## Copy over Snakemake file & config file:
+COPY Snakefile /opt/mp_repo/
+COPY snakemake_config.yaml /opt/mp_repo
+
+
+## Make things work for Singularity by relaxing the permissions:
+RUN chmod -R 755 /opt/mp_repo
+RUN chmod -R 755 /opt/conda
+
 ### EntryPoint source:
-##RUN . /root/mp_repo/MetaPathwaysrc
-#RUN time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
+## TODO
