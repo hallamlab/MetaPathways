@@ -29,7 +29,7 @@ DESTDIR ?= /usr/local
 
 
 
-### Docker Automation
+### Container Automation
 docker-start:
 	sudo systemctl start docker
 
@@ -42,6 +42,18 @@ docker-run:
 docker-deploy:
 	sudo docker login quay.io
 	sudo docker push quay.io/hallamlab/metapathways:dev
+
+singularity-local-build:
+	sudo /usr/local/bin/singularity build test.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+
+singularity-local-shell:
+	singularity shell test.sif
+
+singularity-docker-build:
+	sudo /usr/local/bin/singularity build --docker-login test.sif docker://quay.io/hallamlab/metapathways:dev
+
+singularity-docker-shell:
+	singularity shell --docker-login docker://quay.io/hallamlab/metapathways:dev
 
 
 ### Conda Packaging

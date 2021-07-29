@@ -29,9 +29,9 @@ RUN make -C mp_repo conda-install-deps
 
 
 ### Copying the repo files into the Docker image:
-COPY extensions	      /opt/mp_repo/extensions/
+COPY extensions	     /opt/mp_repo/extensions/
 COPY resources       /opt/mp_repo/resources/
-
+COPY tests           /opt/mp_repo/tests/
 
 RUN mkdir /opt/pgdb_dir
 

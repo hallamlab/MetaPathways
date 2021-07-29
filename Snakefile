@@ -59,8 +59,8 @@ rule fetch_silva_db:
         target_dir = config["ref_db_dir"],
         arb_release = arb_release
     output:
-        ssu_silva_file = config["ref_db_dir"] + '/taxonomic/SILVA{params.arb_release}_SSURef_tax_silva.fasta',
-        lsu_silva_file = config["ref_db_dir"] + '/taxonomic/SILVA{params.arb_release}_LSURef_tax_silva.fasta'
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva.fasta.gz', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva.fasta.gz', arb_release=arb_release)
     shell:
         """
         cd {params.target_dir}/taxonomic
@@ -124,9 +124,14 @@ rule fetch_metacyc_db:
 
 
 rule fetch_refseq_via_update_blastdb:
+    input:
+        config["ref_db_dir"] + '/Dsignal'
+    params:
+        target_dir = config['ref_db_dir']
     output:
+        config["ref_db_dir"] + '/functional/refseq_protein.00.tar.gz'
     shell:
         """
-
-        update_blastdb.pl --decompress --blastdb_version 5 refseq_protein
+        cd {params.target_dir}/functional
+        update_blastdb.pl --blastdb_version 5 refseq_protein
         """
