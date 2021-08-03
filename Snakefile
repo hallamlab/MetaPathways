@@ -123,5 +123,6 @@ rule fetch_refseq_via_update_blastdb:
     output:
     shell:
         """
+        cd {params.target_dir}/functional
         update_blastdb.pl --decompress --blastdb_version 5 refseq_protein
         """

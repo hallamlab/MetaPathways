@@ -48,6 +48,7 @@ docker-deploy:
 ##
 ## Install conda build tools:
 conda-build-init:
+	conda init bash
 	conda install --yes conda-build
 
 conda-install-deps:

@@ -95,6 +95,49 @@ For Ubuntu/Debian
 Reference Sequences
 ===================
 
+We use ``Snakemake`` to automate the staging of reference databases
+needed by MetaPathways. We have installed ``Snakemake`` via Conda. If
+you are using the Docker container, then Conda is already
+initialized.
+
+If you are using the container via Singularity, you must
+first initialize Conda as follows (note the space between the period
+character, and the first slash character):
+::
+  
+   . /opt/conda/etc/profile.d/conda.sh
+
+Now, for both Docker and Singularity, we can activate the ``Snakemake`` environment:
+::
+   conda activate snakemake
+
+Next, we need to switch to the MetaPathways install directory,  with the ``Snakefile`` file:
+::
+   cd /opt/mp_repo
+
+   
+Now, we have ``Snakemake`` automate the installation of the required files:
+::
+   snakemake --cores 1 --config ref_db_dir=/path/to/db/dir -- stage_blast_full
+
+Using the `--config` command, we can specify the desired root
+directory for installing the MetaPathways reference databases
+(replacing `/path/to/db/dir` with a real directory path on your
+system). By default, the ``Snakemake`` configuration file sets
+`/tmp/mp_ref_dbs` as the root directory for the MetaPathways reference
+database, if you leave off the `--config` option.
+
+Instead of using a single core, you can use the `--cores` option with
+a greater number of specified cores to parallelize the staging of the
+requested datasets.
+
+
+
+
+      
+
+
+
 Create the following reference folder structure under a folder. Here we use the 
 example name ``MetaPathways_DBs``
 ::
