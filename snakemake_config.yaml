@@ -4,4 +4,4 @@
 # Example:
 # ref_db_dir: /home/user/metapathways-ref-db-dir
 
-ref_db_dir: /tmp/test
+ref_db_dir: /tmp/mp_ref_dbs
