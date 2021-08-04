@@ -1,4 +1,4 @@
-"""This script runs the functional search via BLAST or LAST like
+"""This script runs the functional search via BLAST or FAST like
 homology search tools on a set of ORFs
 """
 __author__ = "Kishori M Konwar"
@@ -29,9 +29,9 @@ PATHDELIM = sysutils.pathDelim()
 usage = sys.argv[0] + """ -i input -o output [algorithm dependent options]"""
 
 def createParser():
-    epilog = """This script is used for running a homology search algorithm such as BLAST or LAST
+    epilog = """This script is used for running a homology search algorithm such as BLAST or FAST
               on a set of query amino acid sequences against a target of  reference protein sequences.
-              Currently it supports the BLASTP and LAST algorithm. Any other homology search algorithm
+              Currently it supports the BLASTP and FAST algorithm. Any other homology search algorithm
               can be added by first adding the new algorithm name in upper caseusing in to the
               choices parameter in the algorithm option of this script.
               The results are put in a tabular form in the folder blast_results, with individual files
@@ -47,7 +47,7 @@ def createParser():
         "--algorithm",
         dest="algorithm",
         default="BLAST",
-        choices=["BLAST", "LAST"],
+        choices=["BLAST", "FAST"],
         help="the homology search algorithm",
     )
 
@@ -117,38 +117,38 @@ def createParser():
 
     parser.add_option_group(blast_group)
 
-    last_group = OptionGroup(parser, "LAST parameters")
+    last_group = OptionGroup(parser, "FAST parameters")
 
     last_group.add_option(
         "--last_query",
         dest="last_query",
         default=None,
-        help="Query amino acid sequences for LAST",
+        help="Query amino acid sequences for FAST",
     )
 
     last_group.add_option(
         "--last_db",
         dest="last_db",
         default=None,
-        help="Target reference database sequenes for LAST",
+        help="Target reference database sequenes for FAST",
     )
 
     last_group.add_option(
         "--last_f",
         dest="last_f",
         default="0",
-        help="LAST output format [default 0, tabular]",
+        help="FAST output format [default 0, tabular]",
     )
 
     last_group.add_option(
-        "--last_o", dest="last_o", default=None, help="LAST output file"
+        "--last_o", dest="last_o", default=None, help="FAST output file"
     )
 
     last_group.add_option(
         "--last_executable",
         dest="last_executable",
         default=None,
-        help="The LAST executable",
+        help="The FAST executable",
     )
 
     parser.add_option_group(last_group)
@@ -163,8 +163,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if options.algorithm == "BLAST":
         (code, message) = _execute_BLAST(options, logger=errorlogger)
 
-    elif options.algorithm == "LAST":
-        (code, message) = _execute_LAST(options, logger=errorlogger)
+    elif options.algorithm == "FAST":
+        (code, message) = _execute_FAST(options, logger=errorlogger)
     else:
         gutils.eprintf("ERROR\tUnrecognized algorithm name for FUNC_SEARCH\n")
         if errorlogger:
@@ -182,10 +182,10 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         d = "INFO\tTry removing the files for that database in 'formatted' subfolder for MetaPathways to trigger reformatting \n"
         if options.algorithm == "BLAST":
             e = "INFO\tYou can remove as 'rm %s.*','\n" % (options.blast_db)
-        if options.algorithm == "LAST":
+        if options.algorithm == "FAST":
             e = "INFO\tYou can remove as 'rm %s.*','\n" % (options.last_db)
 
-        (code, message) = _execute_LAST(options, logger=errorlogger)
+        (code, message) = _execute_FAST(options, logger=errorlogger)
         f = "INFO\tIf removing the files did not work then format it manually (see manual)"
         outputStr = a + b + c + d + e + f
 
@@ -198,7 +198,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     return 0
 
 
-def _execute_LAST(options, logger=None):
+def _execute_FAST(options, logger=None):
     args = []
 
     if options.last_executable:
@@ -226,7 +226,7 @@ def _execute_LAST(options, logger=None):
         result = sysutils.getstatusoutput(" ".join(args))
         rename(options.last_o + ".tmp", options.last_o)
     except:
-        message = "Could not run LASTAL correctly"
+        message = "Could not run FAST correctly"
         if result and len(result) > 1:
             message = result[1]
         if logger:

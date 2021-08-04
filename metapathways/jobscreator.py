@@ -378,7 +378,7 @@ class ContextCreator:
             cmd = "%s   -o %s -i %s -a  %s"\
                  %( pyScript,  output_refscores, input_filtered_faa, s.algorithm)
 
-        elif s.algorithm == 'LAST':
+        elif s.algorithm == 'FAST':
             pyScript = self.configs.COMPUTE_REFSCORES
             cmd = "%s   -o %s -i %s -a %s"\
                      %( pyScript,  output_refscores, input_filtered_faa, s.algorithm)
@@ -451,9 +451,9 @@ class ContextCreator:
 
                 context.message = self._Message("BLASTING AMINO SEQS AGAINST " + db)
 
-            if s.algorithm == 'LAST':
+            if s.algorithm == 'FAST':
                 pyScript =  self.configs.FUNC_SEARCH
-                searchExec = self.configs.LAST_EXECUTABLE
+                searchExec = self.configs.FAST_EXECUTABLE
                 cmd = ("%s "
                     "--algorithm %s "
                     "--last_executable %s "
@@ -470,7 +470,7 @@ class ContextCreator:
                     refDbFullName,
                     input_filtered_faa)
 
-                context.message = self._Message("LASTING AMINO SEQS AGAINST " + db)
+                context.message = self._Message("FASTING AMINO SEQS AGAINST " + db)
 
             context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
             context.commands = [cmd]
@@ -530,8 +530,8 @@ class ContextCreator:
                   context.inputs['dbmapFile'],  context.inputs['refscorefile'],\
                   min_bsr, min_score, min_length, max_evalue)
 
-            if s.algorithm == 'LAST':
-                cmd = cmd + ' --algorithm LAST'
+            if s.algorithm == 'FAST':
+                cmd = cmd + ' --algorithm FAST'
 
             if s.algorithm == 'BLAST':
                 cmd = cmd + ' --algorithm BLAST'
@@ -561,14 +561,15 @@ class ContextCreator:
 
         pyScript = self.configs.SCAN_rRNA
 
-        algorithm  = s.algorithm.upper()
+        num_threads = self.configs.NUM_CPUS
+
         for db in refrRNArefDBs:
             '''inputs'''
             dbpath = self.configs.REFDBS + PATHDELIM + 'taxonomic' + PATHDELIM + 'formatted' + PATHDELIM + db
             dbsequences = self.configs.REFDBS + PATHDELIM + "taxonomic" + PATHDELIM+  db
 
             '''outputs'''
-            rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + algorithm + "out"
+            rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + 'BLAST' + "out"
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + "." + db + ".rRNA.stats.txt"
 
             context = contextmod.Context()
@@ -578,24 +579,13 @@ class ContextCreator:
             context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
             """ the BLAST part first """
-            blast_cmd = ""
-            if True or algorithm == "BLAST":
-                executable = shutil.which('blastn')
-                if executable == None:
-                    eprintf("ERROR\tCannot find blastn\n")
-                        #logger.printf("ERROR\tCannot find blastn to format\n")
+            executable = shutil.which('blastn')
+            if executable == None:
+                eprintf("ERROR\tCannot find blastn\n")
+                   #logger.printf("ERROR\tCannot find blastn to format\n")
 
-                blast_cmd = "%s -outfmt 6 -num_threads 8  -query %s -out %s -db %s -max_target_seqs 5"\
-                      %(executable, context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
-
-            if False and algorithm == "LAST":
-                executable = shutil.which(self.configs.LAST_EXECUTABLE)
-                if executable == None:
-                    eprintf("ERROR\tCannot find blastn\n")
-                        #logger.printf("ERROR\tCannot find blastn to format\n")
-                blast_cmd = "%s -f 2 -o %s %s %s"\
-                     %(executable, context.outputs['rRNA_blastout'], context.inputs1['dbpath'], context.inputs['input_fasta'])
-
+            blast_cmd = "%s -outfmt 6 -num_threads %s  -query %s -out %s -db %s -max_target_seqs 5"\
+                 %(executable, str(num_threads), context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             """ now the scanning part"""
             scan_cmd = "%s -o %s -b %s -e %s -s %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
@@ -616,8 +606,10 @@ class ContextCreator:
 
         '''inputs'''
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        TPCsignal = self.configs.RESOURCES_DIR + PATHDELIM + 'TPCsignal'
-        Dsignal = self.configs.RESOURCES_DIR+ PATHDELIM + 'Dsignal'
+        import pkg_resources
+
+        TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
+        Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
 
         '''outputs'''
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"

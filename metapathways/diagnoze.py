@@ -63,7 +63,7 @@ def staticDiagnose(params, config = None, logger=None):
         return False
 
     """ make sure all the executables exist """
-    executables = [ 'fastal', 'fastdb', 'rpkm' ]
+    executables = [ 'fastal', 'fastdb', 'metacount', 'samtools' ]
     message, ok = checkbinaries(executables)
 
     if message:
@@ -102,7 +102,7 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
         _algorithm = get_parameter(params, "annotation", "algorithm", default=None)
 
     if dbstring == None:
-        eprintf(
+        gutils.eprintf(
             "WARNING\tReference databases to annotate with is unspecified, please add it in the params file\n"
         )
         return False
@@ -125,7 +125,7 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
         for db in dbs:
             algorithm = ""
             if dbType == "taxonomic":
-                algorithm = _algorithm
+                algorithm = 'BLAST'
                 seqType = "nucl"
             elif dbType == "functional":
                 algorithm = _algorithm
@@ -138,11 +138,11 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
                 algorithm, logger=logger
                 ):
                 """ if note formatted then format it """
-                eprintf(
-                    "WARNING\tTrying to format %s  database %s\n", seqType, sQuote(db)
+                gutils.eprintf(
+                    "WARNING\tFirst format %s database %s\n", seqType, gutils.sQuote(db)
                 )
                 logger.printf(
-                    "WARNING\tTrying to format %s database %s \n", seqType, sQuote(db)
+                    "WARNING\tFirst format %s database %s \n", seqType, gutils.sQuote(db)
                 )
 
                 return False
@@ -151,15 +151,15 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
             """ check for dbMapFile """
             dbMapFile = config.refdb_dir + PATHDELIM + dbType + PATHDELIM + "formatted" + PATHDELIM + db + "-names.txt"
             if not gutils.doesFileExist(dbMapFile):
-                eprintf(
-                    "WARNING\tDoes not have map file %s for %s\n",
-                    sQuote(dbMapFile),
-                    sQuote(db),
+                gutils.eprintf(
+                    "WARNING\tCreate the db annotation file %s for %s\n",
+                    gutils.sQuote(dbMapFile),
+                    gutils.sQuote(db),
                 )
                 logger.printf(
-                    "WARNING\tDoes not have map file %s for %s\n",
-                    sQuote(dbMapFile),
-                    sQuote(db),
+                    "WARNING\tCreate the db annotation file %s for %s\n",
+                    gutils.sQuote(dbMapFile),
+                    gutils.sQuote(db),
                 )
 
     return True
@@ -204,7 +204,7 @@ def isDBformatted(db, refdbspath, dbType, seqType, algorithm, logger=None):
                 fileList.append(aFile)
 
         if len(fileList) == 0:
-            eprintf("WARNING\tsequence for db  %s not formatted\n", dbname)
+            gutils.eprintf("WARNING\tsequence for db  %s not formatted\n", dbname)
             logger.printf("WARNING\tsequence for db  %s not formatted\n", dbname)
             return False
 
@@ -223,9 +223,9 @@ def check_if_refDB_path_valid(refdbspath, logger=None):
 
     status = True
     if not gutils.doesFolderExist(refdbspath):
-        eprintf("ERROR\treference sequence folder %s not found\n", sQuote(refdbspath))
+        gutils.eprintf("ERROR\treference sequence folder %s not found\n", gutils.sQuote(refdbspath))
         logger.printf(
-            "ERROR\treference sequence folder %s not found\n", sQuote(refdbspath)
+            "ERROR\treference sequence folder %s not found\n", gutils.sQuote(refdbspath)
         )
         return False
 
@@ -234,14 +234,14 @@ def check_if_refDB_path_valid(refdbspath, logger=None):
     status = True
     for dbType in dbTypes:
         if not gutils.doesFolderExist(refdbspath + PATHDELIM + dbType):
-            eprintf(
+            gutils.eprintf(
                 "ERROR\tfolder %s for reference type %s not found\n",
-                sQuote(refdbspath + PATHDELIM + dbType),
+                gutils.sQuote(refdbspath + PATHDELIM + dbType),
                 dbType,
             )
             logger.printf(
                 "ERROR\tfolder %s for reference type %s not found\n",
-                sQuote(refdbspath + PATHDELIM + dbType),
+                gutils.sQuote(refdbspath + PATHDELIM + dbType),
                 dbType,
             )
             status = False
@@ -254,15 +254,15 @@ def check_if_refDB_path_valid(refdbspath, logger=None):
         if not gutils.doesFolderExist(
             refdbspath + PATHDELIM + dbType + PATHDELIM + "formatted"
         ):
-            eprintf(
+            gutils.eprintf(
                 "ERROR\tsubfolder %s not found under the folder %s\n",
-                sQuote("formatted"),
-                sQuote(refdbspath + PATHDELIM + dbType + PATHDELIM),
+                gutils.sQuote("formatted"),
+                gutils.sQuote(refdbspath + PATHDELIM + dbType + PATHDELIM),
             )
             logger.printf(
                 "ERROR\tsubfolder %s not found under the folder %s\n",
-                sQuote("formatted"),
-                sQuote(refdbspath + PATHDELIM + dbType + PATHDELIM),
+                gutils.sQuote("formatted"),
+                gutils.sQuote(refdbspath + PATHDELIM + dbType + PATHDELIM),
             )
             status = False
 
@@ -275,7 +275,7 @@ def check_for_raw_sequences(dbs, refdbspath, dbType, logger=None):
     for db in dbs:
         fullPath = refdbspath + PATHDELIM + dbType + PATHDELIM + db
         if not gutils.plain_or_gz_file_exists(fullPath):
-            eprintf(
+            gutils.eprintf(
                 "ERROR\tRaw sequences %s expected for %s references\n", fullPath, dbType
             )
             logger.printf(
@@ -311,19 +311,19 @@ def _checkParams(params, paramsAccept, logger=None, errors=None):
     if not type(params) is dict and type(paramsAccept) is dict:
         # print  'type ',  params, paramsAccept,  (not params in paramsAccept), (len(paramsAccept.keys())!=0)
         try:
-            if (not params in paramsAccept) and len(paramsAccept.keys()) != 0:
+            if (not params in paramsAccept) and len(paramsAccept.keys())!=0:
                 errors[params] = False
                 choices = ", ".join(paramsAccept.keys())
-                eprintf(
-                    "ERROR\tValue for key %s, in param file,  is not set propertly must be one of %s \t %s\n",
-                    sQuote(params),
-                    sQuote(choices),
+                gutils.eprintf(
+                    "ERROR\tValue for key %s, in param file, is not set propertly must be one of %s\t%s\n",
+                    gutils.sQuote(params),
+                    gutils.sQuote(choices),
                     __name__,
                 )
                 logger.printf(
-                    "ERROR\tValue for key %s, in param file,  is not set propertly must be one of %s\t%s\n",
-                    sQuote(params),
-                    sQuote(choices),
+                    "ERROR\tValue for key %s, in param file, is not set propertly must be one of %s\t%s\n",
+                    gutils.sQuote(params),
+                    gutils.sQuote(choices),
                     __name__,
                 )
         except:
@@ -361,13 +361,13 @@ def getSuffixes(algorithm, seqType):
     """
 
     suffixes = {}
-    suffixes["LAST"] = {}
+    suffixes["FAST"] = {}
     suffixes["BLAST"] = {}
     suffixes["BLAST"]["nucl"] = ["nhr", "nsq", "nin"]
     suffixes["BLAST"]["prot"] = ["phr", "psq", "pin"]
 
-    suffixes["LAST"]["nucl"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
-    suffixes["LAST"]["prot"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
+    suffixes["FAST"]["nucl"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
+    suffixes["FAST"]["prot"] = ["des", "sds", "suf", "bck", "prj", "ssp", "tis"]
 
     if not algorithm in suffixes:
         return None

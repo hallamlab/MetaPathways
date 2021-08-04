@@ -1,0 +1,7 @@
+FROM quay.io/mcglock/pt_v24.5
+
+COPY run-pathway-tools-and-copy-pgdb.sh /opt/bin/
+RUN chmod 777 /opt/bin/run-pathway-tools-and-copy-pgdb.sh 
+
+COPY run-pathway-tools-api-mode.sh  /opt/bin/
+RUN chmod 777 /opt/bin/run-pathway-tools-api-mode.sh 
