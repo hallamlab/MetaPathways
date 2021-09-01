@@ -28,12 +28,16 @@ class PythonCyc:
     soc = None
     _ptoolsExec = None
     DEBUG = True
+    print('hello')
 
     def __init__(self):
-        pass
+        self.socket_file = "/tmp/ptools-socket"
 
     def setDebug(self, debug=False):
         DEBUG = debug
+
+    def setSocketFile(self, socket_file):
+        self.socket_file = socket_file
 
     def setPToolsExec(self, ptoolsExec):
         self._ptoolsExec = ptoolsExec
@@ -41,9 +45,12 @@ class PythonCyc:
     def setOrganism(self, organism):
         self._organism = organism
 
+    def setOrganism(self, organism):
+        self._organism = organism
+
     def makeSocket(self):
         self.soc = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.soc.connect("/tmp/ptools-socket")
+        self.soc.connect(self.socket_file)
         return True
 
     def tokenize(self, string):
@@ -108,14 +115,14 @@ class PythonCyc:
 
     def send_query(self, query):
         if self.makeSocket():
-            self.soc.send(query)
+            self.soc.send(query.encode())
         else:
             gutils.printf("ERROR\tCannot create or connect socket\n")
 
     def retrieve_results(self):
         data = ""
         while True:
-            _data = self.soc.recv(1024)
+            _data = self.soc.recv(1024).decode()
             if not _data:
                 break
             data += _data
@@ -170,8 +177,8 @@ class PythonCyc:
         return _organisms
 
     def sendStopSignal(self):
-        query = "(exit)"
-        self.send_query(query)
+        print('exiting')
+        self.soc.send("(exit)".encode())
         time.sleep(10)
 
     def getFlatFiles(self):
