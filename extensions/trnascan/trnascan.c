@@ -1880,13 +1880,29 @@ strncpy(type_trna,amino_acid[num-1],3);
 /* function that prints out the headers */
 void print_headers(FILE *fpo) {
 //  if((*ntrna) == 1)
-  fprintf(fpo,"sequence name\t");
-  fprintf(fpo,"tRNA Type\t");
+  fprintf(fpo,"#seq_name\t");
+  fprintf(fpo,"tRNA\t");
   fprintf(fpo,"anticodon\t");
-  fprintf(fpo,"start position\t end position\t");
-  fprintf(fpo,"strand\n");
- 
-//  fprintf(fpo,"D signal\tTpsyC signal\t");
+  fprintf(fpo,"start_pos\tend_pos\t");
+  fprintf(fpo,"strand\t");
+  fprintf(fpo,"D-signal\t");
+  fprintf(fpo,"TpsyC-signal\t");
+  fprintf(fpo,"amino-acyl-stem\t");
+  fprintf(fpo,"D-stem\t");
+  fprintf(fpo,"anticodon-stem\t");
+  fprintf(fpo,"TpsyC-stem\t");
+  fprintf(fpo,"no-bp-anticodon-stem\n");
+
+//D signal= 8084 8077 TpsyC signal= 8045 8031
+//amino-acyl stem= 8091-8085;8027-8021
+//D stem= 8082-8080;8070-8068
+//anticodon stem= 8066-8062;8054-8050
+//TpsyC stem= 8044-8040;8032-8028
+//tRNA predict as a tRNA- Gln : anticodon ttg
+//number of base pairing in the anticodon stem=5
+
+//  fprintf(fpo,"D signal\t");
+//  fprintf(fpo,"TpsyC signal\t");
  // fprintf(fpo,"amino-acyl stem\t");
   //fprintf(fpo,"D stem\t");
  // fprintf(fpo,"anticodon stem\t");
@@ -1966,46 +1982,26 @@ if ((nloop) == 0) {
   else {
     fprintf(fpo," \t \t");
   } 
-
-  fprintf(fpo,"%ld\t",pos1-7+sqoffset);
-  fprintf(fpo,"%ld\t",pos1-6+lpair1+sqoffset);
-  fprintf(fpo,"+");
-
   fprintf(fpf,">%s_tRNA_%d\n",name, *ntrna);
   fprintf(fpf,"%s\n",chaine2);
-/* Kishori  commented it out
-  fprintf(fpo,"%ld-%ld\t", pos1+sqoffset,pos1+7+sqoffset);
-  fprintf(fpo,"%ld-%ld\t", pos+sqoffset,pos+14+sqoffset);
-  fprintf(fpo,"%ld-%ld;",pos1-7+sqoffset,pos1-1+sqoffset);
-  fprintf(fpo,"%ld-%ld\t",pos1-13+lpair1+sqoffset, pos1-7+lpair1+sqoffset);
-  fprintf(fpo,"%ld-%ld;",pos1+2+sqoffset,pos1+4+sqoffset);
-  fprintf(fpo,"%ld-%ld\t",pos1+lpair+sqoffset, pos1+lpair+2+sqoffset);
-
-  if(lpair2 > 16)
-    {
-    fprintf(fpo,"%ld-%ld;",pos1+lpair+4+sqoffset,pos1+lpair+8+sqoffset);
-    fprintf(fpo,"%ld-%ld\t",pos1+lpair+lpair2+sqoffset,pos1+lpair+lpair2+4+sqoffset);
-    }
-  else
-    {
-    fprintf(fpo,"%ld-%ld;",pos1+lpair+4+sqoffset,pos1+lpair+8+sqoffset);
-    fprintf(fpo,"%ld-%ld\t", pos1+lpair+16+sqoffset,pos1+lpair+20+sqoffset);
-    }
-  fprintf(fpo,"%ld-%ld;",pos+1+sqoffset,pos+5+sqoffset);
-  fprintf(fpo,"%ld-%ld\t",pos+13+sqoffset,pos+17+sqoffset);
 
 
-  if (lpair2 > 16) {
-    posstart=pos1+lpair+15;
-    posend= pos1+lpair+lpair2-2;
-    fprintf(fpo,"%ld-%ld\t",posstart+sqoffset, posend+sqoffset); 
-  }
-  else {
-    fprintf(fpo,"   \t");
+  fprintf(fpo,"%ld\t%ld\t",pos1-7+sqoffset,pos1-6+lpair1+sqoffset + 1);
+  fprintf(fpo,"+\t");
+  fprintf(fpo,"%ld-%ld\t", pos1+sqoffset,pos1+7+sqoffset+1); //D loop
+  fprintf(fpo,"%ld-%ld\t", pos+sqoffset, pos+14+sqoffset+1);  //T loop
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos1-7+sqoffset,pos1-1+sqoffset+1, pos1-13+lpair1+sqoffset, pos1-7+lpair1+sqoffset+1); //amino-acyl stem
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos1+2+sqoffset, pos1+4+sqoffset+1, pos1+lpair+sqoffset, pos1+lpair+2+sqoffset+1);  //D stem
+
+  if(lpair2 > 16) { //anticodon stem
+      fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos1+lpair+4+sqoffset, pos1+lpair+8+sqoffset+1, pos1+lpair+lpair2+sqoffset, pos1+lpair+lpair2+4+sqoffset +1);
+  } else {
+    fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos1+lpair+4+sqoffset,pos1+lpair+8+sqoffset+1, pos1+lpair+16+sqoffset,pos1+lpair+20+sqoffset+1);
   }
 
-  fprintf(fpo,"%d\t",ncomp);
-  */
+  // T stem
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos+1+sqoffset,pos+5+sqoffset+1, pos+13+sqoffset,pos+17+sqoffset+1);
+  fprintf(fpo,"%d",ncomp); //anticodon bp stem len
   fprintf(fpo,"\n");
 }
 else {   // outer if
@@ -2040,50 +2036,29 @@ else {   // outer if
     fprintf(fpo,"   \t  \t"); 
     }
 
-
-  pos2= length-pos1+8;
-  fprintf(fpo,"%ld\t%ld\t",pos2+sqoffset,pos2-lpair1-1+sqoffset);
-  fprintf(fpo,"-");
-
   fprintf(fpf,">%s_tRNA_%d\n",name, *ntrna);
   fprintf(fpf,"%s\n",chaine2);
-              
+  pos2= length-pos1+8;
 
-/*  Kishori commented it out
-  fprintf(fpo,"%ld-%ld\t",length-pos1+1+sqoffset, length-pos1-6+sqoffset);
-  fprintf(fpo,"%ld-%ld\t",length-pos+1+sqoffset,length-pos-13+sqoffset); 
-  fprintf(fpo,"%ld-%ld;",pos2+sqoffset,pos2-6+sqoffset);
-  fprintf(fpo,"%ld-%ld\t",pos2-lpair1+6+sqoffset, pos2-lpair1+sqoffset);
-  fprintf(fpo,"%ld-%ld;",length-pos1-1+sqoffset,length-pos1-3+sqoffset); 
-  fprintf(fpo,"%ld-%ld\t",length-pos1-lpair+1+sqoffset,length-pos1-lpair-1+sqoffset);
+  fprintf(fpo,"%ld\t%ld\t",pos2+sqoffset,pos2-lpair1-1+sqoffset);
+  fprintf(fpo,"-\t");
 
-  if (lpair2 > 16)
-    {
+  fprintf(fpo,"%ld-%ld\t",length-pos1+1+sqoffset, length-pos1-6+sqoffset+1);   //D signal
+  fprintf(fpo,"%ld-%ld\t",length-pos+1+sqoffset,length-pos-13+sqoffset + 1);  //T signal
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",pos2+sqoffset,pos2-6+sqoffset+1, pos2-lpair1+6+sqoffset, pos2-lpair1+sqoffset+1); // aminco-acyl stem
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",length-pos1-1+sqoffset,length-pos1-3+sqoffset+1, length-pos1-lpair+1+sqoffset,length-pos1-lpair-1+sqoffset+1);  //D stem
+  if (lpair2 > 16) { //anticodon stem
     posstart=pos1+lpair+15;
     posend=pos1+lpair+lpair2-2;
-    fprintf(fpo,"%ld-%ld;%ld-%ld\t",length-pos1-lpair-3+sqoffset, length-pos1-lpair-7+sqoffset,length-posend-1+sqoffset,length-posend-5+sqoffset);
-    }
-  else
-    {
     fprintf(fpo,"%ld-%ld;%ld-%ld\t",length-pos1-lpair-3+sqoffset,
-    length-pos1-lpair-7+sqoffset,length-pos1-lpair-lpair2+1+sqoffset,
-    length-pos1-lpair-lpair2-3+sqoffset);
-    }
-
-  fprintf(fpo,"%ld-%ld;t%ld-%ld\t",length-pos+sqoffset,length-pos-4+sqoffset,
-  length-pos-12+sqoffset,length-pos-16+sqoffset);
-
-  if (lpair2 > 16) {
-    posstart=pos1+lpair+15;
-    posend=pos1+lpair+lpair2-2;
-    fprintf(fpo,"%ld-%ld\t", length-posstart+1+sqoffset ,length-posend+1+sqoffset);
+    length-pos1-lpair-7+sqoffset+1,length-posend-1+sqoffset,length-posend-5+sqoffset+1);
+  } else {
+    fprintf(fpo,"%ld-%ld;%ld-%ld\t",length-pos1-lpair-3+sqoffset,
+    length-pos1-lpair-7+sqoffset+1,length-pos1-lpair-lpair2+1+sqoffset,
+    length-pos1-lpair-lpair2-3+sqoffset+1);
   }
-  else {
-    fprintf(fpo,"   \t");
-  }
-
-  fprintf(fpo,"%d\t",ncomp);
-   */
+  fprintf(fpo,"%ld-%ld;%ld-%ld\t",length-pos+sqoffset,length-pos-4+sqoffset+1, length-pos-12+sqoffset,length-pos-16+sqoffset+1);
+  fprintf(fpo,"%d",ncomp); //anticodon bp stem len
   fprintf(fpo,"\n");
   }
 }
