@@ -1,17 +1,8 @@
-# MetaPathways 2: A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
+# MetaPathways
 
-Niels W. Hanson, Kishori M. Konwar, Shang-Ju Wu, and Steven J. Hallam
+A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
 
-## Updates
-
-**November 27, 2014**: [MetaPathways v2.5 released](https://github.com/hallamlab/metapathways2/releases/tag/v2.5) with upgrades to the pipeline:
-    
-* LAST homology searches with BLAST-equivalent output and E-values
-* Reads per kilobase per million mapped (RPKM) coverage measure for Contig annotations calculated from raw reads (`.fastq`) or mapping files (`.SAM`) using [bwa](http://bio-bwa.sourceforge.net)
-* Addition of the [CAZy sequence database](http://www.cazy.org) as a new compatible functional hierachy
-* GUI Keyword-search from annotation subsetting and projection onto different functional hierarcies (KEGG, COG, SEED, MetaCyc, and now CAZy)
-
-See [the release page](https://github.com/hallamlab/metapathways2/releases/tag/v2.5) and [the wiki](https://github.com/hallamlab/metapathways2/wiki) for more information.
+**Authors:** Niels W. Hanson, Kishori M. Konwar, Shang-Ju Wu, and Steven J. Hallam
 
 
 ## Abstract
@@ -31,18 +22,17 @@ Please see the [MetaPathways v2.5 wiki](https://github.com/hallamlab/metapathway
 A template [MetaPathways_DBs.zip (**Updated: October 2014**)](https://www.dropbox.com/s/ye3kpve041e0r39/MetaPathways_DBs.zip?dl=0) contains starter protein and taxonomic databases
 ### Installation steps and information
 
-   * The folder with the script where MetaPathways.py is referred to as METAPATHWAYS_FOLDER
-   * copy over the files template_config.txt and tempalate_params.txt to the folder METAPATHWAYS_FOLDER
-   * the LAST, BLAST and other third party exectables should be in a subfolder in METAPATHWAYS_FOLDER
-   * the formatted databases should be in a separate folder, we refer to it as METAPATHWAYS_DB folder
-   * the template_config.txt files should be pointed to the the actual folders
-   * the tempalte_params.txt is use while running the pipeline
-   * before running the script the user must run "source <METAPATHWAYS_FOLDER>/MetaPathwaysrc
-   
-   
+   * The folder with the script where `MetaPathways.py` is referred to as `METAPATHWAYS_FOLDER`
+   * copy over the files `template_config.txt` and `tempalate_params.txt` to the folder `METAPATHWAYS_FOLDER`
+   * the `LAST`, `BLAST` and other third party exectables should be in a subfolder in `METAPATHWAYS_FOLDER`
+   * the formatted databases should be in a separate folder, we refer to it as `METAPATHWAYS_DB` folder
+   * the `template_config.txt` files should be pointed to the the actual folders
+   * the `tempalte_params.txt` is use while running the pipeline
+   * before running the script the user must run `source <METAPATHWAYS_FOLDER>/MetaPathwaysrc`
 
+## Updates
 
-
+Please refer to the changelog file [changelog.md](changelog.md)
 
 ## Citation
 
