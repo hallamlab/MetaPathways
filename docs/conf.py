@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'MetaPathways'
-copyright = '2020, Kishori M Konwar'
-author = 'Kishori M Konwar'
+copyright = '2021, BCB2'
+author = 'BCB2'
 
 
 # -- General configuration ---------------------------------------------------
