@@ -1181,7 +1181,7 @@ def create_sorted_parse_blast_files(
         seqid += 1
         currSize += 1
         if currSize % size == 0:
-            list.sort(key=lambda tup: tup[1], reverse=False)
+            _list.sort(key=lambda tup: tup[1], reverse=False)
             # print "Num of lines writing to file " + sorted_parse_file + "." + str(batch) + "  :  " + str(len(list))
             writeParsedLines(
                 fieldmapHeaderLine,

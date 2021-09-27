@@ -76,7 +76,7 @@ def format_db(formatdb_executable, seqType, raw_sequence_file, formatted_db, alg
             _temp_formatted_db,
         )
 
-    if algorithm == "LAST":
+    if algorithm == "FAST":
         # dirname = os.path.dirname(raw_sequence_file)
         cmd = "%s -s 4G -p -c %s  %s" % (
             formatdb_executable,

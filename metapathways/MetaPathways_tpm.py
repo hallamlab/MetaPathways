@@ -148,7 +148,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s -o %s" % (
+        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -o %s -" % (
             bwaExec,
             num_threads,
             indexFile,
@@ -158,7 +158,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s -o %s " % (
+         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -o %s -" % (
                 bwaExec,
                 num_threads,
                 indexFile,
@@ -170,7 +170,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     if result[0] == 0:
         rename(bwaOutputTmp, bwaOutput)
     else:
-        gutils.eprintf("ERROR:\t Error in  file processing read files %s\n", readFiles)
+        gutils.eprintf("ERROR:\tError in file processing read files %s\n", readFiles)
         status = False
 
     return status
@@ -262,7 +262,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if not indexSuccess:
         gutils.eprintf("\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs)
         if errorlogger:
-            errorlogger.eprintf(
+            gutils.eprintf(
                 "\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs
             )
             errormod.insert_error(10)
@@ -287,7 +287,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         else:
             gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
             if errorlogger:
-                errorlogger.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
+                gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
             errormod.insert_error(10)
           # exit_process("ERROR\tFailed to run BWA!\n")
             # END of running BWA
@@ -430,7 +430,7 @@ def write_new_file(lines, output_file):
     outputfile.close()
 
 
-def MetaPathways_rpkm(argv, extra_command=None, errorlogger=None, runstatslogger=None):
+def MetaPathways_tpm(argv, extra_command=None, errorlogger=None, runstatslogger=None):
     if errorlogger != None:
         errorlogger.write("#STEP\tRPKM_CALCULATION\n")
     try:
