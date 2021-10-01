@@ -33,10 +33,29 @@ rule stage_blast_full:
         expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva.ndb', arb_release=arb_release),
         config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.pdb',
         config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.pdb',
-        #config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.pdb',
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.pdb',
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.pdb',
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
+
         
+rule stage_blast_lite:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.pdb',
+        config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.pdb',
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.pdb',
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.pdb'
+
+rule stage_fast_lite:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva.prj', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva.prj', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.prj',
+        config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj',
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
+
         
 #rule stage_blast_lite:
 #    input:
@@ -53,7 +72,7 @@ rule download_only:
         config["ref_db_dir"] + '/taxonomic/SILVA_' + arb_release + '_SSURef_tax_silva.fasta.gz',
         config["ref_db_dir"] + '/functional/uniprot_sprot.fasta.gz',
         config["ref_db_dir"] + '/functional/kegg-uniprot-2018-12-20',
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01',
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta',
         config["ref_db_dir"] + '/functional/metacyc-2020-08-10',
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
 
@@ -107,7 +126,26 @@ rule make_silva_blast_db:
         makeblastdb -in SILVA_{arb_release}_LSURef_tax_silva.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_LSURef_tax_silva
         makeblastdb -in SILVA_{arb_release}_SSURef_tax_silva.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_SSURef_tax_silva
         """
-    
+
+rule make_silva_fast_db:
+    input:
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva.fasta', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva.fasta', arb_release=arb_release)
+    params:
+        target_dir = config["ref_db_dir"],
+        arb_release = arb_release
+    output:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva.prj', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva.prj', arb_release=arb_release)
+    shell:
+        """
+        cd {params.target_dir}/taxonomic
+        grep "^>" SILVA_{arb_release}_LSURef_tax_silva.fasta > formatted/SILVA_{arb_release}_LSURef_tax_silva-names.txt
+        fastdb formatted/SILVA_{arb_release}_LSURef_tax_silva SILVA_{arb_release}_LSURef_tax_silva.fasta
+        grep "^>" SILVA_{arb_release}_SSURef_tax_silva.fasta > formatted/SILVA_{arb_release}_SSURef_tax_silva-names.txt
+        fastdb formatted/SILVA_{arb_release}_SSURef_tax_silva SILVA_{arb_release}_SSURef_tax_silva.fasta
+        """
+
 rule fetch_uniprot_swissprot_db:
     input:
         config["ref_db_dir"] + '/Dsignal'
@@ -133,6 +171,20 @@ rule make_swissprot_blast_db:
         """
         cd {params.target_dir}/functional
         makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/uniprot_sprot
+        """
+
+rule make_swissprot_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/uniprot_sprot.fasta'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        grep "^>" {input} > formatted/uniprot_sprot-names.txt
+        fastdb -p formatted/uniprot_sprot {input}
         """
 
         
@@ -163,6 +215,20 @@ rule make_kegg_blast_db:
         makeblastdb -in kegg-uniprot-2018-12-20 -dbtype prot -parse_seqids -out formatted/kegg-uniprot-2018-12-20
         """
 
+rule make_kegg_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/kegg-uniprot-2018-12-20'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        grep "^>" {input} > formatted/kegg-uniprot-2018-12-20-names.txt
+        fastdb -p formatted/kegg-uniprot-2018-12-20 {input}
+        """
+
 
         
 rule fetch_cazy_db:
@@ -175,7 +241,7 @@ rule fetch_cazy_db:
     shell:
         """
         cd {params.target_dir}/functional
-        wget https://ndownloader.figshare.com/files/27421229 -O cazy-2020-06-01.fasta.gz
+        wget https://figshare.com/ndownloader/files/30950710 -O cazy-2020-06-01.fasta.gz
         gunzip cazy-2020-06-01.fasta.gz
         """
 
@@ -190,6 +256,20 @@ rule make_cazy_blast_db:
         """
         cd {params.target_dir}/functional
         makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/cazy-2020-06-01
+        """
+
+rule make_cazy_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        grep "^>" {input} > formatted/cazy-2020-06-01-names.txt
+        fastdb -p formatted/cazy-2020-06-01 {input}
         """
 
 
@@ -218,6 +298,20 @@ rule make_metacyc_blast_db:
         """
         cd {params.target_dir}/functional
         makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/metacyc-2020-08-10
+        """
+
+rule make_metacyc_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/metacyc-2020-08-10.fasta'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        grep "^>" {input} > formatted/metacyc-2020-08-10-names.txt
+        fastdb -p formatted/metacyc-2020-08-10 {input}
         """
 
 
