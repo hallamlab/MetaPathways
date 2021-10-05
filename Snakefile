@@ -327,3 +327,15 @@ rule fetch_refseq_via_update_blastdb:
         cd {params.target_dir}/functional/formatted
         update_blastdb.pl --blastdb_version 5 --decompress refseq_protein
         """
+
+rule make_refseq_protein_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/refseq_protein.prj'
+    shell:
+        """
+        blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | fastdb -p {params.target_dir}/functional/formatted/refseq_protein
+        """
