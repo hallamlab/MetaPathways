@@ -6,14 +6,9 @@
 userpgdbfolders=$1
 socketfolder=$2
 
-#docker run \
-#    -v ${inpath}:/data quay.io/mcglock/pt_v24.5 \
-#    run-pathway-tools.sh \
-#    -patho /data -no-taxonomic-pruning -no-web-cel-overview -tip
-
 docker run \
     -v ${userpgdbfolders}:/opt/data/ptools-local/pgdbs/user \
     -v ${socketfolder}:/tmp \
     -v ${PWD}:/tools \
-    quay.io/mcglock/pt_v24.5 \
+    quay.io/hallamlab/ptools-container:24.5-v1 \
     /tools/run-pathway-tools-to-extract.sh 

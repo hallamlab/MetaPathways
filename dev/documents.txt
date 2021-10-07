@@ -1,6 +1,7 @@
 
 Note: we will be using the following files
- Dockerfile - required to build the docker
+ PTools-pipeline-Dockerfile - required to build the docker
+ (taltman: I don't think it is necessary to stuff these scripts into a new container)
 
  build-pgdb-with-ptools-in-docker.sh 
    - this script is run to build a pgdb
