@@ -5,6 +5,12 @@
   make-camelot-file-generate-report.py <pgdb_flat_file_dir_path> <camelot_file_output_dir_path> <report_path>
 """
 
+"""
+Example command-line usage:
+
+> python3 ./make-camelot-file-generate-report.py ~/data/biocyc-24.0/ecoli/24.0/data /tmp /tmp/report.tsv
+"""
+
 from docopt import docopt
 
 from camelot_frs.camelot_frs import get_kb, get_frame, get_frame_all_children, frame_parent_of_frame_p, frame_object_p
