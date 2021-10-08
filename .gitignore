@@ -14,6 +14,9 @@ binaries/*/*
 *.o
 .snakemake
 .tox
+coverage.xml
+pathologic.log
+
 executables-DELETE-ME
 test
 extensions/FAST/fastal
@@ -21,7 +24,6 @@ extensions/FAST/fastdb
 extensions/metacount/metacount
 extensions/trnascan/trnascan-1.4
 .snakemake
-
 
 regtests/output/*
 regtests/input/beaver.fasta
@@ -34,9 +36,9 @@ config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
 
-
 dist/*
 src/MetaPathways.egg-info/*
+MetaPathways.egg-info
 
 build/*
 docs/_build/*

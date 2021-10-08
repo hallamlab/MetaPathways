@@ -28,6 +28,29 @@ DESTDIR ?= /usr/local
 .SECONDARY:
 
 
+### Local Parameters:
+
+PYTHON = python3
+
+
+
+### Python Packate Automation:
+
+clean-package:
+	rm -r dist *.egg-info build
+
+install-package: 
+	$(PYTHON) -m pip install --user .
+
+install-dev-package: 
+	$(PYTHON) -m pip install --user --upgrade -e .
+
+install-dist-package:
+	$(PYTHON) -m pip install --user dist/*.*-py*-none-any.whl
+
+deploy-package-to-pypi:
+	twine upload dist/*
+
 
 ### Container Automation
 docker-start:
