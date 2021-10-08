@@ -56,6 +56,16 @@ rule stage_fast_lite:
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
 
+rule stage_fast_full:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva.prj', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva.prj', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.prj',
+        config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj',
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj',
+        config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj'
+
         
 #rule stage_blast_lite:
 #    input:
@@ -334,7 +344,7 @@ rule make_refseq_protein_fast_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/refseq_protein.prj'
+        config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj'
     shell:
         """
         blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | fastdb -p {params.target_dir}/functional/formatted/refseq_protein
