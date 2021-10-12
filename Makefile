@@ -43,17 +43,20 @@ docker-deploy:
 	sudo docker login quay.io
 	sudo docker push quay.io/hallamlab/metapathways:dev
 
+docker-fetch:
+	sudo docker pull quay.io/hallamlab/metapathways
+
 singularity-local-build:
-	sudo /usr/local/bin/singularity build test.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
 	singularity shell test.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build --docker-login test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
-	singularity shell --docker-login docker://quay.io/hallamlab/metapathways:dev
+	singularity shell docker://quay.io/hallamlab/metapathways:dev
 
 
 ### Conda Packaging
