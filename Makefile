@@ -71,6 +71,10 @@ singularity-docker-shell:
 
 ### Conda Packaging
 ##
+
+## Conda Installation:
+conda-install: conda-install-deps extensions-install 
+
 ## Install conda build tools:
 conda-build-init:
 	conda init bash
@@ -91,7 +95,7 @@ extensions-build:
 	$(MAKE) -C extensions clean
 	$(MAKE) -C extensions
 
-extensions-install:
+extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
 	cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
