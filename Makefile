@@ -39,6 +39,16 @@ docker-build: #pre-docker-builds
 docker-run:
 	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output quay.io/hallamlab/metapathways:dev bash 
 
+docker-test:
+	cp $(CURDIR)/regtests/input/A1.fasta /tmp
+	sudo docker run -it -v /tmp:/input quay.io/hallamlab/metapathways:dev \
+		MetaPathways -v \
+			-i /opt/mp_repo/tests/data/input/lagoon-sample2.fasta \
+			-o /input/A1_MP_out/ \
+			-p /opt/mp_repo/resources/template_param.txt \
+			-d /opt/mp_repo/tests/data/ref_data
+
+
 docker-deploy:
 	sudo docker login quay.io
 	sudo docker push quay.io/hallamlab/metapathways:dev
@@ -69,7 +79,7 @@ conda-build-init:
 conda-install-deps:
 	conda install --yes -n base -c conda-forge mamba
 	mamba install --yes -c conda-forge curl
-	mamba install --yes -c bioconda blast prodigal bwa
+	mamba install --yes -c bioconda blast prodigal bwa samtools
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
@@ -244,25 +254,12 @@ remove:
 
 ### Testing:
 
-mp-regression-tests:
-	./run_regtests.sh
-	@exit $$?
+## taltman: Doesn't work for me, needs to be reworked.
+# no-ptools-unit-test:
+# 	mkdir -p test
+# 	source MetaPathwaysrc
+# 	touch executables/linux/FGS+
+# 	touch executables/linux/ptools
+# 	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
+# 	time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
 
-## Top-level test target
-test: test-mp-regression-tests
-
-no-ptools-unit-test:
-	mkdir -p test
-	source MetaPathwaysrc
-	touch executables/linux/FGS+
-	touch executables/linux/ptools
-	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
-	time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
-
-docker-test:
-	cp $(CURDIR)/regtests/input/A1.fasta /tmp
-	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/functional/formatted
-	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/taxonomic/formatted
-	mkdir -p /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/formatted
-	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
-	sudo docker run -it -v /tmp:/input taltman/metapathways:taltman_dev /root/mp_repo/MetaPathways.py -i /input/A1.fasta -o /input/A1_MP_out/ -p /root/mp_repo/resources/docker_param.txt -c /root/mp_repo/resources/docker_config.txt

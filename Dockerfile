@@ -18,15 +18,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
 						      python3-pip \
 						      wget
 
-# Install MetaPathways:
-RUN pip3 install metapathways
-
-## COPY over Makefile:
+## Create the mp_repo directory, and copy over the Makefile
 COPY Makefile        /opt/mp_repo/
 
 ## Set up Conda:
 RUN make -C mp_repo conda-install-deps 
 
+# Install MetaPathways:
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
 
 ### Copying the repo files into the Docker image:
 COPY extensions	     /opt/mp_repo/extensions/

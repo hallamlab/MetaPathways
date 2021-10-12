@@ -1,0 +1,72 @@
+
+Note: we will be using the following files
+ Dockerfile - required to build the docker
+
+ build-pgdb-with-ptools-in-docker.sh 
+   - this script is run to build a pgdb
+ run-pathway-tools-and-copy-pgdb.sh  
+  - this script run in the docker container to build one pgdb. Note this script is not
+    directly run rather it is run by the docker container when previous step is executed.
+
+
+ extract-pgdb-with-ptools-in-docker.sh 
+   - this script is run to extract a pgdb by running in the api mode
+ run-pathway-tools-to-extract.sh
+   - this script run in the docker container to start ptools in api mode. Note this script is not
+    directly run rather it is run by the docker container when previous step is executed.
+ extract_pathways.py
+   - while the docker container is active this script is run on your host machine
+     to extract the pathways
+
+INDIVIDUAL STEPS;
+Step 0. You should be in the dev_utils folder in the metapathways folder. All
+        scipts and files are in this folder
+
+Step 1. Make sure you have the docker image on your machine. Note some steps 
+        might require you to have sudo permission. 
+        Suppose the name of the docker is quay.io/bcb2/pt_v24.5. 
+
+Step 2. In case you do not have a docker image on your machine build one with the 
+        following steps based on Ryan's image as follows
+
+            docker build -t quay.io/bcb2/pt_v24.5 .
+        you can check the docker image as 
+            docker images | grep pt_v24.5
+
+Step 3. To build a pgdb, say the 0.pf file, for a sample name "sample_name" 
+        is located in a folder called "/home/login/input/sample_name" and we would 
+        like the output to go into a folder, say name "/home/login/output/pgdbs" 
+        Then to build the pgdb and put the pgdb output as a pgdb.tar folder in the 
+        output folder as 
+           ./build-pgdb-with-ptools-in-docker.sh  /home/login/input/sample_name /home/login/output/pgdbs
+
+        once it is run the results are  in the output folder
+
+Step 4. Now to extract the pgdb from the pgdb.tar file we built, 
+             tar -xvf pgdb.tar
+
+       first we start the docker as 
+           extract-pgdb-with-ptools-in-docker.sh <user-pgdb-folder> <user-output-folder>
+        <user-pgdb-folder> is the folder where the pgdb folders are located, e.g., sample_namecyc. 
+
+             This sample_namecyc is in the pgdb.tar file in the previous step 
+        <user-output-folder> is the folder where a tmp would be created, e.g., <user-output-folder>/tmp
+
+        Wait for the docker container to fully start (you will have to get used to know when it is loaded by looking at 
+        the output in the terminal window. Also you should see the socket file <user-output-folder>/tmp/ptools-socket.
+         Now, open another terminal and make sure your pgdb is avaiable by listing them 
+        as 
+            sudo python extract_pathways.py -s <user-output-folder>/ptools-socket -l
+
+        make sure your pgdb is listed. Important to know that pgdb names are sample_name turned into lowercase
+        If you see your pgdb you can extract as
+            sudo python extract_pathways.py -s <user-output-folder>/ptools-socket -p sample_name > sample_name.pwy.txt
+
+        then the results should be in the file sample_name.pwy.txt
+
+Step 5: If you want to extract additional pgdb you can either kill the docker running in Step 4 and start the steps above
+
+
+
+
+       
