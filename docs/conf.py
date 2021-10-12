@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'MetaPathways'
-copyright = '2021, BCB2'
+copyright = '2021, BCB2 Developers'
 author = 'BCB2'
 
 
