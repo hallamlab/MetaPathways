@@ -24,7 +24,6 @@ Please see the [MetaPathways v2.5 wiki](https://github.com/hallamlab/metapathway
 A template [MetaPathways_DBs.zip (**Updated: October 2014**)](https://www.dropbox.com/s/ye3kpve041e0r39/MetaPathways_DBs.zip?dl=0) contains starter protein and taxonomic databases
 ### Installation steps and information
 
-<<<<<<< HEAD
    * The folder with the script where `MetaPathways.py` is referred to as `METAPATHWAYS_FOLDER`
    * copy over the files `template_config.txt` and `tempalate_params.txt` to the folder `METAPATHWAYS_FOLDER`
    * the `LAST`, `BLAST` and other third party exectables should be in a subfolder in `METAPATHWAYS_FOLDER`
