@@ -12,11 +12,15 @@ binaries/*/*
 .idea*
 *.DS_Store
 *.o
+.snakemake
+.tox
+executables-DELETE-ME
+test
 extensions/FAST/fastal
 extensions/FAST/fastdb
 extensions/metacount/metacount
 extensions/trnascan/trnascan-1.4
-
+.snakemake
 
 
 regtests/output/*

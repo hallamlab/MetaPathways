@@ -1,3 +1,4 @@
+## This Dockerfile adds MP3 pipeline code into the base PTools image
 FROM quay.io/mcglock/pt_v24.5
 
 COPY run-pathway-tools-and-copy-pgdb.sh /opt/bin/
