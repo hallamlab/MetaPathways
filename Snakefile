@@ -67,22 +67,12 @@ rule stage_fast_full:
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj'
 
         
-#rule stage_blast_lite:
-#    input:
-
-#rule stage_fast_full:
-#    input:
-
-#rule stage_fast_lite:
-#    input:
-
-
 rule download_only:
     input:
-        config["ref_db_dir"] + '/taxonomic/SILVA_' + arb_release + '_SSURef_tax_silva.fasta.gz',
-        config["ref_db_dir"] + '/functional/uniprot_sprot.fasta.gz',
+        config["ref_db_dir"] + '/taxonomic/SILVA_' + arb_release + '_SSURef_tax_silva',
+        config["ref_db_dir"] + '/functional/uniprot_sprot',
         config["ref_db_dir"] + '/functional/kegg-uniprot-2018-12-20',
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta',
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01',
         config["ref_db_dir"] + '/functional/metacyc-2020-08-10',
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
 
@@ -109,21 +99,23 @@ rule fetch_silva_db:
         target_dir = config["ref_db_dir"],
         arb_release = arb_release
     output:
-        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva.fasta', arb_release=arb_release),
-        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva.fasta', arb_release=arb_release)
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release)
     shell:
         """
         cd {params.target_dir}/taxonomic
-        wget https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_LSURef_tax_silva.fasta.gz
-        wget https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_SSURef_tax_silva.fasta.gz
-        gunzip {output.ssu_silva_file}
-        gunzip {output.lsu_silva_file}
+        wget -O SILVA_{params.arb_release}_LSURef_tax_silva.gz https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_LSURef_tax_silva.fasta.gz
+        wget -O SILVA_{params.arb_release}_SSURef_tax_silva.gz https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_SSURef_tax_silva.fasta.gz
+        gunzip {output.ssu_silva_file}.gz
+        gunzip {output.lsu_silva_file}.gz
+        grep "^>" {output.ssu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.ssu_silva_file}-names.txt
+        grep "^>" {output.lsu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.lsu_silva_file}-names.txt
         """
 
 rule make_silva_blast_db:
     input:
-        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva.fasta', arb_release=arb_release),
-        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva.fasta', arb_release=arb_release)
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release)
     params:
         target_dir = config["ref_db_dir"],
         arb_release = arb_release
@@ -133,14 +125,14 @@ rule make_silva_blast_db:
     shell:
         """
         cd {params.target_dir}/taxonomic
-        makeblastdb -in SILVA_{arb_release}_LSURef_tax_silva.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_LSURef_tax_silva
-        makeblastdb -in SILVA_{arb_release}_SSURef_tax_silva.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_SSURef_tax_silva
+        makeblastdb -in SILVA_{arb_release}_LSURef_tax_silva -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_LSURef_tax_silva
+        makeblastdb -in SILVA_{arb_release}_SSURef_tax_silva -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_SSURef_tax_silva
         """
 
 rule make_silva_fast_db:
     input:
-        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva.fasta', arb_release=arb_release),
-        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva.fasta', arb_release=arb_release)
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release)
     params:
         target_dir = config["ref_db_dir"],
         arb_release = arb_release
@@ -150,10 +142,8 @@ rule make_silva_fast_db:
     shell:
         """
         cd {params.target_dir}/taxonomic
-        grep "^>" SILVA_{arb_release}_LSURef_tax_silva.fasta > formatted/SILVA_{arb_release}_LSURef_tax_silva-names.txt
-        fastdb formatted/SILVA_{arb_release}_LSURef_tax_silva SILVA_{arb_release}_LSURef_tax_silva.fasta
-        grep "^>" SILVA_{arb_release}_SSURef_tax_silva.fasta > formatted/SILVA_{arb_release}_SSURef_tax_silva-names.txt
-        fastdb formatted/SILVA_{arb_release}_SSURef_tax_silva SILVA_{arb_release}_SSURef_tax_silva.fasta
+        fastdb formatted/SILVA_{arb_release}_LSURef_tax_silva {lsu_silva_file}
+        fastdb formatted/SILVA_{arb_release}_SSURef_tax_silva {ssu_silva_file}
         """
 
 rule fetch_uniprot_swissprot_db:
@@ -162,17 +152,18 @@ rule fetch_uniprot_swissprot_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/uniprot_sprot.fasta'
+        config["ref_db_dir"] + '/functional/uniprot_sprot'
     shell:
         """
         cd {params.target_dir}/functional
-        wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
-        gunzip uniprot_sprot.fasta.gz
+        wget -O uniprot_sprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+        gunzip uniprot_sprot.gz
+        grep "^>" uniprot_sprot > {params.target_dir}/functional/formatted/uniprot_sprot-names.txt
         """
 
 rule make_swissprot_blast_db:
     input:
-        config["ref_db_dir"] + '/functional/uniprot_sprot.fasta'
+        config["ref_db_dir"] + '/functional/uniprot_sprot'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -185,7 +176,7 @@ rule make_swissprot_blast_db:
 
 rule make_swissprot_fast_db:
     input:
-        config["ref_db_dir"] + '/functional/uniprot_sprot.fasta'
+        config["ref_db_dir"] + '/functional/uniprot_sprot'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -193,7 +184,6 @@ rule make_swissprot_fast_db:
     shell:
         """
         cd {params.target_dir}/functional
-        grep "^>" {input} > formatted/uniprot_sprot-names.txt
         fastdb -p formatted/uniprot_sprot {input}
         """
 
@@ -210,6 +200,7 @@ rule fetch_kegg_uniprot_db:
         cd {params.target_dir}/functional
         wget https://ndownloader.figshare.com/files/27422531 -O kegg-uniprot-2018-12-20.gz
         gunzip kegg-uniprot-2018-12-20.gz
+        grep "^>" kegg-uniprot-2018-12-20 > {params.target_dir}/functional/formatted/kegg-uniprot-2018-12-20-names.txt
         """
 
 rule make_kegg_blast_db:
@@ -235,7 +226,6 @@ rule make_kegg_fast_db:
     shell:
         """
         cd {params.target_dir}/functional
-        grep "^>" {input} > formatted/kegg-uniprot-2018-12-20-names.txt
         fastdb -p formatted/kegg-uniprot-2018-12-20 {input}
         """
 
@@ -247,17 +237,18 @@ rule fetch_cazy_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta'
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01'
     shell:
         """
         cd {params.target_dir}/functional
-        wget https://figshare.com/ndownloader/files/30950710 -O cazy-2020-06-01.fasta.gz
-        gunzip cazy-2020-06-01.fasta.gz
+        wget https://figshare.com/ndownloader/files/30950710 -O cazy-2020-06-01.gz
+        gunzip cazy-2020-06-01.gz
+        grep "^>" cazy-2020-06-01 > {params.target_dir}/functional/formatted/cazy-2020-06-01-names.txt
         """
 
 rule make_cazy_blast_db:
     input:
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta'
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -270,7 +261,7 @@ rule make_cazy_blast_db:
 
 rule make_cazy_fast_db:
     input:
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01.fasta'
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -278,7 +269,6 @@ rule make_cazy_fast_db:
     shell:
         """
         cd {params.target_dir}/functional
-        grep "^>" {input} > formatted/cazy-2020-06-01-names.txt
         fastdb -p formatted/cazy-2020-06-01 {input}
         """
 
@@ -290,16 +280,17 @@ rule fetch_metacyc_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/metacyc-2020-08-10.fasta'
+        config["ref_db_dir"] + '/functional/metacyc-2020-08-10'
     shell:
         """
         cd {params.target_dir}/functional
-        wget https://ndownloader.figshare.com/files/27419069 -O metacyc-2020-08-10.fasta
+        wget https://ndownloader.figshare.com/files/27419069 -O metacyc-2020-08-10
+        grep "^>" metacyc-2020-08-10 > {params.target_dir}/functional/formatted/metacyc-2020-08-10-names.txt
         """
 
 rule make_metacyc_blast_db:
     input:
-        config["ref_db_dir"] + '/functional/metacyc-2020-08-10.fasta'
+        config["ref_db_dir"] + '/functional/metacyc-2020-08-10'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -312,7 +303,7 @@ rule make_metacyc_blast_db:
 
 rule make_metacyc_fast_db:
     input:
-        config["ref_db_dir"] + '/functional/metacyc-2020-08-10.fasta'
+        config["ref_db_dir"] + '/functional/metacyc-2020-08-10'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -320,7 +311,6 @@ rule make_metacyc_fast_db:
     shell:
         """
         cd {params.target_dir}/functional
-        grep "^>" {input} > formatted/metacyc-2020-08-10-names.txt
         fastdb -p formatted/metacyc-2020-08-10 {input}
         """
 
@@ -336,6 +326,7 @@ rule fetch_refseq_via_update_blastdb:
         """
         cd {params.target_dir}/functional/formatted
         update_blastdb.pl --blastdb_version 5 --decompress refseq_protein
+        blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | grep "^>" > {params.target_dir}/functional/formatted/refseq_protein-names.txt
         """
 
 rule make_refseq_protein_fast_db:

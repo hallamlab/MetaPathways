@@ -28,6 +28,8 @@ DESTDIR ?= /usr/local
 .SECONDARY:
 
 
+### Local Definitions:
+PYTHON ?= python3
 
 ### Container Automation
 docker-start:
@@ -80,6 +82,31 @@ conda-install-deps:
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
+### Python PyPI Packaging:
+##
+##
+
+### Python installs:
+
+create-package: clean-package
+	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
+	$(PYTHON) setup.py sdist bdist_wheel --universal
+
+clean-package:
+	rm -rf dist MetaPathways.egg-info build
+
+install-package:
+	$(PYTHON) -m pip install --user .
+
+install-dev-package:
+	$(PYTHON) -m pip install --user --upgrade -e .
+
+install-dist-package:
+	$(PYTHON) -m pip install --user dist/MetaPathways-0.*-py*-none-any.whl
+
+deploy-package-to-pypi:
+	twine upload dist/*
+
 ### Build & Install Extensions
 ##
 ##
@@ -99,6 +126,7 @@ CC=gcc
 LEX=lex  
 LEXFLAGS=-lfl
 CFLAGS=-C
+
 
 #example: 
 #     export  METAPATHWAYS_DB=../fogdogdatabases
