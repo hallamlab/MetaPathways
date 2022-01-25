@@ -8,7 +8,7 @@
 ### Local Definitions:
 
 ## User-configurations are set in the config YAML file, not in this Snakemake file:
-configfile: "snakemake_config.yaml"
+#configfile: "snakemake_config.yaml"
 
 ## Database versions:
 arb_release = "138.1"
@@ -22,10 +22,27 @@ hosted_functional_dbs = ["cazy",
                          "kegg",
                          "metacyc"]
 
-thrird_party_functional_dbs = ["refseq"]
+third_party_functional_dbs = ["refseq"]
 
+functional_db_names = ['cazy-2020-06-01',
+                       'kegg-uniprot-2018-12-20',
+                       'metacyc-2020-08-10',
+                       'uniprot_sprot']
+
+taxonomic_db_names = ['SILVA_138.1_LSURef_tax_silva',
+                      'SILVA_138.1_SSURef_tax_silva']
 
 ### DB Staging Rules:
+rule create_names_txt_files:
+    input:
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional/formatted/refseq_protein-names.txt'
+    group: "names-group"
+
+
 
 rule stage_blast_full:
     input:
@@ -306,6 +323,8 @@ rule make_metacyc_fast_db:
         config["ref_db_dir"] + '/functional/metacyc-2020-08-10'
     params:
         target_dir = config['ref_db_dir']
+    resources:
+        mem_mb = 16000
     output:
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
     shell:
@@ -326,17 +345,47 @@ rule fetch_refseq_via_update_blastdb:
         """
         cd {params.target_dir}/functional/formatted
         update_blastdb.pl --blastdb_version 5 --decompress refseq_protein
-        blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | grep "^>" > {params.target_dir}/functional/formatted/refseq_protein-names.txt
         """
 
+
+        
 rule make_refseq_protein_fast_db:
     input:
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
     params:
         target_dir = config['ref_db_dir']
+    resources:
+        mem_mb = 40000,
+        time_min = '23:0:0'
     output:
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj'
     shell:
         """
         blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | fastdb -p {params.target_dir}/functional/formatted/refseq_protein
+        """
+
+### Rules for making the *-names.txt files:
+
+rule make_seq_names_file:
+    input:
+        config['ref_db_dir'] + '{annot_dir}/{db_name}'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '{annot_dir}/formatted/{db_name}-names.txt'
+    shell:
+        """
+        grep "^>" {input} > {output}
+        """
+        
+rule make_refseq_names_file:
+    input:
+        config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '{params.target_dir}/functional/formatted/refseq_protein-names.txt'
+    shell:
+        """
+        blastdbcmd -db {params.target_dir}/functional/formatted/refseq_protein -entry all | grep "^>" > {params.target_dir}/functional/formatted/refseq_protein-names.txt
         """

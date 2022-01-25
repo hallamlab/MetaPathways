@@ -1,3 +1,0 @@
-[console_scripts]
-MetaPathways = metapathways.pipeline:main
-
