@@ -87,7 +87,7 @@ singularity-local-build:
 	sudo /usr/local/bin/singularity build metapathways3.sif docker-daemon://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
-	singularity shell test.sif
+	singularity shell metapathways3.sif
 
 singularity-docker-build:
 	sudo /usr/local/bin/singularity build metapathways3.sif docker://quay.io/hallamlab/metapathways:dev
