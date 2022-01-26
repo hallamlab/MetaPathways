@@ -1,5 +1,0 @@
-pyfastx
-
-[test]
-pytest
-pytest-cov
