@@ -59,13 +59,13 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
-	singularity shell test.sif
+	singularity shell metapathways-dev.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
 	singularity shell docker://quay.io/hallamlab/metapathways:dev
