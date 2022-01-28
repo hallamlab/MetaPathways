@@ -35,8 +35,12 @@ COPY tests           /opt/mp_repo/tests/
 RUN mkdir /opt/pgdb_dir
 
 ## Compile & Install Extensions:
-RUN make -C mp_repo extensions-build
-RUN make -C mp_repo extensions-install
+#RUN make -C mp_repo extensions-build
+#RUN make -C mp_repo extensions-install
+COPY extensions/FAST/fastal /usr/local/bin/fastal
+COPY extensions/FAST/fastdb /usr/local/bin/fastdb
+RUN chmod 755 /usr/local/bin/fastal
+RUN chmod 755 /usr/local/bin/fastdb
 
 
 ## Copy over Snakemake file & config file:
