@@ -59,7 +59,7 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
 	singularity shell metapathways-dev.sif
@@ -124,7 +124,7 @@ extensions-build:
 
 extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
-	cp extensions/FAST/fast*            $(DESTDIR)/bin
+#cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 

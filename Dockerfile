@@ -28,15 +28,15 @@ RUN make -C mp_repo conda-install-deps
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
 
 ### Copying the repo files into the Docker image:
-COPY extensions	     /opt/mp_repo/extensions/
 COPY resources       /opt/mp_repo/resources/
 COPY tests           /opt/mp_repo/tests/
+COPY extensions	     /opt/mp_repo/extensions/
 
 RUN mkdir /opt/pgdb_dir
 
 ## Compile & Install Extensions:
 #RUN make -C mp_repo extensions-build
-#RUN make -C mp_repo extensions-install
+RUN make -C mp_repo extensions-install
 COPY extensions/FAST/fastal /usr/local/bin/fastal
 COPY extensions/FAST/fastdb /usr/local/bin/fastdb
 RUN chmod 755 /usr/local/bin/fastal
