@@ -31,6 +31,33 @@ DESTDIR ?= /usr/local
 ### Local Definitions:
 PYTHON ?= python3
 
+### Install Singularity
+
+OS := linux
+ARCH := amd64
+GO-VERSION := 1.17.6
+SY-VERSION := 3.9.3
+singularity-install:
+	sudo apt-get update
+	sudo apt-get install -y \
+	   build-essential \
+	   libseccomp-dev \
+	   pkg-config \
+	   squashfs-tools \
+	   cryptsetup
+	cd $(TMPDIR)
+	wget https://dl.google.com/go/go$(GO-VERSION).$(OS)-$(ARCH).tar.gz # Downloads the required Go package
+	sudo tar -C /usr/local -xzvf go$(GO-VERSION).$(OS)-$(ARCH).tar.gz  # Extracts the archive
+	rm go$(GO-VERSION).$(OS)-$(ARCH).tar.gz                            # Deletes the ``tar`` file
+	export PATH=$$PATH:/usr/local/go/bin
+	wget https://github.com/sylabs/singularity/releases/download/v${SY-VERSION}/singularity-ce-${SY-VERSION}.tar.gz
+	tar -xzf singularity-ce-${SY-VERSION}.tar.gz
+	rm singularity-ce-${SY-VERSION}.tar.gz
+	cd singularity-ce-${SY-VERSION}
+	./mconfig
+	make -C builddir
+	sudo make -C builddir install
+
 ### Container Automation
 docker-start:
 	sudo systemctl start docker
@@ -59,13 +86,13 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
-	singularity shell test.sif
+	singularity shell metapathways-dev.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
 	singularity shell docker://quay.io/hallamlab/metapathways:dev
@@ -124,7 +151,7 @@ extensions-build:
 
 extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
-	cp extensions/FAST/fast*            $(DESTDIR)/bin
+#cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
