@@ -71,7 +71,11 @@ rule stage_fast_lite:
         config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.prj',
         config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj',
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
-        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names)
 
 rule stage_fast_full:
     input:
