@@ -71,7 +71,11 @@ rule stage_fast_lite:
         config["ref_db_dir"] + '/functional/formatted/uniprot_sprot.prj',
         config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj',
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
-        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj'
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names)
 
 rule stage_fast_full:
     input:
@@ -81,7 +85,12 @@ rule stage_fast_full:
         config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.prj',
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.prj',
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.prj',
-        config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj'
+        config["ref_db_dir"] + '/functional/formatted/refseq_protein.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional/formatted/refseq_protein-names.txt'
 
         
 rule download_only:
@@ -117,7 +126,9 @@ rule fetch_silva_db:
         arb_release = arb_release
     output:
         ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva', arb_release=arb_release),
-        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release)
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release),
+        ssu_silva_names = expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva-names.txt', arb_release=arb_release),
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva-names.txt', arb_release=arb_release)
     shell:
         """
         cd {params.target_dir}/taxonomic
@@ -169,7 +180,8 @@ rule fetch_uniprot_swissprot_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/uniprot_sprot'
+        config["ref_db_dir"] + '/functional/uniprot_sprot',
+        config["ref_db_dir"] + '/functional/formatted/uniprot_sprot-names.txt'
     shell:
         """
         cd {params.target_dir}/functional
@@ -211,7 +223,8 @@ rule fetch_kegg_uniprot_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/kegg-uniprot-2018-12-20'
+        config["ref_db_dir"] + '/functional/kegg-uniprot-2018-12-20',
+        config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20-names.txt',
     shell:
         """
         cd {params.target_dir}/functional
@@ -254,7 +267,8 @@ rule fetch_cazy_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/cazy-2020-06-01'
+        config["ref_db_dir"] + '/functional/cazy-2020-06-01',
+        config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01-names.txt'
     shell:
         """
         cd {params.target_dir}/functional
@@ -297,7 +311,8 @@ rule fetch_metacyc_db:
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/metacyc-2020-08-10'
+        config["ref_db_dir"] + '/functional/metacyc-2020-08-10',
+        config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10-names.txt'
     shell:
         """
         cd {params.target_dir}/functional
