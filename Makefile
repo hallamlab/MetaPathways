@@ -28,6 +28,8 @@ DESTDIR ?= /usr/local
 .SECONDARY:
 
 
+### Local Definitions:
+PYTHON ?= python3
 
 ### Install Singularity
 
@@ -84,13 +86,13 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build metapathways3.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
-	singularity shell metapathways3.sif
+	singularity shell metapathways-dev.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build metapathways3.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
 	singularity shell docker://quay.io/hallamlab/metapathways:dev
@@ -114,6 +116,31 @@ conda-install-deps:
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
+### Python PyPI Packaging:
+##
+##
+
+### Python installs:
+
+create-package: clean-package
+	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
+	$(PYTHON) setup.py sdist bdist_wheel --universal
+
+clean-package:
+	rm -rf dist MetaPathways.egg-info build
+
+install-package:
+	$(PYTHON) -m pip install --user .
+
+install-dev-package:
+	$(PYTHON) -m pip install --user --upgrade -e .
+
+install-dist-package:
+	$(PYTHON) -m pip install --user dist/MetaPathways-0.*-py*-none-any.whl
+
+deploy-package-to-pypi:
+	twine upload dist/*
+
 ### Build & Install Extensions
 ##
 ##
@@ -124,7 +151,7 @@ extensions-build:
 
 extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
-	cp extensions/FAST/fast*            $(DESTDIR)/bin
+#cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
@@ -133,6 +160,7 @@ CC=gcc
 LEX=lex  
 LEXFLAGS=-lfl
 CFLAGS=-C
+
 
 #example: 
 #     export  METAPATHWAYS_DB=../fogdogdatabases

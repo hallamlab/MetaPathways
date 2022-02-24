@@ -1,3 +1,4 @@
+*.sif
 *.pyc
 *.swp
 .idea*
@@ -20,6 +21,10 @@ extensions/FAST/fastal
 extensions/FAST/fastdb
 extensions/metacount/metacount
 extensions/trnascan/trnascan-1.4
+extensions/FAST/src/*.o
+extensions/FAST/gumbel_params/*
+extensions/metacount/parser/libbamparser.a
+MetaPathways.egg-info
 .snakemake
 
 

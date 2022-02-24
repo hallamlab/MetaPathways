@@ -38,6 +38,28 @@ directory in their home directory, and that this path in in their
 Reference Sequences
 ===================
 
+You'll want to install these large reference databases not within the
+container, though. You should have a directory on a disk with plenty
+of capacity, and use Docker's and Singularity's bind options to mount
+that external directory within the container. Here's an example using
+Singularity:
+
+::
+   singularity shell --bind /mnt/sandbox/user:/data docker://quay.io/hallamlab/metapathways:dev
+
+The above example binds the host operating system's
+`/mnt/sandbox/user` directory within the running container as
+`/data`.
+
+Warning: Circa 2021-10, using a beefy computer with many cores and
+plenty of RAM, performing the staging of the full Blast databases may
+take an hour, and staging the full set of FAST databases will
+take around *24 hours*. The Blast `refseq_protein` databases take up ~90 GB of disk
+capacity, while the FAST `refseq_protein` database takes up ~375
+GB. The combination of other staged databases (including both Blast
+and FAST versions) consumes an additional ~20 GB. Please make sure you
+have adequate disk capacity before starting the database staging.
+
 We use ``Snakemake`` to automate the staging of reference databases
 needed by MetaPathways. We have installed ``Snakemake`` via Conda. If
 you are using the Docker container, then Conda is already
@@ -68,14 +90,26 @@ directory for installing the MetaPathways reference databases
 (replacing `/path/to/db/dir` with a real directory path on your
 system). By default, the ``Snakemake`` configuration file sets
 `/tmp/mp_ref_dbs` as the root directory for the MetaPathways reference
-database, if you leave off the `--config` option.
+database, if you leave off the `--config` option. 
 
 Instead of using a single core, you can use the `--cores` option with
 a greater number of specified cores to parallelize the staging of the
 requested datasets.
 
+Above we issued the `stage_blast_full` command to Snakemake. There are
+actually four options for staging the data:
 
+* All databases, indexed for use with Blast: `stage_blast_full`
+* All databases except RefSeq Proteome, indexed for use with Blast:
+  `stage_blast_lite`
+* All databases, indexed for use with FAST: `stage_fast_full`
+* All databases except RefSeq Proteome, indexed for use with FAST:
+  `stage_fast_lite`
 
-
+So, first decide whether you want to use Blast or FAST, and then
+decide whether you have the disk space and the install time to install
+the NCBI RefSeq Proteome reference database. If you have plenty of
+both, you can actually install both full sets for Blast and FAST by
+first issuing the `stage_blast_full` and then `stage_fast_full` to
+Snakemake, one command at a time.
       
-
