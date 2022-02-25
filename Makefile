@@ -28,28 +28,35 @@ DESTDIR ?= /usr/local
 .SECONDARY:
 
 
-### Local Parameters:
+### Local Definitions:
+PYTHON ?= python3
 
-PYTHON = python3
+### Install Singularity
 
-
-
-### Python Packate Automation:
-
-clean-package:
-	rm -r dist *.egg-info build
-
-install-package: 
-	$(PYTHON) -m pip install --user .
-
-install-dev-package: 
-	$(PYTHON) -m pip install --user --upgrade -e .
-
-install-dist-package:
-	$(PYTHON) -m pip install --user dist/*.*-py*-none-any.whl
-
-deploy-package-to-pypi:
-	twine upload dist/*
+OS := linux
+ARCH := amd64
+GO-VERSION := 1.17.6
+SY-VERSION := 3.9.3
+singularity-install:
+	sudo apt-get update
+	sudo apt-get install -y \
+	   build-essential \
+	   libseccomp-dev \
+	   pkg-config \
+	   squashfs-tools \
+	   cryptsetup
+	cd $(TMPDIR)
+	wget https://dl.google.com/go/go$(GO-VERSION).$(OS)-$(ARCH).tar.gz # Downloads the required Go package
+	sudo tar -C /usr/local -xzvf go$(GO-VERSION).$(OS)-$(ARCH).tar.gz  # Extracts the archive
+	rm go$(GO-VERSION).$(OS)-$(ARCH).tar.gz                            # Deletes the ``tar`` file
+	export PATH=$$PATH:/usr/local/go/bin
+	wget https://github.com/sylabs/singularity/releases/download/v${SY-VERSION}/singularity-ce-${SY-VERSION}.tar.gz
+	tar -xzf singularity-ce-${SY-VERSION}.tar.gz
+	rm singularity-ce-${SY-VERSION}.tar.gz
+	cd singularity-ce-${SY-VERSION}
+	./mconfig
+	make -C builddir
+	sudo make -C builddir install
 
 
 ### Container Automation
@@ -76,21 +83,28 @@ docker-deploy:
 	sudo docker login quay.io
 	sudo docker push quay.io/hallamlab/metapathways:dev
 
+docker-fetch:
+	sudo docker pull quay.io/hallamlab/metapathways
+
 singularity-local-build:
-	sudo /usr/local/bin/singularity build test.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
 
 singularity-local-shell:
-	singularity shell test.sif
+	singularity shell metapathways-dev.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build --docker-login test.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
-	singularity shell --docker-login docker://quay.io/hallamlab/metapathways:dev
+	singularity shell docker://quay.io/hallamlab/metapathways:dev
 
 
 ### Conda Packaging
 ##
+
+## Conda Installation:
+conda-install: conda-install-deps extensions-install 
+
 ## Install conda build tools:
 conda-build-init:
 	conda init bash
@@ -103,6 +117,31 @@ conda-install-deps:
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
+### Python PyPI Packaging:
+##
+##
+
+### Python installs:
+
+create-package: clean-package
+	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
+	$(PYTHON) setup.py sdist bdist_wheel --universal
+
+clean-package:
+	rm -rf dist MetaPathways.egg-info build
+
+install-package:
+	$(PYTHON) -m pip install --user .
+
+install-dev-package:
+	$(PYTHON) -m pip install --user --upgrade -e .
+
+install-dist-package:
+	$(PYTHON) -m pip install --user dist/MetaPathways-0.*-py*-none-any.whl
+
+deploy-package-to-pypi:
+	twine upload dist/*
+
 ### Build & Install Extensions
 ##
 ##
@@ -111,9 +150,9 @@ extensions-build:
 	$(MAKE) -C extensions clean
 	$(MAKE) -C extensions
 
-extensions-install:
+extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
-	cp extensions/FAST/fast*            $(DESTDIR)/bin
+#cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
@@ -122,6 +161,7 @@ CC=gcc
 LEX=lex  
 LEXFLAGS=-lfl
 CFLAGS=-C
+
 
 #example: 
 #     export  METAPATHWAYS_DB=../fogdogdatabases
