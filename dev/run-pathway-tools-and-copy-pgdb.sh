@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Xvfb $DISPLAY &
+Xvfb :${DISPLAY#*:} &
 
 ## This builds the PGDB:
 /opt/pathway-tools/pathway-tools "$@"
@@ -13,5 +13,5 @@ org_id=`awk -F"\t" '$1 == "ID" { print $2 }' /opt/data/ptools-local/pgdbs/user/*
     -no-patch-download \
     -eval "(progn (with-organism (:org-id '$org_id) (dump-frames-to-attribute-value-files (org-data-dir)))(exit))"
 
-tar -cjf /output/pgdb.tar  -C /opt/data/ptools-local/pgdbs/user .
+tar -cjf /output/${org_id}cyc.tar.bz2  -C /opt/data/ptools-local/pgdbs/user .
 
