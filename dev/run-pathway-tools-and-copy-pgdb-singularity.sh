@@ -1,27 +1,30 @@
 #!/bin/bash
 
-ppath=$1
+ppath=$1  # path to MP3 main output diretory
 ptoolpath=${ppath}/ptools
 pgdbpath=${ppath}/results/pgdb
+srcpath=$2  # path to ptools-container directory
+tmppath=$3
+# $TMPDIR is a special env variable for sockeye worker nodes
 
-mkdir -p /scratch/st-shallam-1/mcglock/tmp/data/ptools-local/pgdbs/user
-mkdir -p /scratch/st-shallam-1/mcglock/tmp/data/blastdb
-cp /home/ryan/Projects/BCB2/ptools-container/ptools-init.dat /scratch/st-shallam-1/mcglock/tmp/data/ptools-local/ptools-init.dat
-cp /home/ryan/Projects/BCB2/ptools-container/.ncbirc $HOME/
-export DATA_LOADERS=/scratch/st-shallam-1/mcglock/tmp/data/blastdb
+
+rm -rf ${tmppath}/data
+mkdir -p ${tmppath}/data/ptools-local/pgdbs/user
+mkdir -p ${tmppath}/data/blastdb
+cp ${srcpath}/ptools-init.dat ${tmppath}/data/ptools-local/ptools-init.dat
+cp ${srcpath}/.ncbirc $HOME/
+export DATA_LOADERS=${tmppath}/data/blastdb
 
 ## This builds the PGDB:
-/opt/pathway-tools/pathway-tools -patho ${ptoolpath} -no-taxonomic-pruning -no-web-cel-overview -tip -no-patch-download
+/opt/pathway-tools/pathway-tools -patho ${ptoolpath} -no-taxonomic-pruning -no-web-cel-overview -tip -no-patch-download -no-cel-overview -disable-metadata-saving -nologfile
 
 ## Get the Org ID of the just-built PGDB:
-org_id=`awk -F"\t" '$1 == "ID" { print $2 }' /scratch/st-shallam-1/mcglock/tmp/data/ptools-local/pgdbs/user/*cyc/1.0/input/organism.dat`
+org_id=`awk -F"\t" '$1 == "ID" { print $2 }' ${tmppath}/data/ptools-local/pgdbs/user/*cyc/1.0/input/organism.dat`
 
 ## This gets PTools to dump out the flat-files of the PGDB:
 /opt/pathway-tools/pathway-tools \
-    -no-patch-download \
+    -no-web-cel-overview -tip -no-patch-download -no-cel-overview -disable-metadata-saving -nologfile \
     -eval "(progn (with-organism (:org-id '$org_id) (dump-frames-to-attribute-value-files (org-data-dir)))(exit))"
 
-tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2  -C /scratch/st-shallam-1/mcglock/tmp/data/ptools-local/pgdbs/user .
+tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${tmppath}/data/ptools-local/pgdbs/user .
 
-#rm -rf /tmp/data
-#rm -rf $HOME/.ncbirc
