@@ -30,7 +30,7 @@ org_id=$(basename ${ppath})  # `awk -F"\t" '$1 == "ID" { print $2 }' ${tmppath}/
     -no-web-cel-overview -tip -no-patch-download -no-cel-overview -disable-metadata-saving -nologfile \
     -eval "(progn (with-organism (:org-id '$org_id) (dump-frames-to-attribute-value-files (org-data-dir)))(exit))"
 
-sub_id=$(echo ${org_id} | rev | cut -d'_' -f 2- | rev)
+sub_id=$(echo ${org_id} | cut -d'_' -f 2-)
 tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${tmppath}/data/ptools-local/pgdbs/user/*_${sub_id} .
 
 
