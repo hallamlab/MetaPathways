@@ -7,4 +7,4 @@ srcpath="$2"
 tmppath="$3"
 mpdpath="$4"
 
-singularity exec ${srcpath}/ptools-dev.sif ${mpdpath}/run-pathway-tools-and-copy-pgdb-singularity.sh $inpath $srcpath $tmppath
+singularity exec -B ${TMPDIR}:/data ${srcpath}/ptools-dev.sif ${mpdpath}/run-pathway-tools-and-copy-pgdb-singularity.sh $inpath $srcpath $tmppath

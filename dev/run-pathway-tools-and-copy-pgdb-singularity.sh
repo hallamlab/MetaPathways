@@ -7,11 +7,17 @@ srcpath=$2  # path to ptools-container directory
 tmppath=$3
 
 
-rm -rf ${tmppath}/data
-mkdir -p ${tmppath}/data/ptools-local/pgdbs/user
-mkdir -p ${tmppath}/data/blastdb
-cp ${srcpath}/ptools-init.dat ${tmppath}/data/ptools-local/ptools-init.dat
-cp ${srcpath}/.ncbirc $HOME/
+#rm -rf ${tmppath}/data
+#mkdir -p ${tmppath}/data/ptools-local/pgdbs/user
+#mkdir -p ${tmppath}/data/blastdb
+#cp ${srcpath}/ptools-init.dat ${tmppath}/data/ptools-local/ptools-init.dat
+#cp ${srcpath}/.ncbirc $HOME/
+
+mkdir -p /data/ptools-local/pgdbs/user
+mkdir -p /data/blastdb
+cp ${srcpath}/ptools-init.dat /data/ptools-local/ptools-init.dat
+
+Xvfb :${DISPLAY#*:} &
 
 ## This builds the PGDB:
 /opt/pathway-tools/pathway-tools -patho ${ptoolpath} -no-taxonomic-pruning -no-web-cel-overview -tip -no-patch-download -no-cel-overview -disable-metadata-saving -nologfile
@@ -24,5 +30,8 @@ org_id=$(basename ${ppath})  # `awk -F"\t" '$1 == "ID" { print $2 }' ${tmppath}/
     -no-web-cel-overview -tip -no-patch-download -no-cel-overview -disable-metadata-saving -nologfile \
     -eval "(progn (with-organism (:org-id '$org_id) (dump-frames-to-attribute-value-files (org-data-dir)))(exit))"
 
-tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${tmppath}/data/ptools-local/pgdbs/user .
+sub_id=$(echo ${org_id} | rev | cut -d'_' -f 2- | rev)
+tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${tmppath}/data/ptools-local/pgdbs/user/*_${sub_id} .
+
+
 
