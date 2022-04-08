@@ -17,6 +17,7 @@ binaries/*/*
 .tox
 coverage.xml
 pathologic.log
+*.sif
 
 executables-DELETE-ME
 test
