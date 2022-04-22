@@ -30,7 +30,7 @@ new_verfile = os.path.join(flatpath, 'version.dat')
 shutil.copyfile(verfile, new_verfile)
 
 ## Need to create a custom sample_id since org_id is blank
-sample_id = os.path.basename(flatpath.rsplit('/', 6)[0].strip('cyc'))
+sample_id = os.path.basename(flatpath.rsplit('/', 4)[0].strip('cyc'))
 
 ## Create the .camelot file:
 org_id = make_camelot_file(arguments['<pgdb_flat_file_dir_path>'],
