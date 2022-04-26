@@ -35,6 +35,8 @@ sample_id = os.path.basename(flatpath.rsplit('/', 4)[0].strip('cyc'))
 ## Create the .camelot file:
 org_id = make_camelot_file(arguments['<pgdb_flat_file_dir_path>'],
                            arguments['<camelot_file_output_dir_path>'])
+print('SAMPLE_ID:', sample_id)
+print('ORGANISM_ID:', org_id)
 
 ## Load the PGDB:
 load_pgdb(arguments['<camelot_file_output_dir_path>'] + '/' + org_id + '.camelot')
