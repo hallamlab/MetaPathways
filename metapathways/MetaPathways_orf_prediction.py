@@ -93,6 +93,20 @@ def createParser():
     )
 
     prodigal_group.add_option(
+    "--prod_d",
+    dest="prod_d",
+    default=False,
+    help="Write nucleotide sequences of genes to the selected file.",
+    )
+
+    prodigal_group.add_option(
+    "--prod_a",
+    dest="prod_a",
+    default=False,
+    help="Write protein translations to the selected file.",
+    )
+
+    prodigal_group.add_option(
         "--prod_exec", dest="prod_exec", default=None, help="prodigal executable"
     )
 
@@ -193,6 +207,12 @@ def _execute_prodigal(options):
 
     if options.prod_g:
         args += ["-g", options.prod_g]
+
+    if options.prod_a:
+        args += ["-a", options.prod_a]
+
+    if options.prod_d:
+        args += ["-d", options.prod_d]
 
     if options.prod_input:
         args += ["-i", options.prod_input]
