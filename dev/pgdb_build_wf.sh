@@ -14,6 +14,8 @@ python3 ${mpdpath}/format_pf.py ${inputpath}/ptools/0.pf ${orf_file} ${mappath}/
 
 sh ${mpdpath}/build-pgdb-with-ptools-in-singularity.sh ${inputpath} ${sifpath} ${srcpath} ${mpdpath} ${tmppath}
 
+rm -rf ${tmppath}/*
+
 tar -xf ${inputpath}/results/pgdb/*.tar.bz2 -C ${inputpath}/results/pgdb/
 
 rm -rf ${inputpath}/results/pgdb/*.tar.bz2
