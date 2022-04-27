@@ -569,8 +569,8 @@ class ContextCreator:
         context.outputs = { 'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff': rRNA_barout_gff }
         '''build command'''
         bar_exe = shutil.which('barrnap')
-            if bar_exe == None:
-                eprintf("ERROR\tCannot find barrnap\n")
+        if bar_exe == None:
+            eprintf("ERROR\tCannot find barrnap\n")
         barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
                  %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
         context.commands = [barnap_cmd]
