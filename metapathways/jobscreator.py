@@ -554,11 +554,30 @@ class ContextCreator:
         dbstring = self.params.get('rRNA', 'refdbs', default = None)
         refrRNArefDBs = [x.strip() for x in dbstring.split(',') if len(x.strip())]
 
-        pyScript = self.configs.PARSE_FUNC_SEARCH
+        pyScript = self.configs.PARSE_FUNC_SEARCH  #TODO: why is this here?
 
+        """Run BARRNAP on fasta to extract rRNAs"""
         '''inputs'''
         input_fasta = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".fasta"
+        '''outputs'''
+        rRNA_barout_seq = s.preprocessed_dir +  PATHDELIM + s.sample_name + "rRNA.fasta"
+        rRNA_barout_gff = s.preprocessed_dir +  PATHDELIM + s.sample_name + "rRNA.gff"
 
+        context = contextmod.Context()
+        context.name = 'SCAN_rRNA:barrnap'
+        context.inputs = { 'input_fasta':input_fasta }
+        context.outputs = { 'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff': rRNA_barout_gff }
+        '''build command'''
+        bar_exe = shutil.which('barrnap')
+            if bar_exe == None:
+                eprintf("ERROR\tCannot find barrnap\n")
+        barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
+                 %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
+        context.commands = [barnap_cmd]
+        context.status = self.params.get('metapaths_steps','SCAN_rRNA')
+        context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
+        contexts.append(context)
+    
         pyScript = self.configs.SCAN_rRNA
 
         num_threads = self.configs.NUM_CPUS
@@ -574,7 +593,7 @@ class ContextCreator:
 
             context = contextmod.Context()
             context.name = 'SCAN_rRNA:' + db
-            context.inputs = {  'input_fasta':input_fasta, 'dbsequences':dbsequences }
+            context.inputs = {  'rRNA_barout_seq':rRNA_barout_seq, 'dbsequences':dbsequences }
             context.inputs1 = { 'dbpath' : dbpath }
             context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
@@ -585,7 +604,7 @@ class ContextCreator:
                    #logger.printf("ERROR\tCannot find blastn to format\n")
 
             blast_cmd = "%s -outfmt 6 -num_threads %s  -query %s -out %s -db %s -max_target_seqs 5"\
-                 %(executable, str(num_threads), context.inputs['input_fasta'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
+                 %(executable, str(num_threads), context.inputs['rRNA_barout_seq'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             """ now the scanning part"""
             scan_cmd = "%s -o %s -b %s -e %s -s %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
@@ -594,7 +613,7 @@ class ContextCreator:
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
             context.commands = [scan_cmd, blast_cmd]
             context.status = self.params.get('metapaths_steps','SCAN_rRNA')
-            context.message = self._Message("SCANNING FOR rRNA USING DB " + db)
+            context.message = self._Message("ANNOTATING rRNA USING DB " + db)
             contexts.append(context)
 
         return contexts
