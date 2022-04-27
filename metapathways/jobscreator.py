@@ -555,6 +555,8 @@ class ContextCreator:
         refrRNArefDBs = [x.strip() for x in dbstring.split(',') if len(x.strip())]
 
         pyScript = self.configs.PARSE_FUNC_SEARCH  #TODO: why is this here?
+        
+        num_threads = self.configs.NUM_CPUS
 
         """Run BARRNAP on fasta to extract rRNAs"""
         '''inputs'''
@@ -579,8 +581,6 @@ class ContextCreator:
         contexts.append(context)
     
         pyScript = self.configs.SCAN_rRNA
-
-        num_threads = self.configs.NUM_CPUS
 
         for db in refrRNArefDBs:
             '''inputs'''
