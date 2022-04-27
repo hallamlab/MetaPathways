@@ -96,7 +96,8 @@ with open(pf_file, 'r') as pf_in:
 				d_list.append("STARTBASE\t" + tmp_dict["STARTBASE"])
 				d_list.append("ENDBASE\t" + tmp_dict["ENDBASE"])
 				d_list.append("FUNCTION\t" + tmp_dict["FUNCTION"])
-				d_list.append("GENE-COMMENT\t" + tmp_dict["GENE-COMMENT"])
+				if 'GENE-COMMENT' in tmp_dict.keys():
+					d_list.append("GENE-COMMENT\t" + tmp_dict["GENE-COMMENT"])
 				if 'KO' in tmp_dict.keys():
 					d_list.append("DBLINK\tKO:" + tmp_dict["KO"])
 				if 'RXN' in tmp_dict.keys():
