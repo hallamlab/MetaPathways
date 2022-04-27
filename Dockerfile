@@ -25,7 +25,7 @@ COPY Makefile        /opt/mp_repo/
 RUN make -C mp_repo conda-install-deps 
 
 # Install MetaPathways:
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@ptools_prep#egg=MetaPathways
 
 ### Copying the repo files into the Docker image:
 COPY resources       /opt/mp_repo/resources/
