@@ -63,7 +63,8 @@ with open(pf_file, 'r') as pf_in:
 							tmp_dict["FUNCTION"] = l_func
 							tmp_dict["GENE-COMMENT"] = l_note
 						else:
-							tmp_dict["FUNCTION"] = l.split('\t', 1)[1]
+							l_func = l.split('\t', 1)[1]
+							tmp_dict["FUNCTION"] = l_func
 						if l_func not in funct_dict.keys():
 							skip_orf = False
 							funct_dict[l_func] = [pf_id]
