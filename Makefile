@@ -113,7 +113,7 @@ conda-build-init:
 conda-install-deps:
 	conda install --yes -n base -c conda-forge mamba
 	mamba install --yes -c conda-forge curl
-	mamba install --yes -c bioconda blast prodigal bwa samtools
+	mamba install --yes -c bioconda blast prodigal bwa samtools barrnap
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
