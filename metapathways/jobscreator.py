@@ -243,14 +243,11 @@ class ContextCreator:
 
         '''outputs'''
         output_gff = s.orf_prediction_dir + s.sample_name + ".gff"
-        output_faa = s.orf_prediction_dir + s.sample_name + ".prodigal.faa"
-        output_fna = s.orf_prediction_dir + s.sample_name + ".prodigal.fna"
 
         context = contextmod.Context()
         context.name = 'ORF_PREDICTION'
         context.inputs = { 'input_file' : input_file }
-        context.outputs = { 'output_gff' : output_gff, 'output_faa': output_faa,
-                            'output_fna': output_fna}
+        context.outputs = { 'output_gff' : output_gff }
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
         translation_table = self.params.get('orf_prediction', 'translation_table')
         algorithm = self.params.get('orf_prediction', 'algorithm')
@@ -276,8 +273,6 @@ class ContextCreator:
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
                   "--prod_output", context.outputs['output_gff'], #"--strand",  strand
-                  "--prod_a", context.outputs['output_faa'],
-                  "--prod_d", context.outputs['output_fna'],
              ]
         if algorithm == "FGS+":
             num_threads = self.configs.NUM_CPUS
