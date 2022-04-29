@@ -79,15 +79,16 @@ with open(pf_file, 'r') as pf_in:
 								rxn_list = []
 							if len(rxn_list) != 0:
 								tmp_dict["RXN"] = rxn_list
-							ec_list = list(sub_map_df['EC'].dropna().unique())
-							ko_list = list(sub_map_df['KO'].dropna().unique())
-							elif len(ec_list) != 0:
-								tmp_dict["EC"] = ec_list
-							if len(ko_list) != 0:
-								if len(ko_list) > 1:
-									flurp
-								else:
-									tmp_dict["KO"] = ko_list[0]							
+							else:
+								ec_list = list(sub_map_df['EC'].dropna().unique())
+								ko_list = list(sub_map_df['KO'].dropna().unique())
+								if len(ec_list) != 0:
+									tmp_dict["EC"] = ec_list
+								if len(ko_list) != 0:
+									if len(ko_list) > 1:
+										flurp
+									else:
+										tmp_dict["KO"] = ko_list[0]							
 						else:
 							skip_orf = True
 							funct_dict[l_func].append(pf_id)
