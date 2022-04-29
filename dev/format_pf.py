@@ -8,10 +8,11 @@ pd.set_option('display.max_columns', None)
 
 
 pf_file = sys.argv[1]  # the 0.pf file
-orf_file = sys.argv[2] # ORF annotation file from MP3 results dir
-ko_file = sys.argv[3] # Mapping file from Uniprot -> KO -> EC
-mc_file = sys.argv[4] # MetaCyc Parsed Blast results table
-rxn_file = sys.argv[5] # MetaCyc Monomer -> RXNS
+orf_file = sys.argv[2]  # ORF annotation file from MP3 results dir
+ko_file = sys.argv[3]  # Mapping file from Uniprot -> KO -> EC
+mc_file = sys.argv[4]  # MetaCyc Parsed Blast results table
+rxn_file = sys.argv[5]  # MetaCyc Monomer -> RXNS
+map_mode = sys.argv[6]  # Set to either EC or RXN for using ECs or RXN IDs
 dirpath = os.path.dirname(pf_file)  # the working dir
 base = os.path.basename(pf_file)  # the original file
 map_file = os.path.join(dirpath, 'orf_map.txt')  # keep an ORF map
@@ -21,19 +22,23 @@ bak_file = os.path.join(dirpath, '0.pf.bak')  # backup the orig file
 # Build out mapping dictionaries for KO -> EC
 orf_df = pd.read_csv(orf_file, sep='\t', header=0)
 ko_df = pd.read_csv(ko_file, sep='\t', header=0)
-mc_df = pd.read_csv(mc_file, sep='\t', header=0)
-rxn_df = pd.read_csv(rxn_file, sep='\t', header=0)
-mc_df['MC'] = [x.replace('gnl|META|', '') for x in mc_df['target']]
 ec_df = ko_df[['KO', 'EC']]
 kegg_df = orf_df[['# ORF_ID', 'KEGG']]
-meta_df = mc_df[['#query', 'MC']]
-meta_df.columns = ['ORF_ID', 'MC']
 orf_ec_df = pd.merge(kegg_df, ec_df, left_on='KEGG', right_on='KO', how='left')
 orf_ec_df = orf_ec_df[['# ORF_ID', 'KO', 'EC']]
 orf_ec_df.columns = ['ORF_ID', 'KO', 'EC']
-orf_mc_df = pd.merge(orf_ec_df, meta_df, on='ORF_ID', how='outer')
-orf_rxn_df = pd.merge(orf_mc_df, rxn_df, on='MC', how='outer').drop_duplicates()
-orf_map_df = orf_rxn_df.query("EC != ''")
+
+if map_mode == 'RXN':
+	mc_df = pd.read_csv(mc_file, sep='\t', header=0)
+	rxn_df = pd.read_csv(rxn_file, sep='\t', header=0)
+	mc_df['MC'] = [x.replace('gnl|META|', '') for x in mc_df['target']]
+	meta_df = mc_df[['#query', 'MC']]
+	meta_df.columns = ['ORF_ID', 'MC']
+	orf_mc_df = pd.merge(orf_ec_df, meta_df, on='ORF_ID', how='outer')
+	orf_rxn_df = pd.merge(orf_mc_df, rxn_df, on='MC', how='outer').drop_duplicates()
+	orf_map_df = orf_rxn_df.query("EC != ''")
+elif map_mode == 'EC':
+	orf_map_df = orf_ec_df.query("EC != ''")
 
 # Iterate over the entries in 0.pf to remove duplicates and collect ORFs
 funct_dict = {}
@@ -68,11 +73,14 @@ with open(pf_file, 'r') as pf_in:
 						if l_func not in funct_dict.keys():
 							skip_orf = False
 							funct_dict[l_func] = [pf_id]
-							rxn_list = list(sub_map_df['RXN'].dropna().unique())
-							ec_list = list(sub_map_df['EC'].dropna().unique())
-							ko_list = list(sub_map_df['KO'].dropna().unique())
+							if 'RXN' in sub_map_df.columns:
+								rxn_list = list(sub_map_df['RXN'].dropna().unique())
+							else:
+								rxn_list = []
 							if len(rxn_list) != 0:
 								tmp_dict["RXN"] = rxn_list
+							ec_list = list(sub_map_df['EC'].dropna().unique())
+							ko_list = list(sub_map_df['KO'].dropna().unique())
 							elif len(ec_list) != 0:
 								tmp_dict["EC"] = ec_list
 							if len(ko_list) != 0:
