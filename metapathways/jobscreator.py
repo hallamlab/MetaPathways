@@ -312,29 +312,6 @@ class ContextCreator:
         context.message = self._Message("CREATING AMINO ACID SEQS FROM GFF FILE")
         context.commands = [cmd]
         contexts.append(context)
-
-        """Run BARRNAP on ORFs to filter out fragmented rRNAs before Func Anno"""
-        num_threads = self.configs.NUM_CPUS
-        '''inputs'''
-        input_fna = context.outputs['output_fna']
-        '''outputs'''
-        rRNA_barout_seq = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".orf.rRNA.fna"
-        rRNA_barout_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".orf.rRNA.gff"
-
-        context = contextmod.Context()
-        context.name = 'ORF_PREDICTION:barrnap'
-        context.inputs = { 'input_fasta':input_fna }
-        context.outputs = { 'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff': rRNA_barout_gff }
-        '''build command'''
-        bar_exe = shutil.which('barrnap')
-        if bar_exe == None:
-            eprintf("ERROR\tCannot find barrnap\n")
-        barnap_cmd = "%s --reject 0.01 -threads %s --outseq %s %s > %s"\
-                 %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
-        context.commands = [barnap_cmd]
-        context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
-        context.message = self._Message("SCANNING FOR rRNAs in ORFs USING BARRNAP")
-        contexts.append(context)
         return contexts
 
     def create_create_filtered_amino_acid_sequences_cmd(self, s):
