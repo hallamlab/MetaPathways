@@ -581,12 +581,16 @@ class ContextCreator:
         contexts.append(context)
     
         pyScript = self.configs.SCAN_rRNA
-
+        rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
+        subunit = '16S'
         for db in refrRNArefDBs:
             '''inputs'''
             dbpath = self.configs.REFDBS + PATHDELIM + 'taxonomic' + PATHDELIM + 'formatted' + PATHDELIM + db
-            dbsequences = self.configs.REFDBS + PATHDELIM + "taxonomic" + PATHDELIM+  db
-
+            dbsequences = self.configs.REFDBS + PATHDELIM + "taxonomic" + PATHDELIM +  db
+            for s in rRNA_map_dict.keys():  # hack to sort out rRNA, needs to be improved
+                if s in db.lower():
+                    subunit = rRNA_map_dict[s]
+            
             '''outputs'''
             rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + 'BLAST' + "out"
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + "." + db + ".rRNA.stats.txt"
@@ -607,8 +611,8 @@ class ContextCreator:
                  %(executable, str(num_threads), context.inputs['rRNA_barout_seq'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             """ now the scanning part"""
-            scan_cmd = "%s -o %s -b %s -e %s -s %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
-                  bscore_cutoff, eval_cutoff, identity_cutoff)
+            scan_cmd = "%s -o %s -b %s -e %s -s %s -r %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
+                  bscore_cutoff, eval_cutoff, identity_cutoff, subunit)
 
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
             context.commands = [scan_cmd, blast_cmd]

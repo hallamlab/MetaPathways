@@ -144,7 +144,7 @@ def append_taxonomic_information(databaseSequences, table, params):
                 table[key].append("-")
 
 
-def process_blastout_file(blast_file, database, table, errorlogger=None):
+def process_blastout_file(blast_file, database, table, subunit, errorlogger=None):
     try:
         blastfile = open(blast_file, "r")
     except IOError:
@@ -173,14 +173,15 @@ def process_blastout_file(blast_file, database, table, errorlogger=None):
         fields[7] = int(fields[7].strip())
         fields[10] = float(fields[10].strip())
         fields[11] = float(fields[11].strip())
-        table[str(fields[0].strip())] = [
-            fields[2],
-            fields[10],
-            fields[11],
-            fields[1],
-            fields[6],
-            fields[7],
-        ]
+        if subunit in fields[0]:
+            table[str(fields[0].strip())] = [
+                fields[2],
+                fields[10],
+                fields[11],
+                fields[1],
+                fields[6],
+                fields[7],
+            ]
 
 
 usage = (
@@ -217,6 +218,15 @@ def createParser():
         action="append",
         default=[],
         help="Taxonomic databases",
+    )
+
+    input_group.add_option(
+        "-r",
+        "--subunit",
+        dest="subunit",
+        metavar="subunit",
+        default='16S',
+        help="rRNA subunit [16S or 23S]",
     )
 
     input_group.add_option(
@@ -349,6 +359,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.blast_files[x],
             options.tax_databases[x],
             table[options.tax_databases[x]],
+            options.subunit
             errorlogger=errorlogger,
         )
 
