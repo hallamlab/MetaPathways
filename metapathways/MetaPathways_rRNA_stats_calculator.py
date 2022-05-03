@@ -360,7 +360,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.blast_files[x],
             options.tax_databases[x],
             table[options.tax_databases[x]],
-            options.subunit
+            options.subunit,
             errorlogger=errorlogger,
         )
 
