@@ -587,9 +587,9 @@ class ContextCreator:
             '''inputs'''
             dbpath = self.configs.REFDBS + PATHDELIM + 'taxonomic' + PATHDELIM + 'formatted' + PATHDELIM + db
             dbsequences = self.configs.REFDBS + PATHDELIM + "taxonomic" + PATHDELIM +  db
-            for s in rRNA_map_dict.keys():  # hack to sort out rRNA, needs to be improved
-                if s in db.lower():
-                    subunit = rRNA_map_dict[s]
+            for rRNA_key in rRNA_map_dict.keys():  # hack to sort out rRNA, needs to be improved
+                if rRNA_key in db.lower():
+                    subunit = rRNA_map_dict[rRNA_key]
             
             '''outputs'''
             rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + 'BLAST' + "out"
