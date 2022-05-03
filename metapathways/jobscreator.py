@@ -581,7 +581,7 @@ class ContextCreator:
         contexts.append(context)
     
         pyScript = self.configs.SCAN_rRNA
-        rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
+        rRNA_map_dict = {'ssu': '23S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
         subunit = '16S'
         for db in refrRNArefDBs:
             '''inputs'''
