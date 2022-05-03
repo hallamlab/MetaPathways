@@ -329,7 +329,7 @@ class ContextCreator:
         bar_exe = shutil.which('barrnap')
         if bar_exe == None:
             eprintf("ERROR\tCannot find barrnap\n")
-        barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
+        barnap_cmd = "%s --reject 0.01 -threads %s --outseq %s %s > %s"\
                  %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
         context.commands = [barnap_cmd]
         context.status = self.params.get('metapaths_steps','SCAN_ORFs_rRNA')
