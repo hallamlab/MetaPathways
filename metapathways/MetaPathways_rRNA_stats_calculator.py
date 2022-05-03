@@ -173,6 +173,7 @@ def process_blastout_file(blast_file, database, table, subunit, errorlogger=None
         fields[7] = int(fields[7].strip())
         fields[10] = float(fields[10].strip())
         fields[11] = float(fields[11].strip())
+        print(fields[0], subunit)
         if subunit in fields[0]:
             table[str(fields[0].strip())] = [
                 fields[2],
