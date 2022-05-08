@@ -466,7 +466,7 @@ def createParser():
         "--output_amino",
         dest="output_amino",
         metavar="OUTPUT",
-        help="nmino acid output file",
+        help="amino acid output file",
     )
 
     input_group.add_option(

@@ -242,12 +242,13 @@ class ContextCreator:
         input_file = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''
-        output_gff = s.orf_prediction_dir + s.sample_name + ".gff"
+        output_dir = s.orf_prediction_dir
+        output_prefix = s.sample_name
 
         context = contextmod.Context()
         context.name = 'ORF_PREDICTION'
         context.inputs = { 'input_file' : input_file }
-        context.outputs = { 'output_gff' : output_gff }
+        context.outputs = { 'output_dir' : output_dir, 'output_prefix' : output_prefix}
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
         translation_table = self.params.get('orf_prediction', 'translation_table')
         algorithm = self.params.get('orf_prediction', 'algorithm')
@@ -256,6 +257,9 @@ class ContextCreator:
         mode = self.params.get('orf_prediction', 'mode')
 
         pyScript = self.configs.ORF_PREDICTION
+
+        if algorithm == "prokka":
+            executable =  self.configs.PROKKA_EXECUTABLE
 
         if algorithm == "prodigal":
             executable =  self.configs.PRODIGAL_EXECUTABLE
@@ -272,7 +276,8 @@ class ContextCreator:
                   "--prod_f", "gff",
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
-                  "--prod_output", context.outputs['output_gff'], #"--strand",  strand
+                  "--prod_output", context.outputs['output_prefix'],
+                  "--prod_outdir", context.outputs['output_dir'],
              ]
         if algorithm == "FGS+":
             num_threads = self.configs.NUM_CPUS
