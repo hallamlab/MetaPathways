@@ -232,6 +232,12 @@ def _execute_prokka(options):
     if options.prod_output:
         args += ["--prefix", options.prod_output]
 
+    if options.prod_g:
+        args += ["--gcode", options.prod_g]
+
+    if options.prod_p == meta:
+        args += ["--metagenome"]
+
     if options.nthreads:
         args.append("--cpus", options.nthreads)
     
