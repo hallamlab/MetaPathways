@@ -239,7 +239,7 @@ def _execute_prokka(options):
         args += ["--metagenome"]
 
     if options.nthreads:
-        args.append("--cpus", options.nthreads)
+        args += ["--cpus", options.nthreads]
     
     args += ["--noanno"]
     args += ["--force"]
