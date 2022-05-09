@@ -144,7 +144,7 @@ def append_taxonomic_information(databaseSequences, table, params):
                 table[key].append("-")
 
 
-def process_blastout_file(blast_file, database, table, subunit, errorlogger=None):
+def process_blastout_file(blast_file, database, table, subunit, query_fna, errorlogger=None):
     try:
         blastfile = open(blast_file, "r")
     except IOError:
@@ -161,12 +161,28 @@ def process_blastout_file(blast_file, database, table, subunit, errorlogger=None
     blastLines = blastfile.readlines()
     blastfile.close()
 
+    try:
+        queryseqs = open(query_fna, "r")
+    except IOError:
+        gutils.eprintf("ERROR : Cannot write read file " + query_fna + " !")
+        if errorlogger != None:
+            errorlogger.write(
+                "STATS_rRNA\tERROR\tCannot find read query sequences "
+                + query_fna
+            )
+        mputils.exit_process()
+
+    queryDict = {x[1:].split(' ', 1)[0] : x[1:].replace(' ', '_')
+                 for x in queryseqs.readlines() if x[0] == '>'
+                 }
+    queryseqs.close()
+
     for line in blastLines:
         line = line.strip()
         fields = re.split("\t", line)
         if len(fields) < 12:
             continue
-        fields[0] = str(fields[0].strip())
+        fields[0] = queryDict[str(fields[0].strip())]
         fields[1] = str(fields[1].strip())
         fields[2] = float(fields[2].strip())
         fields[6] = int(fields[6].strip())
@@ -238,15 +254,15 @@ def createParser():
         "--fasta",
         dest="fasta",
         metavar="NUC_SEQUENCES",
-        help="The nucleotide sequences",
+        help="Output select nucleotide sequences",
     )
 
     input_group.add_option(
         "-q",
         "--query",
-        dest="fasta",
+        dest="query",
         metavar="NUC_SEQUENCES",
-        help="The nucleotide sequences",
+        help="Query nucleotide sequences",
     )
 
     parser.add_option_group(input_group)
@@ -360,6 +376,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.tax_databases[x],
             table[options.tax_databases[x]],
             options.subunit,
+            options.query,
             errorlogger=errorlogger,
         )
 

@@ -67,6 +67,13 @@ def createParser():
     )
 
     prodigal_group.add_option(
+        "--prod_prefix",
+        dest="prod_prefix",
+        default=None,
+        help="the output prefix"
+    )
+
+    prodigal_group.add_option(
         "--prod_outdir",
         dest="prod_outdir",
         default=None,
@@ -76,7 +83,7 @@ def createParser():
     prodigal_group.add_option(
         "--prod_p",
         dest="prod_p",
-        default=None,
+        default= 'meta',
         help="Select procedure (single or meta).  Default is single",
     )
 
@@ -236,8 +243,8 @@ def _execute_prokka(options):
     if options.prod_outdir:
         args += ["--outdir", options.prod_outdir]
 
-    if options.prod_output:
-        args += ["--prefix", options.prod_output]
+    if options.prod_prefix:
+        args += ["--prefix", options.prod_prefix]
 
     if options.prod_g:
         args += ["--gcode", options.prod_g]

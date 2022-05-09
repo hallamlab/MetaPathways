@@ -463,9 +463,10 @@ def write_annotation_for_orf(
             + "orf_length="
             + orf_dictionary[contig][candidate_orf_pos]["orf_length"]
         )
-        attributes += (
-            ";" + "partial=" + orf_dictionary[contig][candidate_orf_pos]["partial"]
-        )
+        if "partial" in orf_dictionary[contig][candidate_orf_pos].keys():
+            attributes += (
+                ";" + "partial=" + orf_dictionary[contig][candidate_orf_pos]["partial"]
+            )
         attributes += ";" + "sourcedb=" + candidatedbname
 
         if candidatedbname in results_dictionary:
