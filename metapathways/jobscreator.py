@@ -243,7 +243,7 @@ class ContextCreator:
 
         '''outputs'''
         output_dir = s.orf_prediction_dir
-        output_prefix = s.sample_name
+        output_prefix = s.sample_name + ".prk"
 
         context = contextmod.Context()
         context.name = 'ORF_PREDICTION'
@@ -255,6 +255,8 @@ class ContextCreator:
         strand = self.params.get('orf_prediction', 'strand')
 
         mode = self.params.get('orf_prediction', 'mode')
+
+        num_threads = self.configs.NUM_CPUS
 
         pyScript = self.configs.ORF_PREDICTION
 
@@ -278,6 +280,7 @@ class ContextCreator:
                   "--prod_input", context.inputs['input_file'],
                   "--prod_output", context.outputs['output_prefix'],
                   "--prod_outdir", context.outputs['output_dir'],
+                  "--prod_nthreads", num_threads,
              ]
         if algorithm == "FGS+":
             num_threads = self.configs.NUM_CPUS
@@ -294,7 +297,7 @@ class ContextCreator:
         contexts = []
 
         ''' inputs '''
-        input_gff = s.orf_prediction_dir + s.sample_name + ".gff"
+        input_gff = s.orf_prediction_dir + s.sample_name + ".prk.gff"
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''

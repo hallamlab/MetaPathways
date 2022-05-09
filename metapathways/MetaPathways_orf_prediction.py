@@ -114,6 +114,13 @@ def createParser():
         help="strands to use in case of transcriptomic sample",
     )
 
+    prodigal_group.add_option(
+        "--prod_nthreads",
+        dest="prod_nthreads",
+        default=1,
+        help="number of threads",
+    )
+
     parser.add_option_group(prodigal_group)
     return parser
 
@@ -239,7 +246,7 @@ def _execute_prokka(options):
         args += ["--metagenome"]
 
     if options.nthreads:
-        args += ["--cpus", options.nthreads]
+        args += ["--cpus", options.prod_nthreads]
     
     args += ["--noanno"]
     args += ["--force"]
