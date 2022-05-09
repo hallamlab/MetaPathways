@@ -256,7 +256,7 @@ class ContextCreator:
 
         mode = self.params.get('orf_prediction', 'mode')
 
-        num_threads = self.configs.NUM_CPUS
+        num_threads = str(self.configs.NUM_CPUS)
 
         pyScript = self.configs.ORF_PREDICTION
 
