@@ -176,35 +176,51 @@ GffFileParser::~GffFileParser() {
    this->input.close();
 }
 
-string get_orf_name(string name)  {
-  regex orfname_long_regex("^ID=[^;]+_([0-9]+_[0-9]+);");
-  regex orfname_short_regex("^ID=([0-9]+_[0-9]+);");
-  regex orfname_short_trna_regex("^ID=([0-9]+_[0-9]+_tRNA);");
-  regex orfname_short_rrna_regex("^ID=([0-9]+_[0-9]+_rRNA);");
+/*
+
+ regex orfname_long_regex("^ID=[^;]+_([0-9]+_[0-9]+);");
+ regex orfname_short_regex("^ID=([0-9]+_[0-9]+);");
+ regex orfname_short_trna_regex("^ID=([0-9]+_[0-9]+_tRNA);");
+ regex orfname_short_rrna_regex("^ID=([0-9]+_[0-9]+_rRNA);");
+ std::smatch sm; 
+*/
+
+namespace parser {
   std::smatch sm; 
+ regex orfname_long_regex("^ID=[^;]+_([0-9]+_[0-9]+);");
+ regex orfname_short_regex("^ID=([0-9]+_[0-9]+);");
+ regex orfname_short_trna_regex("^ID=([0-9]+_[0-9]+_tRNA);");
+ regex orfname_short_rrna_regex("^ID=([0-9]+_[0-9]+_rRNA);");
+}
+string get_orf_name(string name)  {
+ // regex orfname_long_regex("^ID=[^;]+_([0-9]+_[0-9]+);");
+  //regex orfname_short_regex("^ID=([0-9]+_[0-9]+);");
+  //regex orfname_short_trna_regex("^ID=([0-9]+_[0-9]+_tRNA);");
+ // regex orfname_short_rrna_regex("^ID=([0-9]+_[0-9]+_rRNA);");
+//  std::smatch sm; 
 
   // a long name prodigal orf
-  std::regex_search(name, sm, orfname_long_regex);
-  if (sm.size() > 1) {
-     return sm[1];
+  std::regex_search(name, parser::sm, parser::orfname_long_regex);
+  if (parser::sm.size() > 1) {
+     return parser::sm[1];
   }
 
   // a short name prodigal orf
-  std::regex_search(name, sm, orfname_short_regex);
-  if (sm.size() > 1) {
-     return sm[1];
+  std::regex_search(name, parser::sm, parser::orfname_short_regex);
+  if (parser::sm.size() > 1) {
+     return parser::sm[1];
   }
 
   // a short name tRNA orf
-  std::regex_search(name, sm, orfname_short_trna_regex);
-  if (sm.size() > 1) {
-     return sm[1];
+  std::regex_search(name, parser::sm, parser::orfname_short_trna_regex);
+  if (parser::sm.size() > 1) {
+     return parser::sm[1];
   }
 
   // a short name rRNA orf
-  std::regex_search(name, sm, orfname_short_rrna_regex);
-  if (sm.size() > 1) {
-     return sm[1];
+  std::regex_search(name, parser::sm, parser::orfname_short_rrna_regex);
+  if (parser::sm.size() > 1) {
+     return parser::sm[1];
   }
 
   return string("");

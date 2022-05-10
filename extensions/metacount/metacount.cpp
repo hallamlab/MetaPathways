@@ -25,13 +25,16 @@ int main(int argc, char **argv ){
   // parse options
   Options options;
 
+  std::ostream *err = &std::cerr;
   // if (argc < 9) { options.print_usage(argv[0]); exit(1); }
   if (options.SetOptions(argc, argv)==false) { 
     options.print_usage(argv[0]); exit(0); 
   }
 
   RESULTS results;
+  
 
+  *err << "Creating contig to orf map....";
   results.contig_orf = create_contig_orf_map(options.orf_file);
 
   for (size_t i = 0; i < options.read_map_files.size(); i++) {
@@ -41,23 +44,32 @@ int main(int argc, char **argv ){
         exit(0);
      }
   }
+  *err << "done" << std::endl;
 
   results.global_stats.num_contigs = results.contig_orf->size();
   results.global_stats.num_files = options.read_map_files.size();
 
+  *err << "Reading contig information....";
   results.contig_lengths = get_contig_information(options.read_map_files);
+  *err << "done" << std::endl;
 
   //std::cout << "num contigs " << contig_lengths->size() << std::endl;
 
   //print_contig_orf_map(results.contig_orf);
 
+  *err << "Sorting contig to orf map....";
   sort_contig_orf_map(results.contig_orf);
+  *err << "done" << std::endl;
 
+  *err << "Reading bam files...";
   results.contig_read_counts = 
     read_bam_files(results, options.read_map_files);
+  *err << "done" << std::endl;
 
   // compute the stats
+  *err << "Computing stats...";
   results.compute_stats();
+  *err << "done" << std::endl;
 
 
   std::ostream *output = &std::cout;
@@ -118,13 +130,6 @@ int main(int argc, char **argv ){
 
   exit(0);
    
-  //options.print_options();
-
-//  std::cout << "number of contigs " << contigs_dictionary.size() << std::endl;
-
-  if (options.show_stats) { 
-       std::cout << "Composite stats for all files " << std::endl;
-  }
 
 
 
