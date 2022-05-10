@@ -75,6 +75,6 @@ COPY Snakefile /opt/mp_repo/
 COPY snakemake_config.yaml /opt/mp_repo
 
 ## Make things work for Singularity by relaxing the permissions:
-#RUN chmod -R 755 /opt/mp_repo
-#RUN chmod -R 755 /opt/conda
+RUN chmod -R 755 /opt/mp_repo
+RUN chmod -R 755 /opt/conda
 
