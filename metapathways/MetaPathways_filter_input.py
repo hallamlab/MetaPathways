@@ -284,7 +284,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         length_distribution[i] = 0
         length_cumulative_distribution[i] = 0
 
-    seq_count = 0
+    seq_count = 1
     allNames = dict()
     outputStr = ""
     outputLines = []

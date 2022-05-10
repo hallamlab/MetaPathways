@@ -110,6 +110,15 @@ def createParser():
 
     parser.add_option("--bwaFolder", dest="bwaFolder", default=None, help="BWA Folder")
 
+    parser.add_option(
+        "-n",
+        "--num_threads",
+        dest="num_threads",
+        default=1,
+        help="number of threads",
+    )
+
+
     return parser
 
 
@@ -119,6 +128,14 @@ def getSamFiles(readdir, sample_name):
     samFiles = glob.glob(readdir + PATHDELIM + sample_name + "*.sam")
 
     return samFiles
+
+
+def getBamFiles(readdir, sample_name):
+    """This function finds the set of SAM files that has the BWA recruitment information"""
+
+    bamFiles = glob.glob(readdir + PATHDELIM + sample_name + "*.bam")
+
+    return bamFiles
 
 
 def indexForBWA(bwaExec, contigs, indexfile):
@@ -136,19 +153,17 @@ def indexForBWA(bwaExec, contigs, indexfile):
     return False
 
 
-def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder):
-    num_threads = int(multiprocessing.cpu_count() * 0.8)
-    if num_threads < 1:
-        num_threads = 1
+def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder, num_threads):
+
     status = True
 
-    bwaOutput = bwaFolder + PATHDELIM + readgroup + ".sam"
+    bwaOutput = bwaFolder + PATHDELIM + readgroup + ".bam"
 
     bwaOutputTmp = bwaOutput + ".tmp"
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -o %s -" % (
+        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -O bam -o %s -" % (
             bwaExec,
             num_threads,
             indexFile,
@@ -158,12 +173,12 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -o %s -" % (
+         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -O bam -o %s -" % (
                 bwaExec,
                 num_threads,
                 indexFile,
                 readFiles[0],
-                bwaOutputTmp
+                bwaOutputTmp,
             )
     result = sysutils.getstatusoutput(cmd)
 
@@ -270,8 +285,6 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tMissing read files!\n")
 
     # run BWA
-    
-
     for readgroup in readFiles:
         bwaRunSuccess = runUsingBWA(options.bwaExec,
                                     options.sample_name,
@@ -279,6 +292,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
                                     readgroup,
                                     readFiles[readgroup],
                                     options.bwaFolder,
+                                    int(options.num_threads),
                                    )
         # bwaRunSuccess = True
 
@@ -294,7 +308,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             # make sure you get the latest set of sam file after the bwa
 
     # make sure you get the latest set of sam file after the bwa
-    samFiles = getSamFiles(options.bwaFolder, options.sample_name)
+    bamFiles = getBamFiles(options.bwaFolder, options.sample_name)
 
     command = [
         "%s " % (options.rpkmExec)
@@ -311,8 +325,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         command.append("--stats-out-file %s" % (options.stats))
 
 
-    for samfile in samFiles:
-        command.append("--sam " + samfile)
+    for bamfile in bamFiles:
+        command.append("--sam " + bamfile)
 
     rpkmstatus = 0
     try:
