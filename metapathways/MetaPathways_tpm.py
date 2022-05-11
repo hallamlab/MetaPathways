@@ -196,7 +196,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     clean_cmd = st_cmd = "rm %s" % (bwaOutput)
 
     if stResult[0] == 0:
-        rename(stOutput, stOutputTmp)
+        rename(stOutputTmp, stOutput)
         cleanup = sysutils.getstatusoutput(clean_cmd)
 
     else:
