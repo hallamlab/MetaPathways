@@ -231,6 +231,7 @@ def getReadFiles(readdir, sample_name):
     for _fastqfile in _fastqfiles:
        fastqfile  = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
        fastqfile  = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
+       fastqfile  = re.sub(r'.fq$','', fastqfile, flags=re.IGNORECASE) 
 
        trimmedfastq = path.basename(re.sub(r'_R[12]$', '', fastqfile))
        
