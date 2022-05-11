@@ -157,33 +157,48 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
 
     status = True
 
-    bwaOutput = bwaFolder + PATHDELIM + readgroup + ".bam"
+    bwaOutput = bwaFolder + PATHDELIM + readgroup + ".sam"
+    stOutput = bwaFolder + PATHDELIM + readgroup + ".bam"
 
-    bwaOutputTmp = bwaOutput + ".tmp"
+    stOutputTmp = stOutput + ".tmp"
+    stInterTmp = bwaFolder + PATHDELIM + readgroup + ".tmp"
+
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -O bam -o %s -" % (
+        bwa_cmd = "%s mem -t %d -o %s %s %s 2> /dev/null" % (
             bwaExec,
             num_threads,
+            bwaOutput,
             indexFile,
             readFiles[0],
             readFiles[1],
-            bwaOutputTmp,
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -O bam -o %s -" % (
-                bwaExec,
-                num_threads,
-                indexFile,
-                readFiles[0],
-                bwaOutputTmp,
-            )
-    result = sysutils.getstatusoutput(cmd)
+        bwa_cmd = "%s mem -t %d -o %s %s 2> /dev/null" % (
+            bwaExec,
+            num_threads,
+            bwaOutput,
+            indexFile,
+            readFiles[0],
+        )
 
-    if result[0] == 0:
-        rename(bwaOutputTmp, bwaOutput)
+    st_cmd = "samtools sort -O bam -o %s -T %s %s" % (
+        stOutputTmp,
+        stInterTmp,
+        bwaOutput,
+    )
+    
+    bwaResult = sysutils.getstatusoutput(bwa_cmd)
+    stResult = sysutils.getstatusoutput(st_cmd)
+
+    clean_cmd = st_cmd = "rm %s" % (bwaOutput)
+
+    if stResult[0] == 0:
+        rename(stOutput, stOutputTmp)
+        cleanup = sysutils.getstatusoutput(clean_cmd)
+
     else:
         gutils.eprintf("ERROR:\tError in file processing read files %s\n", readFiles)
         status = False
