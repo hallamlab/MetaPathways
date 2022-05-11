@@ -18,22 +18,12 @@ ENV PYTHONPATH=/opt/mp_repo:/opt/mp_repo/libs
 
 # Install base utilities
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
- bzip2 \
- gzip \
- wget \
- less \
- zlib1g-dev \
- python \
- liblzma-dev \
- libbz2-dev \
- xz-utils \ 
- g++ \
- python3 \
- python3-pip \
- build-essential \
- git \ 
- make && apt-get autoclean && rm -rf /var/lib/apt/lists/*
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
+							python3 \
+							zlib1g-dev \
+							python3-pip \
+							wget \
+							git
 
 # Install miniconda
 ENV CONDA_DIR /opt/conda
@@ -48,9 +38,6 @@ COPY Makefile        /opt/mp_repo/
 
 ## Set up Conda:
 RUN make -C /opt/mp_repo conda-install-deps 
-
-# set perl locale settings so barrnap works in singularity image
-ENV LC_ALL=C
 
 # Install MetaPathways:
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@prokka_test#egg=MetaPathways
