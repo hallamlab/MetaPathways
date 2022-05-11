@@ -166,7 +166,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        bwa_cmd = "%s mem -t %d -o %s %s %s 2> /dev/null" % (
+        bwa_cmd = "%s mem -t %d -o %s %s %s %s 2> /dev/null" % (
             bwaExec,
             num_threads,
             bwaOutput,
@@ -176,7 +176,7 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
         )
 
     if len(readFiles) == 1:
-        bwa_cmd = "%s mem -t %d -o %s %s 2> /dev/null" % (
+        bwa_cmd = "%s mem -t %d -o %s %s %s 2> /dev/null" % (
             bwaExec,
             num_threads,
             bwaOutput,
