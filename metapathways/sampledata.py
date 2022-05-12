@@ -90,7 +90,11 @@ class SampleData:
             return False
 
         self.input_file = inputFile
-        self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
+        if self.input_file.endswith((".gz", "_files")):
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.sample_name)
+        else:
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
         self.sample_name = path.basename(self.sample_name)
         self.sample_name = re.sub("[.]", "_", self.sample_name)
 

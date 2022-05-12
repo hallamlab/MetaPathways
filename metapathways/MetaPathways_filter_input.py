@@ -252,6 +252,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
     sample_name = opts.input_fasta
     sample_name = re.sub(r"^.*/", "", sample_name, re.I)
     sample_name = re.sub(r"^.*\\", "", sample_name, re.I)
+    sample_name = re.sub(r"\.gz$", "", sample_name, re.I)
     sample_name = re.sub(r"\.fasta$", "", sample_name, re.I)
     sample_name = re.sub(r"\.fna$", "", sample_name, re.I)
     sample_name = re.sub(r"\.faa$", "", sample_name, re.I)

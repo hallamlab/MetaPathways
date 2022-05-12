@@ -104,27 +104,30 @@ def isFastaFile(filename):
 
     try:
         c = 0
-        with open(filename) as fp:
-            for line in fp:
-                """trim the line"""
-                line_trimmed = line.strip()
+        if filename.endswith((".gz", "_files")):
+            fp = gzip.open(filename,'rt')
+        else:
+            fp = open(filename)
+        for line in fp:
+            """trim the line"""
+            line_trimmed = line.strip()
 
-                if line_trimmed:
-                    if fastaNamePATT.search(line_trimmed):
-                        """ is a name line """
-                        seenNamePatt = True
-                    else:
-                        """ not a seq name """
-                        if fastaAlphabetPATT.search(line_trimmed):
-                            """ it is of the alphabet"""
-                            if not seenNamePatt:
-                                """ am i seeing sequence before the name"""
-                                isFasta = False
-                        else:
+            if line_trimmed:
+                if fastaNamePATT.search(line_trimmed):
+                    """ is a name line """
+                    seenNamePatt = True
+                else:
+                    """ not a seq name """
+                    if fastaAlphabetPATT.search(line_trimmed):
+                        """ it is of the alphabet"""
+                        if not seenNamePatt:
+                            """ am i seeing sequence before the name"""
                             isFasta = False
-                c += 1
-                if c > 500:
-                    break
+                    else:
+                        isFasta = False
+            c += 1
+            if c > 500:
+                break
         fp.close()
     except:
         eprintf("ERROR:\tCannot open filee " + filename)
@@ -198,20 +201,23 @@ def isNucleotide(filename):
 
     try:
         c = 0
-        with open(filename) as fp:
-            for line in fp:
-                """trim the line"""
-                line_trimmed = line.strip()
-                if line_trimmed:
-                    if not fastaNamePATT.search(line_trimmed):
-                        for a in line_trimmed.upper():
-                            if a in ["A", "T", "C", "G", "N"]:
-                                nucCount += 1
-                            else:
-                                nonNucCount += 1
-                c += 1
-                if c > 500:
-                    break
+        if filename.endswith((".gz", "_files")):
+            fp = gzip.open(filename,'rt')
+        else:
+            fp = open(filename)
+        for line in fp:
+            """trim the line"""
+            line_trimmed = line.strip()
+            if line_trimmed:
+                if not fastaNamePATT.search(line_trimmed):
+                    for a in line_trimmed.upper():
+                        if a in ["A", "T", "C", "G", "N"]:
+                            nucCount += 1
+                        else:
+                            nonNucCount += 1
+            c += 1
+            if c > 500:
+                break
     except:
         eprintf("ERROR:\tCannot open file " + filename)
         return False
@@ -225,33 +231,13 @@ def isNucleotide(filename):
     return False
 
 
-def gunzipFile(filename):
-    svpath = filename.rstrip('.gz')
-    with open(svpath, 'wb') as gunout:
-        with gzip.open(filename, mode='rb') as gunfile:
-            file_content = gunfile.read()
-            gunout.write(file_content)
-    return svpath
-
-
-def check_file_types(filenames, filedict):
+def check_file_types(filenames):
     filetypes = {}
-    new_filenames= []
-    new_filedict = {}
     for filename in filenames:
-        f_val = filedict[filename]
         if not path.exists(filename):
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
 
-        if filename.endswith((".gz", "_files")):  # patch to deal with gzip for now
-            eprintf("%s is gzipped, extracting...\n" %(filename))
-            filename = gunzipFile(filename)
-            if isFastaFile(filename):
-                if isNucleotide(filename):
-                    filetypes[filename] = ["FASTA", "NUCL", False]
-                else:  # assume amino
-                    filetypes[filename] = ["FASTA", "AMINO", False]
-        elif isFastaFile(filename):
+        if isFastaFile(filename):
             if isNucleotide(filename):
                 filetypes[filename] = ["FASTA", "NUCL", False]
             else:  # assume amino
@@ -260,9 +246,7 @@ def check_file_types(filenames, filedict):
             filetypes[filename] = ["GENBANK", "NOT-USED", False]
         else:
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
-        new_filenames.append(filename)
-        new_filedict[filename] = f_val
-    return filetypes, new_filenames, new_filedict
+    return filetypes
 
 
 def load_job_status_file(filename, A):

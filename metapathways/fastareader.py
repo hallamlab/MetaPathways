@@ -9,6 +9,7 @@ try:
     import traceback
     import re
     import sys
+    import gzip
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
@@ -36,7 +37,10 @@ class FastaReader:
 
     def __init__(self, fasta_filename):
         try:
-            self.file = open(fasta_filename, "r")
+            if fasta_filename.endswith((".gz", "_files")):
+                self.file = gzip.open(fasta_filename,'rt')
+            else:
+                self.file = open(fasta_filename, "r")
         except IOError:
             print("Cannot open fasta file " + fasta_filename)
 

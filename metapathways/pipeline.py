@@ -107,7 +107,7 @@ def derive_sample_name(filename):
     basename = path.basename(filename)
 
     shortname = re.sub('[.]gbk$','',basename, re.IGNORECASE)
-    shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',shortname, re.IGNORECASE)
+    shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',shortname, re.IGNORECASE)
     return shortname
 
 def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlogger = None):
@@ -219,7 +219,7 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
 def removeSuffix(sample_subset_in):
     sample_subset_out = []
     for sample_name in sample_subset_in:
-       mod_name = re.sub('.(fasta|fas|fna|faa|gff|gbk|fa)$','',sample_name)
+       mod_name = re.sub('.(fasta|fas|fna|faa|gff|gbk|fa|fna.gz)$','',sample_name)
        sample_subset_out.append(mod_name)
 
     return sample_subset_out
@@ -335,7 +335,7 @@ def process(argv):
 
     # add check the config parameters
     sorted_input_output_list = sorted(input_output_list.keys())
-    filetypes, sorted_input_output_list, input_output_list  = gutils.check_file_types(sorted_input_output_list, input_output_list)  # hacked a lot, need to be cleaned up
+    filetypes = gutils.check_file_types(sorted_input_output_list)
 
     #stop on in valid samples
     if not halt_on_invalid_input(input_output_list, filetypes, sample_subset):
@@ -391,8 +391,6 @@ def process(argv):
          print("RUNNING MetaPathways Version " + __version__)
          if len(input_output_list):
               for input_file in sorted_input_output_list:
-                if input_file.endswith((".gz", "_files")):
-                  input_file = filename.input_file('.gz')
                 sample_output_dir = input_output_list[input_file]
                 algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
 
