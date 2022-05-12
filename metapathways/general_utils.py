@@ -14,6 +14,7 @@ try:
     import types
     import re
     import glob
+    import gzip
 
     from shutil import rmtree
     from os import getenv, makedirs, path, remove
@@ -224,14 +225,33 @@ def isNucleotide(filename):
     return False
 
 
-def check_file_types(filenames):
-    filetypes = {}
+def gunzipFile(filename):
+    svpath = filename.rstrip('.gz')
+    with open(svpath, 'wb') as gunout:
+        with gzip.open(filename, mode='rb') as gunfile:
+            file_content = gunfile.read()
+            gunout.write(file_content)
+    return svpath
 
+
+def check_file_types(filenames, filedict):
+    filetypes = {}
+    new_filenames= []
+    new_filedict = {}
     for filename in filenames:
+        f_val = filedict[filename]
         if not path.exists(filename):
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
 
-        if isFastaFile(filename):
+        if filename.endswith((".gz", "_files")):  # patch to deal with gzip for now
+            eprintf("%s is gzipped, extracting...\n" %(filename))
+            filename = gunzipFile(filename)
+            if isFastaFile(filename):
+                if isNucleotide(filename):
+                    filetypes[filename] = ["FASTA", "NUCL", False]
+                else:  # assume amino
+                    filetypes[filename] = ["FASTA", "AMINO", False]
+        elif isFastaFile(filename):
             if isNucleotide(filename):
                 filetypes[filename] = ["FASTA", "NUCL", False]
             else:  # assume amino
@@ -240,8 +260,9 @@ def check_file_types(filenames):
             filetypes[filename] = ["GENBANK", "NOT-USED", False]
         else:
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
-
-    return filetypes
+        new_filenames.append(filename)
+        new_filedict[filename] = f_val
+    return filetypes, new_filenames, new_filedict
 
 
 def load_job_status_file(filename, A):

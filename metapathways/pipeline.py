@@ -164,12 +164,12 @@ def create_an_input_output_pair(input_file, output_dir,  globalerrorlogger=None)
 
     input_output = {}
 
-    if not re.search(r'.(fasta|fas|fna|faa|gbk|gff|fa)$',input_file, re.IGNORECASE):
+    if not re.search(r'.(fasta|fas|fna|faa|gbk|gff|fa|fna.gz)$',input_file, re.IGNORECASE):
        return input_output
 
     shortname = None
     shortname = re.sub('[.]gbk$','',input_file, re.IGNORECASE)
-    shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',input_file, re.IGNORECASE)
+    shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
     #    shortname = re.sub('[.]gff$','',input_file, re.IGNORECASE)
 
     shortname = re.sub(r'.*' + PATHDELIM ,'',shortname)
@@ -185,7 +185,7 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
     fileslist =  listdir(input_dir)
 
     gbkPatt = re.compile('[.]gbk$',re.IGNORECASE)
-    fastaPatt = re.compile('[.](fasta|fas|fna|faa|fa)$',re.IGNORECASE)
+    fastaPatt = re.compile('[.](fasta|fas|fna|faa|fa|fna.gz)$',re.IGNORECASE)
     gffPatt = re.compile('[.]gff$',re.IGNORECASE)
 
     input_files = {}
@@ -201,12 +201,12 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
        if result==None:
           result =  fastaPatt.search(input_file)
           if result:
-             shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',input_file, re.IGNORECASE)
+             shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
 
        if shortname == None:
           continue
 
-       if re.search('.(fasta|fas|fna|faa|gff|gbk|fa)$',input_file, re.IGNORECASE):
+       if re.search('.(fasta|fas|fna|faa|gff|gbk|fa|fna.gz)$',input_file, re.IGNORECASE):
           if check_for_error_in_input_file_name(shortname, globalerrorlogger=globalerrorlogger):
              input_files[input_file] = shortname
 
@@ -300,8 +300,6 @@ def process(argv):
     command_line_params={}
     command_line_params['verbose']= opts.verbose
 
-    print(parameter_fp)
-    print("TODO -- pipeline 309")
     if not path.exists(parameter_fp):
         gutils.eprintf("%-10s: No parameters file %s found!\n" %('WARNING', parameter_fp))
         gutils.eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
@@ -337,8 +335,7 @@ def process(argv):
 
     # add check the config parameters
     sorted_input_output_list = sorted(input_output_list.keys())
-
-    filetypes = gutils.check_file_types(sorted_input_output_list)
+    filetypes, sorted_input_output_list, input_output_list  = gutils.check_file_types(sorted_input_output_list, input_output_list)  # hacked a lot, need to be cleaned up
 
     #stop on in valid samples
     if not halt_on_invalid_input(input_output_list, filetypes, sample_subset):
@@ -394,6 +391,8 @@ def process(argv):
          print("RUNNING MetaPathways Version " + __version__)
          if len(input_output_list):
               for input_file in sorted_input_output_list:
+                if input_file.endswith((".gz", "_files")):
+                  input_file = filename.input_file('.gz')
                 sample_output_dir = input_output_list[input_file]
                 algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
 
