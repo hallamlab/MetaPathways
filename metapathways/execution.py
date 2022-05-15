@@ -12,6 +12,7 @@ try:
     import sys
     import os
     import re
+    import time
 
     from subprocess import Popen, PIPE, STDOUT
     from os import makedirs, listdir, _exit
@@ -67,9 +68,12 @@ def execute_tasks(s, verbose=False, block=0):
     contextBlock = contextBlocks[block]
 
     for c in contextBlock:
+        start = time.time()
         if c.status == "stop":
             print("Stopping!")
-            s.stepslogger.write("%s\t%s\n" % (c.name, "STOPPED"))
+            end = time.time()
+            elapsed = round(end - start, 2)
+            s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "STOPPED", elapsed))
             return (0, "")
 
         if verbose:
@@ -94,17 +98,22 @@ def execute_tasks(s, verbose=False, block=0):
 
                 if result[0] == 0:
                     gutils.eprintf("..... Redo Success!\n")
-                    s.stepslogger.write("%s\t%s\n" % (c.name, "SUCCESS"))
+                    end = time.time()
+                    elapsed = round(end - start, 2)
+                    s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "SUCCESS", elapsed))
                 else:
                     gutils.eprintf("..... Failed!\n")
-                    # eprintf('%s result \n',  result )
-                    s.stepslogger.write("%s\t%s\n" % (c.name, "FAILED"))
+                    end = time.time()
+                    elapsed = round(end - start, 2)
+                    s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "FAILED", elapsed))
             else:
                 gutils.eprintf("..... Skipping [NO INPUT]!\n")
                 if verbose:
                     missingList = c.getMissingList(errorlogger=s.errorlogger)
                     printMissingList(missingList)
-                s.stepslogger.write("%s\t%s\n" % (c.name, "MISSING_INPUT"))
+                end = time.time()
+                elapsed = round(end - start, 2)
+                s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "MISSING_INPUT", elapsed))
 
             if verbose:
                 for status_message in status_messages:
@@ -125,17 +134,22 @@ def execute_tasks(s, verbose=False, block=0):
 
                     if result[0] == 0:
                         gutils.eprintf("..... Success!\n")
-                        s.stepslogger.write("%s\t%s\n" % (c.name, "SUCCESS"))
+                        end = time.time()
+                        elapsed = round(end - start, 2)
+                        s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "SUCCESS", elapsed))
                     else:
                         gutils.eprintf("..... Failed!\n")
-                        s.stepslogger.write("%s\t%s\n" % (c.name, "FAILED"))
+                        end = time.time()
+                        elapsed = round(end - start, 2)
+                        s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "FAILED", elapsed))
                 else:
                     gutils.eprintf("..... Skipping [NO INPUT]!\n")
                     if verbose:
                         missingList = c.getMissingList(errorlogger=s.errorlogger)
                         printMissingList(missingList)
-
-                    s.stepslogger.write("%s\t%s\n" % (c.name, "SKIPPED"))
+                    end = time.time()
+                    elapsed = round(end - start, 2)
+                    s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "SKIPPED", elapsed))
 
                 if verbose:
                    for status_message in status_messages:
@@ -143,12 +157,16 @@ def execute_tasks(s, verbose=False, block=0):
 
             else:
                 gutils.eprintf("..... Already Computed!\n")
-                s.stepslogger.write("%s\t%s\n" % (c.name, "ALREADY_COMPUTED"))
+                end = time.time()
+                elapsed = round(end - start, 2)
+                s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "ALREADY_COMPUTED", elapsed))
 
 
         elif c.status in ["skip"]:
             gutils.eprintf("..... Skipping!\n")
-            s.stepslogger.write("%s\t%s\n" % (c.name, "SKIPPED"))
+            end = time.time()
+            elapsed = round(end - start, 2)
+            s.stepslogger.write("%s\t%s - Time elapsed: %s seconds\n" % (c.name, "SKIPPED", elapsed))
 
 def execute(s, c):
     result = [1, "Error while executing " + c.name]
