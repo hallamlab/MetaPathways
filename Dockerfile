@@ -61,6 +61,10 @@ RUN chmod 755 /usr/local/bin/fastdb
 COPY Snakefile /opt/mp_repo/
 COPY snakemake_config.yaml /opt/mp_repo
 
+## Hack so that Prokka can't run tbl2asn
+COPY resources/tbl2asn.dummy /opt/conda/bin/tbl2asn
+RUN chmod +x /opt/conda/bin/tbl2asn
+
 ## Make things work for Singularity by relaxing the permissions:
 RUN chmod -R 755 /opt/mp_repo
 RUN chmod -R 755 /opt/conda
