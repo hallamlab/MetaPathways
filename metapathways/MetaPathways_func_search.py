@@ -47,7 +47,7 @@ def createParser():
         "--algorithm",
         dest="algorithm",
         default="BLAST",
-        choices=["BLAST", "FAST"],
+        choices=["BLAST", "FAST", "HMMER"],
         help="the homology search algorithm",
     )
 
@@ -152,6 +152,7 @@ def createParser():
     )
 
     parser.add_option_group(last_group)
+
 
     return parser
 
