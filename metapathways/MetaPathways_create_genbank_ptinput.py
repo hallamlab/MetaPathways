@@ -32,7 +32,16 @@ except:
 PATHDELIM = sysutils.pathDelim()
 
 def createParser():
-    epilog = """This script has three functions : (i) The functional and taxonomic annotations created for the individual ORFs are used to create the inputs required by the Pathway-Tools's Pathologic algorithm to build the ePGDBs. The input consists of 4 files that contains functional annotations and sequences with relevant information, this information is used by Pathologic to create the ePGDBs. (ii) It can create a genbank file for the ORFs and their annotationsequi"""
+    epilog = """
+    This script has three functions:
+    (i) The functional and taxonomic annotations created for the individual
+    ORFs are used to create the inputs required by the Pathway-Tools's
+    Pathologic algorithm to build the ePGDBs.
+    The input consists of 4 files that contains functional annotations and
+    sequences with relevant information, this information is used by
+    Pathologic to create the ePGDBs.
+    (ii) It can create a genbank file for the ORFs and their annotations
+    """
     epilog = re.sub(r'\s+', ' ', epilog)
 
     parser = optparse.OptionParser(usage=usage, epilog = epilog)

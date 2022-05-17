@@ -231,7 +231,7 @@ class SampleData:
         gutils.checkOrCreateFolder(self.bwa_folder)
         gutils.checkOrCreateFolder(self.output_results)
         gutils.checkOrCreateFolder(self.output_results_annotation_table_dir)
-        gutils.checkOrCreateFolder(self.output_results_megan_dir)
+        #gutils.checkOrCreateFolder(self.output_results_megan_dir)
         gutils.checkOrCreateFolder(self.output_results_rpkm_dir)
         gutils.checkOrCreateFolder(self.output_fasta_pf_dir)
         gutils.checkOrCreateFolder(self.output_results_pgdb_dir)
