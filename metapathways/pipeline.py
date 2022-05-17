@@ -362,7 +362,7 @@ def process(argv):
         "ORF_TO_AMINO"         : "MetaPathways_create_amino_sequences",
         "FUNC_SEARCH"          : "MetaPathways_func_search",
         "PARSE_FUNC_SEARCH"    : "MetaPathways_parse_blast",
-        "COMPUTE_REFSCORES"    : "python_scripts/MetaPathways_refscore",
+        "COMPUTE_REFSCORES"    : "MetaPathways_refscore",
         "ANNOTATE_ORFS"        : "MetaPathways_annotate_fast",
         "CREATE_ANNOT_REPORTS" : "MetaPathways_create_reports_fast",
         "GENBANK_FILE"         : "MetaPathways_create_genbank_ptinput",

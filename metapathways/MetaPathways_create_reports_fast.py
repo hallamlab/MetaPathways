@@ -381,6 +381,8 @@ def create_annotation(
     for contig in gffreader:
         #    shortORFId = getShortORFId(orf['id'])
         for orf in gffreader.orf_dictionary[contig]:
+            if orf['seqname'] == '':
+                continue # it has to have a seqname
             shortORFId = mputils.getShortORFId(orf["id"])
             count += 1
             # shortORFId = ShortenORFId(orf['id'])
@@ -405,12 +407,7 @@ def create_annotation(
             else:
                 taxonomy = "root"
 
-            product = orf["product"]  # leave product as it is
-            # product = re.sub(r'\[{1,2}.+?\]{1,2}','', orf['product']).strip()
-            # product = re.sub(r'\[[^\[]+?\]','', orf['product']).strip()
-            # if "partial" in orf['product']:
-            #     print orf['product'].strip()
-            #     print product
+            product = orf["product"]
             orf_id = orf["id"]
             seqname = orf["seqname"]
             if compact_output:
@@ -424,28 +421,11 @@ def create_annotation(
             gutils.fprintf(output_table_file, "\t%s", seqname)
             gutils.fprintf(output_table_file, "\t%s", orf["contig_length"])
             gutils.fprintf(output_table_file, "\t%s", orf["strand"])
-            gutils.fprintf(output_table_file, "\t%s", orf["ec"])
-            # fprintf(output_table_file, "\t%s", str(species))
-            gutils.fprintf(output_table_file, "\t%s", taxonomy)
-            gutils.fprintf(output_table_file, "\t%s\n", product)
-
-            # adding taxons to the megan tree
-            # if meganTree and taxonomy != '':
-            #    meganTree.insertTaxon(taxonomy)
-            # print meganTree.getChildToParentMap()
+            gutils.fprintf(output_table_file, "\t%s", orf["target"])
+            gutils.fprintf(output_table_file, "\t%s", product)
+            gutils.fprintf(output_table_file, "\t%s\n", taxonomy)
 
     output_table_file.close()
-
-    # this prints out the megan tree
-
-
-#    if meganTree:
-#        megan_tree_file = open(output_dir + '/megan_tree.tre', 'w')
-#        fprintf(megan_tree_file,  "%s;", meganTree.printTree('1'))
-#        megan_tree_file.close()
-
-
-# write_annotation_for_orf(outputgff_file, candidatedbname, dbname_weight, results_dictionary, orf_dictionary, contig, candidate_orf_pos,  orf['id'])
 
 
 def remove_repeats(filtered_words):
@@ -1314,7 +1294,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                        output_table_file,
                        '\t'.join(["ORF_ID", "ORF_length", "start", "end", 
                        "Contig_Name", "Contig_length", 
-                       "strand", "ec", "taxonomy", "product"])+"\n"
+                       "strand", "target", "product", "taxonomy"])+"\n"
         )
 
 
@@ -1417,6 +1397,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
     filePermTypes = {}
     start = 0
     with open( opts.output_dir + PATHDELIM + opts.sample_name + ".ORF_annotation_table.txt", "w") as outputfile:
+        '''
         short_to_long_dbnames = {}
         for dbname in database_names:
             results = re.search(r"^seed", dbname, re.IGNORECASE)
@@ -1442,6 +1423,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
             opts.input_kegg_maps,
             opts.input_cazy_maps,
         ]
+        
         field_to_description = {}
         hierarchical_map = {}
 
@@ -1461,7 +1443,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 except:
                     raise
                     pass
-
+        '''
         while start < Length:
             pickorfs = {}
             last = min(Length, start + _stride)
@@ -1477,7 +1459,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
             for dbname, blastoutput in zip(database_names, input_blastouts):
                 try:
                     results_dictionary[dbname] = {}
-                    gutils.eprintf("\n\tEOROR:\tProcessing database : %s...", dbname)
+                    gutils.eprintf("\n\tINFO:\tProcessing database : %s...", dbname)
                     process_parsed_blastoutput(
                         dbname,
                         blastParsers[dbname],
@@ -1516,7 +1498,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 compact_output=opts.compact_output,
                 sample_name=opts.sample_name,
             )
-
+            '''
             for std_dbname, db_map_filename in zip(standard_dbs, standard_db_maps):
                 if std_dbname in short_to_long_dbnames:
                     create_table(
@@ -1528,7 +1510,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                     )
 
             #             create_table(results_dictionary[dbname], opts.input_kegg_maps, 'kegg', opts.output_dir, filePermType)
-
+            '''
             print_orf_table(
                 results_dictionary,
                 orfToContig,
@@ -1600,53 +1582,9 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
                 if dbname in orf_dict[orf["query"]]:  # only the best hit prevails
                     continue
 
-                # if orf['query']=='2_0' and dbname=='refseq-nr-2014-01-18':
-                #  print orf
-
                 orf_dict[orf["query"]]["contig"] = orfToContig[orfname]
 
                 product = orf["product"].strip()
-
-                _results = re.search(r"cog", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = cog_id(product)
-                    continue
-
-                _results = re.search(r"eggnog", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = cog_id(product)
-                    continue
-
-                _results = re.search(r"kegg", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = kegg_id(product)
-                    continue
-
-                _results = re.search(r"cazy", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = cazy_id(product)
-                    # print(orf_dict[orf['query']], cazy_id(product), product)
-                    continue
-
-                _results = re.search(r"metacyc", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = product
-                    continue
-
-                _results = re.search(r"refseq", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = product
-                    continue
-
-                _results = re.search(r"seed", dbname, re.I)
-                if _results:
-                    orf_dict[orf["query"]][dbname] = seed_id(product)
-                    # print "---", orf_dict[orf['query']][dbname]
-                    continue
-
-                # if dbname=='refseq-nr-2014-01-18':
-                #   if orf['query']=='2_0':
-                #      print product
 
                 # adds it anyway
                 orf_dict[orf["query"]][dbname] = product
@@ -1654,50 +1592,14 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
     # compute the databases
     database_maps = {}
     for dbname in results.keys():
-        _results = re.search(r"cog", dbname, re.I)
-        if _results:
-            database_maps["cog"] = dbname
-            continue
-
-        _results = re.search(r"eggnog", dbname, re.I)
-        if _results:
-            database_maps["cog"] = dbname
-            continue
-
-        _results = re.search(r"kegg", dbname, re.I)
-        if _results:
-            database_maps["kegg"] = dbname
-            hit = True
-            continue
-
-        _results = re.search(r"cazy", dbname, re.I)
-        if _results:
-            database_maps["cazy"] = dbname
-            continue
-
-        _results = re.search(r"seed", dbname, re.I)
-        if _results:
-            database_maps["seed"] = dbname
-            continue
-
-        _results = re.search(r"metacyc", dbname, re.I)
-        if _results:
-            database_maps["metacyc"] = dbname
-            continue
-
-        _results = re.search(r"refseq", dbname, re.I)
-        if _results:
-            database_maps["refseq"] = dbname
-            continue
-
         database_maps[dbname] = dbname
 
-    std_dbnames = ["cog", "kegg", "seed", "cazy", "metacyc", "refseq"]
+    std_dbnames = sorted(list(database_maps.keys()))
     dbnames = std_dbnames
 
     headers = ["ORF_ID", "CONTIG_ID"]
     for std_dbname in std_dbnames:
-        headers.append(std_dbname.upper())
+        headers.append(std_dbname)
 
     for dbname in sorted(results.keys()):
         non_std = True
@@ -1713,41 +1615,6 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
 
     sampleName = None
     for orfn in orf_dict:
-        # if orfn=='2_0':
-        # print orfn, '<<',  orf_dict[orfn], ' >> xxxx'
-        # _keys =  orf_dict[orfn].keys()
-        # _results = re.search(r'cog', dbname, re.I)
-
-        if "cog" in database_maps and database_maps["cog"] in orf_dict[orfn]:
-            cogFn = orf_dict[orfn][database_maps["cog"]]
-        else:
-            cogFn = ""
-
-        if "kegg" in database_maps and database_maps["kegg"] in orf_dict[orfn]:
-            keggFn = orf_dict[orfn][database_maps["kegg"]]
-            # print  orfn, keggFn
-        else:
-            keggFn = ""
-
-        if "metacyc" in database_maps and database_maps["metacyc"] in orf_dict[orfn]:
-            metacycPwy = orf_dict[orfn][database_maps["metacyc"]]
-        else:
-            metacycPwy = ""
-
-        if "seed" in database_maps and database_maps["seed"] in orf_dict[orfn]:
-            seedFn = orf_dict[orfn][database_maps["seed"]]
-        else:
-            seedFn = ""
-
-        if "cazy" in database_maps and database_maps["cazy"] in orf_dict[orfn]:
-            cazyFn = orf_dict[orfn][database_maps["cazy"]]
-        else:
-            cazyFn = ""
-
-        if "refseq" in database_maps and database_maps["refseq"] in orf_dict[orfn]:
-            refseqFn = orf_dict[orfn][database_maps["refseq"]]
-        else:
-            refseqFn = ""
 
         if not sampleName:
             sampleName = mputils.getSampleNameFromContig(orf_dict[orfn]["contig"])
@@ -1760,20 +1627,15 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
 
         row = [orfName, contigName]
         for dbname in dbnames:
-            # print(dbname)
             if dbname in database_maps and database_maps[dbname] in orf_dict[orfn]:
                 row.append(orf_dict[orfn][database_maps[dbname]])
-            #   print("\t" + orf_dict[orfn][database_maps[dbname]])
             else:
                 row.append("")
 
-        # fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy)
         if addHeader:
-            # fprintf(outputfile, "# %s\n", '\t'.join(headers)_"ORF_ID" + "\t" + "CONTIG_ID" + '\t' + "COG" + '\t' + "KEGG" +'\t' + "SEED" + '\t' + "CAZY" + '\t'+ "METACYC" + '\t' + "REFSEQ" )
             gutils.fprintf(outputfile, "# %s\n", "\t".join(headers))
             addHeader = False
 
-        # fprintf(outputfile, "%s\n", orfName + "\t" + contigName + '\t' + cogFn + '\t' + keggFn +'\t' + seedFn + '\t' + cazyFn + '\t'+ metacycPwy + '\t' + refseqFn )
         gutils.fprintf(outputfile, "%s\n", "\t".join(row))
 
 

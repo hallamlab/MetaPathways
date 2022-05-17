@@ -892,12 +892,12 @@ class ContextCreator:
         basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree'
         context.inputs = {
             'input_annot_gff':input_annot_gff,
-            'KO_classification':basefun + PATHDELIM +  'KO_classification.txt',
-            'COG_categories':basefun + PATHDELIM +  'COG_categories.txt',
-            'SEED_subsystems':basefun + PATHDELIM + 'SEED_subsystems.txt',
-            'CAZY_hierarchy':basefun + PATHDELIM + 'CAZY_hierarchy.txt',
+            #'KO_classification':basefun + PATHDELIM +  'KO_classification.txt',
+            #'COG_categories':basefun + PATHDELIM +  'COG_categories.txt',
+            #'SEED_subsystems':basefun + PATHDELIM + 'SEED_subsystems.txt',
+            #'CAZY_hierarchy':basefun + PATHDELIM + 'CAZY_hierarchy.txt',
             'ncbi_taxonomy_tree': basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt',
-            'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
+            #'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
         }
 
         context.outputs = {
@@ -922,20 +922,28 @@ class ContextCreator:
         #  --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
         #  --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
 
-        cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
-               --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-               --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
-             %(\
-                pyScript, \
-                context.inputs['input_annot_gff'], \
-                context.inputs['KO_classification'], \
-                context.inputs['COG_categories'],  \
-                context.inputs['SEED_subsystems'], \
-                context.inputs['CAZY_hierarchy'], \
-                context.outputs['output_results_annotation_table_dir'], \
-                context.inputs['ncbi_taxonomy_tree'], \
-                context.inputs['ncbi_megan_map']
-             )
+        """cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
+                                       --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
+                                       --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
+                                     %(\
+                                        pyScript, \
+                                        context.inputs['input_annot_gff'], \
+                                        context.inputs['KO_classification'], \
+                                        context.inputs['COG_categories'],  \
+                                        context.inputs['SEED_subsystems'], \
+                                        context.inputs['CAZY_hierarchy'], \
+                                        context.outputs['output_results_annotation_table_dir'], \
+                                        context.inputs['ncbi_taxonomy_tree'], \
+                                        context.inputs['ncbi_megan_map']
+                                     )"""
+        cmd = "%s  --input-annotated-gff %s  --output-dir %s \
+                                       --ncbi-taxonomy-map %s"\
+                                     %(\
+                                        pyScript, \
+                                        context.inputs['input_annot_gff'], \
+                                        context.outputs['output_results_annotation_table_dir'], \
+                                        context.inputs['ncbi_taxonomy_tree'], \
+                                     )                             
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
 
         #add the command now, remove to disable in a hackish way

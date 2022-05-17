@@ -470,6 +470,7 @@ def write_annotation_for_orf(
         attributes += ";" + "sourcedb=" + candidatedbname
 
         if candidatedbname in results_dictionary:
+            attributes += ";" + "target=" + results_dictionary[candidatedbname][orfid]["target"]
             attributes += (
                 ";"
                 + "annotvalue="
@@ -482,6 +483,7 @@ def write_annotation_for_orf(
                 ";" + "product=" + results_dictionary[candidatedbname][orfid]["product"]
             )
         else:
+            attributes += ";" + "target=" + str("")
             attributes += ";" + "annotvalue=" + str("0")
             attributes += ";" + "ec=" + str("")
             attributes += ";" + "product=" + "hypothetical protein"
@@ -725,22 +727,18 @@ def create_annotation(
     output_comp_annot_file1 = open(output_comparative_annotation + ".1.txt", "w")
     output_comp_annot_file2 = open(output_comparative_annotation + ".2.txt", "w")
 
-    output_comp_annot_file1_Str = "orf_id\tref dbname\tEC\tproduct\tvalue"
+    output_comp_annot_file1_Str = "orf_id\tref dbname\ttarget\tproduct\tvalue"
     gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
 
     output_comp_annot_file2_Str = "orf_id"
     dbnames = dbname_weight.keys()
     for dbname in dbnames:
         weight = dbname_weight[dbname]
-        output_comp_annot_file2_Str += "\t{0}(EC) \t{0}(product)\t{0}(value)".format(
+        output_comp_annot_file2_Str += "\t{0}(target)\t{0}(product)\t{0}(value)".format(
             dbname
         )
     gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
 
-    #    gffreader = GffReader(input_gff)
-    # for dbname in dbnames:
-    #   print dbname, len(results_dictionary[dbname].keys())
-    #   print results_dictionary[dbname].keys()
     values = {}
     i = 0
     for contig in gffreader:
@@ -748,36 +746,31 @@ def create_annotation(
         for orf in gffreader.orf_dictionary[contig]:
             for dbname in dbnames:
                 values[dbname] = 0.0001
-
             success = False
             output_comp_annot_file1_Str = ""
             output_comp_annot_file2_Str = ""
             orf_id = orf["id"]
-
+            best_anno_dict = {'DB': 'None', 'weighted_value': 0}
             # check the annotation of the orf by dbname
-
             for dbname in dbnames:
                 weight = dbname_weight[dbname]
-
                 if orf_id in results_dictionary[dbname]:
-                    if values[dbname] < results_dictionary[dbname][orf_id]["value"]:
-                        values[dbname] = results_dictionary[dbname][orf_id]["value"]
-                        #                print value, dbname
-                        candidatedbname = dbname
+                    if float(values[dbname]) < float(results_dictionary[dbname][orf_id]["value"]):
+                        values[dbname] = float(results_dictionary[dbname][orf_id]["value"])
                         success = True
                         candidate_orf_pos = count
-
+                        wt_val = results_dictionary[dbname][orf_id]["value"] * float(weight)
+                        if wt_val > best_anno_dict['weighted_value']:
+                            best_anno_dict['weighted_value'] = wt_val
+                            best_anno_dict['DB'] = dbname
                         if output_comp_annot_file1_Str:
                             output_comp_annot_file1_Str += (
                                 "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
                                     "",
                                     dbname,
-                                    results_dictionary[dbname][orf["id"]]["ec"],
-                                    results_dictionary[dbname][orf["id"]]["product"],
-                                    str(
-                                        results_dictionary[dbname][orf["id"]]["value"]
-                                        * float(weight)
-                                    ),
+                                    results_dictionary[dbname][orf_id]["target"],
+                                    results_dictionary[dbname][orf_id]["product"],
+                                    str(wt_val),
                                 )
                             )
                         else:
@@ -785,33 +778,24 @@ def create_annotation(
                                 "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
                                     orf_id,
                                     dbname,
-                                    results_dictionary[dbname][orf["id"]]["ec"],
-                                    results_dictionary[dbname][orf["id"]]["product"],
-                                    str(
-                                        results_dictionary[dbname][orf["id"]]["value"]
-                                        * float(weight)
-                                    ),
+                                    results_dictionary[dbname][orf_id]["target"],
+                                    results_dictionary[dbname][orf_id]["product"],
+                                    str(wt_val),
                                 )
                             )
 
                         if output_comp_annot_file2_Str:
                             output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
-                                results_dictionary[dbname][orf["id"]]["ec"],
-                                results_dictionary[dbname][orf["id"]]["product"],
-                                str(
-                                    results_dictionary[dbname][orf["id"]]["value"]
-                                    * float(weight)
-                                ),
+                                results_dictionary[dbname][orf_id]["target"],
+                                results_dictionary[dbname][orf_id]["product"],
+                                str(wt_val),
                             )
                         else:
                             output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
                                 orf_id,
-                                results_dictionary[dbname][orf["id"]]["ec"],
-                                results_dictionary[dbname][orf["id"]]["product"],
-                                str(
-                                    results_dictionary[dbname][orf["id"]]["value"]
-                                    * float(weight)
-                                ),
+                                results_dictionary[dbname][orf_id]["target"],
+                                results_dictionary[dbname][orf_id]["product"],
+                                str(wt_val),
                             )
 
                 else:
@@ -836,8 +820,8 @@ def create_annotation(
                 gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
                 write_annotation_for_orf(
                     outputgff_file,
-                    candidatedbname,
-                    dbname_weight,
+                    best_anno_dict['DB'],
+                    dbname_weight[best_anno_dict['DB']],
                     results_dictionary,
                     gffreader.orf_dictionary,
                     contig,
@@ -846,7 +830,7 @@ def create_annotation(
                     sample_name,
                     compact_output=compact_output,
                 )
-            else:  # if it was not  a hit then it is a hypothetical protein
+            else:  # if it was not a hit then it is a hypothetical protein
                 # print gffreader.orf_dictionary
                 write_annotation_for_orf(
                     outputgff_file,
@@ -1078,7 +1062,7 @@ class BlastOutputTsvParser(object):
                     self.data["query"] = mputils.ShortenORFId(fields[self.fieldmap["query"]])
                 else:
                     self.data["query"] = fields[self.fieldmap["query"]]
-
+                self.data["target"] = fields[self.fieldmap["target"]]
                 self.data["q_length"] = int(fields[self.fieldmap["q_length"]])
                 self.data["bitscore"] = float(fields[self.fieldmap["bitscore"]])
                 self.data["bsr"] = float(fields[self.fieldmap["bsr"]])
@@ -1175,34 +1159,29 @@ def process_parsed_blastoutput(
 ):
     blastparser = BlastOutputTsvParser(dbname, blastoutput, shortenorfid=False)
 
-    fields = ["q_length", "bitscore", "bsr", "expect", "aln_length", "identity", "ec"]
+    fields = ["target", "q_length", "bitscore", "bsr", "expect", "aln_length", "identity", "ec"]
     if cutoffs.taxonomy:
         fields.append("taxonomy")
     fields.append("product")
 
     annotation = {}
     for data in blastparser:
-        # if count%10000==0:
         if isWithinCutoffs(data, cutoffs):
-            # print data['query'] + '\t' + str(data['q_length']) +'\t' + str(data['bitscore']) +'\t' + str(data['expect']) +'\t' + str(data['identity']) + '\t' + str(data['bsr']) + '\t' + data['ec'] + '\t' + data['product']
-            #           if data['query'] =='NapDC_illum_asm_188606_0':
-
-            #       print dbname
+            annotation["target"] = data["target"]
             annotation["bsr"] = data["bsr"]
             annotation["ec"] = data["ec"]
             annotation["product"] = mputils.strip_taxonomy(
                 process_product(data["product"], dbname)
             )
             annotation["value"] = compute_annotation_value(annotation) * weight
-            #  print annotation
+            annotation["bitscore"] = data["bitscore"]
 
             if not data["query"] in annotation_results:
-                annotation_results[data["query"]] = {"value": 0}
+                annotation_results[data["query"]] = {"value": 0, "bitscore": 0.0}
+            if annotation_results[data["query"]]["bitscore"] <= annotation["bitscore"]:
+                if annotation_results[data["query"]]["value"] < annotation["value"]:
+                    annotation_results[data["query"]] = annotation.copy()
 
-            if annotation_results[data["query"]]["value"] <= annotation["value"]:
-                annotation_results[data["query"]] = annotation.copy()
-
-    #    add_refscore_to_file(blastoutput,refscore_file, allNames)
     count = len(annotation_results.keys())
     return count
 
