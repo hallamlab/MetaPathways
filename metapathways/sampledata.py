@@ -85,7 +85,7 @@ class SampleData:
         self.stages = []
         self.stages_context = {}
 
-    def setInputOutput(self, inputFile=None, sample_output_dir=None):
+    def setInputOutput(self, inputFile=None, sample_output_dir=None, readsDir=None):
         if inputFile == None and sample_output_dir == None:
             return False
 
@@ -98,7 +98,8 @@ class SampleData:
         self.sample_name = path.basename(self.sample_name)
         self.sample_name = re.sub("[.]", "_", self.sample_name)
 
-        self.rpkm_input_dir = path.dirname(inputFile) + PATHDELIM + "reads"
+        #self.rpkm_input_dir = path.dirname(inputFile) + PATHDELIM + "reads"
+        self.rpkm_input_dir = readsDir
 
         self.output_dir = sample_output_dir
 

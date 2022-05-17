@@ -66,6 +66,9 @@ def createParser():
     parser.add_option("-d", "--dirref", dest="refdb_dir",
                       help="location of the reference DB [REQUIRED]")
 
+    parser.add_option("-r", "--readsdir", dest="readsdir",
+                      help="location of the raw fastq data for RPKM and TPM [optional]")
+    
     parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
                       help="max number of cores to use in multhreaded steps [DEFAULT 1]")
 
@@ -395,7 +398,10 @@ def process(argv):
                 algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
 
                 s = sampledata.SampleData()
-                s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
+                if opts.readsdir:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=opts.readsdir)  
+                else:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
                 s.setParameter('FILE_TYPE', filetypes[input_file][0])
                 s.setParameter('SEQ_TYPE', filetypes[input_file][1])

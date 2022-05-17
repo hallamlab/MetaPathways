@@ -41,13 +41,13 @@ epilog = (
 
                 2.   abcd.b1.fastq  : means only unpaired read from batch b1
 
-                3.   abcd_1.fastq  and abcd_2.fastq: this means paired reads for sample
+                3.   abcd_R1.fastq  and abcd_R2.fastq: this means paired reads for sample
 
-                4.   abcd_1.fastq or abcd_2.fastq: this means only one end of a paired read
+                4.   abcd_R1.fastq or abcd_R2.fastq: this means only one end of a paired read
 
-                5.   abcd_1.b2.fastq and  abcd_2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, where n is a number
+                5.   abcd_R1.b2.fastq and  abcd_R2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, where n is a number
 
-                6.   abcd_1.b1.fastq or abcd_2.b1.fastq: this means only one of a paried read from batch b1
+                6.   abcd_R1.b1.fastq or abcd_R2.b1.fastq: this means only one of a paried read from batch b1
              """
 )
 
@@ -229,13 +229,13 @@ def getReadFiles(readdir, sample_name):
 
     fastqgroups = {}
     for _fastqfile in _fastqfiles:
-       fastqfile  = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
-       fastqfile  = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
-       fastqfile  = re.sub(r'.fq$','', fastqfile, flags=re.IGNORECASE) 
-
+       fastqfile = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
+       fastqfile = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
+       fastqfile = re.sub(r'.fq$','', fastqfile, flags=re.IGNORECASE) 
        trimmedfastq = path.basename(re.sub(r'_R[12]$', '', fastqfile))
-       
-       
+       if len(trimmedfastq.rsplit('.', 1)) > 1: # goofy hack to get batches to work, need to improve
+           trimmedfastq = re.sub(r'_R[12]', '', trimmedfastq.rsplit('.', 1)[0]) + '.' + trimmedfastq.rsplit('.', 1)[1]
+
        if trimmedfastq not in fastqgroups:
            fastqgroups[trimmedfastq] = []
   
