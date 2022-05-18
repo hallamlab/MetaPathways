@@ -17,6 +17,7 @@ try:
     import gzip
     import glob
     import pandas as pd
+    import numpy as np
 
     from os import makedirs, path, listdir, remove, rename
 
@@ -80,6 +81,9 @@ def createParser():
     output_options_group.add_option("--taxonomy-table", dest="taxonomy_table",  default=None,
                        help='table with taxonomy')
 
+    output_options_group.add_option("--annotation-table", dest="annotation_table",  default=None,
+                       help='table with all annotations')
+    
     output_options_group.add_option("--ec-mapping", dest="ec_mapping",  default=None,
                        help='table with mappings for Uniprot/KEGG/EC')
 
@@ -230,6 +234,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     output_dir_name = outfiles['ptinput']
     ec_map_file = outfiles['ec_mapping']
     rxn_map_file = outfiles['rxn_mapping']
+    anno_file = outfiles['annotation_table']
 
     try:
         gutils.remove_dir(output_dir_name)
@@ -239,6 +244,12 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
         print("cannot create the pathway tools files")
         print("perhaps there is already a folder " + output_dir_name)
         traceback.print_exc(file=sys.stdout)
+
+    # load annotable
+    anno_df = pd.read_csv(anno_file, sep='\t', header=0, low_memory=False)
+    anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
+    anno_df['orf_id']  = anno_df['orf_id'].ffill()
+    anno_df.dropna(subset = ['target'], inplace=True)
 
     # Load all mapping files
     ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
@@ -268,9 +279,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
 
             for attrib in contig_dict[key]:
                 id  =  attrib['id']
-                shortid= ""
+                shortid = ""
                 compactid = ""
-                dbname = attrib['sourcedb']
+                
+                del attrib['ec'] # do this for now, but it should be cleaned up better
 
                 if attrib['feature'] == 'CDS':
                     shortid = prefix + mputils.ShortenORFId(attrib['id'])
@@ -295,19 +307,55 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                     print(attrib)
                     sys.exit(0)
 
-                del attrib['ec']
-                if 'metacyc' in dbname:
-                    trim_attr = attrib['target'].split('|', 2)[2]
-                    if trim_attr in rxn_dict:
-                        attrib['rxn'] = rxn_dict[trim_attr]
-                elif 'uniref' in dbname:
-                    trim_attr = attrib['target'].split('_', 1)[1]
-                    if trim_attr in ec_dict:
-                        attrib['ec'] = ec_dict[trim_attr]
-                elif 'sprot' in dbname:
-                    trim_attr = attrib['target'].split('|', 2)[1]
-                    if trim_attr in ec_dict:
-                        attrib['ec'] = ec_dict[trim_attr]
+                # find all DBs and map to general DB names
+                orf_anno_df = anno_df.query('orf_id == @compactid')
+                db_dict = {}
+                for dbname in orf_anno_df['ref dbname']:
+                    if 'metacyc' in dbname:
+                        if 'metacyc' in db_dict:
+                            db_dict['metacyc'].append(dbname)
+                        else:
+                            db_dict['metacyc'] = [dbname]
+                    elif 'sprot' in dbname:
+                        if 'sprot' in db_dict:
+                            db_dict['sprot'].append(dbname)
+                        else:
+                            db_dict['sprot'] = [dbname]
+                    elif 'uniref' in dbname:
+                        if 'uniref' in db_dict:
+                            db_dict['uniref'].append(dbname)
+                        else:
+                            db_dict['uniref'] = [dbname]
+
+                # map all DBs to targets and add attributes if RXNs or ECs exist
+                db_targ_dict = dict(zip(orf_anno_df['ref dbname'], orf_anno_df['target']))
+                if 'metacyc' in db_dict:
+                    for db in db_dict['metacyc']:
+                        target = db_targ_dict[db]
+                        trim_targ = target.split('|', 2)[2]
+                        if trim_targ in rxn_dict:
+                            if 'rxn' in attrib:
+                                attrib['rxn'].extend(rxn_dict[trim_targ])
+                            else:
+                                attrib['rxn'] = rxn_dict[trim_targ]
+                if (('sprot' in db_dict) & ('rxn' not in attrib)):
+                    for db in db_dict['sprot']:
+                        target = db_targ_dict[db]
+                        trim_targ = target.split('|', 2)[1]
+                        if trim_targ in ec_dict:
+                            if 'ec' in attrib:
+                                attrib['ec'].extend(ec_dict[trim_targ])
+                            else:
+                                attrib['ec'] = ec_dict[trim_targ]
+                if (('uniref' in db_dict) & ('rxn' not in attrib) & ('ec' not in attrib)):
+                    for db in db_dict['uniref']:
+                        target = db_targ_dict[db]
+                        trim_targ = target.split('_', 1)[1]
+                        if trim_targ in ec_dict:
+                            if 'ec' in attrib:
+                                attrib['ec'].extend(ec_dict[trim_targ])
+                            else:
+                                attrib['ec'] = ec_dict[trim_targ]
 
                 # fix function
                 attrib = get_funct(attrib)
@@ -394,11 +442,13 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
         gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", attrib['gene-comment'])
 
     if 'rxn' in attrib:
-        for rxn_val in attrib['rxn']:
+        rxn_list = list(set(attrib['rxn']))
+        for rxn_val in rxn_list:
             gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
     elif 'ec' in attrib:
-        for ec_val in attrib['ec']:
+        ec_list = list(set(attrib['ec']))
+        for ec_val in ec_list:
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
     if 'taxon' in attrib:
@@ -759,6 +809,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
        output_files['ptinput'] = options.ptinput_file
        output_files['ec_mapping'] = options.ec_mapping
        output_files['rxn_mapping'] = options.rxn_mapping
+       output_files['annotation_table'] = options.annotation_table
 
 
     nucleotide_seq_dict = {}

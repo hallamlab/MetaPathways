@@ -806,9 +806,10 @@ class ContextCreator:
         basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree'
         ncbi_tree = basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt'
         taxonomy_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
+        annotation_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.1.txt'
         basefunct = self.configs.REFDBS + PATHDELIM + 'functional_categories'
         ec_mapping = basefunct + PATHDELIM + 'Uniprot_KEGG_EC_map.tsv'
-        rxn_mapping = basefunct + PATHDELIM + 'MetaCyc-26-monomer-rxn-pairs.tsv'
+        rxn_mapping = basefunct + PATHDELIM + 'MetaCyc-monomer-rxn-pairs.tsv'
         
         '''outputs'''
 
@@ -824,6 +825,7 @@ class ContextCreator:
         context.inputs1 = {
                              'ncbi_tree': ncbi_tree,
                              'taxonomy_table': taxonomy_table,
+                             'annotation_table': annotation_table,
                              'ec_mapping': ec_mapping,
                              'rxn_mapping': rxn_mapping
                           }
@@ -875,6 +877,7 @@ class ContextCreator:
             cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
             cmd += ' --ec-mapping ' + context.inputs1['ec_mapping']
             cmd += ' --rxn-mapping ' + context.inputs1['rxn_mapping']
+            cmd += ' --annotation-table ' + context.inputs1['annotation_table']
 
 
         context.message = self._Message("PATHOLOGIC INPUT" )
