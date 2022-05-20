@@ -13,12 +13,14 @@ try:
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
+    from collections import namedtuple
 
     from metapathways import sysutil as sysutils
     from metapathways import general_utils as gutils
     from metapathways import metapathways_utils as mputils
     from metapathways import sysutil as sysutils
     from metapathways import errorcodes as errormod
+    from metapathways import MetaPathways_parse_hmmer
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
@@ -285,6 +287,155 @@ def MetaPathways_func_search(
         return (1, traceback.print_exc(10))
 
     return (0, "")
+
+
+def define_hmm_domtbl_thresholds(stringency: str, hmm_cov: int, query_cov: int) -> namedtuple:
+    thresholds_nt = namedtuple("thresholds", ["perc_aligned", "query_aligned",
+                                              "min_acc", "max_e", "max_ie", "min_score",
+                                              "profile_match"])
+
+    for opt, value in {"hmm_coverage": hmm_cov, "query_coverage": query_cov}.items():
+        if not 1 <= value <= 100:
+            ts_logger.error("Option '{}' needs to be between 1 and 100 percent (currently {}).\n"
+                                 .format(opt, value))
+            sys.exit(3)
+
+    # Parameterizing the hmmsearch output parsing:
+    if stringency == "relaxed":
+        domtbl_thresholds = thresholds_nt(perc_aligned=hmm_cov, query_aligned=query_cov,
+                                          min_acc=0.7, max_e=1E-3, max_ie=1E-1, min_score=15, profile_match=False)
+    elif stringency == "strict":
+        domtbl_thresholds = thresholds_nt(perc_aligned=hmm_cov, query_aligned=query_cov,
+                                          min_acc=0.7, max_e=1E-5, max_ie=1E-3, min_score=30, profile_match=False)
+    else:
+        ts_logger.error("Unknown HMM-parsing stringency option '{}'.\n".format(stringency))
+        sys.exit(3)
+    return domtbl_thresholds
+
+
+def best_discrete_matches(matches: list) -> list:
+    """
+    Function for finding the best alignment in a list of HmmMatch() objects
+    The best match is based off of the full sequence score
+
+    :param matches: A list of HmmMatch() objects
+    :return: List of the best HmmMatch's
+    """
+    # Code currently only permits multi-domains of the same gene
+    dropped_annotations = list()
+    len_sorted_matches = sorted(matches, key=lambda x: x.end - x.start)
+    i = 0
+    orf = len_sorted_matches[0].orf
+    while i + 1 < len(len_sorted_matches):
+        j = i + 1
+        a_match = len_sorted_matches[i]  # type HmmMatch
+        while j < len(len_sorted_matches):
+            b_match = len_sorted_matches[j]  # type HmmMatch
+            if a_match.target_hmm != b_match.target_hmm:
+                if MetaPathways_parse_hmmer.detect_orientation(a_match.start, a_match.end,
+                                                       b_match.start, b_match.end) != "satellite":
+                    if a_match.full_score > b_match.full_score:
+                        dropped_annotations.append(len_sorted_matches.pop(j))
+                        j -= 1
+                    else:
+                        dropped_annotations.append(len_sorted_matches.pop(i))
+                        j = len(len_sorted_matches)
+                        i -= 1
+            j += 1
+        i += 1
+
+    if len(len_sorted_matches) == 0:
+        LOGGER.error("All alignments were discarded while deciding the best discrete HMM-match.\n")
+        sys.exit(3)
+
+    LOGGER.debug("HMM search annotations for " + orf +
+                 ":\n\tRetained\t" +
+                 ', '.join([match.target_hmm +
+                            " (%d-%d)" % (match.start, match.end) for match in len_sorted_matches]) +
+                 "\n\tDropped\t\t" +
+                 ', '.join([match.target_hmm +
+                            " (%d-%d)" % (match.start, match.end) for match in dropped_annotations]) + "\n")
+    return len_sorted_matches
+
+
+def parse_domain_tables(thresholds, hmm_domtbl_files: dict) -> dict:
+    """
+    Parses HMMER domain tables using predetermined thresholds
+
+    :param thresholds: A namedtuple instance: namedtuple("thresholds", "max_e max_ie min_acc min_score perc_aligned")
+    :param hmm_domtbl_files: A list of domain table files written by hmmsearch
+    :return: Dictionary of HmmMatch objects indexed by their reference package and/or HMM name
+    """
+    # Check if the HMM filtering thresholds have been set
+    LOGGER.info("Parsing HMMER domain tables for high-quality matches... ")
+
+    search_stats = MetaPathways_parse_hmmer.HmmSearchStats()
+    hmm_matches = dict()
+    orf_gene_map = dict()
+    optional_matches = list()
+
+    # TODO: Capture multimatches across multiple domain table files
+    for r_q, domtbl_file in hmm_domtbl_files.items():
+        _prefix, reference = r_q
+        domain_table = MetaPathways_parse_hmmer.DomainTableParser(domtbl_file)
+        domain_table.read_domtbl_lines()
+        distinct_hits = MetaPathways_parse_hmmer.format_split_alignments(domain_table, search_stats)
+        purified_hits = MetaPathways_parse_hmmer.filter_poor_hits(thresholds, distinct_hits, search_stats)
+        complete_hits = MetaPathways_parse_hmmer.filter_incomplete_hits(thresholds, purified_hits, search_stats)
+        MetaPathways_parse_hmmer.renumber_multi_matches(complete_hits)
+
+        for match in complete_hits:
+            match.genome = reference
+            if match.orf not in orf_gene_map:
+                orf_gene_map[match.orf] = dict()
+            try:
+                orf_gene_map[match.orf][match.target_hmm].append(match)
+            except KeyError:
+                orf_gene_map[match.orf][match.target_hmm] = [match]
+            if match.target_hmm not in hmm_matches.keys():
+                hmm_matches[match.target_hmm] = list()
+    search_stats.num_dropped()
+    for orf in orf_gene_map:
+        if len(orf_gene_map[orf]) == 1:
+            for target_hmm in orf_gene_map[orf]:
+                for match in orf_gene_map[orf][target_hmm]:
+                    hmm_matches[target_hmm].append(match)
+                    search_stats.seqs_identified += 1
+        else:
+            search_stats.multi_alignments += 1
+            # Remove all the overlapping domains - there can only be one highlander
+            for target_hmm in orf_gene_map[orf]:
+                optional_matches += orf_gene_map[orf][target_hmm]
+            retained = 0
+            for discrete_match in best_discrete_matches(optional_matches):
+                hmm_matches[discrete_match.target_hmm].append(discrete_match)
+                retained += 1
+            search_stats.dropped += (len(optional_matches) - retained)
+            search_stats.seqs_identified += retained
+            optional_matches.clear()
+
+    LOGGER.info("done.\n")
+
+    alignment_stat_string = search_stats.summarize()
+
+    if search_stats.seqs_identified == 0 and search_stats.dropped == 0:
+        LOGGER.warning("No alignments found.\n")
+        sys.exit(0)
+    if search_stats.seqs_identified == 0 and search_stats.dropped > 0:
+        LOGGER.warning("No alignments (" + str(search_stats.seqs_identified) + '/' + str(search_stats.dropped) +
+                       ") met the quality cut-offs!\n")
+        alignment_stat_string += "\tPoor quality alignments:\t" + str(search_stats.bad) + "\n"
+        alignment_stat_string += "\tShort alignments:\t" + str(search_stats.short) + "\n"
+        LOGGER.debug(alignment_stat_string)
+        sys.exit(0)
+
+    alignment_stat_string += "\n\tNumber of markers identified:\n"
+    for marker in sorted(hmm_matches):
+        alignment_stat_string += "\t\t" + marker + "\t" + str(len(hmm_matches[marker])) + "\n"
+
+    LOGGER.debug(alignment_stat_string)
+    return hmm_matches
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
