@@ -418,6 +418,53 @@ class ContextCreator:
         dbs = [x.strip() for x in dbstring.split(",") if len(x) != 0]
 
         for db in dbs:
+            """
+            if '.hmm' in db: #  Special for HMM DBs
+                '''inputs'''
+            input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
+
+            '''outputs'''
+            hmmoutput = s.blast_results_dir + PATHDELIM + s.sample_name + "." + db.split('.', 1)[0] + "." + 'HMMER' + "out"
+            hmmdomout = s.blast_results_dir + PATHDELIM + s.sample_name + "." + db.split('.', 1)[0] + "." + 'HMMER' + "dom"
+
+            refDbFullName = self.configs.REFDBS + PATHDELIM + 'functional'+ PATHDELIM + db
+
+            context = contextmod.Context()
+            context.name = 'HMM_SEARCH:' + db
+            context.inputs = {'input_filtered_faa' : input_filtered_faa}
+            context.outputs = {'hmmoutput': hmmoutput,
+                                'hmmdomout': hmmdomout
+                                }
+
+            cmd = None
+        
+            pyScript =  self.configs.FUNC_SEARCH
+            searchExec = self.configs.HMMER_EXECUTABLE
+            cmd = ("%s "
+                "--algorithm %s "
+                "--hmmer_executable %s "
+                "--num_threads %s "
+                "--hmmer_query %s "
+                "--hmmer_db %s "
+                "--hmmer_dom %s "
+                "--hmmer_o %s "
+                "--hmmer_stringency %s "
+                "--hmmer_hmm_cov %s "
+                "--hmmer_query_cov %s") \
+                %(pyScript,
+                "HMMER" ,
+                searchExec,
+                num_threads,
+                context.inputs['input_filtered_faa'],
+                refDbFullName,
+                context.outputs['hmmdomout'],
+                # START HERE #
+                input_filtered_faa)
+
+                context.message = self._Message("FASTING AMINO SEQS AGAINST " + db)
+
+            else:
+            """
             '''inputs'''
             input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
 
@@ -428,7 +475,7 @@ class ContextCreator:
                             'formatted' + PATHDELIM + db
 
             context = contextmod.Context()
-            context.name = 'FUNC_SEARCH:' +db
+            context.name = 'FUNC_SEARCH:' + db
             context.inputs = { 'input_filtered_faa' : input_filtered_faa }
             context.outputs = { 'blastoutput': blastoutput}
 

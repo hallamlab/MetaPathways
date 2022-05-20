@@ -70,7 +70,10 @@ def createParser():
     )
 
     blast_group.add_option(
-        "--blast_out", dest="blast_out", default=None, help="BLAST output file"
+        "--blast_out",
+        dest="blast_out",
+        default=None,
+        help="BLAST output file"
     )
 
     blast_group.add_option(
@@ -143,7 +146,10 @@ def createParser():
     )
 
     last_group.add_option(
-        "--last_o", dest="last_o", default=None, help="FAST output file"
+        "--last_o",
+        dest="last_o",
+        default=None,
+        help="FAST output file"
     )
 
     last_group.add_option(
@@ -154,7 +160,71 @@ def createParser():
     )
 
     parser.add_option_group(last_group)
+    """
+    hmmer_group = OptionGroup(parser, "HMMer parameters")
 
+    hmmer_group.add_option(
+        "--hmmer_query",
+        dest="hmmer_query",
+        default=None,
+        help="Query amino acid sequences for HMMer",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_db",
+        dest="hmmer_db",
+        default=None,
+        help="Target reference database (.hmm) for HMMer",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_dom",
+        dest="hmmer_dom",
+        default=None,
+        help="HMMer per-domain hits output file",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_o",
+        dest="hmmer_o",
+        default=None,
+        help="HMMer output file"
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_stringency",
+        dest="hmmer_stringency",
+        default='strict',
+        choices=["strict", "relaxed"],
+        type="str",
+        help="DOM Table parsing stringency [default: 'strict']",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_hmm_cov",
+        dest="hmmer_hmm_cov",
+        default=80,
+        type=int,
+        help="Minimum coverage of hmm profile to pass, range 1-100 [default: 80]",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_query_cov",
+        dest="hmmer_query_cov",
+        default=80,
+        type=int,
+        help="Minimum coverage of query to pass, range 1-100 [default: 80]",
+    )
+
+    hmmer_group.add_option(
+        "--hmmer_executable",
+        dest="hmmer_executable",
+        default=None,
+        help="The HMMer executable",
+    )
+
+    parser.add_option_group(hmmer_group)
+    """
 
     return parser
 
@@ -168,6 +238,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
     elif options.algorithm == "FAST":
         (code, message) = _execute_FAST(options, logger=errorlogger)
+
+    elif options.algorithm == "HMMER":
+        (code, message) = _execute_HMMer(options, logger=errorlogger)
     else:
         gutils.eprintf("ERROR\tUnrecognized algorithm name for FUNC_SEARCH\n")
         if errorlogger:
@@ -270,6 +343,44 @@ def _execute_BLAST(options, logger=None):
     rename(options.blast_out + ".tmp", options.blast_out)
     return (result[0], result[1])
 
+"""
+def _execute_HMMer(options, logger=None):
+    args = []
+
+    if options.hmmer_executable:
+        args.append(options.hmmer_executable)
+
+    if options.hmmer_dom:
+        args += ["--domtblout", options.hmmer_dom + ".tmp"]
+
+    if options.hmmer_o:
+        args += ["-o", options.hmmer_o + ".tmp"]
+
+    if options.num_threads:
+        args += ["--cpu", options.num_threads]
+
+    if options.hmmer_db:
+        args += [options.hmmer_db]
+
+    if options.hmmer_query:
+        args += [options.hmmer_query]
+
+    result = None
+    try:
+        result = sysutils.getstatusoutput(" ".join(args))
+        rename(options.hmmer_o + ".tmp", options.hmmer_o)
+        rename(options.hmmer_dom + ".tmp", options.hmmer_dom)
+    except:
+        message = "Could not run HMMer correctly"
+        if result and len(result) > 1:
+            message = result[1]
+        if logger:
+            logger.printf("ERROR\t%s\n", message)
+        return (1, message)
+
+    return (result[0], result[1])
+"""
+
 def MetaPathways_func_search(
     argv, extra_command=None, errorlogger=None, runstatslogger=None):
 
@@ -288,7 +399,7 @@ def MetaPathways_func_search(
 
     return (0, "")
 
-
+"""
 def define_hmm_domtbl_thresholds(stringency: str, hmm_cov: int, query_cov: int) -> namedtuple:
     thresholds_nt = namedtuple("thresholds", ["perc_aligned", "query_aligned",
                                               "min_acc", "max_e", "max_ie", "min_score",
@@ -314,13 +425,13 @@ def define_hmm_domtbl_thresholds(stringency: str, hmm_cov: int, query_cov: int) 
 
 
 def best_discrete_matches(matches: list) -> list:
-    """
-    Function for finding the best alignment in a list of HmmMatch() objects
-    The best match is based off of the full sequence score
+    #
+    #Function for finding the best alignment in a list of HmmMatch() objects
+    #The best match is based off of the full sequence score
 
-    :param matches: A list of HmmMatch() objects
-    :return: List of the best HmmMatch's
-    """
+    #:param matches: A list of HmmMatch() objects
+    #:return: List of the best HmmMatch's
+    #
     # Code currently only permits multi-domains of the same gene
     dropped_annotations = list()
     len_sorted_matches = sorted(matches, key=lambda x: x.end - x.start)
@@ -359,13 +470,13 @@ def best_discrete_matches(matches: list) -> list:
 
 
 def parse_domain_tables(thresholds, hmm_domtbl_files: dict) -> dict:
-    """
-    Parses HMMER domain tables using predetermined thresholds
+    #
+    #Parses HMMER domain tables using predetermined thresholds
 
-    :param thresholds: A namedtuple instance: namedtuple("thresholds", "max_e max_ie min_acc min_score perc_aligned")
-    :param hmm_domtbl_files: A list of domain table files written by hmmsearch
-    :return: Dictionary of HmmMatch objects indexed by their reference package and/or HMM name
-    """
+    #:param thresholds: A namedtuple instance: namedtuple("thresholds", "max_e max_ie min_acc min_score perc_aligned")
+    #:param hmm_domtbl_files: A list of domain table files written by hmmsearch
+    #:return: Dictionary of HmmMatch objects indexed by their reference package and/or HMM name
+    #
     # Check if the HMM filtering thresholds have been set
     LOGGER.info("Parsing HMMER domain tables for high-quality matches... ")
 
@@ -435,7 +546,7 @@ def parse_domain_tables(thresholds, hmm_domtbl_files: dict) -> dict:
 
     LOGGER.debug(alignment_stat_string)
     return hmm_matches
-
+"""
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
