@@ -172,7 +172,7 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
             )
         mputils.exit_process()
 
-    queryDict = {x[1:].split(' ', 1)[0] : x[1:].replace(' ', '_')
+    queryDict = {x[1:].split(' ', 1)[0].strip('\n') : x[1:].replace(' ', '_').strip('\n')
                  for x in queryseqs.readlines() if x[0] == '>'
                  }
     queryseqs.close()
@@ -182,22 +182,23 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
         fields = re.split("\t", line)
         if len(fields) < 12:
             continue
-        fields[0] = queryDict[str(fields[0].strip())]
-        fields[1] = str(fields[1].strip())
-        fields[2] = float(fields[2].strip())
-        fields[6] = int(fields[6].strip())
-        fields[7] = int(fields[7].strip())
-        fields[10] = float(fields[10].strip())
-        fields[11] = float(fields[11].strip())
-        if subunit in fields[0]:
-            table[str(fields[0].strip())] = [
-                fields[2],
-                fields[10],
-                fields[11],
-                fields[1],
-                fields[6],
-                fields[7],
-            ]
+        if str(fields[0].strip()) in queryDict:
+            fields[0] = queryDict[str(fields[0].strip())]
+            fields[1] = str(fields[1].strip())
+            fields[2] = float(fields[2].strip())
+            fields[6] = int(fields[6].strip())
+            fields[7] = int(fields[7].strip())
+            fields[10] = float(fields[10].strip())
+            fields[11] = float(fields[11].strip())
+            if subunit in fields[0]:
+                table[str(fields[0].strip())] = [
+                    fields[2],
+                    fields[10],
+                    fields[11],
+                    fields[1],
+                    fields[6],
+                    fields[7],
+                ]
 
 
 usage = (

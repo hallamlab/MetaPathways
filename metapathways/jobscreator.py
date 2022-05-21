@@ -118,6 +118,7 @@ class ContextCreator:
 
     def create_preprocess_input_aminos_cmd(self, s):
         """ PREPROCESS_AMINOS """
+        """
         contexts = []
 
         '''inputs'''
@@ -164,6 +165,7 @@ class ContextCreator:
         context.commands = [cmd]
         contexts.append(context)
         return contexts
+        """
 
 
     def  convert_gbk_to_fna_faa_gff_annotated(self, s):
@@ -304,7 +306,7 @@ class ContextCreator:
 
         '''outputs'''
         output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
-        output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.fna"
+        output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
 
         context = contextmod.Context()
@@ -592,7 +594,7 @@ class ContextCreator:
             context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
             contexts.append(context)
         else:
-            input_fna = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".prk.ffn"
+            input_fna = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".fna"
 
         pyScript = self.configs.SCAN_rRNA
         rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
@@ -640,13 +642,18 @@ class ContextCreator:
         """SCAN_tRNA"""
 
         contexts = []
-
         '''inputs'''
-        input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        import pkg_resources
-
+        orf_algo = self.params.get('orf_prediction', 'algorithm') # Have to check if prokka was run
+        if orf_algo == "prokka":
+            input_fasta = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".fna"
+        else:
+            input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
+        
+        #
+        import pkg_resources  # TODO: this isn't the right thing to do here
         TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
         Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
+        #
 
         '''outputs'''
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
@@ -677,11 +684,11 @@ class ContextCreator:
         contexts = []
 
         '''inputs'''
-        input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".gff"
+        input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name + ".gff"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
 
         '''outputs'''
-        output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name+".annot.gff"
+        output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
         output_comparative_annotation  =  s.output_results_annotation_table_dir \
                                             + PATHDELIM + s.sample_name
         dbstring = self.get_dbstring()
@@ -712,10 +719,10 @@ class ContextCreator:
         '''use rRNA stats if they are available'''
         options = ''
         for rRNArefdb in rRNAdbs:
-            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name +\
+            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
                                '.' + rRNArefdb + '.rRNA.stats.txt'
             #print rRNA_stat_results
-            if gutils.hasResults(rRNA_stat_results)  :
+            if gutils.hasResults(rRNA_stat_results):
                 context.inputs['rRNA_stat_results']  = rRNA_stat_results
                 options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
 
@@ -733,9 +740,6 @@ class ContextCreator:
               %(pyScript, context.inputs['input_unannotated_gff'],\
               context.outputs['output_annotated_gff'],  options,\
               context.outputs1['output_comparative_annotation'],s.algorithm )
-
-
-
 
         for refdb in refdbs:
             parsed_file =  s.blast_results_dir + PATHDELIM + s.sample_name\
