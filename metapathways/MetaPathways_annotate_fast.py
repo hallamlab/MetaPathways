@@ -417,7 +417,7 @@ def write_annotation_for_orf(
     orfid,
     sample_name,
     compact_output=True,
-):
+    ):
     global errorcode
     try:
         fields = ["source", "feature", "start", "end", "score", "strand", "frame"]
@@ -562,7 +562,7 @@ def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary, shortenorfid=Fals
             if not name in counter_rRNA:
                 counter_rRNA[name] = 0
 
-            _name = name + "_" + str(counter_rRNA[name])
+            _name = name #+ "_" + str(counter_rRNA[name])
             counter_rRNA[name] = counter_rRNA[name] + 1
 
             if fields[1] != "-":
@@ -672,7 +672,7 @@ def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths):
 
 
 # this adds the features and attributes to  be added to the gff file format for the 16S rRNA genes
-def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths):
+def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths, nCDS_dict):
 
     for rRNA in rRNA_16S_dictionary:
         # print rRNA
@@ -703,7 +703,7 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths):
             "feature": "rRNA",
             "source": "barrnap/BLAST",
             "frame": 0,
-            "product": "SSU/LSU rRNA",
+            "product": nCDS_dict[rRNA]['product'],
             "ec": "",
         }
         rRNA_dictionary[rRNA] = dict.copy()
@@ -745,6 +745,7 @@ def create_annotation(
 
     values = {}
     i = 0
+    nCDS_dict = {}
     for contig in gffreader:
         count = 0
         for orf in gffreader.orf_dictionary[contig]:
@@ -849,9 +850,12 @@ def create_annotation(
                         sample_name,
                         compact_output=compact_output,
                     )
-
+            else:
+                seqid = orf["seqname"].rsplit('_', 1)[0]
+                k_id = seqid + '_' + orf["id"]
+                nCDS_dict[k_id] = orf
+ 
             count += 1  # move to the next orf
-            
     # del orf_dictionary[contig]
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
@@ -863,7 +867,7 @@ def create_annotation(
             process_rRNA_16S_stats(rRNA_16S_stats_file, rRNA_16S_dictionary)
 
         rRNA_dictionary = {}
-        add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths)
+        add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths, nCDS_dict)
         write_16S_tRNA_gene_info(rRNA_dictionary, outputgff_file, "_rRNA")
 
     # now deal with the tRNA sequences  if there is tRNA stats file

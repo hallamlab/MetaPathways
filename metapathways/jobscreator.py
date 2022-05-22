@@ -307,19 +307,23 @@ class ContextCreator:
         '''outputs'''
         output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
+        output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + "rRNA.fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
 
         context = contextmod.Context()
         context.name = 'ORF_TO_AMINO'
         context.inputs = { 'input_gff' : input_gff, 'input_fasta': input_fasta }
-        context.outputs = { 'output_faa': output_faa, 'output_fna': output_fna, 'output_gff' : output_gff }
+        context.outputs = {'output_faa': output_faa, 'output_fna': output_fna,
+                           'output_gff' : output_gff, 'output_rrna': output_rrna
+                           }
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
 
         pyScript = self.configs.ORF_TO_AMINO
-        cmd = "%s -g  %s  -n %s --output_nuc %s --output_amino %s --output_gff %s"\
+        cmd = "%s -g  %s  -n %s --output_nuc %s --output_nuc_rrna %s --output_amino %s --output_gff %s"\
                %(pyScript, context.inputs['input_gff'], context.inputs['input_fasta'],\
-                 context.outputs['output_fna'], context.outputs['output_faa'],\
-                 context.outputs['output_gff'])
+                 context.outputs['output_fna'], context.outputs['output_rrna'],
+                 context.outputs['output_faa'], context.outputs['output_gff']
+                 )
 
         context.message = self._Message("CREATING AMINO ACID SEQS FROM GFF FILE")
         context.commands = [cmd]
@@ -594,7 +598,7 @@ class ContextCreator:
             context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
             contexts.append(context)
         else:
-            input_fna = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".fna"
+            input_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + "rRNA.fna"
 
         pyScript = self.configs.SCAN_rRNA
         rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
@@ -606,7 +610,6 @@ class ContextCreator:
             for rRNA_key in rRNA_map_dict.keys():  # hack to sort out rRNA, needs to be improved
                 if rRNA_key in db.lower():
                     subunit = rRNA_map_dict[rRNA_key]
-            
             '''outputs'''
             rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + 'BLAST' + "out"
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + "." + db + ".rRNA.stats.txt"

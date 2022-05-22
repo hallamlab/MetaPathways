@@ -183,14 +183,14 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
         if len(fields) < 12:
             continue
         if str(fields[0].strip()) in queryDict:
-            fields[0] = queryDict[str(fields[0].strip())]
+            full_f0 = queryDict[str(fields[0].strip())]
             fields[1] = str(fields[1].strip())
             fields[2] = float(fields[2].strip())
             fields[6] = int(fields[6].strip())
             fields[7] = int(fields[7].strip())
             fields[10] = float(fields[10].strip())
             fields[11] = float(fields[11].strip())
-            if subunit in fields[0]:
+            if subunit in full_f0:
                 table[str(fields[0].strip())] = [
                     fields[2],
                     fields[10],
