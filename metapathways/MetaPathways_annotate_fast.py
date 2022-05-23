@@ -264,6 +264,7 @@ def insert_attribute(attributes, attribStr):
         if rawfields[0].strip().lower() == "id":
             orfid = mputils.ShortenORFId(rawfields[1].strip())
             attributes[rawfields[0].strip().lower()] = orfid
+            attributes['orf_id'] = rawfields[1].strip()
         else:
             attributes[rawfields[0].strip().lower()] = rawfields[1].strip()
 
@@ -504,25 +505,45 @@ def write_annotation_for_orf(
         exit_process()
 
 
-def write_16S_tRNA_gene_info(rRNA_dictionary, outputgff_file, tag):
-    fields = ["source", "feature", "start", "end", "score", "strand", "frame"]
-    for rRNA in rRNA_dictionary:
-        output_line = rRNA_dictionary[rRNA]["id"]
-        for field in fields:
-            output_line += "\t" + str(rRNA_dictionary[rRNA][field])
-
-        attributes = "ID=" + mputils.ShortenORFId(rRNA_dictionary[rRNA]["seqname"]) + tag
-        attributes += (
-            ";" + "locus_tag=" + mputils.ShortenORFId(rRNA_dictionary[rRNA]["seqname"]) + tag
-        )
-        attributes += ";" + "orf_length=" + str(rRNA_dictionary[rRNA]["orf_length"])
-        attributes += (
-            ";" + "contig_length=" + str(rRNA_dictionary[rRNA]["contig_length"])
-        )
+def write_16S_tRNA_gene_info(orf_id, orf_rec, r_dictionary, outputgff_file, tag):
+    print(orf_id)
+    print(orf_rec)
+    print(r_dictionary[orf_id])
+    output_line = str(orf_rec["seqname"])
+    if tag == "_rRNA":
+        output_line += "\t" + str(orf_rec["source"])
+        output_line += "\t" + str(orf_rec["feature"])
+        output_line += "\t" + str(orf_rec["start"])
+        output_line += "\t" + str(orf_rec["end"])
+        output_line += "\t" + str(r_dictionary[orf_id]["evalue"])
+        output_line += "\t" + str(orf_rec["strand"])
+        output_line += "\t" + str(orf_rec["frame"])
+        attributes = "ID=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
+        attributes += ";" + "locus_tag=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
+        attributes += ";" + "orf_length=" + str(orf_rec["orf_length"])
+        attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
+        attributes += ";" + "product=" + orf_rec["product"]
+        attributes += ";" + "target=" + r_dictionary[orf_id]["taxonomy"]
         attributes += ";" + "ec="
-        attributes += ";" + "product=" + rRNA_dictionary[rRNA]["product"]
         output_line += "\t" + attributes
-        gutils.fprintf(outputgff_file, "%s\n", output_line)
+
+    elif tag == "_tRNA":
+        output_line += "\t" + str(r_dictionary[orf_id]["source"])
+        output_line += "\t" + str(r_dictionary[orf_id]["feature"])
+        output_line += "\t" + str(r_dictionary[orf_id]["start"])
+        output_line += "\t" + str(r_dictionary[orf_id]["end"])
+        output_line += "\t" + str(r_dictionary[orf_id]["score"])
+        output_line += "\t" + str(r_dictionary[orf_id]["strand"])
+        output_line += "\t" + str(r_dictionary[orf_id]["frame"])
+        attributes = "ID=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
+        attributes += ";" + "locus_tag=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
+        attributes += ";" + "orf_length=" + str(r_dictionary[orf_id]["orf_length"])
+        attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
+        attributes += ";" + "product=" + r_dictionary[orf_id]["product"]
+        attributes += ";" + "target=" + r_dictionary[orf_id]["product"]
+        attributes += ";" + "ec="
+        output_line += "\t" + attributes
+    gutils.fprintf(outputgff_file, "%s\n", output_line)
 
 
 def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary, shortenorfid=False):
@@ -566,11 +587,15 @@ def process_rRNA_16S_stats(rRNA_16S_file, rRNA_16S_dictionary, shortenorfid=Fals
             counter_rRNA[name] = counter_rRNA[name] + 1
 
             if fields[1] != "-":
-                rRNA_16S_dictionary[_name] = [fields[1], fields[2], fields[5]]
-            else:
-                if len(fields) >= 12:
-                    if fields[7] != "-":
-                        rRNA_16S_dictionary[_name] = [fields[7], fields[8], fields[11]]
+                rRNA_16S_dictionary[_name] = {
+                                              'sequence': fields[0],
+                                              'start': fields[1],
+                                              'end': fields[2],
+                                              'similarity': fields[3],
+                                              'evalue': fields[4],
+                                              'bitscore': fields[5],
+                                              'taxonomy': fields[6]
+                                              }
 
     taxonomy_file.close()
 
@@ -672,40 +697,34 @@ def add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths):
 
 
 # this adds the features and attributes to  be added to the gff file format for the 16S rRNA genes
-def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths, nCDS_dict):
-
+def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths):
     for rRNA in rRNA_16S_dictionary:
-        # print rRNA
-        try:
-            orf_length = (
-                abs(int(tRNA_dictionary[rRNA][1]) - int(tRNA_dictionary[rRNA][0])) + 1
-            )
-        except:
-            orf_length = 0
-
-        if rRNA in contig_lengths:
-            contig_length = contig_lengths[rRNA]
+        start = rRNA_16S_dictionary[rRNA]['start']
+        end = rRNA_16S_dictionary[rRNA]['end']
+        if start > end:
+            strand = '-'
         else:
-            contig_length = 0
+            strand = '+'
+        score = rRNA_16S_dictionary[rRNA]['bitscore']
+        taxonomy = rRNA_16S_dictionary[rRNA]['taxonomy']
+        similarity = rRNA_16S_dictionary[rRNA]['similarity']
+        evalue = rRNA_16S_dictionary[rRNA]['evalue']
 
-        strand = "+"
-        reverse = 0
 
         dict = {
             "id": mputils.ContigID(rRNA),
             "seqname": rRNA,
-            "start": str(rRNA_16S_dictionary[rRNA][reverse % 2]),
-            "end": str(rRNA_16S_dictionary[rRNA][(reverse + 1) % 2]),
+            "start": str(start),
+            "end": str(end),
             "strand": strand,
-            "score": str(rRNA_16S_dictionary[rRNA][2]),
-            "orf_length": str(orf_length),
-            "contig_length": str(contig_length),
+            "score": str(score),
             "feature": "rRNA",
-            "source": "barrnap/BLAST",
+            "taxonomy": str(taxonomy),
+            "similarity": str(similarity),
+            "evalue": str(evalue),
             "frame": 0,
-            "product": nCDS_dict[rRNA]['product'],
-            "ec": "",
-        }
+            "ec": ""
+            }
         rRNA_dictionary[rRNA] = dict.copy()
 
 
@@ -743,13 +762,37 @@ def create_annotation(
         )
     gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
 
+    
+    # Deal with the rRNA sequences if there is rRNA stats file
+    if len(rRNA_16S_stats_files) > 0 and contig_lengths:
+        rRNA_16S_dictionary = {}
+        for rRNA_16S_stats_file in rRNA_16S_stats_files:
+            process_rRNA_16S_stats(rRNA_16S_stats_file, rRNA_16S_dictionary)
+
+        rRNA_dictionary = {}
+        add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths)
+
+    # now deal with the tRNA sequences  if there is tRNA stats file
+    if len(tRNA_stats_files) > 0 and contig_lengths:
+        tRNA_dictionary = {}
+        for tRNA_stats_file in tRNA_stats_files:
+            process_tRNA_stats(tRNA_stats_file, tRNA_dictionary)
+
+        tRNA_gff_dictionary = {}
+        add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths)
     values = {}
     i = 0
-    nCDS_dict = {}
     for contig in gffreader:
         count = 0
         for orf in gffreader.orf_dictionary[contig]:
-            if orf['feature'] == 'CDS': # only deal with the CDSs here
+            orf_id = orf['orf_id']
+            if orf_id in rRNA_dictionary:
+                write_16S_tRNA_gene_info(orf_id, orf, rRNA_dictionary, outputgff_file, "_rRNA")
+
+            elif orf_id in tRNA_dictionary:
+                write_16S_tRNA_gene_info(orf_id, orf, tRNA_gff_dictionary, outputgff_file, "_tRNA")
+
+            else:
                 for dbname in dbnames:
                     values[dbname] = 0.0001
                 success = False
@@ -850,35 +893,11 @@ def create_annotation(
                         sample_name,
                         compact_output=compact_output,
                     )
-            else:
-                seqid = orf["seqname"].rsplit('_', 1)[0]
-                k_id = seqid + '_' + orf["id"]
-                nCDS_dict[k_id] = orf
  
             count += 1  # move to the next orf
-    # del orf_dictionary[contig]
+
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
-
-    # now deal with the rRNA sequences  if there is rRNA stats file
-    if len(rRNA_16S_stats_files) > 0 and contig_lengths:
-        rRNA_16S_dictionary = {}
-        for rRNA_16S_stats_file in rRNA_16S_stats_files:
-            process_rRNA_16S_stats(rRNA_16S_stats_file, rRNA_16S_dictionary)
-
-        rRNA_dictionary = {}
-        add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths, nCDS_dict)
-        write_16S_tRNA_gene_info(rRNA_dictionary, outputgff_file, "_rRNA")
-
-    # now deal with the tRNA sequences  if there is tRNA stats file
-    if len(tRNA_stats_files) > 0 and contig_lengths:
-        tRNA_dictionary = {}
-        for tRNA_stats_file in tRNA_stats_files:
-            process_tRNA_stats(tRNA_stats_file, tRNA_dictionary)
-
-        tRNA_gff_dictionary = {}
-        add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths)
-        write_16S_tRNA_gene_info(tRNA_gff_dictionary, outputgff_file, "_tRNA")
 
     outputgff_file.close()
     rename(output_gff_tmp, output_gff)

@@ -265,15 +265,22 @@ class ContextCreator:
 
         if algorithm == "prokka":
             executable =  self.configs.PROKKA_EXECUTABLE
+            cmd = [
+                  pyScript,
+                  "--prod_exec", executable,
+                  "--prod_m",
+                  "--prod_p", mode,
+                  "--prod_f", "gff",
+                  "--prod_g", translation_table,
+                  "--prod_input", context.inputs['input_file'],
+                  "--prod_prefix", output_prefix,
+                  "--prod_outdir", output_dir,
+                  "--prod_nthreads", num_threads,
+             ]
 
         if algorithm == "prodigal":
             executable =  self.configs.PRODIGAL_EXECUTABLE
-
-        if algorithm == "FGS+":
-            executable = self.configs.FGSPlus_EXECUTABLE
-
-
-        cmd = [
+            cmd = [
                   pyScript,
                   "--prod_exec", executable,
                   "--prod_m",
@@ -282,12 +289,11 @@ class ContextCreator:
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
                   "--prod_output", context.outputs['output_file'],
-                  "--prod_prefix", output_prefix,
-                  "--prod_outdir", output_dir,
                   "--prod_nthreads", num_threads,
              ]
+
         if algorithm == "FGS+":
-            num_threads = self.configs.NUM_CPUS
+            executable = self.configs.FGSPlus_EXECUTABLE
             cmd += ["--algorithm", "FGS+"]
             cmd += ["--nthreads", num_threads]
 
@@ -307,7 +313,7 @@ class ContextCreator:
         '''outputs'''
         output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
-        output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + "rRNA.fna"
+        output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
 
         context = contextmod.Context()
@@ -598,7 +604,7 @@ class ContextCreator:
             context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
             contexts.append(context)
         else:
-            input_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + "rRNA.fna"
+            input_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
 
         pyScript = self.configs.SCAN_rRNA
         rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
@@ -725,18 +731,17 @@ class ContextCreator:
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
                                '.' + rRNArefdb + '.rRNA.stats.txt'
             #print rRNA_stat_results
-            if gutils.hasResults(rRNA_stat_results):
-                context.inputs['rRNA_stat_results']  = rRNA_stat_results
-                options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
+            #if gutils.hasResults(rRNA_stat_results):
+            context.inputs['rRNA_stat_results']  = rRNA_stat_results
+            options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
 
 
         '''use rRNA stats if they are available'''
         tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.stats.txt'
-        if gutils.hasResults(tRNA_stat_results):
-            context.inputs['tRNA_stat_results']  = tRNA_stat_results
-            options += " --tRNA " +  context.inputs['tRNA_stat_results']
-
-
+        #if gutils.hasResults(tRNA_stat_results):
+        context.inputs['tRNA_stat_results']  = tRNA_stat_results
+        options += " --tRNA " +  context.inputs['tRNA_stat_results']
+        
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \
                   --algorithm %s "\

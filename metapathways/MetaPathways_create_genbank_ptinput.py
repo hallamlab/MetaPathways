@@ -362,17 +362,17 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
 
                 if compactid in orf_to_taxonid:
                     attrib['taxon'] = orf_to_taxonid[compactid]
-                if (('rxn' in attrib) or ('ec' in attrib)):
-                    l_func = attrib['function']
-                    if l_func in funct_dict: # only want to keep one ORF/functional annotation
-                        funct_dict[l_func].append(shortid)
-                    else:
-                        write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
-                        funct_dict[l_func] = [shortid]
+                #if (('rxn' in attrib) or ('ec' in attrib)):
+                l_func = attrib['function']
+                if l_func in funct_dict: # only want to keep one ORF/functional annotation
+                    funct_dict[l_func].append(shortid)
+                else:
+                    write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+                    funct_dict[l_func] = [shortid]
 
-                    # append to the gen elements file
-                    if compact_output==False:
-                        append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+                # append to the gen elements file
+                if compact_output==False:
+                    append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
                 #endfor
 
 
