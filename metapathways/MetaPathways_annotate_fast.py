@@ -506,9 +506,6 @@ def write_annotation_for_orf(
 
 
 def write_16S_tRNA_gene_info(orf_id, orf_rec, r_dictionary, outputgff_file, tag):
-    print(orf_id)
-    print(orf_rec)
-    print(r_dictionary[orf_id])
     output_line = str(orf_rec["seqname"])
     if tag == "_rRNA":
         output_line += "\t" + str(orf_rec["source"])
