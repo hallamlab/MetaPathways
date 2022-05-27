@@ -406,7 +406,7 @@ def create_annotation(
                     taxonomy = Taxons[shortORFId]
             else:
                 taxonomy = "root"
-
+            print(orf)
             product = orf["product"]
             orf_id = orf["id"]
             seqname = orf["seqname"]

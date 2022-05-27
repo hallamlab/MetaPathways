@@ -917,75 +917,25 @@ def process_product(product, database, similarity_threshold=0.9):
 
     processed_product = ""
 
-    # COG
-    if database == "cog":
-        results = re.search(r"Function: (.+?) #", product)
-        if results:
-            processed_product = results.group(1)
+    if 'cazy' in database:
+        processed_product = product
+        comment = ''
 
-    # KEGG: split and process
+    elif (('cog' in database) or ('refseq' in database)):
+        processed_product = product.rsplit(' [', 1)[0]
+        comment = '[' + product.rsplit(' [', 1)[1]
 
-    elif database == "kegg":
-        kegg_products = re.split(r"\s*;\s+", product)
-        for kegg_product in kegg_products:
-            # Toss out organism:ID pairs, gene names, and KO IDs
-            kegg_product = re.sub(r"^lcl[|]", "", kegg_product)
-            kegg_product = re.sub(r"[a-z]{3}:\S+", "", kegg_product)
-            kegg_product = kegg_product.strip()
-            kegg_product = re.sub(r"(, \b[a-z]{3}[A-Z]?\b)+", "", kegg_product)
-            kegg_product = re.sub(r"^\b[a-z]{3}[A-Z]?\b", "", kegg_product)
-            # get KO number
-            kegg_product = re.sub(r"\bK\d{5}\b", "", kegg_product)
+    elif 'metacyc' in database:
+        processed_product = product.rsplit(' (', 1)[0]
+        comment = '(' + product.rsplit(' (', 1)[1]
 
-            # Also toss out anything between square brackets
-            kegg_product = re.sub(r"\[.*\]", "", kegg_product)
+    elif 'sprot' in database:
+        processed_product = product.rsplit(' OS=', 1)[0]
+        comment = ' OS=' + product.rsplit(' OS=', 1)[1]
 
-            if kegg_product.strip():
-                processed_product = kegg_product.strip()
-
-    # RefSeq: split and process
-    elif database == "refseq":
-        for subproduct in product.split("; "):
-            subproduct = re.sub(r"\[.+?\]", "", subproduct)
-            subproduct = re.sub(r"[a-z]{2,}\|(.+?)\|\S*", "", subproduct)
-            subproduct = re.sub(r"\[", "", subproduct)
-            if subproduct.strip():
-                processed_product = subproduct.strip()
-
-    # MetaCyc: split and process
-
-    elif database == "metacyc":
-        # Pull out first name after the accession code:
-        product_name = product.split("#")[0].strip()
-        product_name = re.sub(r"^[^ ]* ", "", product_name)
-        product_name = re.sub(r" OS=.*", "", product_name)
-
-        if product_name:
-            processed_product = product_name
-
-    # Seed: split and process
-
-    elif database == "seed":
-        for subproduct in product.split("; "):
-            # subproduct = re.sub(r'[a-z]{2,}\|(.+?)\|\S*', '', subproduct)
-            subproduct = re.sub(r"\[.+?\]", "", subproduct)
-            subproduct = re.sub(r"\(.+?\)", "", subproduct)
-            if subproduct.strip():
-                processed_product = subproduct.strip()
-
-    elif database == "cazy":
-        for subproduct in product.split("; "):
-            # subproduct = re.sub(r'[a-z]{2,}\|(.+?)\|\S*', '', subproduct)
-            subproduct = re.sub(r"\[.+?\]", "", subproduct)
-            subproduct = re.sub(r"\(.+?\)", "", subproduct)
-            if subproduct.strip():
-                processed_product = subproduct.strip()
-
-    # MetaCyc: split and process
-    # Generic
-    else:
-        processed_product = mputils.strip_taxonomy(product)
-        processed_product = re.sub(r"\[.*\]", "", processed_product)
+    elif 'uniref' in database:
+        processed_product = product.rsplit(' n=', 1)[0]
+        comment = ' n=' + product.rsplit(' n=', 1)[1]
 
     words = [x.strip() for x in processed_product.split()]
     filtered_words = []
@@ -995,15 +945,10 @@ def process_product(product, database, similarity_threshold=0.9):
         if not underscore_pattern.search(word) and not arrow_pattern.search(word):
             filtered_words.append(word)
 
-    # processed_product = ' '.join(filtered_words)
-    # Chop out hypotheticals
     processed_product = remove_repeats(filtered_words)
     processed_product = re.sub(";", "", processed_product)
 
-    # can actually be a proper annotation
-    # processed_product = re.sub(r'hypothetical protein','', processed_product)
-
-    return processed_product
+    return processed_product, comment
 
 
 def remove_repeats(filtered_words):
@@ -1093,9 +1038,7 @@ class BlastOutputTsvParser(object):
                 self.data["expect"] = float(fields[self.fieldmap["expect"]])
                 self.data["identity"] = float(fields[self.fieldmap["identity"]])
                 self.data["ec"] = fields[self.fieldmap["ec"]]
-                self.data["product"] = re.sub(
-                    r"=", " ", fields[self.fieldmap["product"]]
-                )
+                self.data["product"] = fields[self.fieldmap["product"]]
 
                 self.i = self.i + 1
                 return self.data
@@ -1194,9 +1137,9 @@ def process_parsed_blastoutput(
             annotation["target"] = data["target"]
             annotation["bsr"] = data["bsr"]
             annotation["ec"] = data["ec"]
-            annotation["product"] = mputils.strip_taxonomy(
-                process_product(data["product"], dbname)
-            )
+            pprod, comm = process_product(data["product"], dbname)
+            annotation["product"] = pprod #mputils.strip_taxonomy()
+            annotation["comment"] = comm
             annotation["value"] = compute_annotation_value(annotation) * weight
             annotation["bitscore"] = data["bitscore"]
 
