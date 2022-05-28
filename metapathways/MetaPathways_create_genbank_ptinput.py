@@ -388,7 +388,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                             # append to the gen elements file
                             if compact_output==False:
                                 append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
-                        else:
+                        elif l_func in cprod_dict:
                             cprod_dict[l_func].append(shortid)
                     #endfor
 
