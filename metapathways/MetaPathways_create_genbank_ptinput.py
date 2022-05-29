@@ -284,6 +284,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
     ec_df.dropna(subset = ['EC'], inplace=True)
     ec_df = ec_df.query('UniProtKB in @trim_set_list')
+    ec_df['EC'] = [x.replace('EC:') for x in ec_df['EC']]
     ec_dict = ec_df.groupby('UniProtKB')['EC'].apply(list).to_dict()
     rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
     rxn_df = rxn_df.query('MC in @trim_set_list')
