@@ -924,8 +924,12 @@ def process_product(product, database, similarity_threshold=0.9):
         comment = ''
 
     elif (('cog' in database) or ('refseq' in database)):
-        processed_product = product.rsplit(' [', 1)[0]
-        comment = '[' + product.rsplit(' [', 1)[1]
+        if '[' in product: # helps with edge cases
+            processed_product = product.rsplit(' [', 1)[0]
+            comment = '[' + product.rsplit(' [', 1)[1]
+        else:
+            processed_product = product
+            comment = ''
 
     elif 'metacyc' in database:
         processed_product = product.rsplit(' (', 1)[0]
