@@ -368,7 +368,7 @@ def create_annotation(
     if not path.exists(output_dir):
         makedirs(output_dir)
 
-    orf_dictionary = {}
+    #orf_dictionary = {}
     # process_gff_file(annotated_gff, orf_dictionary)
     gffreader = mputils.GffFileParser(annotated_gff)
 
@@ -406,7 +406,6 @@ def create_annotation(
                     taxonomy = Taxons[shortORFId]
             else:
                 taxonomy = "root"
-
             product = orf["product"]
             orf_id = orf["id"]
             seqname = orf["seqname"]

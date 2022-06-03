@@ -381,7 +381,6 @@ def process(argv):
         "FAST_EXECUTABLE"      : 'fastal',
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "PROKKA_EXECUTABLE"    : 'prokka',
-        "HMMER_EXECUTABLE"     : 'hmmsearch',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
         "RPKM_EXECUTABLE"      : 'metacount',
         "NUM_CPUS"             : opts.num_cpus,

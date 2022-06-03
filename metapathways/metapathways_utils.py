@@ -300,7 +300,7 @@ class GffFileParser(object):
         contig_dict[fields[0]].append(attributes)
 
     def insert_attribute(self, attributes, attribStr):
-        rawfields = re.split("=", attribStr)
+        rawfields = attribStr.split("=", 1)
         if len(rawfields) == 2:
             attributes[rawfields[0].strip().lower()] = rawfields[1].strip()
 
