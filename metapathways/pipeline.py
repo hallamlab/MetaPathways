@@ -66,6 +66,9 @@ def createParser():
     parser.add_option("-d", "--dirref", dest="refdb_dir",
                       help="location of the reference DB [REQUIRED]")
 
+    parser.add_option("-r", "--readsdir", dest="readsdir",
+                      help="location of the raw fastq data for RPKM and TPM [optional]")
+    
     parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
                       help="max number of cores to use in multhreaded steps [DEFAULT 1]")
 
@@ -107,7 +110,7 @@ def derive_sample_name(filename):
     basename = path.basename(filename)
 
     shortname = re.sub('[.]gbk$','',basename, re.IGNORECASE)
-    shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',shortname, re.IGNORECASE)
+    shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',shortname, re.IGNORECASE)
     return shortname
 
 def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlogger = None):
@@ -164,12 +167,12 @@ def create_an_input_output_pair(input_file, output_dir,  globalerrorlogger=None)
 
     input_output = {}
 
-    if not re.search(r'.(fasta|fas|fna|faa|gbk|gff|fa)$',input_file, re.IGNORECASE):
+    if not re.search(r'.(fasta|fas|fna|faa|gbk|gff|fa|fna.gz)$',input_file, re.IGNORECASE):
        return input_output
 
     shortname = None
     shortname = re.sub('[.]gbk$','',input_file, re.IGNORECASE)
-    shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',input_file, re.IGNORECASE)
+    shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
     #    shortname = re.sub('[.]gff$','',input_file, re.IGNORECASE)
 
     shortname = re.sub(r'.*' + PATHDELIM ,'',shortname)
@@ -185,7 +188,7 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
     fileslist =  listdir(input_dir)
 
     gbkPatt = re.compile('[.]gbk$',re.IGNORECASE)
-    fastaPatt = re.compile('[.](fasta|fas|fna|faa|fa)$',re.IGNORECASE)
+    fastaPatt = re.compile('[.](fasta|fas|fna|faa|fa|fna.gz)$',re.IGNORECASE)
     gffPatt = re.compile('[.]gff$',re.IGNORECASE)
 
     input_files = {}
@@ -201,12 +204,12 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
        if result==None:
           result =  fastaPatt.search(input_file)
           if result:
-             shortname = re.sub('[.](fasta|fas|fna|faa|fa)$','',input_file, re.IGNORECASE)
+             shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
 
        if shortname == None:
           continue
 
-       if re.search('.(fasta|fas|fna|faa|gff|gbk|fa)$',input_file, re.IGNORECASE):
+       if re.search('.(fasta|fas|fna|faa|gff|gbk|fa|fna.gz)$',input_file, re.IGNORECASE):
           if check_for_error_in_input_file_name(shortname, globalerrorlogger=globalerrorlogger):
              input_files[input_file] = shortname
 
@@ -219,7 +222,7 @@ def create_input_output_pairs(input_dir, output_dir,  globalerrorlogger=None):
 def removeSuffix(sample_subset_in):
     sample_subset_out = []
     for sample_name in sample_subset_in:
-       mod_name = re.sub('.(fasta|fas|fna|faa|gff|gbk|fa)$','',sample_name)
+       mod_name = re.sub('.(fasta|fas|fna|faa|gff|gbk|fa|fna.gz)$','',sample_name)
        sample_subset_out.append(mod_name)
 
     return sample_subset_out
@@ -300,8 +303,6 @@ def process(argv):
     command_line_params={}
     command_line_params['verbose']= opts.verbose
 
-    print(parameter_fp)
-    print("TODO -- pipeline 309")
     if not path.exists(parameter_fp):
         gutils.eprintf("%-10s: No parameters file %s found!\n" %('WARNING', parameter_fp))
         gutils.eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
@@ -337,7 +338,6 @@ def process(argv):
 
     # add check the config parameters
     sorted_input_output_list = sorted(input_output_list.keys())
-
     filetypes = gutils.check_file_types(sorted_input_output_list)
 
     #stop on in valid samples
@@ -365,7 +365,7 @@ def process(argv):
         "ORF_TO_AMINO"         : "MetaPathways_create_amino_sequences",
         "FUNC_SEARCH"          : "MetaPathways_func_search",
         "PARSE_FUNC_SEARCH"    : "MetaPathways_parse_blast",
-        "COMPUTE_REFSCORES"    : "python_scripts/MetaPathways_refscore",
+        "COMPUTE_REFSCORES"    : "MetaPathways_refscore",
         "ANNOTATE_ORFS"        : "MetaPathways_annotate_fast",
         "CREATE_ANNOT_REPORTS" : "MetaPathways_create_reports_fast",
         "GENBANK_FILE"         : "MetaPathways_create_genbank_ptinput",
@@ -397,7 +397,10 @@ def process(argv):
                 algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
 
                 s = sampledata.SampleData()
-                s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
+                if opts.readsdir:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=opts.readsdir)  
+                else:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
                 s.setParameter('FILE_TYPE', filetypes[input_file][0])
                 s.setParameter('SEQ_TYPE', filetypes[input_file][1])

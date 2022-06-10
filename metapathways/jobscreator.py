@@ -194,7 +194,7 @@ class ContextCreator:
         if annotated == True:
             output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         else:
-            output_gff = s.orf_prediction_dir + s.sample_name + ".unannot.gff"
+            output_gff = s.orf_prediction_dir + s.sample_name + "unannot.gff"
 
         mapping_file =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
 
@@ -233,7 +233,6 @@ class ContextCreator:
         return contexts
 
 
-
     def create_orf_prediction_cmd(self, s) :
         """ ORF_PREDICTION """
         contexts = []
@@ -255,16 +254,13 @@ class ContextCreator:
 
         mode = self.params.get('orf_prediction', 'mode')
 
+        num_threads = str(self.configs.NUM_CPUS)
+
         pyScript = self.configs.ORF_PREDICTION
 
         if algorithm == "prodigal":
             executable =  self.configs.PRODIGAL_EXECUTABLE
-
-        if algorithm == "FGS+":
-            executable = self.configs.FGSPlus_EXECUTABLE
-
-
-        cmd = [
+            cmd = [
                   pyScript,
                   "--prod_exec", executable,
                   "--prod_m",
@@ -272,17 +268,16 @@ class ContextCreator:
                   "--prod_f", "gff",
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
-                  "--prod_output", context.outputs['output_gff'], #"--strand",  strand
+                  "--prod_output", context.outputs['output_gff'],
+                  "--prod_nthreads", num_threads,
              ]
-        if algorithm == "FGS+":
-            num_threads = self.configs.NUM_CPUS
-            cmd += ["--algorithm", "FGS+"]
-            cmd += ["--nthreads", num_threads]
 
         context.commands = [' '.join(cmd)]
         context.message = self._Message("ORF PREDICTION")
         contexts.append(context)
+        
         return contexts
+
 
     def create_aa_orf_sequences_cmd(self, s):
         """ ORF_TO_AMINO """
@@ -296,23 +291,28 @@ class ContextCreator:
         output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".faa"
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
+        output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
 
         context = contextmod.Context()
         context.name = 'ORF_TO_AMINO'
         context.inputs = { 'input_gff' : input_gff, 'input_fasta': input_fasta }
-        context.outputs = { 'output_faa': output_faa, 'output_fna': output_fna, 'output_gff' : output_gff }
+        context.outputs = {'output_faa': output_faa, 'output_fna': output_fna,
+                           'output_gff' : output_gff, 'output_rrna': output_rrna
+                           }
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
 
         pyScript = self.configs.ORF_TO_AMINO
-        cmd = "%s -g  %s  -n %s --output_nuc %s --output_amino %s --output_gff %s"\
+        cmd = "%s -g  %s  -n %s --output_nuc %s --output_nuc_rrna %s --output_amino %s --output_gff %s"\
                %(pyScript, context.inputs['input_gff'], context.inputs['input_fasta'],\
-                 context.outputs['output_fna'], context.outputs['output_faa'],\
-                 context.outputs['output_gff'])
+                 context.outputs['output_fna'], context.outputs['output_rrna'],
+                 context.outputs['output_faa'], context.outputs['output_gff']
+                 )
 
         context.message = self._Message("CREATING AMINO ACID SEQS FROM GFF FILE")
         context.commands = [cmd]
         contexts.append(context)
         return contexts
+
 
     def create_create_filtered_amino_acid_sequences_cmd(self, s):
         """FILTER_AMINOS"""
@@ -557,18 +557,20 @@ class ContextCreator:
         pyScript = self.configs.PARSE_FUNC_SEARCH  #TODO: why is this here?
         
         num_threads = self.configs.NUM_CPUS
-
         """Run BARRNAP on fasta to extract rRNAs"""
+
         '''inputs'''
         input_fasta = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".fasta"
+
         '''outputs'''
-        rRNA_barout_seq = s.preprocessed_dir +  PATHDELIM + s.sample_name + "rRNA.fasta"
-        rRNA_barout_gff = s.preprocessed_dir +  PATHDELIM + s.sample_name + "rRNA.gff"
+        rRNA_barout_seq = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
+        rRNA_barout_gff = s.orf_prediction_dir +  PATHDELIM + s.sample_name + "rRNA.gff"
 
         context = contextmod.Context()
         context.name = 'SCAN_rRNA:barrnap'
         context.inputs = { 'input_fasta':input_fasta }
         context.outputs = { 'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff': rRNA_barout_gff }
+
         '''build command'''
         bar_exe = shutil.which('barrnap')
         if bar_exe == None:
@@ -579,7 +581,7 @@ class ContextCreator:
         context.status = self.params.get('metapaths_steps','SCAN_rRNA')
         context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
         contexts.append(context)
-    
+
         pyScript = self.configs.SCAN_rRNA
         rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
         subunit = '16S'
@@ -590,7 +592,6 @@ class ContextCreator:
             for rRNA_key in rRNA_map_dict.keys():  # hack to sort out rRNA, needs to be improved
                 if rRNA_key in db.lower():
                     subunit = rRNA_map_dict[rRNA_key]
-            
             '''outputs'''
             rRNA_blastout = s.blast_results_dir + PATHDELIM + s.sample_name + ".rRNA." + db + "." + 'BLAST' + "out"
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + "." + db + ".rRNA.stats.txt"
@@ -626,14 +627,12 @@ class ContextCreator:
         """SCAN_tRNA"""
 
         contexts = []
-
         '''inputs'''
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
         import pkg_resources
-
         TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
         Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
-
+        
         '''outputs'''
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
         tRNA_fasta_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
@@ -667,7 +666,7 @@ class ContextCreator:
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
 
         '''outputs'''
-        output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name+".annot.gff"
+        output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
         output_comparative_annotation  =  s.output_results_annotation_table_dir \
                                             + PATHDELIM + s.sample_name
         dbstring = self.get_dbstring()
@@ -698,30 +697,25 @@ class ContextCreator:
         '''use rRNA stats if they are available'''
         options = ''
         for rRNArefdb in rRNAdbs:
-            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name +\
+            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
                                '.' + rRNArefdb + '.rRNA.stats.txt'
             #print rRNA_stat_results
-            if gutils.hasResults(rRNA_stat_results)  :
-                context.inputs['rRNA_stat_results']  = rRNA_stat_results
-                options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
+            context.inputs['rRNA_stat_results']  = rRNA_stat_results
+            options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
 
 
         '''use rRNA stats if they are available'''
         tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.stats.txt'
-        if gutils.hasResults(tRNA_stat_results):
-            context.inputs['tRNA_stat_results']  = tRNA_stat_results
-            options += " --tRNA " +  context.inputs['tRNA_stat_results']
-
-
+        #if gutils.hasResults(tRNA_stat_results):
+        context.inputs['tRNA_stat_results']  = tRNA_stat_results
+        options += " --tRNA " +  context.inputs['tRNA_stat_results']
+        
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \
                   --algorithm %s "\
               %(pyScript, context.inputs['input_unannotated_gff'],\
               context.outputs['output_annotated_gff'],  options,\
               context.outputs1['output_comparative_annotation'],s.algorithm )
-
-
-
 
         for refdb in refdbs:
             parsed_file =  s.blast_results_dir + PATHDELIM + s.sample_name\
@@ -736,6 +730,7 @@ class ContextCreator:
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]
         contexts.append(context)
+        
         return contexts
 
     def create_genbank_file_cmd(self, s):
@@ -792,6 +787,11 @@ class ContextCreator:
         basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree'
         ncbi_tree = basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt'
         taxonomy_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
+        annotation_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.1.txt'
+        basefunct = self.configs.REFDBS + PATHDELIM + 'functional_categories'
+        ec_mapping = basefunct + PATHDELIM + 'Uniprot_KEGG_EC_map.tsv'
+        rxn_mapping = basefunct + PATHDELIM + 'MetaCyc-monomer-rxn-pairs.tsv'
+        
         '''outputs'''
 
         context = contextmod.Context()
@@ -805,7 +805,10 @@ class ContextCreator:
 
         context.inputs1 = {
                              'ncbi_tree': ncbi_tree,
-                             'taxonomy_table': taxonomy_table
+                             'taxonomy_table': taxonomy_table,
+                             'annotation_table': annotation_table,
+                             'ec_mapping': ec_mapping,
+                             'rxn_mapping': rxn_mapping
                           }
 
 
@@ -853,6 +856,10 @@ class ContextCreator:
             cmd += ' --taxonomy-table ' + context.inputs1['taxonomy_table']
             cmd += ' -p ' + context.inputs['input_amino_acid_fasta']
             cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
+            cmd += ' --ec-mapping ' + context.inputs1['ec_mapping']
+            cmd += ' --rxn-mapping ' + context.inputs1['rxn_mapping']
+            cmd += ' --annotation-table ' + context.inputs1['annotation_table']
+
 
         context.message = self._Message("PATHOLOGIC INPUT" )
 
@@ -878,12 +885,12 @@ class ContextCreator:
         basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree'
         context.inputs = {
             'input_annot_gff':input_annot_gff,
-            'KO_classification':basefun + PATHDELIM +  'KO_classification.txt',
-            'COG_categories':basefun + PATHDELIM +  'COG_categories.txt',
-            'SEED_subsystems':basefun + PATHDELIM + 'SEED_subsystems.txt',
-            'CAZY_hierarchy':basefun + PATHDELIM + 'CAZY_hierarchy.txt',
+            #'KO_classification':basefun + PATHDELIM +  'KO_classification.txt',
+            #'COG_categories':basefun + PATHDELIM +  'COG_categories.txt',
+            #'SEED_subsystems':basefun + PATHDELIM + 'SEED_subsystems.txt',
+            #'CAZY_hierarchy':basefun + PATHDELIM + 'CAZY_hierarchy.txt',
             'ncbi_taxonomy_tree': basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt',
-            'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
+            #'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
         }
 
         context.outputs = {
@@ -908,20 +915,28 @@ class ContextCreator:
         #  --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
         #  --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
 
-        cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
-               --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-               --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
-             %(\
-                pyScript, \
-                context.inputs['input_annot_gff'], \
-                context.inputs['KO_classification'], \
-                context.inputs['COG_categories'],  \
-                context.inputs['SEED_subsystems'], \
-                context.inputs['CAZY_hierarchy'], \
-                context.outputs['output_results_annotation_table_dir'], \
-                context.inputs['ncbi_taxonomy_tree'], \
-                context.inputs['ncbi_megan_map']
-             )
+        """cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
+                                       --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
+                                       --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
+                                     %(\
+                                        pyScript, \
+                                        context.inputs['input_annot_gff'], \
+                                        context.inputs['KO_classification'], \
+                                        context.inputs['COG_categories'],  \
+                                        context.inputs['SEED_subsystems'], \
+                                        context.inputs['CAZY_hierarchy'], \
+                                        context.outputs['output_results_annotation_table_dir'], \
+                                        context.inputs['ncbi_taxonomy_tree'], \
+                                        context.inputs['ncbi_megan_map']
+                                     )"""
+        cmd = "%s  --input-annotated-gff %s  --output-dir %s \
+                                       --ncbi-taxonomy-map %s"\
+                                     %(\
+                                        pyScript, \
+                                        context.inputs['input_annot_gff'], \
+                                        context.outputs['output_results_annotation_table_dir'], \
+                                        context.inputs['ncbi_taxonomy_tree'], \
+                                     )                             
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
 
         #add the command now, remove to disable in a hackish way
@@ -952,8 +967,10 @@ class ContextCreator:
 
 
         '''output'''
-        rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_rpkm.txt"
-        stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_read_counts_stats.txt"
+        rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_counts.txt"
+        stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_counts_stats.txt"
+
+        num_threads = self.configs.NUM_CPUS
 
         context = contextmod.Context()
         context1 = contextmod.Context()
@@ -979,13 +996,13 @@ class ContextCreator:
 
         pyScript = self.configs.RPKM_CALCULATION
 
-        cmd = "%s -c %s --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s"\
+        cmd = "%s -c %s --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
               % (pyScript, context.inputs['output_fas'], 
                  context1.inputs['rpkmExec'],\
                  context.inputs['rpkm_input'], context.inputs['output_gff'],\
                  context1.outputs['rpkm_output'], 
                  s.sample_name, context.outputs['stats_file'],\
-                 context.inputs['bwaFolder'], context1.inputs['bwaExec']
+                 context.inputs['bwaFolder'], context1.inputs['bwaExec'], num_threads
                  )
 
         context.status = self.params.get('metapaths_steps', 'COMPUTE_TPM')

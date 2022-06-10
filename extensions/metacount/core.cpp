@@ -1,5 +1,4 @@
 #include "core.h"
-#include "types.h"
 
 using namespace std;
 
@@ -31,7 +30,6 @@ CONTIG_ORF *create_contig_orf_map(const string &orf_file) {
                  << "\t" << shorten_id(match.subject, ORFID) << "\t" 
                  << match.start << "\t"<< match.end << std::endl;
 */
-
      
        contigid =  shorten_id(match.query, CONTIGID); 
        //orfid =  shorten_id(match.subject, ORFID); 
@@ -48,11 +46,6 @@ CONTIG_ORF *create_contig_orf_map(const string &orf_file) {
        ORFINFO *orfinfo = new ORFINFO(orfid, match.start, match.end);
        it->second->push_back(orfinfo);
 
-/*
-       if(i%10000==0) {
-           std::cout << "\n\033[F\033[J";
-       }
-*/
     }
     delete parser;
     return contig_orf;
@@ -73,9 +66,10 @@ std::map<string, uint32_t> * get_contig_information(vector<string>  read_map_fil
      samIn.ReadHeader(samFileHeader);
      while ((headerRec = samFileHeader.getNextSQRecord()) != NULL) {
        //std::cout << headerRec->getTagValue("SN") << "\t" << headerRec->getTagValue("LN") <<  std::endl;
-       contig_name = headerRec->getTagValue("SN");
-       contig_len = strToUint16(headerRec->getTagValue("LN"));
-       contig_length->insert(std::pair<string, uint32_t>(contig_name, contig_len));       
+        contig_name = headerRec->getTagValue("SN");
+        string ln_str = headerRec->getTagValue("LN");
+        contig_len = std::stoi(ln_str);
+        contig_length->insert(std::pair<string, uint32_t>(contig_name, contig_len));       
      }
   }
   return contig_length;
@@ -130,7 +124,7 @@ std::map<string, uint32_t> * read_bam_files(RESULTS &results,
 
      while (samIn.ReadRecord(samFileHeader, samRecord)) {
        contigid =  shorten_id(samRecord.getReferenceName(), CONTIGID); 
-
+       
        sam_file_stats->num_total_alns++;
        
        if (contig_read_counts->find(contigid) ==  contig_read_counts->end()) {
@@ -204,7 +198,7 @@ std::map<string, uint32_t> * read_bam_files(RESULTS &results,
                  << "\t" << samRecord.get1BasedPosition() + samRecord.getAlignmentLength() - 1
                  << std::endl;
 #endif
-     }
+     } //while
     // sam_file_stats->print_stats(&std::cout);
   }
 

@@ -144,7 +144,7 @@ def append_taxonomic_information(databaseSequences, table, params):
                 table[key].append("-")
 
 
-def process_blastout_file(blast_file, database, table, subunit, errorlogger=None):
+def process_blastout_file(blast_file, database, table, subunit, query_fna, errorlogger=None):
     try:
         blastfile = open(blast_file, "r")
     except IOError:
@@ -161,27 +161,44 @@ def process_blastout_file(blast_file, database, table, subunit, errorlogger=None
     blastLines = blastfile.readlines()
     blastfile.close()
 
+    try:
+        queryseqs = open(query_fna, "r")
+    except IOError:
+        gutils.eprintf("ERROR : Cannot write read file " + query_fna + " !")
+        if errorlogger != None:
+            errorlogger.write(
+                "STATS_rRNA\tERROR\tCannot find read query sequences "
+                + query_fna
+            )
+        mputils.exit_process()
+
+    queryDict = {x[1:].split(' ', 1)[0].strip('\n') : x[1:].replace(' ', '_').strip('\n')
+                 for x in queryseqs.readlines() if x[0] == '>'
+                 }
+    queryseqs.close()
+
     for line in blastLines:
         line = line.strip()
         fields = re.split("\t", line)
         if len(fields) < 12:
             continue
-        fields[0] = str(fields[0].strip())
-        fields[1] = str(fields[1].strip())
-        fields[2] = float(fields[2].strip())
-        fields[6] = int(fields[6].strip())
-        fields[7] = int(fields[7].strip())
-        fields[10] = float(fields[10].strip())
-        fields[11] = float(fields[11].strip())
-        if subunit in fields[0]:
-            table[str(fields[0].strip())] = [
-                fields[2],
-                fields[10],
-                fields[11],
-                fields[1],
-                fields[6],
-                fields[7],
-            ]
+        if str(fields[0].strip()) in queryDict:
+            full_f0 = queryDict[str(fields[0].strip())]
+            fields[1] = str(fields[1].strip())
+            fields[2] = float(fields[2].strip())
+            fields[6] = int(fields[6].strip())
+            fields[7] = int(fields[7].strip())
+            fields[10] = float(fields[10].strip())
+            fields[11] = float(fields[11].strip())
+            if subunit in full_f0:
+                table[str(fields[0].strip())] = [
+                    fields[2],
+                    fields[10],
+                    fields[11],
+                    fields[1],
+                    fields[6],
+                    fields[7],
+                ]
 
 
 usage = (
@@ -238,15 +255,15 @@ def createParser():
         "--fasta",
         dest="fasta",
         metavar="NUC_SEQUENCES",
-        help="The nucleotide sequences",
+        help="Output select nucleotide sequences",
     )
 
     input_group.add_option(
         "-q",
         "--query",
-        dest="fasta",
+        dest="query",
         metavar="NUC_SEQUENCES",
-        help="The nucleotide sequences",
+        help="Query nucleotide sequences",
     )
 
     parser.add_option_group(input_group)
@@ -360,6 +377,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.tax_databases[x],
             table[options.tax_databases[x]],
             options.subunit,
+            options.query,
             errorlogger=errorlogger,
         )
 

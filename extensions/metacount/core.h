@@ -5,8 +5,8 @@
 #include <ostream>
 #include <iterator>
 #include <assert.h>
+#include <array>
 #include "types.h"
-
 #include "parser.h"
 #include "SamValidation.h"
 

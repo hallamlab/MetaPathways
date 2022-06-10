@@ -41,13 +41,13 @@ epilog = (
 
                 2.   abcd.b1.fastq  : means only unpaired read from batch b1
 
-                3.   abcd_1.fastq  and abcd_2.fastq: this means paired reads for sample
+                3.   abcd_R1.fastq  and abcd_R2.fastq: this means paired reads for sample
 
-                4.   abcd_1.fastq or abcd_2.fastq: this means only one end of a paired read
+                4.   abcd_R1.fastq or abcd_R2.fastq: this means only one end of a paired read
 
-                5.   abcd_1.b2.fastq and  abcd_2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, where n is a number
+                5.   abcd_R1.b2.fastq and  abcd_R2.b2.fastq: this means paried reads from batch b2, note that batches are idenfied as bn, where n is a number
 
-                6.   abcd_1.b1.fastq or abcd_2.b1.fastq: this means only one of a paried read from batch b1
+                6.   abcd_R1.b1.fastq or abcd_R2.b1.fastq: this means only one of a paried read from batch b1
              """
 )
 
@@ -110,6 +110,15 @@ def createParser():
 
     parser.add_option("--bwaFolder", dest="bwaFolder", default=None, help="BWA Folder")
 
+    parser.add_option(
+        "-n",
+        "--num_threads",
+        dest="num_threads",
+        default=1,
+        help="number of threads",
+    )
+
+
     return parser
 
 
@@ -119,6 +128,14 @@ def getSamFiles(readdir, sample_name):
     samFiles = glob.glob(readdir + PATHDELIM + sample_name + "*.sam")
 
     return samFiles
+
+
+def getBamFiles(readdir, sample_name):
+    """This function finds the set of SAM files that has the BWA recruitment information"""
+
+    bamFiles = glob.glob(readdir + PATHDELIM + sample_name + "*.bam")
+
+    return bamFiles
 
 
 def indexForBWA(bwaExec, contigs, indexfile):
@@ -136,39 +153,52 @@ def indexForBWA(bwaExec, contigs, indexfile):
     return False
 
 
-def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder):
-    num_threads = int(multiprocessing.cpu_count() * 0.8)
-    if num_threads < 1:
-        num_threads = 1
+def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder, num_threads):
+
     status = True
 
     bwaOutput = bwaFolder + PATHDELIM + readgroup + ".sam"
+    stOutput = bwaFolder + PATHDELIM + readgroup + ".bam"
 
-    bwaOutputTmp = bwaOutput + ".tmp"
+    stOutputTmp = stOutput + ".tmp"
+    stInterTmp = bwaFolder + PATHDELIM + readgroup + ".tmp"
+
     cmd = "command not prepared"
 
     if len(readFiles) == 2:
-        cmd = "%s mem -t %d %s %s %s 2> /dev/null | samtools sort -o %s -" % (
+        bwa_cmd = "%s mem -t %d -o %s %s %s %s 2> /dev/null" % (
             bwaExec,
             num_threads,
+            bwaOutput,
             indexFile,
             readFiles[0],
             readFiles[1],
-            bwaOutputTmp,
         )
 
     if len(readFiles) == 1:
-         cmd = "%s mem -t %d  %s %s 2> /dev/null | samtools sort -o %s -" % (
-                bwaExec,
-                num_threads,
-                indexFile,
-                readFiles[0],
-                bwaOutputTmp
-            )
-    result = sysutils.getstatusoutput(cmd)
+        bwa_cmd = "%s mem -t %d -o %s %s %s 2> /dev/null" % (
+            bwaExec,
+            num_threads,
+            bwaOutput,
+            indexFile,
+            readFiles[0],
+        )
 
-    if result[0] == 0:
-        rename(bwaOutputTmp, bwaOutput)
+    st_cmd = "samtools sort -O bam -o %s -T %s %s" % (
+        stOutputTmp,
+        stInterTmp,
+        bwaOutput,
+    )
+    
+    bwaResult = sysutils.getstatusoutput(bwa_cmd)
+    stResult = sysutils.getstatusoutput(st_cmd)
+
+    clean_cmd = st_cmd = "rm %s" % (bwaOutput)
+
+    if stResult[0] == 0:
+        rename(stOutputTmp, stOutput)
+        cleanup = sysutils.getstatusoutput(clean_cmd)
+
     else:
         gutils.eprintf("ERROR:\tError in file processing read files %s\n", readFiles)
         status = False
@@ -199,12 +229,13 @@ def getReadFiles(readdir, sample_name):
 
     fastqgroups = {}
     for _fastqfile in _fastqfiles:
-       fastqfile  = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
-       fastqfile  = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
-
+       fastqfile = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
+       fastqfile = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
+       fastqfile = re.sub(r'.fq$','', fastqfile, flags=re.IGNORECASE) 
        trimmedfastq = path.basename(re.sub(r'_R[12]$', '', fastqfile))
-       
-       
+       if len(trimmedfastq.rsplit('.', 1)) > 1: # goofy hack to get batches to work, need to improve
+           trimmedfastq = re.sub(r'_R[12]', '', trimmedfastq.rsplit('.', 1)[0]) + '.' + trimmedfastq.rsplit('.', 1)[1]
+
        if trimmedfastq not in fastqgroups:
            fastqgroups[trimmedfastq] = []
   
@@ -270,8 +301,6 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tMissing read files!\n")
 
     # run BWA
-    
-
     for readgroup in readFiles:
         bwaRunSuccess = runUsingBWA(options.bwaExec,
                                     options.sample_name,
@@ -279,6 +308,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
                                     readgroup,
                                     readFiles[readgroup],
                                     options.bwaFolder,
+                                    int(options.num_threads),
                                    )
         # bwaRunSuccess = True
 
@@ -294,7 +324,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             # make sure you get the latest set of sam file after the bwa
 
     # make sure you get the latest set of sam file after the bwa
-    samFiles = getSamFiles(options.bwaFolder, options.sample_name)
+    bamFiles = getBamFiles(options.bwaFolder, options.sample_name)
 
     command = [
         "%s " % (options.rpkmExec)
@@ -311,8 +341,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         command.append("--stats-out-file %s" % (options.stats))
 
 
-    for samfile in samFiles:
-        command.append("--sam " + samfile)
+    for bamfile in bamFiles:
+        command.append("--sam " + bamfile)
 
     rpkmstatus = 0
     try:

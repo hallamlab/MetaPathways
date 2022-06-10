@@ -137,7 +137,6 @@ def insert_orf_into_dict(line, contig_dict):
 
     if not fields[0] in contig_dict:
         contig_dict[fields[0]] = []
-
     contig_dict[fields[0]].append(attributes)
 
 
@@ -171,6 +170,7 @@ def process_gff_file(
     gff_file_name,
     output_amino_file_name,
     output_nuc_file_name,
+    output_rrna_file_name,
     output_gff_file_name,
     nucleotide_seq_dict,
 ):
@@ -192,9 +192,10 @@ def process_gff_file(
         insert_orf_into_dict(line, contig_dict)
 
     create_the_gene_IDs(contig_dict, nucleotide_seq_dict)
-    create_sequnces(
-        output_amino_file_name, output_nuc_file_name, contig_dict, nucleotide_seq_dict
-    )
+    create_sequences(
+        output_amino_file_name, output_nuc_file_name, output_rrna_file_name,
+        contig_dict, nucleotide_seq_dict
+        )
     write_gff_file(output_gff_file_name, contig_dict)
 
 
@@ -214,7 +215,10 @@ def write_gff_file(output_gff_file, contig_dict):
 
             if "ID" in elem:
                 line = "ID=" + elem["ID"]
-                line = line + ";" + "locus_tag=" + elem["ID"]
+                if "locus_tag" in elem:
+                    line = line + ";" + "locus_tag=" + elem["locus_tag"]
+                else:
+                    line = line + ";" + "locus_tag=" + elem["feature"]
             else:
                 line = "ID= "
 
@@ -226,6 +230,9 @@ def write_gff_file(output_gff_file, contig_dict):
 
             if "contig_length" in elem:
                 line = line + ";" + "contig_length=" + str(elem["contig_length"])
+            
+            if "product" in elem:
+                line = line + ";" + "product=" + str(elem["product"])
 
             gutils.fprintf(outputfile, "\t%s", line)
             gutils.fprintf(outputfile, "\n")
@@ -237,15 +244,16 @@ def create_the_gene_IDs(contig_dict, nucleotide_seq_dict):
     for key in contig_dict:
         count = 0
         for elem in contig_dict[key]:
-            name = elem["seqname"] + "_%d" % (count)
+            name = elem["seqname"] + "_%d" % (count + 1)
             contig_dict[key][count]["ID"] = name
             contig_dict[key][count]["contig_length"] = len(nucleotide_seq_dict[key])
             count += 1
 
 
-def create_sequnces(
-    output_amino_file_name, output_nuc_file_name, contig_dict, nucleotide_seq_dict
-):
+def create_sequences(
+    output_amino_file_name, output_nuc_file_name,
+    output_rrna_file_name, contig_dict, nucleotide_seq_dict
+    ):
 
     translation_table = get_translation_table(11)
     # print translation_table
@@ -253,6 +261,7 @@ def create_sequnces(
 
     aa_outputfile = open(output_amino_file_name, "w")
     nucl_outputfile = open(output_nuc_file_name, "w")
+    rrna_outputfile = open(output_rrna_file_name, "w")
 
     for key in contig_dict:
         for elem in contig_dict[key]:
@@ -263,6 +272,7 @@ def create_sequnces(
                 elem["start"],
                 elem["end"],
                 elem["strand"],
+                elem["feature"],
             )
             name = ">" + elem["ID"]
             if len(aa_orf_sequence) > 0:
@@ -272,39 +282,45 @@ def create_sequnces(
             if len(nuc_orf_sequence) > 0:
                 gutils.fprintf(nucl_outputfile, "%s\n", name)
                 gutils.fprintf(nucl_outputfile, "%s\n", nuc_orf_sequence)
+                if elem['feature'] == 'rRNA':
+                    rname = name + ' ' + elem['product']
+                    gutils.fprintf(rrna_outputfile, "%s\n", rname)
+                    gutils.fprintf(rrna_outputfile, "%s\n", nuc_orf_sequence)
 
     aa_outputfile.close()
     nucl_outputfile.close()
+    rrna_outputfile.close()
 
 
 def get_amino_acid_sequence(
-    nucleotide_seq_dict, translation_table, seqname, start, end, strand
+    nucleotide_seq_dict, translation_table, seqname, start, end, strand, feature
 ):
+    if strand == "-":
+        #          nuc_orf_sequence = reverse(nucleotide_seq_dict[seqname])
+        #          nuc_orf_sequence = nuc_orf_sequence[start-1:end-1].upper()
 
-    try:
-        if strand == "-":
-            #          nuc_orf_sequence = reverse(nucleotide_seq_dict[seqname])
-            #          nuc_orf_sequence = nuc_orf_sequence[start-1:end-1].upper()
+        nuc_orf_sequence = nucleotide_seq_dict[seqname]
 
-            nuc_orf_sequence = nucleotide_seq_dict[seqname]
-
-            nuc_orf_sequence = nuc_orf_sequence[start - 1 : end].upper()
-            a = len(nuc_orf_sequence)
-            nuc_orf_sequence = reverse(nuc_orf_sequence)
-            b = len(nuc_orf_sequence)
-            nuc_orf_sequence = complement(nuc_orf_sequence)
-            c = len(nuc_orf_sequence)
-            # print str(a) + ' ' + str(b) + ' ' + str(c)
+        nuc_orf_sequence = nuc_orf_sequence[start - 1 : end].upper()
+        a = len(nuc_orf_sequence)
+        nuc_orf_sequence = reverse(nuc_orf_sequence)
+        b = len(nuc_orf_sequence)
+        nuc_orf_sequence = complement(nuc_orf_sequence)
+        c = len(nuc_orf_sequence)
+        # print str(a) + ' ' + str(b) + ' ' + str(c)
+    else:
+        nuc_orf_sequence = nucleotide_seq_dict[seqname][start - 1 : end - 1].upper()
+    try:    
+        if feature == "CDS": # AAs only for CDSs
+            aa_orf_sequence = convert_to_amino_acid(
+                translation_table, nuc_orf_sequence, strand
+            )
+            return (nuc_orf_sequence, aa_orf_sequence)
         else:
-            nuc_orf_sequence = nucleotide_seq_dict[seqname][start - 1 : end - 1].upper()
-
-        aa_orf_sequence = convert_to_amino_acid(
-            translation_table, nuc_orf_sequence, strand
-        )
-        return (nuc_orf_sequence, aa_orf_sequence)
+            return(nuc_orf_sequence, '')
     except:
         return ("XXXXX", "YYYYY")
-
+    
 
 def convert_to_amino_acid(translation_table, nuc_orf_sequence, strand):
     # print nuc_orf_sequence
@@ -466,14 +482,21 @@ def createParser():
         "--output_amino",
         dest="output_amino",
         metavar="OUTPUT",
-        help="nmino acid output file",
+        help="amino acid output file",
     )
 
     input_group.add_option(
         "--output_nuc",
         dest="output_nuc",
         metavar="OUTPUT",
-        help="nucleotide Sequence file",
+        help="nucleotide output file",
+    )
+
+    input_group.add_option(
+        "--output_nuc_rrna",
+        dest="output_nuc_rrna",
+        metavar="OUTPUT",
+        help="rRNA nucleotide output file",
     )
 
     input_group.add_option(
@@ -545,6 +568,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         options.gff_file,
         options.output_amino,
         options.output_nuc,
+        options.output_nuc_rrna,
         options.output_gff,
         nucleotide_seq_dict,
     )

@@ -85,16 +85,21 @@ class SampleData:
         self.stages = []
         self.stages_context = {}
 
-    def setInputOutput(self, inputFile=None, sample_output_dir=None):
+    def setInputOutput(self, inputFile=None, sample_output_dir=None, readsDir=None):
         if inputFile == None and sample_output_dir == None:
             return False
 
         self.input_file = inputFile
-        self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
+        if self.input_file.endswith((".gz", "_files")):
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.sample_name)
+        else:
+            self.sample_name = re.sub(r"[.][a-zA-Z]*$", "", self.input_file)
         self.sample_name = path.basename(self.sample_name)
         self.sample_name = re.sub("[.]", "_", self.sample_name)
 
-        self.rpkm_input_dir = path.dirname(inputFile) + PATHDELIM + "reads"
+        #self.rpkm_input_dir = path.dirname(inputFile) + PATHDELIM + "reads"
+        self.rpkm_input_dir = readsDir
 
         self.output_dir = sample_output_dir
 
@@ -227,7 +232,7 @@ class SampleData:
         gutils.checkOrCreateFolder(self.bwa_folder)
         gutils.checkOrCreateFolder(self.output_results)
         gutils.checkOrCreateFolder(self.output_results_annotation_table_dir)
-        gutils.checkOrCreateFolder(self.output_results_megan_dir)
+        #gutils.checkOrCreateFolder(self.output_results_megan_dir)
         gutils.checkOrCreateFolder(self.output_results_rpkm_dir)
         gutils.checkOrCreateFolder(self.output_fasta_pf_dir)
         gutils.checkOrCreateFolder(self.output_results_pgdb_dir)
