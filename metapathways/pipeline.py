@@ -380,7 +380,6 @@ def process(argv):
         "FASTDB_EXECUTABLE"    : 'fastdb',
         "FAST_EXECUTABLE"      : 'fastal',
         "PRODIGAL_EXECUTABLE"  : 'prodigal',
-        "PROKKA_EXECUTABLE"    : 'prokka',
         "SCAN_tRNA_EXECUTABLE" : 'trnascan-1.4',
         "RPKM_EXECUTABLE"      : 'metacount',
         "NUM_CPUS"             : opts.num_cpus,

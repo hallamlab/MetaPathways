@@ -41,9 +41,9 @@ def createParser():
     parser.add_option(
         "--algorithm",
         dest="algorithm",
-        default="prokka",
-        choices=["prokka", "prodigal", "FGS+"],
-        help="default : prokka ORF prediction algorithm [prokka, prodigal, FGS+]",
+        default="prodigal",
+        choices=["prodigal", "FGS+"],
+        help="default : prodigal ORF prediction algorithm [prodigal, FGS+]",
     )
 
     parser.add_option(
@@ -60,30 +60,13 @@ def createParser():
     )
 
     prodigal_group.add_option(
-        "--prod_output",
-        dest="prod_output",
-        default=None,
-        help="the output <outfile>"
-    )
-
-    prodigal_group.add_option(
-        "--prod_prefix",
-        dest="prod_prefix",
-        default=None,
-        help="the output prefix"
-    )
-
-    prodigal_group.add_option(
-        "--prod_outdir",
-        dest="prod_outdir",
-        default=None,
-        help="the output <directory>"
+        "--prod_output", dest="prod_output", default=None, help="the output <outfile>"
     )
 
     prodigal_group.add_option(
         "--prod_p",
         dest="prod_p",
-        default= 'meta',
+        default=None,
         help="Select procedure (single or meta).  Default is single",
     )
 
@@ -121,13 +104,6 @@ def createParser():
         help="strands to use in case of transcriptomic sample",
     )
 
-    prodigal_group.add_option(
-        "--prod_nthreads",
-        dest="prod_nthreads",
-        default=1,
-        help="number of threads",
-    )
-
     parser.add_option_group(prodigal_group)
     return parser
 
@@ -135,9 +111,6 @@ def createParser():
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     parser = createParser()
     options, args = parser.parse_args(argv)
-
-    if options.algorithm == "prokka":
-        _execute_prokka(options)
 
     if options.algorithm == "prodigal":
         _execute_prodigal(options)
@@ -230,38 +203,6 @@ def _execute_prodigal(options):
 
     result = sysutils.getstatusoutput(" ".join(args))
     rename(options.prod_output + ".tmp", options.prod_output)
-    
-    return result[0]
-
-
-def _execute_prokka(options):
-    args = []
-
-    if options.prod_exec:
-        args.append(options.prod_exec)
-
-    if options.prod_outdir:
-        args += ["--outdir", options.prod_outdir]
-
-    if options.prod_prefix:
-        args += ["--prefix", options.prod_prefix]
-
-    if options.prod_g:
-        args += ["--gcode", options.prod_g]
-
-    if options.prod_p == 'meta':
-        args += ["--metagenome"]
-
-    if options.nthreads:
-        args += ["--cpus", options.prod_nthreads]
-    
-    args += ["--noanno"]
-    args += ["--force"]
-    
-    if options.prod_input:
-        args += [options.prod_input]
-
-    result = sysutils.getstatusoutput(" ".join(args))
     
     return result[0]
 

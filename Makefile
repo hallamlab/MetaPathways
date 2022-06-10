@@ -113,7 +113,7 @@ conda-build-init:
 conda-install-deps:
 	conda install --yes -n base -c conda-forge mamba
 	mamba install --yes -c conda-forge curl
-	mamba install --yes -c conda-forge -c biobuilds -c bioconda python=3.7 blast prodigal bwa samtools barrnap prokka=1.14.6 perl=5.26 perl-bioperl=1.7.2 perl-xml-simple perl-bio-tools-run-alignment-tcoffee t_coffee pandas
+	mamba install --yes -c bioconda blast prodigal bwa samtools barrnap
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 

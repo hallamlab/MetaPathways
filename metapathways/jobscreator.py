@@ -118,7 +118,6 @@ class ContextCreator:
 
     def create_preprocess_input_aminos_cmd(self, s):
         """ PREPROCESS_AMINOS """
-        """
         contexts = []
 
         '''inputs'''
@@ -131,9 +130,9 @@ class ContextCreator:
         nuc_stats_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".nuc.stats"
         contig_lengths_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".contig.lengths.txt"
 
-        output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
-        output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.fna"
-        output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
+        output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".faa"
+        output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
+        output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
 
         '''params'''
 
@@ -165,7 +164,6 @@ class ContextCreator:
         context.commands = [cmd]
         contexts.append(context)
         return contexts
-        """
 
 
     def  convert_gbk_to_fna_faa_gff_annotated(self, s):
@@ -186,7 +184,7 @@ class ContextCreator:
 
         '''outputs'''
         output_fna = s.preprocessed_dir + s.sample_name + ".fasta"
-        output_faa = s.orf_prediction_dir + s.sample_name + ".cds.faa"
+        output_faa = s.orf_prediction_dir + s.sample_name + ".faa"
         output_annot_table = s.output_results_annotation_table_dir +\
                              PATHDELIM + 'functional_and_taxonomic_table.txt'
         contig_lengths_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".contig.lengths.txt"
@@ -196,7 +194,7 @@ class ContextCreator:
         if annotated == True:
             output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         else:
-            output_gff = s.orf_prediction_dir + s.sample_name + ".gff"
+            output_gff = s.orf_prediction_dir + s.sample_name + "unannot.gff"
 
         mapping_file =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
 
@@ -235,7 +233,6 @@ class ContextCreator:
         return contexts
 
 
-
     def create_orf_prediction_cmd(self, s) :
         """ ORF_PREDICTION """
         contexts = []
@@ -244,14 +241,12 @@ class ContextCreator:
         input_file = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''
-        output_file = input_gff = s.orf_prediction_dir + s.sample_name + ".gff"
-        output_dir = s.orf_prediction_dir
-        output_prefix = s.sample_name + ".prk"
+        output_gff = s.orf_prediction_dir + s.sample_name + ".gff"
 
         context = contextmod.Context()
         context.name = 'ORF_PREDICTION'
         context.inputs = { 'input_file' : input_file }
-        context.outputs = { 'output_file' : output_file }
+        context.outputs = { 'output_gff' : output_gff }
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
         translation_table = self.params.get('orf_prediction', 'translation_table')
         algorithm = self.params.get('orf_prediction', 'algorithm')
@@ -263,21 +258,6 @@ class ContextCreator:
 
         pyScript = self.configs.ORF_PREDICTION
 
-        if algorithm == "prokka":
-            executable =  self.configs.PROKKA_EXECUTABLE
-            cmd = [
-                  pyScript,
-                  "--prod_exec", executable,
-                  "--prod_m",
-                  "--prod_p", mode,
-                  "--prod_f", "gff",
-                  "--prod_g", translation_table,
-                  "--prod_input", context.inputs['input_file'],
-                  "--prod_prefix", output_prefix,
-                  "--prod_outdir", output_dir,
-                  "--prod_nthreads", num_threads,
-             ]
-
         if algorithm == "prodigal":
             executable =  self.configs.PRODIGAL_EXECUTABLE
             cmd = [
@@ -288,33 +268,30 @@ class ContextCreator:
                   "--prod_f", "gff",
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
-                  "--prod_output", context.outputs['output_file'],
+                  "--prod_output", context.outputs['output_gff'],
                   "--prod_nthreads", num_threads,
              ]
-
-        if algorithm == "FGS+":
-            executable = self.configs.FGSPlus_EXECUTABLE
-            cmd += ["--algorithm", "FGS+"]
-            cmd += ["--nthreads", num_threads]
 
         context.commands = [' '.join(cmd)]
         context.message = self._Message("ORF PREDICTION")
         contexts.append(context)
+        
         return contexts
+
 
     def create_aa_orf_sequences_cmd(self, s):
         """ ORF_TO_AMINO """
         contexts = []
 
         ''' inputs '''
-        input_gff = s.orf_prediction_dir + s.sample_name + ".prk.gff"
+        input_gff = s.orf_prediction_dir + s.sample_name + ".gff"
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''
-        output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
+        output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".faa"
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
+        output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
         output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
-        output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
 
         context = contextmod.Context()
         context.name = 'ORF_TO_AMINO'
@@ -336,12 +313,13 @@ class ContextCreator:
         contexts.append(context)
         return contexts
 
+
     def create_create_filtered_amino_acid_sequences_cmd(self, s):
         """FILTER_AMINOS"""
         contexts = []
 
         '''inputs'''
-        input_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".cds.faa"
+        input_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".faa"
 
 
         '''outputs'''
@@ -579,32 +557,30 @@ class ContextCreator:
         pyScript = self.configs.PARSE_FUNC_SEARCH  #TODO: why is this here?
         
         num_threads = self.configs.NUM_CPUS
+        """Run BARRNAP on fasta to extract rRNAs"""
 
-        algorithm = self.params.get('orf_prediction', 'algorithm')
-        if algorithm == "prodigal":
-            #"Run BARRNAP on fasta to extract rRNAs"
-            #'''inputs'''
-            input_fasta = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".fasta"
-            #'''outputs'''
-            input_fna = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".rRNA.fasta"
-            rRNA_barout_gff = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
+        '''inputs'''
+        input_fasta = s.preprocessed_dir +  PATHDELIM + s.sample_name + ".fasta"
 
-            context = contextmod.Context()
-            context.name = 'SCAN_rRNA:barrnap'
-            context.inputs = { 'input_fasta':input_fasta }
-            context.outputs = { 'input_fna':input_fna, 'rRNA_barout_gff': rRNA_barout_gff }
-            '''build command'''
-            bar_exe = shutil.which('barrnap')
-            if bar_exe == None:
-                eprintf("ERROR\tCannot find barrnap\n")
-            barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
-                     %(bar_exe, str(num_threads), context.outputs['input_fna'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
-            context.commands = [barnap_cmd]
-            context.status = self.params.get('metapaths_steps','SCAN_rRNA')
-            context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
-            contexts.append(context)
-        else:
-            input_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
+        '''outputs'''
+        rRNA_barout_seq = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
+        rRNA_barout_gff = s.orf_prediction_dir +  PATHDELIM + s.sample_name + "rRNA.gff"
+
+        context = contextmod.Context()
+        context.name = 'SCAN_rRNA:barrnap'
+        context.inputs = { 'input_fasta':input_fasta }
+        context.outputs = { 'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff': rRNA_barout_gff }
+
+        '''build command'''
+        bar_exe = shutil.which('barrnap')
+        if bar_exe == None:
+            eprintf("ERROR\tCannot find barrnap\n")
+        barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
+                 %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
+        context.commands = [barnap_cmd]
+        context.status = self.params.get('metapaths_steps','SCAN_rRNA')
+        context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
+        contexts.append(context)
 
         pyScript = self.configs.SCAN_rRNA
         rRNA_map_dict = {'ssu': '16S', 'lsu': '23S', '16s': '16S', '23s': '23S'}
@@ -622,7 +598,7 @@ class ContextCreator:
 
             context = contextmod.Context()
             context.name = 'SCAN_rRNA:' + db
-            context.inputs = {  'input_fna':input_fna, 'dbsequences':dbsequences }
+            context.inputs = {  'rRNA_barout_seq':rRNA_barout_seq, 'dbsequences':dbsequences }
             context.inputs1 = { 'dbpath' : dbpath }
             context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
@@ -633,11 +609,11 @@ class ContextCreator:
                    #logger.printf("ERROR\tCannot find blastn to format\n")
 
             blast_cmd = "%s -outfmt 6 -num_threads %s  -query %s -out %s -db %s -max_target_seqs 5"\
-                 %(executable, str(num_threads), context.inputs['input_fna'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
+                 %(executable, str(num_threads), context.inputs['rRNA_barout_seq'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             """ now the scanning part"""
-            scan_cmd = "%s -o %s -b %s -e %s -s %s -r %s -q %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
-                  bscore_cutoff, eval_cutoff, identity_cutoff, subunit, context.inputs['input_fna'])
+            scan_cmd = "%s -o %s -b %s -e %s -s %s -r %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
+                  bscore_cutoff, eval_cutoff, identity_cutoff, subunit)
 
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
             context.commands = [scan_cmd, blast_cmd]
@@ -652,18 +628,11 @@ class ContextCreator:
 
         contexts = []
         '''inputs'''
-        orf_algo = self.params.get('orf_prediction', 'algorithm') # Have to check if prokka was run
-        if orf_algo == "prokka":
-            input_fasta = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".fna"
-        else:
-            input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        
-        #
-        import pkg_resources  # TODO: this isn't the right thing to do here
+        input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
+        import pkg_resources
         TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
         Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
-        #
-
+        
         '''outputs'''
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
         tRNA_fasta_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
@@ -693,7 +662,7 @@ class ContextCreator:
         contexts = []
 
         '''inputs'''
-        input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name + ".gff"
+        input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
 
         '''outputs'''
@@ -731,7 +700,6 @@ class ContextCreator:
             rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
                                '.' + rRNArefdb + '.rRNA.stats.txt'
             #print rRNA_stat_results
-            #if gutils.hasResults(rRNA_stat_results):
             context.inputs['rRNA_stat_results']  = rRNA_stat_results
             options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
 
@@ -762,6 +730,7 @@ class ContextCreator:
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]
         contexts.append(context)
+        
         return contexts
 
     def create_genbank_file_cmd(self, s):
@@ -990,7 +959,7 @@ class ContextCreator:
         '''input'''
         rpkm_input = s.rpkm_input_dir
         bwaFolder = s.bwa_folder
-        output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".gff"
+        output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         rpkmExec = self.configs.RPKM_EXECUTABLE

@@ -137,8 +137,6 @@ def insert_orf_into_dict(line, contig_dict):
 
     if not fields[0] in contig_dict:
         contig_dict[fields[0]] = []
-
-    #if attributes["feature"] == "CDS":
     contig_dict[fields[0]].append(attributes)
 
 
@@ -181,7 +179,7 @@ def process_gff_file(
     except IOError:
         print("Cannot read file " + gff_file_name + " !")
 
-    sample_name = re.sub(".prk.gff", "", gff_file_name)
+    sample_name = re.sub(".gff", "", gff_file_name)
     gff_lines = gfffile.readlines()
     gff_beg_pattern = re.compile("^#")
     gfffile.close()
