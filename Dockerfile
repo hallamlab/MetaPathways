@@ -17,7 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
 						      zlib1g-dev \
 						      python3-pip \
 						      wget
-
+RUN pip3 install pandas
 ## Create the mp_repo directory, and copy over the Makefile
 COPY Makefile        /opt/mp_repo/
 
