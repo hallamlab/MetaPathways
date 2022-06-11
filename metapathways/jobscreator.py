@@ -631,30 +631,35 @@ class ContextCreator:
         contexts = []
         '''inputs'''
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        import pkg_resources
-        TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
-        Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
         
         '''outputs'''
+        tRNA_results_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.results.txt"
+        tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
-        tRNA_fasta_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
-
+        tRNA_fasta_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
 
         context = contextmod.Context()
         context.name = 'SCAN_tRNA'
-        context.inputs = { 'input_fasta':input_fasta, 'TPCsignal':TPCsignal, 'Dsignal':Dsignal }
-        context.outputs = { 'tRNA_stats_output':tRNA_stats_output, 'tRNA_fasta_output': tRNA_fasta_output}
+        context.inputs = {'input_fasta':input_fasta}
+        context.outputs = {'tRNA_results_output':tRNA_results_output,
+                           'tRNA_gff_output':tRNA_gff_output,
+                           'tRNA_stats_output':tRNA_stats_output,
+                           'tRNA_fasta_output':tRNA_fasta_output,
+                           }
 
-
+        num_threads = self.configs.NUM_CPUS
         pyScript = self.configs.SCAN_tRNA
         executable = self.configs.SCAN_tRNA_EXECUTABLE
-        cmd = "%s --executable %s -o %s -F %s  -i %s -T %s  -D %s"\
-             %(pyScript, executable, context.outputs['tRNA_stats_output'], context.outputs['tRNA_fasta_output'],\
-             context.inputs['input_fasta'], context.inputs['TPCsignal'], context.inputs['Dsignal'])
+        cmd = "%s --executable %s -o %s -j %s -m %s -a %s -p %s -t %s -i %s"\
+             %(pyScript, executable, context.outputs['tRNA_results_output'],
+                context.outputs['tRNA_gff_output'], context.outputs['tRNA_stats_output'],
+                context.outputs['tRNA_fasta_output'], s.sample_name, num_threads,
+                context.inputs['input_fasta']
+                )
 
         context.commands = [cmd]
         context.status = self.params.get('metapaths_steps','SCAN_tRNA')
-        context.message = self._Message("SCANNING FOR tRNA USING tRNA-Scan")
+        context.message = self._Message("SCANNING FOR tRNA USING tRNA-Scan SE")
         contexts.append(context)
         return contexts
 
