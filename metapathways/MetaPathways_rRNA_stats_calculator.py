@@ -160,7 +160,7 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
 
     blastLines = blastfile.readlines()
     blastfile.close()
-
+    print(query_fna)
     try:
         queryseqs = open(query_fna, "r")
     except IOError:

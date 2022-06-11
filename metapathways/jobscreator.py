@@ -241,7 +241,7 @@ class ContextCreator:
         input_file = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''
-        output_gff = s.orf_prediction_dir + s.sample_name + ".gff"
+        output_gff = s.orf_prediction_dir + s.sample_name + ".cds.gff"
 
         context = contextmod.Context()
         context.name = 'ORF_PREDICTION'
@@ -284,28 +284,28 @@ class ContextCreator:
         contexts = []
 
         ''' inputs '''
-        input_gff = s.orf_prediction_dir + s.sample_name + ".gff"
+        input_gff = s.orf_prediction_dir + s.sample_name + ".cds.gff"
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         '''outputs'''
         output_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".faa"
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
-        output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
+        #output_rrna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
 
         context = contextmod.Context()
         context.name = 'ORF_TO_AMINO'
         context.inputs = { 'input_gff' : input_gff, 'input_fasta': input_fasta }
         context.outputs = {'output_faa': output_faa, 'output_fna': output_fna,
-                           'output_gff' : output_gff, 'output_rrna': output_rrna
+                           'output_gff' : output_gff, #'output_rrna': output_rrna
                            }
         context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
 
         pyScript = self.configs.ORF_TO_AMINO
-        cmd = "%s -g  %s  -n %s --output_nuc %s --output_nuc_rrna %s --output_amino %s --output_gff %s"\
-               %(pyScript, context.inputs['input_gff'], context.inputs['input_fasta'],\
-                 context.outputs['output_fna'], context.outputs['output_rrna'],
-                 context.outputs['output_faa'], context.outputs['output_gff']
+        cmd = "%s -g  %s  -n %s --output_nuc %s --output_amino %s --output_gff %s"\
+               %(pyScript, context.inputs['input_gff'], context.inputs['input_fasta'],
+                 context.outputs['output_fna'], context.outputs['output_faa'],
+                 context.outputs['output_gff'], #context.outputs['output_rrna'],
                  )
 
         context.message = self._Message("CREATING AMINO ACID SEQS FROM GFF FILE")
@@ -564,7 +564,7 @@ class ContextCreator:
 
         '''outputs'''
         rRNA_barout_seq = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".rRNA.fna"
-        rRNA_barout_gff = s.orf_prediction_dir +  PATHDELIM + s.sample_name + "rRNA.gff"
+        rRNA_barout_gff = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
 
         context = contextmod.Context()
         context.name = 'SCAN_rRNA:barrnap'
@@ -575,8 +575,10 @@ class ContextCreator:
         bar_exe = shutil.which('barrnap')
         if bar_exe == None:
             eprintf("ERROR\tCannot find barrnap\n")
-        barnap_cmd = "%s -threads %s --outseq %s %s > %s"\
-                 %(bar_exe, str(num_threads), context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'], context.outputs['rRNA_barout_gff'])
+        barnap_cmd = "%s --quiet --threads %s --outseq %s %s > %s"\
+                 %(bar_exe, str(num_threads),
+                    context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'],
+                    context.outputs['rRNA_barout_gff'])
         context.commands = [barnap_cmd]
         context.status = self.params.get('metapaths_steps','SCAN_rRNA')
         context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
@@ -612,8 +614,8 @@ class ContextCreator:
                  %(executable, str(num_threads), context.inputs['rRNA_barout_seq'], context.outputs['rRNA_blastout'], context.inputs1['dbpath'])
 
             """ now the scanning part"""
-            scan_cmd = "%s -o %s -b %s -e %s -s %s -r %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
-                  bscore_cutoff, eval_cutoff, identity_cutoff, subunit)
+            scan_cmd = "%s -o %s -b %s -e %s -s %s -r %s -q %s"  %(pyScript, context.outputs['rRNA_stat_results'],\
+                  bscore_cutoff, eval_cutoff, identity_cutoff, subunit, context.inputs['rRNA_barout_seq'])
 
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
             context.commands = [scan_cmd, blast_cmd]

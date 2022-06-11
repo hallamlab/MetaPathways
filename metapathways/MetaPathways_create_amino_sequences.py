@@ -261,7 +261,7 @@ def create_sequences(
 
     aa_outputfile = open(output_amino_file_name, "w")
     nucl_outputfile = open(output_nuc_file_name, "w")
-    rrna_outputfile = open(output_rrna_file_name, "w")
+    #rrna_outputfile = open(output_rrna_file_name, "w")
 
     for key in contig_dict:
         for elem in contig_dict[key]:
@@ -282,14 +282,14 @@ def create_sequences(
             if len(nuc_orf_sequence) > 0:
                 gutils.fprintf(nucl_outputfile, "%s\n", name)
                 gutils.fprintf(nucl_outputfile, "%s\n", nuc_orf_sequence)
-                if elem['feature'] == 'rRNA':
-                    rname = name + ' ' + elem['product']
-                    gutils.fprintf(rrna_outputfile, "%s\n", rname)
-                    gutils.fprintf(rrna_outputfile, "%s\n", nuc_orf_sequence)
+                #if elem['feature'] == 'rRNA':
+                #    rname = name + ' ' + elem['product']
+                #    gutils.fprintf(rrna_outputfile, "%s\n", rname)
+                #    gutils.fprintf(rrna_outputfile, "%s\n", nuc_orf_sequence)
 
     aa_outputfile.close()
     nucl_outputfile.close()
-    rrna_outputfile.close()
+    #rrna_outputfile.close()
 
 
 def get_amino_acid_sequence(
