@@ -671,6 +671,9 @@ class ContextCreator:
         '''inputs'''
         input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
+        rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
+        tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
+
 
         '''outputs'''
         output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
@@ -688,7 +691,6 @@ class ContextCreator:
         context.inputs = {
             'input_unannotated_gff':input_unannotated_gff
         }
-
         context.inputs1 = {
             'mapping_txt':mapping_txt,
         }
@@ -703,19 +705,25 @@ class ContextCreator:
 
         '''use rRNA stats if they are available'''
         options = ''
-        for rRNArefdb in rRNAdbs:
-            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
-                               '.' + rRNArefdb + '.rRNA.stats.txt'
-            #print rRNA_stat_results
-            context.inputs['rRNA_stat_results']  = rRNA_stat_results
-            options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
+        if os.path.isfile(rRNA_gff_output):
+            context.inputs['rRNA_gff_file']  = rRNA_gff_output
+            options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
 
+            for rRNArefdb in rRNAdbs:
+                rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
+                                   '.' + rRNArefdb + '.rRNA.stats.txt'
+                #print rRNA_stat_results
+                context.inputs['rRNA_stat_results']  = rRNA_stat_results
+                options += " --rRNA " +  context.inputs['rRNA_stat_results']
 
-        '''use rRNA stats if they are available'''
-        tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.stats.txt'
-        #if gutils.hasResults(tRNA_stat_results):
-        context.inputs['tRNA_stat_results']  = tRNA_stat_results
-        options += " --tRNA " +  context.inputs['tRNA_stat_results']
+        '''use tRNA stats if they are available'''
+        if os.path.isfile(tRNA_gff_output):
+            context.inputs['tRNA_gff_file']  = tRNA_gff_output
+            options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
+
+            tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
+            context.inputs['tRNA_stat_results']  = tRNA_stat_results
+            options += " --tRNA " +  context.inputs['tRNA_stat_results']
         
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \

@@ -18,6 +18,7 @@ try:
     from metapathways import metapathways_utils as mputils
     from metapathways import sysutil as sysutils
     from metapathways import errorcodes as errormod
+    from metapathways import gff_compare as gffc
 except:
     print(""" Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
@@ -89,7 +90,11 @@ def createParser():
     )
 
     parser.add_option(
-        "-s", "--samplename", dest="sample_name", default=None, help="the sample name"
+        "-s",
+        "--samplename",
+        dest="sample_name",
+        default=None,
+        help="the sample name"
     )
 
     parser.add_option(
@@ -103,11 +108,11 @@ def createParser():
     )
 
     parser.add_option(
-        "--rRNA_16S",
-        dest="rRNA_16S",
+        "--rRNA",
+        dest="rRNA",
         action="append",
         default=[],
-        help="the 16s rRNA stats file [OPTIONAL]",
+        help="the SSU rRNA stats file [OPTIONAL]",
     )
 
     parser.add_option(
@@ -116,6 +121,20 @@ def createParser():
         action="append",
         default=[],
         help="the tRNA stats file [OPTIONAL]",
+    )
+
+    parser.add_option(
+        "--rRNA_gff",
+        dest="rRNA_gff",
+        default=None,
+        help="the SSU rRNA GFF file [OPTIONAL]",
+    )
+
+    parser.add_option(
+        "--tRNA_gff",
+        dest="tRNA_gff",
+        default=None,
+        help="the tRNA GFF file [OPTIONAL]",
     )
 
     cutoffs_group = OptionGroup(parser, "Cuttoff Related Options")
@@ -193,7 +212,10 @@ def createParser():
     parser.add_option_group(output_options_group)
 
     parser.add_option(
-        "-o", "--output_gff", dest="output_gff", help="the output gff file [REQUIRED]"
+        "-o",
+        "--output_gff",
+        dest="output_gff",
+        help="the output gff file [REQUIRED]"
     )
 
     parser.add_option(
@@ -505,40 +527,41 @@ def write_annotation_for_orf(
         exit_process()
 
 
-def write_16S_tRNA_gene_info(orf_id, orf_rec, r_dictionary, outputgff_file, tag):
-    output_line = str(orf_rec["seqname"])
+def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
+    output_line = str(f_rec["seqname"])
+    length = abs(f_rec["end"] - f_rec["start"])
     if tag == "_rRNA":
-        output_line += "\t" + str(orf_rec["source"])
-        output_line += "\t" + str(orf_rec["feature"])
-        output_line += "\t" + str(orf_rec["start"])
-        output_line += "\t" + str(orf_rec["end"])
-        output_line += "\t" + str(r_dictionary[orf_id]["evalue"])
-        output_line += "\t" + str(orf_rec["strand"])
-        output_line += "\t" + str(orf_rec["frame"])
-        attributes = "ID=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
-        attributes += ";" + "locus_tag=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
-        attributes += ";" + "orf_length=" + str(orf_rec["orf_length"])
-        attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
-        attributes += ";" + "product=" + orf_rec["product"]
-        attributes += ";" + "target=" + r_dictionary[orf_id]["taxonomy"]
-        attributes += ";" + "ec="
+        output_line += "\t" + str(f_rec["source"])
+        output_line += "\t" + str(f_rec["feature"])
+        output_line += "\t" + str(f_rec["start"])
+        output_line += "\t" + str(f_rec["end"])
+        output_line += "\t" + str(f_rec["score"])
+        output_line += "\t" + str(f_rec["strand"])
+        output_line += "\t" + str(f_rec["frame"])
+        attributes = "ID=" + str(f_rec["name"])
+        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes += ";" + "orf_length=" + str(length)
+        #attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
+        attributes += ";" + "product=" + f_rec["product"]
+        #attributes += ";" + "target=" + r_dictionary[orf_id]["taxonomy"]
+        #attributes += ";" + "ec="
         output_line += "\t" + attributes
 
     elif tag == "_tRNA":
-        output_line += "\t" + str(r_dictionary[orf_id]["source"])
-        output_line += "\t" + str(r_dictionary[orf_id]["feature"])
-        output_line += "\t" + str(r_dictionary[orf_id]["start"])
-        output_line += "\t" + str(r_dictionary[orf_id]["end"])
-        output_line += "\t" + str(r_dictionary[orf_id]["score"])
-        output_line += "\t" + str(r_dictionary[orf_id]["strand"])
-        output_line += "\t" + str(r_dictionary[orf_id]["frame"])
-        attributes = "ID=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
-        attributes += ";" + "locus_tag=" + mputils.ShortenORFId(r_dictionary[orf_id]["seqname"]) + tag
-        attributes += ";" + "orf_length=" + str(r_dictionary[orf_id]["orf_length"])
-        attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
-        attributes += ";" + "product=" + r_dictionary[orf_id]["product"]
-        attributes += ";" + "target=" + r_dictionary[orf_id]["product"]
-        attributes += ";" + "ec="
+        output_line += "\t" + str(f_rec["source"])
+        output_line += "\t" + str(f_rec["feature"])
+        output_line += "\t" + str(f_rec["start"])
+        output_line += "\t" + str(f_rec["end"])
+        output_line += "\t" + str(f_rec["score"])
+        output_line += "\t" + str(f_rec["strand"])
+        output_line += "\t" + str(f_rec["frame"])
+        attributes = "ID=" + str(f_rec["name"])
+        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes += ";" + "orf_length="  + str(length)
+        #attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
+        #attributes += ";" + "product=" + f_rec["product"]
+        #attributes += ";" + "target=" + f_rec["product"]
+        #attributes += ";" + "ec="
         output_line += "\t" + attributes
     gutils.fprintf(outputgff_file, "%s\n", output_line)
 
@@ -730,7 +753,9 @@ def create_annotation(
     results_dictionary,
     input_gff,
     rRNA_16S_stats_files,
+    rRNA_gff,
     tRNA_stats_files,
+    tRNA_gff,
     output_gff,
     output_comparative_annotation,
     contig_lengths,
@@ -762,139 +787,152 @@ def create_annotation(
     
     # Deal with the rRNA sequences if there is rRNA stats file
     if len(rRNA_16S_stats_files) > 0 and contig_lengths:
+        rRNA_reader = GffFileParser(rRNA_gff)
+        '''
         rRNA_16S_dictionary = {}
         for rRNA_16S_stats_file in rRNA_16S_stats_files:
             process_rRNA_16S_stats(rRNA_16S_stats_file, rRNA_16S_dictionary)
-
+        '''
         rRNA_dictionary = {}
-        add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths)
-
+        for contig in rRNA_reader:
+            rec = rRNA_reader.orf_dictionary[contig]
+            rRNA_dictionary[contig] = rec
+        #add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths)
+        
     # now deal with the tRNA sequences  if there is tRNA stats file
     if len(tRNA_stats_files) > 0 and contig_lengths:
+        tRNA_reader = GffFileParser(tRNA_gff)
+        '''
         tRNA_dictionary = {}
         for tRNA_stats_file in tRNA_stats_files:
             process_tRNA_stats(tRNA_stats_file, tRNA_dictionary)
 
         tRNA_gff_dictionary = {}
         add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths)
+        '''
+        tRNA_dictionary = {}
+        for contig in tRNA_reader:
+            rec = tRNA_reader.orf_dictionary[contig]
+            tRNA_dictionary[contig] = rec
+
     values = {}
     i = 0
     for contig in gffreader:
         count = 0
         for orf in gffreader.orf_dictionary[contig]:
             orf_id = orf['orf_id']
-            if orf_id in rRNA_dictionary:
-                write_16S_tRNA_gene_info(orf_id, orf, rRNA_dictionary, outputgff_file, "_rRNA")
-
-            elif orf_id in tRNA_dictionary:
-                write_16S_tRNA_gene_info(orf_id, orf, tRNA_gff_dictionary, outputgff_file, "_tRNA")
-
-            else:
-                for dbname in dbnames:
-                    values[dbname] = 0.0001
-                success = False
-                output_comp_annot_file1_Str = ""
-                output_comp_annot_file2_Str = ""
-                orf_id = orf["id"]
-                best_anno_dict = {'DB': 'None', 'weighted_value': 0}
-                # check the annotation of the orf by dbname
-                for dbname in dbnames:
-                    weight = dbname_weight[dbname]
-                    if orf_id in results_dictionary[dbname]:
-                        if float(values[dbname]) < float(results_dictionary[dbname][orf_id]["value"]):
-                            values[dbname] = float(results_dictionary[dbname][orf_id]["value"])
-                            success = True
-                            candidate_orf_pos = count
-                            wt_val = results_dictionary[dbname][orf_id]["value"] * float(weight)
-                            if wt_val > best_anno_dict['weighted_value']:
-                                best_anno_dict['weighted_value'] = wt_val
-                                best_anno_dict['DB'] = dbname
-                            if output_comp_annot_file1_Str:
-                                output_comp_annot_file1_Str += (
-                                    "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
-                                        "",
-                                        dbname,
-                                        results_dictionary[dbname][orf_id]["target"],
-                                        results_dictionary[dbname][orf_id]["product"],
-                                        str(wt_val),
-                                    )
-                                )
-                            else:
-                                output_comp_annot_file1_Str += (
-                                    "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
-                                        orf_id,
-                                        dbname,
-                                        results_dictionary[dbname][orf_id]["target"],
-                                        results_dictionary[dbname][orf_id]["product"],
-                                        str(wt_val),
-                                    )
-                                )
-
-                            if output_comp_annot_file2_Str:
-                                output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
-                                    results_dictionary[dbname][orf_id]["target"],
-                                    results_dictionary[dbname][orf_id]["product"],
-                                    str(wt_val),
-                                )
-                            else:
-                                output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
-                                    orf_id,
-                                    results_dictionary[dbname][orf_id]["target"],
-                                    results_dictionary[dbname][orf_id]["product"],
-                                    str(wt_val),
-                                )
-
-                    else:
-                        if not output_comp_annot_file1_Str:
+            for dbname in dbnames:
+                values[dbname] = 0.0001
+            success = False
+            output_comp_annot_file1_Str = ""
+            output_comp_annot_file2_Str = ""
+            orf_id = orf["id"]
+            best_anno_dict = {'DB': 'None', 'weighted_value': 0}
+            # check the annotation of the orf by dbname
+            for dbname in dbnames:
+                weight = dbname_weight[dbname]
+                if orf_id in results_dictionary[dbname]:
+                    if float(values[dbname]) < float(results_dictionary[dbname][orf_id]["value"]):
+                        values[dbname] = float(results_dictionary[dbname][orf_id]["value"])
+                        success = True
+                        candidate_orf_pos = count
+                        wt_val = results_dictionary[dbname][orf_id]["value"] * float(weight)
+                        if wt_val > best_anno_dict['weighted_value']:
+                            best_anno_dict['weighted_value'] = wt_val
+                            best_anno_dict['DB'] = dbname
+                        if output_comp_annot_file1_Str:
                             output_comp_annot_file1_Str += (
-                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(orf_id, "", "", "", "")
+                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
+                                    "",
+                                    dbname,
+                                    results_dictionary[dbname][orf_id]["target"],
+                                    results_dictionary[dbname][orf_id]["product"],
+                                    str(wt_val),
+                                )
+                            )
+                        else:
+                            output_comp_annot_file1_Str += (
+                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
+                                    orf_id,
+                                    dbname,
+                                    results_dictionary[dbname][orf_id]["target"],
+                                    results_dictionary[dbname][orf_id]["product"],
+                                    str(wt_val),
+                                )
                             )
 
                         if output_comp_annot_file2_Str:
                             output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
-                                "", "", ""
+                                results_dictionary[dbname][orf_id]["target"],
+                                results_dictionary[dbname][orf_id]["product"],
+                                str(wt_val),
                             )
                         else:
                             output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
-                                orf_id, "", "", "", ""
+                                orf_id,
+                                results_dictionary[dbname][orf_id]["target"],
+                                results_dictionary[dbname][orf_id]["product"],
+                                str(wt_val),
                             )
 
-                # end of for all dbname
+                else:
+                    if not output_comp_annot_file1_Str:
+                        output_comp_annot_file1_Str += (
+                            "{0}\t{1}\t{2}\t{3}\t{4}\n".format(orf_id, "", "", "", "")
+                        )
 
-                if success:  # there was a database hit
-                    gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
-                    gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
-                    write_annotation_for_orf(
-                        outputgff_file,
-                        best_anno_dict['DB'],
-                        dbname_weight[best_anno_dict['DB']],
-                        results_dictionary,
-                        gffreader.orf_dictionary,
-                        contig,
-                        candidate_orf_pos,
-                        orf_id,
-                        sample_name,
-                        compact_output=compact_output,
-                    )
-                else:  # if it was not a hit then it is a hypothetical protein
-                    # print gffreader.orf_dictionary
-                    write_annotation_for_orf(
-                        outputgff_file,
-                        "None",
-                        "0",
-                        results_dictionary,
-                        gffreader.orf_dictionary,
-                        contig,
-                        count,
-                        orf_id,
-                        sample_name,
-                        compact_output=compact_output,
-                    )
- 
+                    if output_comp_annot_file2_Str:
+                        output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
+                            "", "", ""
+                        )
+                    else:
+                        output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
+                            orf_id, "", "", "", ""
+                        )
+
+            # end of for all dbname
+
+            if success:  # there was a database hit
+                gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
+                gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
+                write_annotation_for_orf(
+                    outputgff_file,
+                    best_anno_dict['DB'],
+                    dbname_weight[best_anno_dict['DB']],
+                    results_dictionary,
+                    gffreader.orf_dictionary,
+                    contig,
+                    candidate_orf_pos,
+                    orf_id,
+                    sample_name,
+                    compact_output=compact_output,
+                )
+            else:  # if it was not a hit then it is a hypothetical protein
+                # print gffreader.orf_dictionary
+                write_annotation_for_orf(
+                    outputgff_file,
+                    "None",
+                    "0",
+                    results_dictionary,
+                    gffreader.orf_dictionary,
+                    contig,
+                    count,
+                    orf_id,
+                    sample_name,
+                    compact_output=compact_output,
+                )
+
             count += 1  # move to the next orf
-
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
+
+    # Add rRNA and tRNA records to output gff
+    for contig in rRNA_dictionary:
+        rrna_rec = rRNA_dictionary[contig][0]
+        write_16S_tRNA_gene_info(contig, rrna_rec, outputgff_file, "_rRNA")
+    for contig in tRNA_dictionary:
+        trna_rec = tRNA_dictionary[contig][0]
+        write_16S_tRNA_gene_info(contig, trna_rec, outputgff_file, "_tRNA")
 
     outputgff_file.close()
     rename(output_gff_tmp, output_gff)
@@ -1273,14 +1311,23 @@ def main(argv, errorlogger=None, runstatslogger=None):
         dbname_weight,
         results_dictionary,
         opts.input_gff,
-        opts.rRNA_16S,
+        opts.rRNA,
+        opts.rRNA_gff,
         opts.tRNA,
+        opts.tRNA_gff,
         opts.output_gff,
         opts.output_comparative_annotation,
         contig_lengths,
         sample_name=opts.sample_name,
         compact_output=opts.compact_output,
     )
+
+    # Lastly, find overlaps of annotated ORFs against rRNAs and tRNAs
+    if opts.rRNA_gff != None: # rRNAs?
+        gffc.compare_gffs(opts.output_gff, opts.rRNA_gff, tag='rRNA')
+    if opts.tRNA_gff != None: # tRNAs?
+        gffc.compare_gffs(opts.output_gff, opts.tRNA_gff, tag='tRNA')
+
 
 
 def MetaPathways_annotate_fast(argv, errorlogger=None, runstatslogger=None):
