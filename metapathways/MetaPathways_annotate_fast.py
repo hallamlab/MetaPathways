@@ -786,7 +786,10 @@ def create_annotation(
 
     
     # Deal with the rRNA sequences if there is rRNA stats file
+    rRNA_yes = False
+    tRNA_yes = False
     if len(rRNA_16S_stats_files) > 0 and contig_lengths:
+        rRNA_yes = True
         rRNA_reader = GffFileParser(rRNA_gff)
         '''
         rRNA_16S_dictionary = {}
@@ -801,6 +804,7 @@ def create_annotation(
         
     # now deal with the tRNA sequences  if there is tRNA stats file
     if len(tRNA_stats_files) > 0 and contig_lengths:
+        tRNA_yes = True
         tRNA_reader = GffFileParser(tRNA_gff)
         '''
         tRNA_dictionary = {}
@@ -927,12 +931,14 @@ def create_annotation(
     output_comp_annot_file2.close()
 
     # Add rRNA and tRNA records to output gff
-    for contig in rRNA_dictionary:
-        rrna_rec = rRNA_dictionary[contig][0]
-        write_16S_tRNA_gene_info(contig, rrna_rec, outputgff_file, "_rRNA")
-    for contig in tRNA_dictionary:
-        trna_rec = tRNA_dictionary[contig][0]
-        write_16S_tRNA_gene_info(contig, trna_rec, outputgff_file, "_tRNA")
+    if rRNA_yes = True:
+        for contig in rRNA_dictionary:
+            rrna_rec = rRNA_dictionary[contig][0]
+            write_16S_tRNA_gene_info(contig, rrna_rec, outputgff_file, "_rRNA")
+    if tRNA_yes = True:
+        for contig in tRNA_dictionary:
+            trna_rec = tRNA_dictionary[contig][0]
+            write_16S_tRNA_gene_info(contig, trna_rec, outputgff_file, "_tRNA")
 
     outputgff_file.close()
     rename(output_gff_tmp, output_gff)
