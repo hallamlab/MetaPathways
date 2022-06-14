@@ -28,8 +28,18 @@ PATHDELIM = sysutils.pathDelim()
 usage = __file__ + """ -i input_fasta_file -o output_file """
 
 def createParser():
-    epilog = """The amino acid sequences in the orf_prediction folder are used to do a self alignment, which will be used to compute the bit score ratio (BSR) for the hits.  The BSR ratio can be defined at the ratio of a the bit-score between a query and a target sequence to the bitcore when both the query and target sequenes are the query sequence. Usually, a BSR ratio of 0.4 or more is considered as a good hit for protein sequences. Note that BSR ratio is designed in some sense to have a normalized value for the bit-score  since the score is also influenced by the length of the query.
-The results are written to a file  (usually in a folder called blast_results in the MetaPathway pipeline,  into a file named <samplename>.refscore.<algorithm> (where <algorithm> refers to the BLAST or FAST in the context of the pipeline) extension This script can be extended to add other sequence homology search algorithms."""
+    epilog = """
+    The amino acid sequences in the orf_prediction folder are used to do a self alignment, 
+    which will be used to compute the bit score ratio (BSR) for the hits.  The BSR ratio can be defined 
+    at the ratio of a the bit-score between a query and a target sequence to the bitcore when both the 
+    query and target sequenes are the query sequence. Usually, a BSR ratio of 0.4 or more is considered 
+    as a good hit for protein sequences. Note that BSR ratio is designed in some sense to have a normalized 
+    value for the bit-score  since the score is also influenced by the length of the query.
+    The results are written to a file  (usually in a folder called blast_results in the MetaPathway pipeline, 
+    into a file named <samplename>.refscore.<algorithm> (where <algorithm> refers to the
+    BLAST or FAST in the context of the pipeline) extension This script can be extended
+    to add other sequence homology search algorithms.
+    """
 
     epilog = re.sub(r"[ \t\f\v]+", " ", epilog)
     parser = OptionParser(usage=usage, epilog=epilog)

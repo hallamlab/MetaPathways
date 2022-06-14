@@ -214,7 +214,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         length_distribution[i] = 0
         length_cumulative_distribution[i] = 0
 
-    seq_count = 0
+    seq_count = 1
     allNames = dict()
     outputStr = ""
     outputLines = []
@@ -262,7 +262,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 gutils.fprintf(outfile, "%s\n", seqname)
             else:
                 contigID = sample_name + "_" + str(seq_count)
-                orfID = sample_name + "_" + str(seq_count) + "_0"
+                orfID = sample_name + "_" + str(seq_count) + "_1"
 
                 gutils.fprintf(outfile, ">%s\n", contigID)
                 gutils.fprintf(outfilefna, ">%s\n", orfID)

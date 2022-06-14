@@ -53,12 +53,23 @@ void error(char *msg) {
     exit(1);
 }
 
-string shorten_id(string name, enum IDTYPE idtype)  {
+
+
   regex contigid_regex("_([0-9]+)$");
   regex orfid_regex("_([0-9]+_[0-9]+)$");
   regex orfid_trna_regex("_([0-9]+_[0-9]+_tRNA)$");
   regex orfid_rrna_regex("_([0-9]+_[0-9]+_rRNA)$");
   std::smatch sm; 
+
+
+string shorten_id(string name, enum IDTYPE idtype)  {
+/*
+  regex contigid_regex("_([0-9]+)$");
+  regex orfid_regex("_([0-9]+_[0-9]+)$");
+  regex orfid_trna_regex("_([0-9]+_[0-9]+_tRNA)$");
+  regex orfid_rrna_regex("_([0-9]+_[0-9]+_rRNA)$");
+  std::smatch sm; 
+*/
   switch (idtype) {
      case ORFID: 
        // prodigal predicted orf
@@ -90,16 +101,16 @@ string shorten_id(string name, enum IDTYPE idtype)  {
   return string("");
 }
 
-uint32_t strToUint16(string str1) {
+uint32_t strToUint32(string str1) {
   int myint(std::stoi(str1));
-  uint32_t myint16(0);
-  if (myint <= static_cast<int>(UINT16_MAX) && myint >=0) {
-     myint16 = static_cast<uint32_t>(myint);
+
+  uint32_t myint32(0);
+  if (myint <= static_cast<int>(UINT32_MAX) && myint >=0) {
+     myint32 = static_cast<uint32_t>(myint);
   } else {
-     exception a;
-     throw a;
+     throw std::runtime_error("Error in converting string to uint32 in strToUint32");
   }
-  return myint16;
+  return myint32;
 }
 
 void print_contig_orf_map(CONTIG_ORF *contig_orf_map) {

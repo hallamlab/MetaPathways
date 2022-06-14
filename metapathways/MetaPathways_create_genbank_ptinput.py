@@ -16,6 +16,9 @@ try:
     import re
     import gzip
     import glob
+    import pandas as pd
+    import numpy as np
+    from tqdm import tqdm
 
     from os import makedirs, path, listdir, remove, rename
 
@@ -32,7 +35,16 @@ except:
 PATHDELIM = sysutils.pathDelim()
 
 def createParser():
-    epilog = """This script has three functions : (i) The functional and taxonomic annotations created for the individual ORFs are used to create the inputs required by the Pathway-Tools's Pathologic algorithm to build the ePGDBs. The input consists of 4 files that contains functional annotations and sequences with relevant information, this information is used by Pathologic to create the ePGDBs. (ii) It can create a genbank file for the ORFs and their annotationsequi"""
+    epilog = """
+    This script has three functions:
+    (i) The functional and taxonomic annotations created for the individual
+    ORFs are used to create the inputs required by the Pathway-Tools's
+    Pathologic algorithm to build the ePGDBs.
+    The input consists of 4 files that contains functional annotations and
+    sequences with relevant information, this information is used by
+    Pathologic to create the ePGDBs.
+    (ii) It can create a genbank file for the ORFs and their annotations
+    """
     epilog = re.sub(r'\s+', ' ', epilog)
 
     parser = optparse.OptionParser(usage=usage, epilog = epilog)
@@ -70,6 +82,14 @@ def createParser():
     output_options_group.add_option("--taxonomy-table", dest="taxonomy_table",  default=None,
                        help='table with taxonomy')
 
+    output_options_group.add_option("--annotation-table", dest="annotation_table",  default=None,
+                       help='table with all annotations')
+    
+    output_options_group.add_option("--ec-mapping", dest="ec_mapping",  default=None,
+                       help='table with mappings for Uniprot/KEGG/EC')
+
+    output_options_group.add_option("--rxn-mapping", dest="rxn_mapping",  default=None,
+                       help='table with mappings for MetaCyc PROT IDs to RXN IDS')
 
     output_options_group.add_option("--out-ptinput", dest="ptinput_file",  default=None,
                      help='option and directory  to create ptools input files')
@@ -82,7 +102,7 @@ def createParser():
     return parser
 
 def insert_attribute(attributes, attribStr):
-     rawfields = re.split('=', attribStr)
+     rawfields = attribStr.split('=', 1)
      if len(rawfields) == 2:
        attributes[rawfields[0].strip().lower()] = rawfields[1].strip()
 
@@ -172,12 +192,12 @@ def get_sample_name(gff_file_name):
 
 
 def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
+
     protein_seq_dict, input_filenames, orf_to_taxonid = {},  compact_output=True):
 
     gff_file_name = gutils.correct_filename_extension(gff_file_name)
     with gzip.open(gff_file_name, 'r') if gff_file_name.endswith('.gz') \
         else open(gff_file_name, 'r') as gfffile:
-
         sample_name=get_sample_name(gff_file_name)
 
         gff_lines = gfffile.readlines()
@@ -197,323 +217,320 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
               gutils.eprintf("%s\n", raceback.print_exc(10))
 
         if "gbk" in output_filenames:
-          write_gbk_file(
+          write_gbk_file(  # TODO: this function should be parallelized
               output_filenames['gbk'], contig_dict, sample_name, \
               nucleotide_seq_dict, protein_seq_dict
-          )
+              )
 
         if "ptinput" in output_filenames:
-          write_ptinput_files(
-              output_filenames['ptinput'], contig_dict, sample_name, \
+          write_ptinput_files(  # TODO: this function should be parallelized
+              output_filenames, contig_dict, sample_name, \
               nucleotide_seq_dict, protein_seq_dict, compact_output, orf_to_taxonid=orf_to_taxonid
           )
 
 # this function creates the pathway tools input files
-def write_ptinput_files(output_dir_name, contig_dict, sample_name, nucleotide_seq_dict, \
+def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict, \
         protein_seq_dict, compact_output, orf_to_taxonid={}):
+     
+    output_dir_name = outfiles['ptinput']
+    ec_map_file = outfiles['ec_mapping']
+    rxn_map_file = outfiles['rxn_mapping']
+    anno_file = outfiles['annotation_table']
+    ft_file = outfiles['taxonomy_table']
 
-     try:
+    try:
         gutils.remove_dir(output_dir_name)
-        #print output_dir_name
         makedirs(output_dir_name)
         genetic_elements_file = open(output_dir_name + "/.tmp.genetic-elements.dat", 'w')
-        #reducedpffile = open(output_dir_name + "/tmp.reduced.txt", 'w')
-     except:
+    except:
         print("cannot create the pathway tools files")
         print("perhaps there is already a folder " + output_dir_name)
         traceback.print_exc(file=sys.stdout)
 
-     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
-         count =0
-         outputStr=""
-    
-         # iterate over every contig sequence
-         first_hits = {}
-         if compact_output:
+    # load annotable
+    anno_df = pd.read_csv(anno_file, sep='\t', header=0, low_memory=False)
+    anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
+    anno_df['orf_id']  = anno_df['orf_id'].ffill()
+    anno_df.dropna(subset = ['target'], inplace=True)
+    # load funct/tax table
+    ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
+    ft_df.dropna(subset = ['target'], inplace=True)
+    ft_df['orf_id'] = [mputils.ShortenORFId(x) for x in ft_df['ORF_ID']]
+    # build product dictionary to remove duplicate ORF annotations
+    cprod_dict = {k : [] for k in set(ft_df['product'])}
+    rep_orf_list = list(ft_df.drop_duplicates('product')['orf_id'])
+
+    # subset annotable to only rep ORFs
+    anno_df = anno_df.copy().query('orf_id in @rep_orf_list')
+    # modify target headers for later mapping
+    trim_t_list = []
+    for d,t in zip(anno_df['ref dbname'], anno_df['target']):
+        if 'metacyc' in d:
+            trim_t = t.split('|', 2)[2]
+            trim_t_list.append(trim_t)
+        elif 'sprot' in d:
+            trim_t = t.split('|', 2)[1]
+            trim_t_list.append(trim_t)
+        elif 'uniref' in d:
+            trim_t = t.split('_', 1)[1]
+            trim_t_list.append(trim_t)
+        else:
+            trim_t_list.append('NONE')
+    anno_df['trim_target'] = trim_t_list
+    # remove uninformative targets
+    anno_df = anno_df.query("trim_target != 'NONE'")
+    trim_set_list = list(set(trim_t_list))
+    # Load all mapping files, subset to only annotated targets, create dicts
+    ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
+    ec_df.dropna(subset = ['EC'], inplace=True)
+    ec_df = ec_df.copy().query('UniProtKB in @trim_set_list')
+    ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
+    ec_dict = ec_df.groupby('UniProtKB')['EC'].apply(list).to_dict()
+    rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
+    rxn_df = rxn_df.query('MC in @trim_set_list')
+    rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
+
+    with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
+        # iterate over every contig sequence
+        if compact_output:
             prefix = 'O_'
-         else:
+        else:
             prefix = sample_name + '_'
-    
-         countError = 0
-         for key in contig_dict:
+
+        countError = 0
+        for key in contig_dict:
             first = True
-            if count %10000 == 0:
-               #print "count " + str(count)
-               #outputfile.write(outputStr)
-               outputStr=""
-            count+=1
-    
             for attrib in contig_dict[key]:
-               id  =  attrib['id']
-               shortid=""
-               compactid = ""
-    
-               if attrib['feature']=='CDS':
-                  shortid  =  prefix + mputils.ShortenORFId(attrib['id'])
-                  compactid =  mputils.ShortenORFId(attrib['id'])
-    
-               if attrib['feature']=='rRNA':
-                  shortid  =  prefix + mputils.ShortenrRNAId(attrib['id'])
-                  compactid =  mputils.ShortenrRNAId(attrib['id'])
-    
-               if attrib['feature']=='tRNA':
-                  shortid  =  prefix + mputils.ShortentRNAId(attrib['id'])
-                  compactid =  mputils.ShortentRNAId(attrib['id'])
-    
-    
-               try:
-                  protein_seq = protein_seq_dict[id]
-               except:
-                  protein_seq = ""
-               try:
-                  if attrib['product']=='hypothetical protein':
-                     continue
-               except:
-                  print(attrib)
-                  sys.exit(0)
-    
-    
-               #if attrib['product']  in first_hits:
-               #    if attrib['ec'] :
-               #      if attrib['ec'] in first_hits[attrib['product']]:
-               #          gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
-    
-                        # to  remove redundancy add "continue "
-                        # continue
-               #      else:
-               #          first_hits[attrib['product']]['ec'] =attrib['ec']
-               #          first_hits[attrib['product']]['n'] =shortid
-               #    else:
-               #      gutils.fprintf(reducedpffile,"%s\t%s\n", shortid, first_hits[attrib['product']]['n'])
-                     # to  remove redundancy add "continue "
-                     #continue
-               #else:
-    
-               first_hits[attrib['product']] = {}
-               first_hits[attrib['product']]['n'] =shortid
-               first_hits[attrib['product']]['ec'] =attrib['ec']
-    
-               if compactid in orf_to_taxonid:
-                   attrib['taxon'] = orf_to_taxonid[compactid]
-    
-               write_to_pf_file(output_dir_name, shortid, attrib, pfFile,  compact_output=True)
-    
-               # append to the gen elements file
-               if compact_output==False:
-                  append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
-            #endfor
-    
-    
+                id  =  attrib['id']
+                shortid = ""
+                compactid = ""
+                
+                del attrib['ec'] # do this for now, but it should be cleaned up better
+
+                if attrib['feature'] == 'CDS':
+                    shortid = prefix + mputils.ShortenORFId(attrib['id'])
+                    compactid = mputils.ShortenORFId(attrib['id'])
+
+                #elif attrib['feature'] == 'rRNA':
+                #    shortid = prefix + mputils.ShortenrRNAId(attrib['id'])
+                #    compactid = mputils.ShortenrRNAId(attrib['id'])
+
+                #elif attrib['feature'] == 'tRNA':
+                #    shortid = prefix + mputils.ShortentRNAId(attrib['id'])
+                #    compactid = mputils.ShortentRNAId(attrib['id'])
+
+                    # clean function
+                    l_func = attrib['product']
+                    if l_func != '':
+                        if compactid in rep_orf_list: # only want to keep one ORF/functional annotation
+                            try:
+                                protein_seq = protein_seq_dict[id]
+                            except:
+                                protein_seq = ""
+                            try:
+                                if attrib['product']=='hypothetical protein':
+                                    continue
+                            except:
+                                print(attrib)
+                                sys.exit(0)
+                            # find all DBs and map to general DB names
+                            orf_anno_df = anno_df.query('orf_id == @compactid')
+                            db_dict = {}
+                            for dbname in set(orf_anno_df['ref dbname']):
+                                if 'metacyc' in dbname:
+                                    if 'metacyc' in db_dict:
+                                        db_dict['metacyc'].append(dbname)
+                                    else:
+                                        db_dict['metacyc'] = [dbname]
+                                elif 'sprot' in dbname:
+                                    if 'sprot' in db_dict:
+                                        db_dict['sprot'].append(dbname)
+                                    else:
+                                        db_dict['sprot'] = [dbname]
+                                elif 'uniref' in dbname:
+                                    if 'uniref' in db_dict:
+                                        db_dict['uniref'].append(dbname)
+                                    else:
+                                        db_dict['uniref'] = [dbname]
+
+                            # map all DBs to targets and add attributes if RXNs or ECs exist
+                            db_targ_dict = dict(zip(orf_anno_df['ref dbname'], orf_anno_df['trim_target']))
+                            if 'metacyc' in db_dict:
+                                for db in db_dict['metacyc']:
+                                    target = db_targ_dict[db]
+                                    if target in rxn_dict:
+                                        if 'rxn' in attrib:
+                                            attrib['rxn'].extend(rxn_dict[target])
+                                        else:
+                                            attrib['rxn'] = rxn_dict[target]
+                            elif (('sprot' in db_dict) & ('rxn' not in attrib)):
+                                for db in db_dict['sprot']:
+                                    target = db_targ_dict[db]
+                                    if target in ec_dict:
+                                        if 'ec' in attrib:
+                                            attrib['ec'].extend(ec_dict[target])
+                                        else:
+                                            attrib['ec'] = ec_dict[target]
+                            elif (('uniref' in db_dict) & ('rxn' not in attrib) & ('ec' not in attrib)):
+                                for db in db_dict['uniref']:
+                                    target = db_targ_dict[db]
+                                    if target in ec_dict:
+                                        if 'ec' in attrib:
+                                            attrib['ec'].extend(ec_dict[target])
+                                        else:
+                                            attrib['ec'] = ec_dict[target]
+
+                            if compactid in orf_to_taxonid:
+                                attrib['taxon'] = orf_to_taxonid[compactid]
+                            # add ORF record to pf file
+                            write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+                            cprod_dict[l_func].append(shortid)
+
+                            # append to the gen elements file
+                            if compact_output==False:
+                                append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+                        elif l_func in cprod_dict:
+                            cprod_dict[l_func].append(shortid)
+                    #endfor
+
+
             #write the sequence now only once per contig
             try:
-               contig_seq =  nucleotide_seq_dict[key]
+                contig_seq =  nucleotide_seq_dict[key]
             except:
-               #print nucleotide_seq_dict.keys()[0]
-               if countError < 10:
-                  gutils.printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
-                  countError += 1
-                  if countError == 10:
-                    gutils.printf("...................................................................\n")
-               continue
-    
-            fastaStr=wrap("",0,62, contig_seq)
-    
-               #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
-            if compact_output==False:
-               write_input_sequence_file(output_dir_name, shortid, fastaStr)
-         #endif
+                #print nucleotide_seq_dict.keys()[0]
+                if countError < 10:
+                    gutils.printf("ERROR: Contig %s missing file in \"preprocessed\" folder for sample\n", key)
+                    countError += 1
+                    if countError == 10:
+                        gutils.printf("...................................................................\n")
+                continue
 
-     if compact_output==True:
+            fastaStr=wrap("",0,62, contig_seq)
+
+            #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
+            if compact_output==False:
+                write_input_sequence_file(output_dir_name, shortid, fastaStr)
+        #endif
+    # Save the complete list of ORFs that were deduped
+    with open(output_dir_name + "/" + "orf_map.txt", 'w') as map_out:
+        for l in cprod_dict.keys():
+            map_out.write('\t'.join(cprod_dict[l]) + '\n')
+
+    if compact_output==True:
         add_genetic_elements_file(genetic_elements_file)
 
-     # removing annotated.gff from sample_name
-     sample_name = re.sub(".annot.gff", '', sample_name)
-     sample_name = re.sub('.*/', '', sample_name)
-     sample_name = re.sub(r'[\\].', '', sample_name)
+    # removing annotated.gff from sample_name
+    sample_name = re.sub(".annot.gff", '', sample_name)
+    sample_name = re.sub('.*/', '', sample_name)
+    sample_name = re.sub(r'[\\].', '', sample_name)
 
-     # trim sample_name to less than 35 characters
-     # as it causes PGDB creation to fail
-     if (len(sample_name) > 35):
+    # trim sample_name to less than 35 characters
+    # as it causes PGDB creation to fail
+    if (len(sample_name) > 35):
         sample_name = sample_name[0:35]
 
 
-     if not sample_name[0].isalpha() :
+    if not sample_name[0].isalpha() :
         sample_name = 'E' + sample_name
 
-     write_organisms_dat_file(output_dir_name, sample_name)
+    write_organisms_dat_file(output_dir_name, sample_name)
 
-     genetic_elements_file.close()
-     rename(output_dir_name + "/.tmp.genetic-elements.dat", output_dir_name + "/genetic-elements.dat")
+    genetic_elements_file.close()
+    rename(output_dir_name + "/.tmp.genetic-elements.dat", output_dir_name + "/genetic-elements.dat")
 
 
 
 def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
-    try:
-       gutils.fprintf(pfFile, "ID\t%s\n", shortid)
-       gutils.fprintf(pfFile, "NAME\t%s\n", shortid)
+    
+    gutils.fprintf(pfFile, "ID\t%s\n", shortid)
+    gutils.fprintf(pfFile, "NAME\t%s\n", shortid)
 
-       # for orfs no the negative strand the start and the end positions
-       # are reversed
-       if attrib['strand'] == '+':
-           gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['start'])
-           gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['end'])
-       else: # if on the negative strand
-           gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
-           gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
-    except:
-       pass
+    # for orfs on the negative strand the start and the end positions
+    # are reversed
+    if attrib['strand'] == '+':
+        gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['start'])
+        gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['end'])
+    else: # if on the negative strand
+        gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
+        gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
 
-    ec_nos = {}
-    try:
-       prod_attributes = create_product_attributes(attrib['product'])
+    gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+    if 'gene-comment' in attrib:
+        gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", attrib['gene-comment'])
 
-       for function in prod_attributes['FUNCTION']:
-          gutils.fprintf(pfFile, "FUNCTION\t%s\n", function)
-          #printf("FUNCTION\t%s\n", function)
+    if 'rxn' in attrib:
+        rxn_list = list(set(attrib['rxn']))
+        for rxn_val in rxn_list:
+            gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
-       if 'taxon' in attrib:
-          gutils.fprintf(pfFile, "TAXONOMIC-ANNOT\tTAX-%s\n", attrib['taxon'])
+    elif 'ec' in attrib:
+        ec_list = list(set(attrib['ec']))
+        for ec_val in ec_list:
+            gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
-
-       for dblink in prod_attributes['DBLINK']:
-          gutils.fprintf(pfFile, "DBLINK\t%s:%s\n", dblink[0], dblink[1])
-          #printf("DBLINK\t%s:%s\n", dblink[0], dblink[1])
-
-       for ec in prod_attributes['EC']:
-          gutils.fprintf(pfFile, "EC\t%s\n", ec)
-          #printf("EC\t%s\n", ec)
-
-
-#       if len(prod_attributes)>=5:
-#         for i in range(0, len(prod_attributes)):
-#            if i==0:
-#              fprintf(pfFile, "FUNCTION\t%s\n", prod_attributes[i])
-#
-#            if i==1:
-#              fprintf(pfFile, "DBLINK\tSP:%s\n", prod_attributes[i])
-#            #  printf("DBLINK\tSP:%s\n", prod_attributes[0])
-#
-#            if i == 2:
-#              fprintf(pfFile, "DBLINK\tMetaCyc:%s\n", prod_attributes[i])
-#            #  printf("DBLINK\tMetaCyc:%s\n", prod_attributes[1])
-#
-#            if i >= 4:
-#              if not prod_attributes[i] in ec_nos:
-#                 fprintf(pfFile, "EC\t%s\n", prod_attributes[i])
-#                 ec_nos[prod_attributes[i]] = True
-#       else:
-#         fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
-#            #  printf("EC\t%s\n", prod_attributes[3])
-    except:
-       gutils.fprintf(pfFile, "FUNCTION\t%s \n", 'hypothetical protein')
+    if 'taxon' in attrib:
+        gutils.fprintf(pfFile, "TAXONOMIC-ANNOT\tTAX-%s\n", attrib['taxon'])
 
     if attrib['feature']=='CDS':
-       gutils.fprintf(pfFile, "PRODUCT-TYPE\tP\n")
+        gutils.fprintf(pfFile, "PRODUCT-TYPE\tP\n")
 
     if attrib['feature']=='tRNA':
-       gutils.fprintf(pfFile, "PRODUCT-TYPE\tTRNA\n")
+        gutils.fprintf(pfFile, "PRODUCT-TYPE\tTRNA\n")
 
     if attrib['feature']=='rRNA':
-       gutils.fprintf(pfFile, "PRODUCT-TYPE\trRNA\n")
+        gutils.fprintf(pfFile, "PRODUCT-TYPE\trRNA\n")
+
     gutils.fprintf(pfFile, "//\n")
 
+'''
+def get_funct(_attrib):
+    prod = _attrib['product']
+    srcdb = _attrib['sourcedb']
+    prod = prod.replace('MULTISPECIES: ', '')  # If present
+    if ' OS ' in prod:  # if has taxa info
+        split_p = prod.split(' OS ', 1)
+        p_func = split_p[0]
+        p_note = split_p[1]
+        _attrib['function'] = p_func
+        _attrib['gene-comment'] = p_note
+    elif ' TaxID ' in prod:
+        print(_attrib)
+        split_p = prod.rsplit(' n ', 1)
+        p_func = split_p[0]
+        p_note = split_p[1]
+        _attrib['function'] = p_func
+        _attrib['gene-comment'] = p_note
+    elif 'metacyc' in srcdb:
+        split_p = prod.rsplit(' (', 1)
+        p_func = split_p[0]
+        p_note = split_p[1]
+        _attrib['function'] = p_func
+        _attrib['gene-comment'] = p_note
+    else:
+        p_func = prod
+        _attrib['function'] = p_func
 
-def  create_product_attributes(product) :
-     COG_PATT = re.compile(r'(COG\d\d\d\d)')
-     KEGG_PATT = re.compile(r'(K\d\d\d\d\d)')
-     EC_PATTS = [
-                  re.compile(r'EC[:\s](\d+[.]\d+[.]\d+[.]-)'),\
-                  re.compile(r'EC[:\s](\d+[.]\d+[.]\d+[.]\d+)'),\
-                  re.compile(r'EC[:\s](\d+[.]\d+[.]-[.]-)'),\
-                  re.compile(r'EC[:\s](\d+[.]-[.]-[.]-)'),\
-                  re.compile(r'(\d+[.]\d+[.]\d+[.]-)'),\
-                  re.compile(r'(\d+[.]\d+[.]\d+[.]\d+)'),\
-                  re.compile(r'(\d+[.]\d+[.]-[.]-)'),\
-                  re.compile(r'(\d+[.]-[.]-[.]-)')
-                ]
-
-     #METACYC_PATT = re.compile(r'#\sUNIPROT\s#\s([A-Z0-9]+)\s#\s([.*])\s#')
-# UNIPROT # Q9I1M2 # MetaCyc # 1.2.4.4-RXN
-     METACYC_PATTS = [   # order is important
-                         re.compile(r'#\sUNIPROT\s#\s([A-Z0-9]+)\s#\sMetaCyc\s#(\s)#'),
-                         re.compile(r'#\sUNIPROT\s#\s([A-Z0-9]+)\s#\sMetaCyc\s#\s(\S*)\s#'),
-                         re.compile(r'#\sUNIPROT\s#\s([A-Z0-9]+)\s#\s(\S*)\s#')
-                    ]
-     ORGANISM_PATT = re.compile(r'#\sOrganism:\s(.*)$')
-     FUNCTION_PATT = re.compile(r'#\sFunction:\s([^#]*)')
-
-     STRAY_PATT = re.compile(r'[()#%]')
-
-     products = []
-     _products = {}
-     _products['DBLINK'] =[]
-     _products['FUNCTION'] =[]
-     _products['ORGANISM'] =[]
-     _products['EC'] =[]
-     _product = product
+    return _attrib
 
 
-     seen_ec={}
-     res = KEGG_PATT.search(_product)
-     if res:
-        for kegg in res.groups( ):
-          _products["DBLINK"].append([ "KO", kegg ])
-        _product = re.sub(KEGG_PATT,'%',_product)
+def clean_prod(_target, _product):  # TODO: this and get_funct should be joined
+    prod = str(_product)
+    prod = prod.replace('MULTISPECIES: ', '')  # If present
+    if ' OS ' in prod:  # if has taxa info
+        split_p = prod.split(' OS ', 1)
+        p_func = split_p[0]
+    elif ' TaxID ' in prod:
+        split_p = prod.rsplit(' n ', 1)
+        p_func = split_p[0]
+    elif 'gnl|META|' in _target:
+        split_p = prod.rsplit(' (', 1)
+        p_func = split_p[0]
+    else:
+        p_func = prod
 
-
-     res = COG_PATT.search(_product)
-     if res:
-        for cog in res.groups( ):
-          _products["DBLINK"].append([ "COG", cog ])
-        _product = re.sub(COG_PATT,'%',_product)
-
-     for EC_PATT in EC_PATTS:
-        res = EC_PATT.search(_product)
-        if res:
-          for ec in res.groups( ):
-             if not  ec in seen_ec:
-                _products["EC"].append( ec)
-                seen_ec[ec]= True
-
-        _product = re.sub(EC_PATT,'%',_product)
-
-
-
-     for METACYC_PATT in METACYC_PATTS:
-         res = METACYC_PATT.search(_product)
-         if res:
-           i=0
-           for ec in res.groups():
-             if i==0:
-               _products["DBLINK"].append([ 'SP',  ec])
-             if i==1:
-               if ec.strip():
-                 _products["DBLINK"].append([ 'MetaCyc',  ec])
-             i+=1
-           _product = re.sub(METACYC_PATT,'%',_product)
-           break
-
-
-     res = ORGANISM_PATT.search(_product)
-     if res:
-         for ec in res.groups():
-             _products["ORGANISM"].append( ec.strip())
-         _product = re.sub(ORGANISM_PATT,'%',_product)
-
-     res = FUNCTION_PATT.search(_product)
-     if res:
-         for func in res.groups():
-             _func  =re.sub(STRAY_PATT,'',func)
-             _products["FUNCTION"].append(clean_up_function_text(_func.strip()))
-         _product = re.sub(FUNCTION_PATT,'%',_product)
-
-     _product = re.sub(STRAY_PATT,'', _product)
-     if _product.strip():
-          _products["FUNCTION"].append(clean_up_function_text(_product.strip()))
-
-
-     return _products
-
+    return p_func
+'''
 
 def clean_up_function_text(_product):
      _fields = [ x.strip() for x in  _product.split(' ')]
@@ -585,8 +602,8 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
      output_file_name_tmp = output_file_name + ".tmp"
      outputfile = open(output_file_name_tmp, 'w')
 
-     count =0
-     outputStr=""
+     count = 0
+     outputStr = ""
      for key in contig_dict:
         first = True
         if count %10000 == 0:
@@ -833,14 +850,6 @@ def main(argv, errorlogger = None, runstatslogger = None):
         errorlogger.printf("ERROR\tGFF file %s  not found\n", options.gff_file)
         sys.exit(0)
 
-    #if not path.exists(options.nucleotide_sequences):
-    #    errorlogger.printf("ERROR\tNucloetide sequences file does not exist")
-    #    sys.exit(0)
-
-    #if not path.exists(options.protein_sequences):
-    #    errorlogger.printf("ERROR\tProtein sequences file does not exist")
-    #    sys.exit(0)
-
     output_files = {}
     input_files = {}
     if  options.gbk_file:
@@ -848,10 +857,13 @@ def main(argv, errorlogger = None, runstatslogger = None):
 
     if  options.ptinput_file:
        output_files['ptinput'] = options.ptinput_file
+       output_files['ec_mapping'] = options.ec_mapping
+       output_files['rxn_mapping'] = options.rxn_mapping
+       output_files['annotation_table'] = options.annotation_table
+       output_files['taxonomy_table'] = options.taxonomy_table
 
     nucleotide_seq_dict = {}
     protein_seq_dict = {}
-
     if options.nucleotide_sequences  and path.exists(options.nucleotide_sequences):
        process_sequence_file(options.nucleotide_sequences, nucleotide_seq_dict)
 
@@ -859,7 +871,7 @@ def main(argv, errorlogger = None, runstatslogger = None):
        process_sequence_file(options.protein_sequences, protein_seq_dict)
 
     orf_to_taxonid={}
-    if options.ncbi_taxonomy_tree!=None and options.taxonomy_table !=None:
+    if options.ncbi_taxonomy_tree != None and options.taxonomy_table != None:
       orf_to_taxonid = read_taxons_for_orfs(options.ncbi_taxonomy_tree, options.taxonomy_table)
 
     process_gff_file(options.gff_file, output_files, nucleotide_seq_dict, \

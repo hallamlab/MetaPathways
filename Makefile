@@ -111,9 +111,9 @@ conda-build-init:
 	conda install --yes conda-build
 
 conda-install-deps:
-	conda install --yes -n base -c conda-forge mamba
+	conda install --yes -c conda-forge mamba
 	mamba install --yes -c conda-forge curl
-	mamba install --yes -c bioconda blast prodigal bwa samtools
+	mamba install --yes -c bioconda blast prodigal bwa samtools barrnap pandas tqdm
 	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
 
 
@@ -152,7 +152,7 @@ extensions-build:
 
 extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
-#cp extensions/FAST/fast*            $(DESTDIR)/bin
+	cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
@@ -301,13 +301,13 @@ clean:
 	$(MAKE) $(CFLAGS) executables/source/trnascan clean
 	$(MAKE) $(CFLAGS) executables/source/rpkm clean
 	$(MAKE) $(CFLAGS) executables/source/prodigal.v2_00 clean
-	$(MAKE) $(CFLAGS) executables/source/FAST clean
+	#$(MAKE) $(CFLAGS) executables/source/FAST clean
 	$(MAKE) $(CFLAGS) executables/source/bwa clean
 
 remove:
 	rm -rf  ../$(OS_PLATFORM)/trnascan-1.4 
-	rm -rf ../$(OS_PLATFORM)/fastal  
-	rm -rf ../$(OS_PLATFORM)/fastdb  
+	#rm -rf ../$(OS_PLATFORM)/fastal  
+	#rm -rf ../$(OS_PLATFORM)/fastdb  
 	rm -rf ../$(OS_PLATFORM)/bwa  
 	rm -rf ../$(OS_PLATFORM)/prodigal
 	rm -rf ../$(OS_PLATFORM)/rpkm 
