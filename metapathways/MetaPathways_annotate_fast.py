@@ -931,11 +931,11 @@ def create_annotation(
     output_comp_annot_file2.close()
 
     # Add rRNA and tRNA records to output gff
-    if rRNA_yes = True:
+    if rRNA_yes == True:
         for contig in rRNA_dictionary:
             rrna_rec = rRNA_dictionary[contig][0]
             write_16S_tRNA_gene_info(contig, rrna_rec, outputgff_file, "_rRNA")
-    if tRNA_yes = True:
+    if tRNA_yes == True:
         for contig in tRNA_dictionary:
             trna_rec = tRNA_dictionary[contig][0]
             write_16S_tRNA_gene_info(contig, trna_rec, outputgff_file, "_tRNA")
