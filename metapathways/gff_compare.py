@@ -3,7 +3,7 @@ import pybedtools
 
 
 
-def clean_gff(gff_in, gff_out):
+def clean_gff(gff_in, gff_out, f_tag):
 	# Clean up GFF3 files so they work with pybedtools
 	with open(gff_in, 'r') as gff_i:
 		with open(gff_out, 'w') as gff_o:
@@ -11,13 +11,8 @@ def clean_gff(gff_in, gff_out):
 			clean_data = []
 			for line in data:
 				tab_cnt = len(line.split('\t'))
-				if 'cds' in gff_out:
-					if '\tCDS\t' in line:
-						clean_data.append(line)
-				elif 'trna' in gff_in:
-					if '\ttRNA\t' in line:
-						clean_data.append(line)
-				elif ((line[0] != '#') & (tab_cnt > 1)):
+				feat_str = '\t' + f_tag + '\t'
+				if feat_str in line: # only add feature lines
 					clean_data.append(line)
 			gff_o.write(''.join(clean_data))
 
@@ -37,8 +32,8 @@ def compare_gffs(orf_gff_file, feat_gff_file, tag='UNKNOWN'):
 	# Clean input GFF3 files
 	orf_clean_file = os.path.join(sv_path, sample_id + '.annot.cds.gff')
 	feat_clean_file = os.path.join(sv_path, sample_id + '.' + tag + '.clean.gff')
-	clean_gff(orf_gff_file, orf_clean_file)
-	clean_gff(feat_gff_file, feat_clean_file)
+	clean_gff(orf_gff_file, orf_clean_file, 'CDS')
+	clean_gff(feat_gff_file, feat_clean_file, tag)
 	
 	# Load GFF3s
 	orf_gff = pybedtools.BedTool(orf_clean_file)
