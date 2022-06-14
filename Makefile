@@ -154,7 +154,6 @@ extensions-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
 	cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
-	cp extensions/trnascan/trnascan-1.4 $(DESTDIR)/bin
 
 # The location of the expat directory
 CC=gcc  
@@ -188,21 +187,15 @@ BLASTP=$(BINARY_FOLDER)/blastp
 LASTAL=$(BINARY_FOLDER)/lastal+
 RPKM=$(BINARY_FOLDER)/rpkm
 BWA=$(BINARY_FOLDER)/bwa
-TRNASCAN=$(BINARY_FOLDER)/trnascan-1.4
 FAST=$(BINARY_FOLDER)/fastal
 PRODIGAL=$(BINARY_FOLDER)/prodigal
-
-METAPATHWAYS_DB_DEFAULT=../fogdogdatabases
-METAPATHWAYS_DB_TAR=Metapathways_DBs_2016-04.tar.xz
-METAPATHWAYS_DB_URL=https://www.dropbox.com/s/ye3kpve041e0r39/MetaPathways_DBs.zip
-
 
 GIT_SUBMODULE_UPDATE=gitupdate
 # Alias for target 'all', for compliance with FogDog deliverables standard:
 
-#all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM)
-all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
-#pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(TRNASCAN)  $(RPKM) $(BLASTP) 
+#all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA)  $(RPKM)
+all: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(RPKM) $(BLASTP) METAPATHWAYS_DB_FETCH
+#pre-docker-builds: $(GIT_SUBMODULE_UPDATE) $(BINARY_FOLDER) $(PRODIGAL)  $(FAST)  $(BWA) $(RPKM) $(BLASTP) 
 
 
 install-without-ptools: all METAPATHWAYS_DB_FETCH
@@ -234,8 +227,6 @@ NOT_USED:
 
 .PHONY: $(GIT_SUBMODULE_UPDATE) 
 $(GIT_SUBMODULE_UPDATE):
-	@echo git submodule update  trnascan
-	git submodule update  --init executables/source/trnascan 
 	@echo git submodule update  rpkm
 	git submodule update  --init executables/source/rpkm 
 	@echo git submodule update  bwa
@@ -244,10 +235,6 @@ $(GIT_SUBMODULE_UPDATE):
 	git submodule update  --init executables/source/FAST 
 	@echo git submodule update  prodigal
 	git submodule update  --init executables/source/prodigal 
-
-$(TRNASCAN):  
-	$(MAKE) $(CFLAGS) executables/source/trnascan 
-	mv executables/source/trnascan/trnascan-1.4 $(BINARY_FOLDER)/
 
 $(RPKM):  
 	$(MAKE) $(CFLAGS) executables/source/rpkm 
@@ -298,28 +285,12 @@ $(BINARY_FOLDER):
 
 ### Utilities:
 clean:
-	$(MAKE) $(CFLAGS) executables/source/trnascan clean
 	$(MAKE) $(CFLAGS) executables/source/rpkm clean
 	$(MAKE) $(CFLAGS) executables/source/prodigal.v2_00 clean
-	#$(MAKE) $(CFLAGS) executables/source/FAST clean
 	$(MAKE) $(CFLAGS) executables/source/bwa clean
 
 remove:
-	rm -rf  ../$(OS_PLATFORM)/trnascan-1.4 
-	#rm -rf ../$(OS_PLATFORM)/fastal  
-	#rm -rf ../$(OS_PLATFORM)/fastdb  
 	rm -rf ../$(OS_PLATFORM)/bwa  
 	rm -rf ../$(OS_PLATFORM)/prodigal
 	rm -rf ../$(OS_PLATFORM)/rpkm 
-
-### Testing:
-
-## taltman: Doesn't work for me, needs to be reworked.
-# no-ptools-unit-test:
-# 	mkdir -p test
-# 	source MetaPathwaysrc
-# 	touch executables/linux/FGS+
-# 	touch executables/linux/ptools
-# 	touch /tmp/mp_db_dir/MetaPathways_DBs/ncbi_tree/RefSeq-release80.catalog
-# 	time ./MetaPathways.py -i regtests/input/B1.fasta -o test/B1_MPout/ -p test/mp_param.txt -c test/mp_config.txt
 
