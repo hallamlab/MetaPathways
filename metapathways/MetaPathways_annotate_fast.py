@@ -137,6 +137,13 @@ def createParser():
         help="the tRNA GFF file [OPTIONAL]",
     )
 
+    parser.add_option(
+        "--diag",
+        dest="diag_path",
+        default=None,
+        help="path to diagnostics directory",
+    )
+
     cutoffs_group = OptionGroup(parser, "Cuttoff Related Options")
 
     cutoffs_group.add_option(
@@ -1329,10 +1336,21 @@ def main(argv, errorlogger=None, runstatslogger=None):
     )
 
     # Lastly, find overlaps of annotated ORFs against rRNAs and tRNAs
+    feature_dict = {}
     if opts.rRNA_gff != None: # rRNAs?
-        gffc.compare_gffs(opts.output_gff, opts.rRNA_gff, tag='rRNA')
+        orf_diag_file, feat_entry = gffc.compare_gffs(opts.diag_path, opts.output_gff,
+                                                      opts.rRNA_gff, tag='rRNA'
+                                                      )
+        feature_dict[feat_entry[0]] = feat_entry[1]
     if opts.tRNA_gff != None: # tRNAs?
-        gffc.compare_gffs(opts.output_gff, opts.tRNA_gff, tag='tRNA')
+        orf_diag_file, feat_entry = gffc.compare_gffs(opts.diag_path, opts.output_gff,
+                                                      opts.tRNA_gff, tag='tRNA'
+                                                      )
+        feature_dict[feat_entry[0]] = feat_entry[1]
+
+    if feature_dict != {}: # Any features to filter?
+        gffc.subtract_gffs(opts.diag_path, orf_diag_file, feature_dict)
+
 
 
 

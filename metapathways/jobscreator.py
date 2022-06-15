@@ -673,7 +673,7 @@ class ContextCreator:
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
         rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
-
+        diag_sv_path = s.diagnostics_dir
 
         '''outputs'''
         output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
@@ -730,17 +730,18 @@ class ContextCreator:
                   --algorithm %s "\
               %(pyScript, context.inputs['input_unannotated_gff'],\
               context.outputs['output_annotated_gff'],  options,\
-              context.outputs1['output_comparative_annotation'],s.algorithm )
+              context.outputs1['output_comparative_annotation'], s.algorithm
+              )
 
         for refdb in refdbs:
             parsed_file =  s.blast_results_dir + PATHDELIM + s.sample_name\
                             + "." + refdb+ "." + s.algorithm + "out.parsed.txt"
             context.inputs[parsed_file] = parsed_file
-#               cmd = cmd + " -b " + parsed_file + " -d " + refdb + " -w 1 "
 
 
         cmd = cmd + " -m " + context.inputs1['mapping_txt']
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name
+        cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]
