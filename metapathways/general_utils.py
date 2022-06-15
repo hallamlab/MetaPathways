@@ -14,6 +14,7 @@ try:
     import types
     import re
     import glob
+    import gzip
 
     from shutil import rmtree
     from os import getenv, makedirs, path, remove
@@ -103,27 +104,30 @@ def isFastaFile(filename):
 
     try:
         c = 0
-        with open(filename) as fp:
-            for line in fp:
-                """trim the line"""
-                line_trimmed = line.strip()
+        if filename.endswith((".gz", "_files")):
+            fp = gzip.open(filename,'rt')
+        else:
+            fp = open(filename)
+        for line in fp:
+            """trim the line"""
+            line_trimmed = line.strip()
 
-                if line_trimmed:
-                    if fastaNamePATT.search(line_trimmed):
-                        """ is a name line """
-                        seenNamePatt = True
-                    else:
-                        """ not a seq name """
-                        if fastaAlphabetPATT.search(line_trimmed):
-                            """ it is of the alphabet"""
-                            if not seenNamePatt:
-                                """ am i seeing sequence before the name"""
-                                isFasta = False
-                        else:
+            if line_trimmed:
+                if fastaNamePATT.search(line_trimmed):
+                    """ is a name line """
+                    seenNamePatt = True
+                else:
+                    """ not a seq name """
+                    if fastaAlphabetPATT.search(line_trimmed):
+                        """ it is of the alphabet"""
+                        if not seenNamePatt:
+                            """ am i seeing sequence before the name"""
                             isFasta = False
-                c += 1
-                if c > 500:
-                    break
+                    else:
+                        isFasta = False
+            c += 1
+            if c > 500:
+                break
         fp.close()
     except:
         eprintf("ERROR:\tCannot open filee " + filename)
@@ -197,20 +201,23 @@ def isNucleotide(filename):
 
     try:
         c = 0
-        with open(filename) as fp:
-            for line in fp:
-                """trim the line"""
-                line_trimmed = line.strip()
-                if line_trimmed:
-                    if not fastaNamePATT.search(line_trimmed):
-                        for a in line_trimmed.upper():
-                            if a in ["A", "T", "C", "G", "N"]:
-                                nucCount += 1
-                            else:
-                                nonNucCount += 1
-                c += 1
-                if c > 500:
-                    break
+        if filename.endswith((".gz", "_files")):
+            fp = gzip.open(filename,'rt')
+        else:
+            fp = open(filename)
+        for line in fp:
+            """trim the line"""
+            line_trimmed = line.strip()
+            if line_trimmed:
+                if not fastaNamePATT.search(line_trimmed):
+                    for a in line_trimmed.upper():
+                        if a in ["A", "T", "C", "G", "N"]:
+                            nucCount += 1
+                        else:
+                            nonNucCount += 1
+            c += 1
+            if c > 500:
+                break
     except:
         eprintf("ERROR:\tCannot open file " + filename)
         return False
@@ -226,7 +233,6 @@ def isNucleotide(filename):
 
 def check_file_types(filenames):
     filetypes = {}
-
     for filename in filenames:
         if not path.exists(filename):
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
@@ -240,7 +246,6 @@ def check_file_types(filenames):
             filetypes[filename] = ["GENBANK", "NOT-USED", False]
         else:
             filetypes[filename] = ["UNKNOWN", "UNKNOWN", False]
-
     return filetypes
 
 

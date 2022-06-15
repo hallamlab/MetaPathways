@@ -13,7 +13,7 @@ all:
 
 .PHOHY: clean
 clean:
-	make -C FAST clean
+	#make -C FAST clean
 	make -C trnascan clean
 	make -C metacount clean
 	make -C rpkm clean
