@@ -30,7 +30,15 @@ usage = sys.argv[0] + """ --algorithm <algorithm> [algorithm dependent options]"
 
 def createParser():
 
-    epilog = """The preprocessed nucleotide sequences (contigs) are used as input to a gene prediction algorithm, currently prodigal, to detect the gene coding regions.  The output of the prodigal run is a set of untranslated ORFs and the same ORFs translated (into amino acid sequences). The resulting files are available in the 'orf_prediction' folder. The translation is done based on the translation table id provided by the user, by default it 11"""
+    epilog = """
+    The preprocessed nucleotide sequences (contigs) are used as
+    input to a gene prediction algorithm, currently prodigal, to detect the
+    gene coding regions.  The output of the prodigal run is a set of
+    untranslated ORFs and the same ORFs translated (into amino acid sequences).
+    The resulting files are available in the 'orf_prediction' folder.
+    The translation is done based on the translation table id provided by
+    the user, by default it 11
+    """
 
     epilog = re.sub(r"\s+", " ", epilog)
 
@@ -42,8 +50,8 @@ def createParser():
         "--algorithm",
         dest="algorithm",
         default="prodigal",
-        choices=["prodigal", "FGS+"],
-        help="default : prodigal ORF prediction algorithm [prodigal, FGS+]",
+        choices=["prodigal"],
+        help="default : prodigal ORF prediction algorithm [prodigal]",
     )
 
     parser.add_option(
@@ -115,91 +123,24 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     if options.algorithm == "prodigal":
         _execute_prodigal(options)
 
-    if options.algorithm == "FGS+":
-        _execute_fgs(options)
-
-
-def _execute_fgs(options):
-    modelFile = "illumina_10"
-    sample_name = re.sub(r".gff", "", options.prod_output)
-
-    args = []
-    if options.prod_exec:
-        args.append(options.prod_exec)
-    if options.prod_input:
-        args += ["-s", options.prod_input]
-
-    if options.prod_output:
-        args += ["-o", sample_name + ".tmp"]
-
-    args += ["-w", "0"]
-    args += ["-t", modelFile]
-    args += ["-p", options.nthreads]
-
-    # arguments =  [ fragGeneScan, "-s", inputFile, "-o", outputfile, "-w", "0", "-t", modelFile, "-p", thread]
-
-    result = sysutils.getstatusoutput(" ".join(args))
-
-    create_gff_faa(
-        sample_name + ".tmp" + ".faa", sample_name + ".gff", sample_name + ".faa"
-    )
-    remove(sample_name + ".tmp" + ".faa")
-    return (0, "")
-
-
-def create_gff_faa(tempfile, gfffile, faafile):
-    patt = re.compile(r">(.*)_(\d+)_(\d+)_([+-])")
-    idpatt = re.compile(r".*_(\d+_\d+)")
-
-    with open(gfffile, "w") as gffout:
-        with open(faafile, "w") as faaout:
-            fastareader = fastreadrmod.FastaReader(tempfile)
-            for fasta in fastareader:
-                res = patt.search(fasta.name)
-                if res:
-                    # nameprint(res.group(1),res.group(2), res.group(3), res.group(4))
-                    orfname = res.group(1)
-                    start = res.group(2)
-                    end = res.group(3)
-                    strand = res.group(4)
-                    res = idpatt.search(orfname)
-                    id = ""
-                    if res:
-                        id = res.group(1)
-                    attr = "ID=" + id + ";partial=00"
-                fields = [orfname, "FGS+", "CDS", start, end, "0", strand, "0", attr]
-
-                gutils.fprintf(faaout, ">" + orfname + "\n" + fasta.sequence + "\n")
-                gutils.fprintf(gffout, "\t".join(fields) + "\n")
-
-
-# engcyc_3300002128_0	Prodigal_v2.00	CDS	32	322	32.0	-	0	ID=1_1;partial=00;type=ATG;rbs_motif=GGAG/GAGG;rbs_spacer=5-10bp;score=33.49;cscore=16.72;sscore=16.76;rscore=11.36;uscore=-0.16;tscore=4.12
-
 
 def _execute_prodigal(options):
     args = []
 
     if options.prod_exec:
         args.append(options.prod_exec)
-
     if options.prod_m:
         args.append("-m")
-
     if options.prod_p:
         args += ["-p", options.prod_p]
-
     if options.prod_f:
         args += ["-f", options.prod_f]
-
     if options.prod_g:
         args += ["-g", options.prod_g]
-
     if options.prod_input:
         args += ["-i", options.prod_input]
-
     if options.prod_output:
         args += ["-o", options.prod_output + ".tmp"]
-        # args += [ "-o", options.prod_output  ]
 
     result = sysutils.getstatusoutput(" ".join(args))
     rename(options.prod_output + ".tmp", options.prod_output)

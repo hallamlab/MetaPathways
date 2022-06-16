@@ -35,36 +35,73 @@ def createParser():
 
     # Input options
     parser.add_option(
+        "--mode",
+        dest="trna_mode",
+        default='B',
+        help="search mode for tRNAs",
+    )
+
+    parser.add_option(
+        "-i",
+        dest="trna_i",
+        default=None,
+        help="input fasta file"
+    )
+
+    parser.add_option(
         "-o",
         dest="trna_o",
         default=None,
-        help="Output from the tRNA-Scan 1.4 into <outfile>",
+        help="save final results in <file>"
     )
 
     parser.add_option(
-        "-i", dest="trna_i", default=None, help="reads the sequences from <input> file"
-    )
-
-    parser.add_option(
-        "-T", dest="trna_T", default="6", help="reads the Tsignal from <TPCsignal>"
-    )
-
-    parser.add_option(
-        "-D", dest="trna_D", default=None, help="reads the Dsignal from <Dsignal>"
-    )
-
-    parser.add_option(
-        "-F",
-        dest="trna_F",
+        "-m",
+        dest="trna_m",
         default=None,
-        help="write predicted tRNA genes in fasta format<outfile>",
+        help="save statistics summary for run in <file>"
+    )
+
+    parser.add_option(
+        "-j",
+        dest="trna_j",
+        default=None,
+        help="save results in GFF3 file format of <file>"
+    )
+
+    parser.add_option(
+        "-a",
+        dest="trna_a",
+        default=None,
+        help="save predicted tRNA sequences in FASTA file format of <file>",
+    )
+
+    parser.add_option(
+        "-p",
+        dest="trna_p",
+        default=None,
+        help="use <label> prefix for all default output file names",
+    )
+
+    parser.add_option(
+        "-q",
+        dest="trna_q",
+        default=True,
+        help="quiet mode (credits & run option selections suppressed)",
+    )
+
+    parser.add_option(
+        "-t",
+        dest="trna_t",
+        default=str(1),
+        help="number of threads used for running infernal (default 1)",
     )
 
     parser.add_option(
         "--executable",
         dest="trna_executable",
         default=None,
-        help="The tRNA-SCAN 1.4 executable",
+        help="The tRNA-SCAN SE executable",
     )
     return parser
 
@@ -82,21 +119,33 @@ def _execute_tRNA_Scan(options):
     if options.trna_executable:
         args.append(options.trna_executable)
 
-    if options.trna_i:
-        args += ["-i", options.trna_i]
+    if options.trna_mode:
+        args += ['-' + options.trna_mode]
 
     if options.trna_o:
         args += ["-o", options.trna_o]
 
-    if options.trna_D:
-        args += ["-D", options.trna_D]
+    if options.trna_m:
+        args += ["-m", options.trna_m]
 
-    if options.trna_T:
-        args += ["-T", options.trna_T]
+    if options.trna_j:
+        args += ["-j", options.trna_j]
 
-    if options.trna_F:
-        args += ["-F", options.trna_F]
+    if options.trna_a:
+        args += ["-a", options.trna_a]
 
+    if options.trna_p:
+        args += ["-p", options.trna_p]
+
+    if options.trna_q:
+        args += ["--quiet"]
+
+    if options.trna_t:
+        args += ["--thread", options.trna_t]
+       
+    if options.trna_i:
+        args += [options.trna_i]
+    
     result = sysutils.getstatusoutput(" ".join(args))
 
     if result[0] != 0:

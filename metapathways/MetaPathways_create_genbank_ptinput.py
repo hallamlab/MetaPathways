@@ -304,8 +304,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 id  =  attrib['id']
                 shortid = ""
                 compactid = ""
-                
-                del attrib['ec'] # do this for now, but it should be cleaned up better
+                try:
+                    del attrib['ec'] # do this for now, but it should be cleaned up better
+                except:
+                    1 + 1
 
                 if attrib['feature'] == 'CDS':
                     shortid = prefix + mputils.ShortenORFId(attrib['id'])

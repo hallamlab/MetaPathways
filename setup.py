@@ -42,7 +42,10 @@ setup(
     scripts=["bin/compress_by_ec"],
     install_requires=["pyfastx",
                       "docopt",
-                      'camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs'
+                      'camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs',
+                      'pandas',
+                      'tqdm',
+                      'pybedtools'
                       ],
     entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),

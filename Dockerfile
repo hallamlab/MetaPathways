@@ -1,6 +1,15 @@
 FROM continuumio/miniconda3
-
 MAINTAINER Tomer Altman, Altman Analytics LLC
+
+### EXAMPLES ###
+
+### Build dev branch
+# sudo docker build --network=host -t metapathways:dev .
+
+### Build test branch
+# sudo docker build --build-arg git_branch=test --network=host -t metapathways:test .
+
+################
 
 Workdir /opt
 
@@ -8,6 +17,7 @@ Workdir /opt
 
 ENV PYTHONPATH=/opt/mp_repo:/opt/mp_repo/libs
 
+ARG git_branch=dev
 
 ### Install apt dependencies
 
@@ -30,7 +40,7 @@ RUN old_umask=`umask` && \
     umask $old_umask
 
 # Install MetaPathways:
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
 
 ### Copying the repo files into the Docker image:
 COPY resources       /opt/mp_repo/resources/

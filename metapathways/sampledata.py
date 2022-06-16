@@ -107,6 +107,9 @@ class SampleData:
         self.orf_prediction_dir = (
             self.output_dir + PATHDELIM + "orf_prediction" + PATHDELIM
         )
+        self.diagnostics_dir = (
+            self.output_dir + PATHDELIM + "diagnostics" + PATHDELIM
+        )
         self.genbank_dir = self.output_dir + PATHDELIM + "genbank" + PATHDELIM
         self.output_run_statistics_dir = (
             self.output_dir + PATHDELIM + "run_statistics" + PATHDELIM
@@ -120,9 +123,9 @@ class SampleData:
             self.output_results + PATHDELIM + "annotation_table" + PATHDELIM
         )
 
-        self.output_results_megan_dir = (
-            self.output_results + PATHDELIM + "megan" + PATHDELIM
-        )
+        #self.output_results_megan_dir = (
+        #    self.output_results + PATHDELIM + "megan" + PATHDELIM
+        #)
         self.output_results_rpkm_dir = self.output_results + PATHDELIM + "rpkm"
         self.output_fasta_pf_dir = self.output_dir + PATHDELIM + "ptools" + PATHDELIM
         self.output_results_pgdb_dir = (
@@ -226,6 +229,7 @@ class SampleData:
     def _createFolders(self):
         gutils.checkOrCreateFolder(self.preprocessed_dir)
         gutils.checkOrCreateFolder(self.orf_prediction_dir)
+        gutils.checkOrCreateFolder(self.diagnostics_dir)
         gutils.checkOrCreateFolder(self.genbank_dir)
         gutils.checkOrCreateFolder(self.output_run_statistics_dir)
         gutils.checkOrCreateFolder(self.blast_results_dir)
