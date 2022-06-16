@@ -967,6 +967,7 @@ def process_product(product, database, similarity_threshold=0.9):
     """
 
     processed_product = ""
+
     if 'MULTISPECIES: ' in product:
         product = product.replace('MULTISPECIES: ', '')
     #try:

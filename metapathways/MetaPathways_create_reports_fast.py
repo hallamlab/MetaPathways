@@ -22,6 +22,7 @@ try:
     from metapathways import general_utils as gutils
     from metapathways import sysutil as sysutils
     from metapathways import errorcodes as errormod
+    from metapathways import MetaPathways_annotate_fast as anno_fast
 except:
     print("""Could not load some user defined  module functions""")
     print(traceback.print_exc(10))
@@ -641,11 +642,6 @@ def process_parsed_blastoutput(
                 print("refseq process", data)
 
             if data != None and isWithinCutoffs(data, cutoffs):
-                # if dbname=='refseq-nr-2014-01-18':
-                #      print  'refseq process',  data
-                # if dbname=='refseq':
-                # if "partial" in data['product']:
-                #    print data['query'] + '\t' + str(data['q_length']) +'\t' + str(data['bitscore']) +'\t' + str(data['expect']) +'\t' + str(data['identity']) + '\t' + str(data['bsr']) + '\t' + data['ec'] + '\t' + data['product']
                 annotation = {}
                 shortORFId = None
                 for field in fields:
@@ -653,27 +649,24 @@ def process_parsed_blastoutput(
                         if field == "query":
                             shortORFId = mputils.getShortORFId(data[field])
                             annotation[field] = shortORFId
+                        elif field == "product":
+                            pprod, comm = anno_fast.process_product(data["product"], dbname)
+                            annotation[field] = pprod
+                            annotation['comment'] = comm
                         else:
                             annotation[field] = data[field]
 
                 if not shortORFId in pickorfs:
                     continue
 
-                #        blastparser.rewind()
-                #        return None
-
                 annotation["dbname"] = dbname
                 if not shortORFId in annotation_results:
                     annotation_results[shortORFId] = []
 
                 annotation_results[shortORFId].append(annotation)
-                # if callnum==2 and 'refseq' in dbname:
-                #   print(shortORFId, annotation)
+
     except:
         print(traceback.print_exc())
-
-    # if dbname=='refseq-nr-2014-01-18':
-    #     print 'annot refseq process', len(annotation_results)
 
     return None
 
@@ -1398,53 +1391,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
     filePermTypes = {}
     start = 0
     with open( opts.output_dir + PATHDELIM + opts.sample_name + ".ORF_annotation_table.txt", "w") as outputfile:
-        '''
-        short_to_long_dbnames = {}
-        for dbname in database_names:
-            results = re.search(r"^seed", dbname, re.IGNORECASE)
-            if results:
-                short_to_long_dbnames["seed"] = dbname
-
-            results = re.search(r"^eggnog", dbname, re.IGNORECASE)
-            if results:
-                short_to_long_dbnames["cog"] = dbname
-
-            results = re.search(r"^kegg", dbname, re.IGNORECASE)
-            if results:
-                short_to_long_dbnames["kegg"] = dbname
-
-            results = re.search(r"^cazy", dbname, re.IGNORECASE)
-            if results:
-                short_to_long_dbnames["cazy"] = dbname
-
-        standard_dbs = ["cog", "seed", "kegg", "cazy"]
-        standard_db_maps = [
-            opts.input_cog_maps,
-            opts.input_seed_maps,
-            opts.input_kegg_maps,
-            opts.input_cazy_maps,
-        ]
-        
-        field_to_description = {}
-        hierarchical_map = {}
-
-        for db in standard_dbs:
-            if db in short_to_long_dbnames:
-                field_to_description[db] = {}
-                hierarchical_map[db] = {}
-
-        for dbname in standard_dbs:
-            if dbname in short_to_long_dbnames:
-                try:
-                    read_map_file(
-                        db_to_map_Maps[dbname],
-                        field_to_description[dbname],
-                        hierarchical_map[dbname],
-                    )
-                except:
-                    raise
-                    pass
-        '''
         while start < Length:
             pickorfs = {}
             last = min(Length, start + _stride)
@@ -1499,19 +1445,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 compact_output=opts.compact_output,
                 sample_name=opts.sample_name,
             )
-            '''
-            for std_dbname, db_map_filename in zip(standard_dbs, standard_db_maps):
-                if std_dbname in short_to_long_dbnames:
-                    create_table(
-                        results_dictionary[short_to_long_dbnames[std_dbname]],
-                        std_dbname,
-                        opts.output_dir,
-                        hierarchical_map,
-                        field_to_description,
-                    )
 
-            #             create_table(results_dictionary[dbname], opts.input_kegg_maps, 'kegg', opts.output_dir, filePermType)
-            '''
             print_orf_table(
                 results_dictionary,
                 orfToContig,
@@ -1519,11 +1453,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 outputfile,
                 compact_output=opts.compact_output,
             )
-
-    #  comment these lines out if you want to generate the KEGG and COG reports
-    # for std_dbname, db_map_filename in zip(standard_dbs, standard_db_maps):
-    #   if std_dbname in short_to_long_dbnames:
-    #      print_kegg_cog_tables(std_dbname, opts.output_dir, hierarchical_map, field_to_description,  filePermType = 'w', sample_name = opts.sample_name)
 
     # now remove the temporary files
     for dbname, blastoutput in zip(database_names, input_blastouts):
