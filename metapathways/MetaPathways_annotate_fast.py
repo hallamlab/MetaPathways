@@ -993,6 +993,11 @@ def process_product(product, database, similarity_threshold=0.9):
         elif 'uniref' in database:
             processed_product = product.rsplit(' n=', 1)[0]
             comment = ' n=' + product.rsplit(' n=', 1)[1]
+        
+        else: # no defline cleaning
+            processed_product = product
+            comment = ''
+
     except:
         gutils.eprintf("\n\tERROR:\tDatabase:%s\n", database)
         gutils.eprintf("\n\t\t\tProduct:%s\n", product)
