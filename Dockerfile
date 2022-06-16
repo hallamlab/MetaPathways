@@ -22,7 +22,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
 COPY Makefile        /opt/mp_repo/
 
 ## Set up Conda:
-RUN make -C mp_repo conda-install-deps 
+## We do some umask munging to avoid having to use chmod later on,
+## as it is painfully slow on large directores in Docker.
+RUN old_umask=`umask` && \
+    umask 0000 && \
+    make -C mp_repo conda-install-deps && \
+    umask $old_umask
 
 # Install MetaPathways:
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
@@ -50,7 +55,7 @@ COPY snakemake_config.yaml /opt/mp_repo
 
 ## Make things work for Singularity by relaxing the permissions:
 RUN chmod -R 755 /opt/mp_repo
-RUN chmod -R 755 /opt/conda
+#RUN chmod -R 755 /opt/conda
 
 ### EntryPoint source:
 ## TODO
