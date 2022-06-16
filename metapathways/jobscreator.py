@@ -631,30 +631,35 @@ class ContextCreator:
         contexts = []
         '''inputs'''
         input_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
-        import pkg_resources
-        TPCsignal = pkg_resources.resource_filename('resources', 'TPCsignal')
-        Dsignal = pkg_resources.resource_filename('resources', 'Dsignal')
         
         '''outputs'''
+        tRNA_results_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.results.txt"
+        tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
-        tRNA_fasta_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
-
+        tRNA_fasta_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
 
         context = contextmod.Context()
         context.name = 'SCAN_tRNA'
-        context.inputs = { 'input_fasta':input_fasta, 'TPCsignal':TPCsignal, 'Dsignal':Dsignal }
-        context.outputs = { 'tRNA_stats_output':tRNA_stats_output, 'tRNA_fasta_output': tRNA_fasta_output}
+        context.inputs = {'input_fasta':input_fasta}
+        context.outputs = {'tRNA_results_output':tRNA_results_output,
+                           'tRNA_gff_output':tRNA_gff_output,
+                           'tRNA_stats_output':tRNA_stats_output,
+                           'tRNA_fasta_output':tRNA_fasta_output,
+                           }
 
-
+        num_threads = self.configs.NUM_CPUS
         pyScript = self.configs.SCAN_tRNA
         executable = self.configs.SCAN_tRNA_EXECUTABLE
-        cmd = "%s --executable %s -o %s -F %s  -i %s -T %s  -D %s"\
-             %(pyScript, executable, context.outputs['tRNA_stats_output'], context.outputs['tRNA_fasta_output'],\
-             context.inputs['input_fasta'], context.inputs['TPCsignal'], context.inputs['Dsignal'])
+        cmd = "%s --executable %s -o %s -j %s -m %s -a %s -p %s -t %s -i %s"\
+             %(pyScript, executable, context.outputs['tRNA_results_output'],
+                context.outputs['tRNA_gff_output'], context.outputs['tRNA_stats_output'],
+                context.outputs['tRNA_fasta_output'], s.sample_name, num_threads,
+                context.inputs['input_fasta']
+                )
 
         context.commands = [cmd]
         context.status = self.params.get('metapaths_steps','SCAN_tRNA')
-        context.message = self._Message("SCANNING FOR tRNA USING tRNA-Scan")
+        context.message = self._Message("SCANNING FOR tRNA USING tRNA-Scan SE")
         contexts.append(context)
         return contexts
 
@@ -666,6 +671,9 @@ class ContextCreator:
         '''inputs'''
         input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
+        rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
+        tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
+        diag_sv_path = s.diagnostics_dir
 
         '''outputs'''
         output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
@@ -683,7 +691,6 @@ class ContextCreator:
         context.inputs = {
             'input_unannotated_gff':input_unannotated_gff
         }
-
         context.inputs1 = {
             'mapping_txt':mapping_txt,
         }
@@ -698,36 +705,43 @@ class ContextCreator:
 
         '''use rRNA stats if they are available'''
         options = ''
-        for rRNArefdb in rRNAdbs:
-            rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
-                               '.' + rRNArefdb + '.rRNA.stats.txt'
-            #print rRNA_stat_results
-            context.inputs['rRNA_stat_results']  = rRNA_stat_results
-            options += " --rRNA_16S " +  context.inputs['rRNA_stat_results']
+        if os.path.isfile(rRNA_gff_output):
+            context.inputs['rRNA_gff_file']  = rRNA_gff_output
+            options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
 
+            for rRNArefdb in rRNAdbs:
+                rRNA_stat_results = s.output_results_rRNA_dir + s.sample_name + \
+                                   '.' + rRNArefdb + '.rRNA.stats.txt'
+                #print rRNA_stat_results
+                context.inputs['rRNA_stat_results']  = rRNA_stat_results
+                options += " --rRNA " +  context.inputs['rRNA_stat_results']
 
-        '''use rRNA stats if they are available'''
-        tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.stats.txt'
-        #if gutils.hasResults(tRNA_stat_results):
-        context.inputs['tRNA_stat_results']  = tRNA_stat_results
-        options += " --tRNA " +  context.inputs['tRNA_stat_results']
+        '''use tRNA stats if they are available'''
+        if os.path.isfile(tRNA_gff_output):
+            context.inputs['tRNA_gff_file']  = tRNA_gff_output
+            options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
+
+            tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
+            context.inputs['tRNA_stat_results']  = tRNA_stat_results
+            options += " --tRNA " +  context.inputs['tRNA_stat_results']
         
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \
                   --algorithm %s "\
               %(pyScript, context.inputs['input_unannotated_gff'],\
               context.outputs['output_annotated_gff'],  options,\
-              context.outputs1['output_comparative_annotation'],s.algorithm )
+              context.outputs1['output_comparative_annotation'], s.algorithm
+              )
 
         for refdb in refdbs:
             parsed_file =  s.blast_results_dir + PATHDELIM + s.sample_name\
                             + "." + refdb+ "." + s.algorithm + "out.parsed.txt"
             context.inputs[parsed_file] = parsed_file
-#               cmd = cmd + " -b " + parsed_file + " -d " + refdb + " -w 1 "
 
 
         cmd = cmd + " -m " + context.inputs1['mapping_txt']
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name
+        cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]

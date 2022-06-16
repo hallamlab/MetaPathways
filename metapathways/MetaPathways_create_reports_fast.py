@@ -383,6 +383,8 @@ def create_annotation(
         for orf in gffreader.orf_dictionary[contig]:
             if orf['seqname'] == '':
                 continue # it has to have a seqname
+            if orf['feature'] != 'CDS':
+                continue # has to be a CDS
             shortORFId = mputils.getShortORFId(orf["id"])
             count += 1
             # shortORFId = ShortenORFId(orf['id'])
