@@ -64,14 +64,23 @@ docker-start:
 	sudo systemctl start docker
 
 docker-build: #pre-docker-builds
-	sudo docker build --network=host -t quay.io/hallamlab/metapathways:dev .
+	git_branch=$$(git symbolic-ref --short -q HEAD)
+	sudo docker build --network=host \
+			--build-arg git_branch=$$git_branch \
+			-t quay.io/hallamlab/metapathways:$$git_branch .
 
 docker-run:
-	sudo docker run -it --network=host --rm -v $(CURDIR):/input -v $(CURDIR)/out:/output quay.io/hallamlab/metapathways:dev bash 
+	git_branch=$$(git symbolic-ref --short -q HEAD)
+	sudo docker run -it --network=host --rm \
+		-v $(CURDIR):/input \
+		-v $(CURDIR)/out:/output
+		quay.io/hallamlab/metapathways:$$git_branch bash 
 
 docker-test:
 	cp $(CURDIR)/regtests/input/A1.fasta /tmp
-	sudo docker run -it -v /tmp:/input quay.io/hallamlab/metapathways:dev \
+	git_branch=$$(git symbolic-ref --short -q HEAD)
+	sudo docker run -it -v /tmp:/input \
+		quay.io/hallamlab/metapathways:$$git_branch \
 		MetaPathways -v \
 			-i /opt/mp_repo/tests/data/input/lagoon-sample2.fasta \
 			-o /input/A1_MP_out/ \

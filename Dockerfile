@@ -7,7 +7,7 @@ MAINTAINER Tomer Altman, Altman Analytics LLC
 # sudo docker build --network=host -t metapathways:dev .
 
 ### Build test branch
-# sudo docker build --build-arg github_branch=test --network=host -t metapathways:test .
+# sudo docker build --build-arg git_branch=test --network=host -t metapathways:test .
 
 ################
 
@@ -17,7 +17,7 @@ Workdir /opt
 
 ENV PYTHONPATH=/opt/mp_repo:/opt/mp_repo/libs
 
-ARG github_branch=dev
+ARG git_branch=dev
 
 ### Install apt dependencies
 
@@ -35,7 +35,7 @@ COPY Makefile        /opt/mp_repo/
 RUN make -C mp_repo conda-install-deps 
 
 # Install MetaPathways:
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${github_branch}#egg=MetaPathways
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
 
 ### Copying the repo files into the Docker image:
 COPY resources       /opt/mp_repo/resources/
