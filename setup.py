@@ -45,7 +45,8 @@ setup(
                       'camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs',
                       'pandas',
                       'tqdm',
-                      'pybedtools'
+                      'pybedtools',
+                      'pprodigal'
                       ],
     entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),

@@ -55,7 +55,10 @@ def createParser():
     )
 
     parser.add_option(
-        "--nthreads", dest="nthreads", default="1", help="number of threads default : 1"
+        "--nthreads",
+        dest="nthreads",
+        default="1",
+        help="number of threads default : 1"
     )
 
     prodigal_group = OptionGroup(parser, "Prodigal parameters")
@@ -68,7 +71,10 @@ def createParser():
     )
 
     prodigal_group.add_option(
-        "--prod_output", dest="prod_output", default=None, help="the output <outfile>"
+        "--prod_output",
+        dest="prod_output",
+        default=None,
+        help="the output <outfile>"
     )
 
     prodigal_group.add_option(
@@ -101,7 +107,10 @@ def createParser():
     )
 
     prodigal_group.add_option(
-        "--prod_exec", dest="prod_exec", default=None, help="prodigal executable"
+        "--prod_exec",
+        dest="prod_exec",
+        default=None,
+        help="prodigal executable"
     )
 
     prodigal_group.add_option(
@@ -137,6 +146,8 @@ def _execute_prodigal(options):
         args += ["-f", options.prod_f]
     if options.prod_g:
         args += ["-g", options.prod_g]
+    if options.nthreads:
+        args += ["-T", options.nthreads]
     if options.prod_input:
         args += ["-i", options.prod_input]
     if options.prod_output:
