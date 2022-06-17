@@ -970,7 +970,7 @@ def process_product(product, database, similarity_threshold=0.9):
 
     if 'MULTISPECIES: ' in product:
         product = product.replace('MULTISPECIES: ', '')
-    #try:
+
     if 'cazy' in database:
         processed_product = product
         comment = ''
@@ -1010,11 +1010,6 @@ def process_product(product, database, similarity_threshold=0.9):
     else: # no defline cleaning
         processed_product = product
         comment = ''
-
-    #except:
-    #    gutils.eprintf("\n\tERROR:\tDatabase:%s\n", database)
-    #    gutils.eprintf("\n\t\t\tProduct:%s\n", product)
-    #    gutils.eprintf("\n\t\t\tHas unknown format\n")
 
     words = [x.strip() for x in processed_product.split()]
     filtered_words = []
