@@ -47,7 +47,8 @@ curr_kb = get_kb(org_id)
 
 headers = [ "SAMPLE",
             "PWY_NAME", 	
-            "PWY_COMMON_NAME", 
+            "PWY_COMMON_NAME",
+            "PSCORE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
     	    "ORF_COUNT",
@@ -67,7 +68,10 @@ with open(arguments['<report_path>'],"w") as report_fp:
                 if 'ENZYMATIC-REACTION' in rxn.slots:
                     covered_rxn_count += 1
             
-            print(pwy)
+            pscore = pwy.get_slot_values('SCORE')[0].strip()
+
+            print(pwy, pscore)
+
             try:
                 pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
             except Exception:
@@ -75,6 +79,7 @@ with open(arguments['<report_path>'],"w") as report_fp:
             print('\t'.join([sample_id, #  curr_kb.kb_name,
                              pwy.frame_id,
                              pwy.get_slot_values('COMMON-NAME')[0],
+                             pscore,
                              str(len(pwy.get_slot_values('REACTION-LIST'))),
                              str(covered_rxn_count),
                              str(len(pwy_gene_names)),
