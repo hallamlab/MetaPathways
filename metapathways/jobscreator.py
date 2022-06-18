@@ -269,7 +269,7 @@ class ContextCreator:
                   "--prod_g", translation_table,
                   "--prod_input", context.inputs['input_file'],
                   "--prod_output", context.outputs['output_gff'],
-                  #"--prod_nthreads", num_threads, # not functional yet
+                  "--nthreads", num_threads,
              ]
 
         context.commands = [' '.join(cmd)]

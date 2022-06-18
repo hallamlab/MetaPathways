@@ -967,36 +967,49 @@ def process_product(product, database, similarity_threshold=0.9):
     """
 
     processed_product = ""
+
     if 'MULTISPECIES: ' in product:
         product = product.replace('MULTISPECIES: ', '')
-    try:
-        if 'cazy' in database:
+
+    if 'cazy' in database:
+        processed_product = product
+        comment = ''
+
+    elif (('cog' in database) or ('refseq' in database)):
+        if '[' in product: # helps with edge cases
+            processed_product = product.rsplit(' [', 1)[0]
+            comment = '[' + product.rsplit(' [', 1)[1]
+        else:
             processed_product = product
             comment = ''
 
-        elif (('cog' in database) or ('refseq' in database)):
-            if '[' in product: # helps with edge cases
-                processed_product = product.rsplit(' [', 1)[0]
-                comment = '[' + product.rsplit(' [', 1)[1]
-            else:
-                processed_product = product
-                comment = ''
-
-        elif 'metacyc' in database:
+    elif 'metacyc' in database:
+        if '(' in product: # helps with edge cases
             processed_product = product.rsplit(' (', 1)[0]
             comment = '(' + product.rsplit(' (', 1)[1]
+        else:
+            processed_product = product
+            comment = ''
 
-        elif 'sprot' in database:
+    elif 'sprot' in database:
+        if ' OS=' in product: # helps with edge cases
             processed_product = product.rsplit(' OS=', 1)[0]
             comment = ' OS=' + product.rsplit(' OS=', 1)[1]
+        else:
+            processed_product = product
+            comment = ''
 
-        elif 'uniref' in database:
+    elif 'uniref' in database:
+        if ' n=' in product: # helps with edge cases
             processed_product = product.rsplit(' n=', 1)[0]
             comment = ' n=' + product.rsplit(' n=', 1)[1]
-    except:
-        gutils.eprintf("\n\tERROR:\tDatabase:%s\n", database)
-        gutils.eprintf("\n\t\t\tProduct:%s\n", product)
-        gutils.eprintf("\n\t\t\tHas unknown format\n")
+        else:
+            processed_product = product
+            comment = ''
+    
+    else: # no defline cleaning
+        processed_product = product
+        comment = ''
 
     words = [x.strip() for x in processed_product.split()]
     filtered_words = []
