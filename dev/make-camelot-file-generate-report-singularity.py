@@ -19,6 +19,9 @@ from camelot_frs.pgdb_api    import genes_of_pathway
 import os
 import shutil
 import glob
+from sexpdata import loads, dumps, Symbol
+
+
 
 
 def get_pwy_inf(reports_dir):
@@ -58,9 +61,11 @@ def get_pwy_inf(reports_dir):
         pwy_inf_rec_list.append(pwy_inf_rec) # add last record
     pwy_inf_dict = {}
     for p_rec in pwy_inf_rec_list:
-        split_line = p_rec.strip(' (').strip(')').split(' ')
-        pwy_k = split_line[0]
-        pwy_inf_dict[pwy_k] = {'CONFIDENCE': split_line[2]}
+        parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
+        pwy_id = parsed_sexpr[0]
+        pwy_conf = parsed_sexpr[2]
+        pwy_score = parsed_sexpr[5]
+        pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
 
     return pwy_inf_dict
 
@@ -125,7 +130,7 @@ with open(arguments['<report_path>'],"w") as report_fp:
                 if 'ENZYMATIC-REACTION' in rxn.slots:
                     covered_rxn_count += 1
             
-            pscore = pwy.get_slot_values('SCORE')[0].strip()
+            pscore = pwy_inf_data[pwy.frame_id]['SCORE']
             pconf = pwy_inf_data[pwy.frame_id]['CONFIDENCE']
             print(pwy, pscore, pconf)
 
