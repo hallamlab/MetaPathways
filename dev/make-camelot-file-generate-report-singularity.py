@@ -27,7 +27,7 @@ def get_pwy_inf(reports_dir):
     Ptools flatfile output.
 
     Returns dictionary of all values found in
-    'pwy-inference-description.data' file.
+    'pwy-inference-report_YYYY-MM-DD.txt' file.
     """
     pwy_inf_rec_list = []
     pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
