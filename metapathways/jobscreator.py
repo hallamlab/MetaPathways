@@ -705,7 +705,7 @@ class ContextCreator:
 
         '''use rRNA stats if they are available'''
         options = ''
-        if os.path.isfile(rRNA_gff_output):
+        if rRNAdbs:
             context.inputs['rRNA_gff_file']  = rRNA_gff_output
             options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
 
@@ -716,15 +716,13 @@ class ContextCreator:
                 context.inputs['rRNA_stat_results']  = rRNA_stat_results
                 options += " --rRNA " +  context.inputs['rRNA_stat_results']
 
-        '''use tRNA stats if they are available'''
-        if os.path.isfile(tRNA_gff_output):
-            context.inputs['tRNA_gff_file']  = tRNA_gff_output
-            options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
+        '''use tRNA stats'''
+        context.inputs['tRNA_gff_file']  = tRNA_gff_output
+        options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
 
-            tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
-            context.inputs['tRNA_stat_results']  = tRNA_stat_results
-            options += " --tRNA " +  context.inputs['tRNA_stat_results']
-        
+        context.inputs['tRNA_stat_results'] = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
+        options += " --tRNA " +  context.inputs['tRNA_stat_results']
+    
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \
                   --algorithm %s "\
