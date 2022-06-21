@@ -46,7 +46,8 @@ setup(
                       'pandas',
                       'tqdm',
                       'pybedtools',
-                      'pprodigal'
+                      'pprodigal',
+                      'sexpdata'
                       ],
     entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),

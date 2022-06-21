@@ -18,6 +18,58 @@ from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
 from camelot_frs.pgdb_api    import genes_of_pathway
 import os
 import shutil
+import glob
+from sexpdata import loads, dumps, Symbol
+
+
+
+
+def get_pwy_inf(reports_dir):
+    """
+    Accepts the path to the 'reports' directory within
+    Ptools flatfile output.
+
+    Returns dictionary of all values found in
+    'pwy-inference-report_YYYY-MM-DD.txt' file.
+    """
+    pwy_inf_rec_list = []
+    pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
+
+
+    with open(pwy_inf_file, 'r') as pwy_inf_in:
+
+        data = pwy_inf_in.read()
+        trim_dat = data.split('::: Pathway Inference Report')
+        if len(trim_dat) == 3:
+            keep_dat = trim_dat[2]
+        else:
+            keep_dat = trim_dat[1]
+        keep_dat = keep_dat.split('List of pathways pruned')[0]
+
+        pwy_inf_rec = ''
+        start = False
+        for line in keep_dat.split('\n'):
+            if line[:2] == ' (': # start of record
+                if pwy_inf_rec != '': # add if there is something to add
+                    pwy_inf_rec_list.append(pwy_inf_rec)
+                    pwy_inf_rec = line
+                else: # start a new record
+                    pwy_inf_rec = line
+                start = True
+            elif start == True:
+                pwy_inf_rec = pwy_inf_rec + line
+        pwy_inf_rec_list.append(pwy_inf_rec) # add last record
+    pwy_inf_dict = {}
+    for p_rec in pwy_inf_rec_list:
+        parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
+        pwy_id = parsed_sexpr[0]
+        pwy_conf = parsed_sexpr[2]
+        pwy_score = parsed_sexpr[5]
+        pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
+
+    return pwy_inf_dict
+
+
 
 
 arguments = docopt(__doc__, version='run-reactionary 0.4')
@@ -31,6 +83,12 @@ shutil.copyfile(verfile, new_verfile)
 
 ## Need to create a custom sample_id since org_id is blank
 sample_id = os.path.basename(flatpath.rsplit('/', 4)[0].strip('cyc'))
+if sample_id == '': # just in case there is an extra '/' at the end
+    sample_id = os.path.basename(
+                    os.path.dirname(
+                        flatpath.rsplit('/', 4)[0].strip('cyc')
+                        )
+                    )
 
 ## Create the .camelot file:
 org_id = make_camelot_file(arguments['<pgdb_flat_file_dir_path>'],
@@ -43,11 +101,16 @@ load_pgdb(arguments['<camelot_file_output_dir_path>'] + '/' + org_id + '.camelot
 
 curr_kb = get_kb(org_id)
 
-## Generate the report:
+# Build Pathway Inference Data Dictionary from contents of ./reports/ dirextory
+reportspath = os.path.dirname(flatpath) + '/reports'
+pwy_inf_data = get_pwy_inf(reportspath)
 
+## Generate the report:
 headers = [ "SAMPLE",
             "PWY_NAME", 	
-            "PWY_COMMON_NAME", 
+            "PWY_COMMON_NAME",
+            "PWY_SCORE",
+            "PWY_CONFIDENCE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
     	    "ORF_COUNT",
@@ -67,7 +130,10 @@ with open(arguments['<report_path>'],"w") as report_fp:
                 if 'ENZYMATIC-REACTION' in rxn.slots:
                     covered_rxn_count += 1
             
-            print(pwy)
+            pscore = pwy_inf_data[pwy.frame_id]['SCORE']
+            pconf = pwy_inf_data[pwy.frame_id]['CONFIDENCE']
+            print(pwy, pscore, pconf)
+
             try:
                 pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
             except Exception:
@@ -75,6 +141,8 @@ with open(arguments['<report_path>'],"w") as report_fp:
             print('\t'.join([sample_id, #  curr_kb.kb_name,
                              pwy.frame_id,
                              pwy.get_slot_values('COMMON-NAME')[0],
+                             pscore,
+                             pconf,
                              str(len(pwy.get_slot_values('REACTION-LIST'))),
                              str(covered_rxn_count),
                              str(len(pwy_gene_names)),
