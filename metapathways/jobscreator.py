@@ -720,8 +720,7 @@ class ContextCreator:
         context.inputs['tRNA_gff_file']  = tRNA_gff_output
         options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
 
-        tRNA_stat_results = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
-        context.inputs['tRNA_stat_results']  = tRNA_stat_results
+        context.inputs['tRNA_stat_results'] = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
         options += " --tRNA " +  context.inputs['tRNA_stat_results']
     
         pyScript = self.configs.ANNOTATE_ORFS
