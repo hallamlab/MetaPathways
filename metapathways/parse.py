@@ -1,10 +1,5 @@
 """ Parser files for configs """
 
-__author__ = "Kishori Mohan Konwar"
-__copyright__ = "MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import traceback
     import os

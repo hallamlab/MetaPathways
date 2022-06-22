@@ -2,11 +2,6 @@
 against the taxonomy databases such as silva or greenegenes
 """
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import traceback
     import optparse

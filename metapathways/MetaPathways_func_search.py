@@ -1,10 +1,6 @@
 """This script runs the functional search via BLAST or FAST like
 homology search tools on a set of ORFs
 """
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
 
 try:
     import traceback

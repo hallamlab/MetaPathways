@@ -1,10 +1,6 @@
 """The main script that calls the pipeline """
 
-__author__ = "Kishori M Konwar"
 __version__ = "3.5.0"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
 
 try:
     import sys

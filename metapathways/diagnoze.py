@@ -1,10 +1,4 @@
 """Checks the required tools for running the pipeline"""
-
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 """Contains general utility code for the metapaths project"""
 
 try:

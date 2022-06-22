@@ -3,11 +3,6 @@
    b) genbank file with annotations
 """
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import traceback
     import optparse

@@ -1,10 +1,5 @@
 """Extracts pathways from a PGDB """
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2013, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import traceback
     import os

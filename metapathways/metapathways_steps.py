@@ -4,12 +4,6 @@ and finally the remaining steps for all samples. This makes it easier to
 do the homology search in separate machines, manually
 """
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
-
 try:
     import traceback
     import os

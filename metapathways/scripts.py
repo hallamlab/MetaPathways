@@ -1,7 +1,3 @@
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
 
 from metapathways import MetaPathways_filter_input
 from metapathways import MetaPathways_orf_prediction

@@ -1,11 +1,6 @@
 """Creates functional and taxonomic tables and the orf annotation tables
 """
 
-__author__ = "Kishori M Konwar"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import traceback
     import re
