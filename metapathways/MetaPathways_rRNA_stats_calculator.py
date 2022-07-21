@@ -182,23 +182,40 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
         fields = re.split("\t", line)
         if len(fields) < 12:
             continue
-        if str(fields[0].strip()) in queryDict:
-            full_f0 = queryDict[str(fields[0].strip())]
-            fields[1] = str(fields[1].strip())
-            fields[2] = float(fields[2].strip())
-            fields[6] = int(fields[6].strip())
-            fields[7] = int(fields[7].strip())
-            fields[10] = float(fields[10].strip())
-            fields[11] = float(fields[11].strip())
-            if subunit in full_f0:
-                table[str(fields[0].strip())] = [
-                    fields[2],
-                    fields[10],
-                    fields[11],
-                    fields[1],
-                    fields[6],
-                    fields[7],
-                ]
+        query_key = str(fields[0].strip())
+        if query_key in queryDict:
+            query_id = queryDict[str(fields[0].strip())]
+            target_id = str(fields[1].strip())
+            percent_id = float(fields[2].strip())
+            start_pos = int(fields[6].strip())
+            end_pos = int(fields[7].strip())
+            e_value = float(fields[10].strip())
+            bitscore = float(fields[11].strip())
+            length = end_pos - start_pos + 1
+            if subunit in query_id: # check subunit
+                if query_key in table: # compare blast stats for queries
+                    t_percent_id = table[query_key][0]
+                    t_e_value = table[query_key][1]
+                    t_bitscore = table[query_key][2]
+                    t_length = table[query_key][5] - table[query_key][4] + 1
+                    if ((bitscore >= t_bitscore) &
+                        (length > t_length)): # only replace if bitscore is better AND alignment is longer
+                        table[query_key] = [percent_id,
+                                        e_value,
+                                        bitscore,
+                                        target_id,
+                                        start_pos,
+                                        end_pos,
+                                        ]
+
+                else: # not in table yet
+                    table[query_key] = [percent_id,
+                                        e_value,
+                                        bitscore,
+                                        target_id,
+                                        start_pos,
+                                        end_pos,
+                                        ]
 
 
 usage = (
