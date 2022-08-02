@@ -230,7 +230,7 @@ class LCAComputation:
     # extracts taxon names for a refseq annotation
     def get_species(self, hit):
         accession_PATT = re.compile(r"ref\|(.*)\|")
-        if not "product" in hit and not "target" in hit:
+        if not "comment" in hit and not "target" in hit:
             return None
 
         species = []
@@ -244,7 +244,7 @@ class LCAComputation:
             #      if gi in self.accession_to_taxon_map:
             #        species.append(self.accession_to_taxon_map[gi])
             # else:
-            m = re.findall(r"\[([^\[]+?)\]", hit["product"])
+            m = re.findall(r"\[([^\[]+?)\]", hit["comment"])
             if m != None:
                 copyList(m, species)
                 # print hit['product']
