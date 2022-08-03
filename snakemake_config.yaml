@@ -1,0 +1,7 @@
+# Specify the directory that will store the local copy of the reference database files
+# used by MetaPathways:
+# (Note: there must be a single white-space after the colon; no quotation characters necessary)
+# Example:
+# ref_db_dir: /home/user/metapathways-ref-db-dir
+
+ref_db_dir: /tmp/mp_ref_dbs
