@@ -137,7 +137,7 @@ headers = [ "SAMPLE",
             "PWY_CONFIDENCE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
-            "NUM_ENZ_RNX",
+            "NUM_ENZ_RXN",
     	    "ORF_COUNT",
             "ORFS" 
            ]
