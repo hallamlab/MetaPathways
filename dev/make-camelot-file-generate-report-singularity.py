@@ -137,7 +137,7 @@ headers = [ "SAMPLE",
             "PWY_CONFIDENCE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
-            "NUM_ENZ_RXN",
+            #"NUM_ENZ_RXN",
     	    "ORF_COUNT",
             "ORFS" 
            ]
@@ -176,7 +176,7 @@ with open(arguments['<report_path>'],"w") as report_fp:
                              pconf,
                              str(len(pwy.get_slot_values('REACTION-LIST'))),
                              str(covered_rxn_count),
-                             str(enz_rxn_count),
+                             #str(enz_rxn_count),
                              str(len(pwy_gene_names)),
                              ','.join(pwy_gene_names)]),
                   file = report_fp)
