@@ -151,7 +151,7 @@ with open(arguments['<report_path>'],"w") as report_fp:
                                        pwy):
             
             
-            pwy_rxn_dict = get_prz_rxns(pwy)
+            pwy_rxn_dict = get_present_rxns(pwy)
             
             enz_rxn_count = 0
             for rxn in pwy.get_slot_values('REACTION-LIST'):
