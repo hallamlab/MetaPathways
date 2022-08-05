@@ -70,6 +70,30 @@ def get_pwy_inf(reports_dir):
     return pwy_inf_dict
 
 
+def get_present_rxns(pwy_frame):
+    pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
+    pwy_rxns = {}
+    for r in pwy_expl:
+        if isinstance(r, Symbol):
+            r = r.value()
+        elif isinstance(r, list):
+            for rr in r:
+                if isinstance(rr, Symbol):
+                    rr = rr.value()
+                    rr_key = rr
+                elif isinstance(rr, list):
+                    rrr_vals = []            
+                    for rrr in rr:
+                        if isinstance(rrr, Symbol):
+                            rrr = rrr.value()
+                            rrr_vals.append(rrr)
+                        else:
+                            rrr = str(rrr)
+                    pwy_rxns[rr_key] = rrr_vals
+
+    return pwy_rxns
+
+
 
 
 arguments = docopt(__doc__, version='run-reactionary 0.4')
@@ -110,9 +134,9 @@ headers = [ "SAMPLE",
             "PWY_NAME", 	
             "PWY_COMMON_NAME",
             "PWY_SCORE",
-            "PWY_CONFIDENCE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
+            #"NUM_ENZ_RXN",
     	    "ORF_COUNT",
             "ORFS" 
            ]
@@ -125,14 +149,19 @@ with open(arguments['<report_path>'],"w") as report_fp:
     for pwy in get_frame_all_children(get_frame(curr_kb, 'Pathways'), frame_types='instance'):
         if not frame_parent_of_frame_p(get_frame(curr_kb, 'Super-Pathways'),
                                        pwy):
-            covered_rxn_count = 0
+            
+            
+            pwy_rxn_dict = get_prz_rxns(pwy)
+            
+            enz_rxn_count = 0
             for rxn in pwy.get_slot_values('REACTION-LIST'):
                 if 'ENZYMATIC-REACTION' in rxn.slots:
-                    covered_rxn_count += 1
+                    enz_rxn_count += 1
             
+            covered_rxn_count = len(pwy_rxn_dict['REACTIONS-PRESENT'])
+
             pscore = pwy_inf_data[pwy.frame_id]['SCORE']
-            pconf = pwy_inf_data[pwy.frame_id]['CONFIDENCE']
-            print(pwy, pscore, pconf)
+            print(pwy, pscore, covered_rxn_count)
 
             try:
                 pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
@@ -142,9 +171,9 @@ with open(arguments['<report_path>'],"w") as report_fp:
                              pwy.frame_id,
                              pwy.get_slot_values('COMMON-NAME')[0],
                              pscore,
-                             pconf,
                              str(len(pwy.get_slot_values('REACTION-LIST'))),
                              str(covered_rxn_count),
+                             #str(enz_rxn_count),
                              str(len(pwy_gene_names)),
                              ','.join(pwy_gene_names)]),
                   file = report_fp)
