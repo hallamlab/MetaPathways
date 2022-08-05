@@ -70,7 +70,7 @@ def get_pwy_inf(reports_dir):
     return pwy_inf_dict
 
 
-def get_prz_rxns(pwy_frame):
+def get_present_rxns(pwy_frame):
     pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
     pwy_rxns = {}
     for r in pwy_expl:
