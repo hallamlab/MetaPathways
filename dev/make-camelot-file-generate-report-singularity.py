@@ -134,7 +134,6 @@ headers = [ "SAMPLE",
             "PWY_NAME", 	
             "PWY_COMMON_NAME",
             "PWY_SCORE",
-            "PWY_CONFIDENCE",
             "NUM_REACTIONS",
             "NUM_COVERED_REACTIONS",
             #"NUM_ENZ_RXN",
@@ -162,8 +161,7 @@ with open(arguments['<report_path>'],"w") as report_fp:
             covered_rxn_count = len(pwy_rxn_dict['REACTIONS-PRESENT'])
 
             pscore = pwy_inf_data[pwy.frame_id]['SCORE']
-            pconf = pwy_inf_data[pwy.frame_id]['CONFIDENCE']
-            print(pwy, pscore, pconf, enz_rxn_count, covered_rxn_count)
+            print(pwy, pscore, covered_rxn_count)
 
             try:
                 pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
@@ -173,7 +171,6 @@ with open(arguments['<report_path>'],"w") as report_fp:
                              pwy.frame_id,
                              pwy.get_slot_values('COMMON-NAME')[0],
                              pscore,
-                             pconf,
                              str(len(pwy.get_slot_values('REACTION-LIST'))),
                              str(covered_rxn_count),
                              #str(enz_rxn_count),
