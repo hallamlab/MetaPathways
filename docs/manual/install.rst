@@ -1,39 +1,68 @@
 Installation
 ************
 
-MetaPathways supports installing the software *via* Conda or from a
+MetaPathways supports installing the software using Conda and Pip, or from a
 container image that can be used with Docker or Singularity. If you do
 not have administrator (i.e., "root") access to your computer, we
 recommend that users install MiniConda if they do not already have it
 set up. For users wanting to use MetaPathways in an academic grid
 computing environment, we recommend using the container image *via*
-Singularity.
+Singularity. Below please find a description of how to install MetaPathways 
+using the two supported options:
 
 
 Container Install
 =================
 
+Our container images are hosted at `Quay.io <https://quay.io/repository/hallamlab/metapathways?tab=info>`_. The following commands assume that 
+you are already familiar with installing and running Docker containers via the 
+``docker`` or ``singularity`` executables:
 
-Using Docker::
+Using `Docker <https://sylabs.io/>`_::
      sudo docker pull quay.io/hallamlab/metapathways
 
-Using Singularity::
-   singularity build metapathways.sif docker://quay.io/hallamlab/metapathways:dev
+Using `Singularity <https://sylabs.io/>`_::
+   singularity build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
 
-More container-related commands are available as Make targets in the ``Makefile``.
+More advanced container-related commands are available as Make targets in the ``Makefile``.
 
-Conda Install
+Installing with Pip and Conda
 =============
 
-Execute the following Make targets in the ``Makefile`` in the top
-level of the MetaPathways repository. Assuming that you do not have
-root access on your computer, you can use the ``DESTDIR`` environment
-variable to specify where to put the executables::
+We currently offer a way to use Pip to install the MetaPathways Python package,
+along with using `Conda <https://conda.io`_ to install all dependencies. We do not yet have a Conda 
+package for MetaPathways. It is in the works for a future release.
+
+For this to work, we assume that you have the following already set up in your
+command line environment:
+
+* You have a working version of ``git``
+* You have the ``make`` command in your path
+* You have already `installed Conda <https://docs.conda.io/en/latest/miniconda.html>`_, and it is activated
+
+First, clone the MetaPathways repo:
+::
+   git clone git@bitbucket.org:BCB2/metapathways.git
+   
+Then, change into the directory:
+::
+   cd metapathways
+   
+If you have root/administrator access to the machine where you are installing MetaPathways,
+execute the following Make targets in the ``Makefile`` in the top
+level of the MetaPathways repository:
+::
+   make conda-install
+
+If you do not have root/administrator access on your computer, you 
+can use the ``DESTDIR`` environment variable to specify where to 
+install the executables::
   make DESTDIR=/home/user/bin conda-install
 
-In this example, we assume that the user ``user`` has a ``bin``
-directory in their home directory, and that this path in in their
+In this example, we assume that the user with username ``user`` has a ``bin``
+directory in their home directory, and that this path is in their
 ``$PATH`` environment variable.
+
 
 Reference Sequences
 ===================
@@ -43,9 +72,8 @@ container, though. You should have a directory on a disk with plenty
 of capacity, and use Docker's and Singularity's bind options to mount
 that external directory within the container. Here's an example using
 Singularity:
-
 ::
-   singularity shell --bind /mnt/sandbox/user:/data docker://quay.io/hallamlab/metapathways:dev
+   singularity shell --bind /mnt/sandbox/user:/data docker://quay.io/hallamlab/metapathways:latest
 
 The above example binds the host operating system's
 `/mnt/sandbox/user` directory within the running container as
