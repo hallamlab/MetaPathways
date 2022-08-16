@@ -4,7 +4,7 @@
 
 A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
 
-**Current Team:** Tomer Altman, Aria Hahn, Kishori M. Konwar, Ryan McLaughlin, and Steven J. Hallam
+**Current Team:** Tomer Altman, Julia Anstett, Aria Hahn, Kishori M. Konwar, Tony Liu, Ryan McLaughlin, Aditi Nagaraj, and Steven J. Hallam
 
 **Previous Team Members:** Niels W. Hanson and Shang-Ju Wu
 
@@ -20,6 +20,15 @@ MetaPathways v3.0 requires Python 3.0 or greater. For full functionality, you sh
 
 Please see the [MetaPathways v3.0 documentation](https://metapathways.readthedocs.io/en/dev/) for installation details.
 
+## Support
+
+Have technical questions about MetaPathways? Please post a new question to 
+[BioStars](https://www.biostars.org/), [Bioinformatics StackExchange](https://bioinformatics.stackexchange.com/), 
+or [SeqAnswers Bioinformatics](https://www.seqanswers.com/forum/bioinformatics/bioinformatics-aa), 
+and tag it with "MetaPathways". We will monitor those sites, and will respond there. 
+
+Have a specific bug report or enhancement request? Please use our 
+[BitBucket Issue Tracker](https://bitbucket.org/BCB2/metapathways/issues?status=new&status=open).
 
 ## Citation
 
