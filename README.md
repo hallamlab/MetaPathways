@@ -4,8 +4,9 @@
 
 A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
 
-**Authors:** Niels W. Hanson, Kishori M. Konwar, Shang-Ju Wu, and Steven J. Hallam
+**Current Team:** Tomer Altman, Aria Hahn, Kishori M. Konwar, Ryan McLaughlin, and Steven J. Hallam
 
+**Previous Team Members:** Niels W. Hanson and Shang-Ju Wu
 
 ## Abstract
 
