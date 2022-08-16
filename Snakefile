@@ -128,7 +128,7 @@ rule fetch_silva_db:
         ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_tax_silva', arb_release=arb_release),
         lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_tax_silva', arb_release=arb_release),
         ssu_silva_names = expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_tax_silva-names.txt', arb_release=arb_release),
-        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva-names.txt', arb_release=arb_release)
+        lsu_silva_names = expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_tax_silva-names.txt', arb_release=arb_release)
     shell:
         """
         cd {params.target_dir}/taxonomic
@@ -136,8 +136,8 @@ rule fetch_silva_db:
         wget -O SILVA_{params.arb_release}_SSURef_tax_silva.gz https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_SSURef_tax_silva.fasta.gz
         gunzip {output.ssu_silva_file}.gz
         gunzip {output.lsu_silva_file}.gz
-        grep "^>" {output.ssu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.ssu_silva_file}-names.txt
-        grep "^>" {output.lsu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.lsu_silva_file}-names.txt
+        grep "^>" {output.ssu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.ssu_silva_names}-names.txt
+        grep "^>" {output.lsu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.lsu_silva_names}-names.txt
         """
 
 rule make_silva_blast_db:
