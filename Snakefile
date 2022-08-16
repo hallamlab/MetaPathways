@@ -136,8 +136,8 @@ rule fetch_silva_db:
         wget -O SILVA_{params.arb_release}_SSURef_tax_silva.gz https://www.arb-silva.de/fileadmin/silva_databases/release_{params.arb_release}/Exports/SILVA_{params.arb_release}_SSURef_tax_silva.fasta.gz
         gunzip {output.ssu_silva_file}.gz
         gunzip {output.lsu_silva_file}.gz
-        grep "^>" {output.ssu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.ssu_silva_names}-names.txt
-        grep "^>" {output.lsu_silva_file} > {params.target_dir}/taxonomic/formatted/{output.lsu_silva_names}-names.txt
+        grep "^>" {output.ssu_silva_file} > {output.ssu_silva_names}
+        grep "^>" {output.lsu_silva_file} > {output.lsu_silva_names}
         """
 
 rule make_silva_blast_db:
