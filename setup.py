@@ -51,7 +51,7 @@ setup(
                       ],
     entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),
-    package_data={'resources': ['Dsignal', 'TPCsignal', 'template_param.txt']},
+    #package_data={'resources': ['Dsignal', 'TPCsignal', 'template_param.txt']},
     include_package_data=True,
     classifiers=CLASSIFIERS,
     extras_require={
