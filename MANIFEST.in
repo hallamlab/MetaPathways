@@ -1,0 +1,10 @@
+include docs/*
+include README.md
+include Makefile
+include Snakefile
+include snakemake_config.yaml
+include resources/*
+include tests/*
+include extensions/FAST/fastal
+include extensions/FAST/fastdb
+include extensions/metacount/metacount
