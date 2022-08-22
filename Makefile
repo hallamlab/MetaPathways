@@ -115,7 +115,7 @@ singularity-docker-shell:
 ##
 
 ## Conda Installation:
-conda-install: conda-install-deps extensions-install 
+conda-install: conda-install-deps #extensions-install 
 
 ## Install conda build tools:
 conda-build-init:
@@ -123,10 +123,7 @@ conda-build-init:
 	conda install --yes conda-build
 
 conda-install-deps:
-	conda install --yes -c conda-forge mamba
-	mamba install --yes -c conda-forge curl
-	mamba install --yes -c bioconda blast prodigal bwa samtools barrnap trnascan-se
-	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
+	bin/metapathways-install-deps.sh
 
 
 ### Python PyPI Packaging:
@@ -149,7 +146,7 @@ install-dev-package:
 	$(PYTHON) -m pip install --user --upgrade -e .
 
 install-dist-package:
-	$(PYTHON) -m pip install --user dist/MetaPathways-0.*-py*-none-any.whl
+	$(PYTHON) -m pip install --user dist/MetaPathways-*-py*-none-any.whl
 
 deploy-package-to-pypi:
 	twine upload dist/*
@@ -162,11 +159,13 @@ extensions-build:
 	$(MAKE) -C extensions clean
 	$(MAKE) -C extensions
 
+## Deprecated, see Python package.
 extensions-build-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
 	cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
 
+## Deprecated, these binaries need to get revisited.
 extensions-install:
 	mkdir -p $(DESTDIR)/bin
 	$(MAKE) -C extensions/metacount clean

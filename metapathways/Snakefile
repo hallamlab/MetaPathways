@@ -104,18 +104,19 @@ rule download_only:
 
 rule create_dirs_local_files:
     params:
-        target_dir = config["ref_db_dir"]
+        target_dir = config["ref_db_dir"],
+        pkg_dir    = config["pkg_dir"]
     output:
         config["ref_db_dir"] + '/Dsignal'
     shell:
         """
         mkdir -p {params.target_dir}/functional/formatted
         mkdir -p {params.target_dir}/taxonomic/formatted
-        cp tests/data/ref_data/Dsignal {params.target_dir}/
-        cp tests/data/ref_data/TPCsignal {params.target_dir}/
+        cp {params.pkg_dir}/tests/data/ref_data/Dsignal {params.target_dir}/
+        cp {params.pkg_dir}/tests/data/ref_data/TPCsignal {params.target_dir}/
         ## Stage Functional Categories Files:
-        cp -R tests/data/ref_data/functional_categories {params.target_dir}/
-        cp -R tests/data/ref_data/ncbi_tree {params.target_dir}/
+        cp -R {params.pkg_dir}/tests/data/ref_data/functional_categories {params.target_dir}/
+        cp -R {params.pkg_dir}/tests/data/ref_data/ncbi_tree {params.target_dir}/
         """
         
 rule fetch_silva_db:
