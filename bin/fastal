@@ -1,0 +1,5 @@
+#!/bin/bash
+
+metapathways_pkg_dir=`python3 -c "import metapathways; print(metapathways.__path__[0])"`
+
+$metapathways_pkg_dir/bin/fastal $@
