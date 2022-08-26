@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 echo "Installing MetaPathways dependencies using Conda:"
 conda install --yes -c conda-forge mamba
