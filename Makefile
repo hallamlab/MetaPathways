@@ -63,8 +63,11 @@ singularity-install:
 docker-start:
 	sudo systemctl start docker
 
+## If git_branch is empty, it probably means that we are building off of a tagged version.
+## So, we then grab the tag string:
 docker-build: #pre-docker-builds
-	git_branch=$$(git symbolic-ref --short -q HEAD)
+	git_branch=$$(git symbolic-ref --short -q HEAD) \
+		|| git_branch=$$(git describe --tags)
 	sudo docker build --network=host \
 			--build-arg git_branch=$$git_branch \
 			-t quay.io/hallamlab/metapathways:$$git_branch .
@@ -112,7 +115,7 @@ singularity-docker-shell:
 ##
 
 ## Conda Installation:
-conda-install: conda-install-deps extensions-install 
+conda-install: conda-install-deps #extensions-install 
 
 ## Install conda build tools:
 conda-build-init:
@@ -120,10 +123,7 @@ conda-build-init:
 	conda install --yes conda-build
 
 conda-install-deps:
-	conda install --yes -c conda-forge mamba
-	mamba install --yes -c conda-forge curl
-	mamba install --yes -c bioconda blast prodigal bwa samtools barrnap trnascan-se
-	mamba create --yes -c conda-forge -c bioconda -n snakemake snakemake
+	bin/metapathways-install-deps.sh
 
 
 ### Python PyPI Packaging:
@@ -146,7 +146,7 @@ install-dev-package:
 	$(PYTHON) -m pip install --user --upgrade -e .
 
 install-dist-package:
-	$(PYTHON) -m pip install --user dist/MetaPathways-0.*-py*-none-any.whl
+	$(PYTHON) -m pip install --user dist/MetaPathways-*-py*-none-any.whl
 
 deploy-package-to-pypi:
 	twine upload dist/*
@@ -159,10 +159,23 @@ extensions-build:
 	$(MAKE) -C extensions clean
 	$(MAKE) -C extensions
 
-extensions-install: extensions-build
+## Deprecated, see Python package.
+extensions-build-install: extensions-build
 	mkdir -p $(DESTDIR)/bin
 	cp extensions/FAST/fast*            $(DESTDIR)/bin
 	cp extensions/metacount/metacount   $(DESTDIR)/bin
+
+## Deprecated, these binaries need to get revisited.
+extensions-install:
+	mkdir -p $(DESTDIR)/bin
+	$(MAKE) -C extensions/metacount clean
+	$(MAKE) -C extensions/metacount 
+	cp extensions/FAST/fastal $(DESTDIR)/bin/fastal
+	cp extensions/FAST/fastdb $(DESTDIR)/bin/fastdb
+	cp extensions/metacount/metacount $(DESTDIR)/bin/metacount
+	chmod 755 $(DESTDIR)/bin/fastal
+	chmod 755 $(DESTDIR)/bin/fastdb
+	chmod 755 $(DESTDIR)/bin/metacount
 
 # The location of the expat directory
 CC=gcc  

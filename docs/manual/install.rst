@@ -37,9 +37,6 @@ package for MetaPathways. It is in the works for a future release.
 For this to work, we assume that you have the following already set up in your
 command line environment:
 
-* You have basic ``C`` development tools in your path, including: ``make``, ``ar``, ``gcc``, ``g++``, etc.
-* You have a development verson of the ``zlib`` library
-* You have a working version of ``git``
 * You have Python 3 (``python3``) and ``pip3`` installed
 * You have already `installed Conda <https://docs.conda.io/en/latest/miniconda.html>`_, and it is activated
 * You have ``wget`` installed
@@ -48,33 +45,10 @@ If you are using a version of Linux that uses ``apt``, and you have root access,
 following to get all of the dependencies except Conda:
 ::
    sudo apt-get update -y
-   sudo apt-get install -y make \
-                  binutils \
+   sudo apt-get install -y \
                   python3 \
                   python3-pip \
-                  zlib1g-dev \
                   wget
-
-First, clone the MetaPathways repo into the current directory:
-::
-   git clone https://taltman1@bitbucket.org/BCB2/metapathways.git
-   
-Then, change into the top-level directory of the MetaPathways repository:
-::
-   cd metapathways
-   
-If you have root or administrator access, execute the following Make target in the ``Makefile`` in the top
-level of the MetaPathways repository to use Conda to install some of the dependencies. Aside from the 
-Conda-based dependencies, wo binary executables will be installed in the ``/usr/local/bin`` directory:
-::
-  make conda-install
-  
-If you do not have root or administrator access, use this version, where ``/home/user/example`` 
-is a directory where you want the binaries to be installed. In that directory, a ``bin``
-directory will be created, if it does not already exist. It is assumed that, following
-this example, that ``/home/user/example/bin`` is in your ``$PATH`` environment variable:
-::
-   make DESTDIR=/home/user/example conda-install
 
 If you have root/administrator access, install the MetaPathways Python package using the following command:
 ::
@@ -86,6 +60,17 @@ Else, use this form to install the package to the user's home directory:
    
 If installing with the ``--user`` option, make sure to add ``$HOME/.local/bin`` to your ``$PATH`` environment variable. This will allow you 
 to use the programs without having to type the full path each time.
+
+Once you have installed the Python package, you will have the following executables either in the system Python install path, or in ``~/.local/bin``, so be sure to add those paths to your ``$PATH`` environment variable.
+::
+   MetaPathways
+   metapathways-install-deps.sh
+   metapathways-data-install.sh
+   metacount
+   fastal
+   fastdb
+
+Execute ``metapathways-install-deps.sh`` to install pipeline dependencies using Conda.
 
 
 Reference Sequences
@@ -128,29 +113,12 @@ character, and the first slash character):
 ::
   
    . /opt/conda/etc/profile.d/conda.sh
-   
-Now we can activate the ``Snakemake`` environment:
+
+Now we can run the ``metapathways-data-install.sh`` script
 ::
-   conda activate snakemake
+   metapathways-data-install.sh /media/ref-db-dir stage_fast_lite
 
-Next, we need to switch to the MetaPathways install directory,  with the ``Snakefile`` file:
-::
-   cd /opt/mp_repo
-
-Now, we have ``Snakemake`` automate the installation of the required files:
-::
-   snakemake --cores 1 --config ref_db_dir=/path/to/db/dir -- stage_blast_lite
-
-Using the ```--config`` command, we can specify the desired root
-directory for installing the MetaPathways reference databases
-(replacing ``/path/to/db/dir`` with a real directory path on your
-system). By default, the ``Snakemake`` configuration file sets
-``/tmp/mp_ref_dbs`` as the root directory for the MetaPathways reference
-database, if you leave off the ``--config`` option. 
-
-Instead of using a single core, you can use the ``--cores`` option with
-a greater number of specified cores to parallelize the staging of the
-requested datasets.
+... where ``/media/ref-db-dir`` is the reference database installation directory (make sure this directory has adequate capacity for the data to be installed).
 
 Above we issued the ``stage_fast_lite`` command to Snakemake, as an example
 that runs quickly. There are actually four options for staging the data:
