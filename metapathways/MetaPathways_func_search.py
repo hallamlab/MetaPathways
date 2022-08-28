@@ -10,6 +10,7 @@ try:
     import traceback
     import sys
     import re
+    import glob
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -199,32 +200,59 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
 
 def _execute_FAST(options, logger=None):
-    args = []
+    
 
-    if options.last_executable:
+    # open *.prj file to check if there are multiple volumes
+        # if there are then use the per-volume function
+        volumes = 0
+        with open(options.last_db + '.prj', 'r') as prj_in:
+            data = prj_in.read()
+            if 'volumes=' in data:
+                dat_rl = prj_in.readlines()
+                for line in dat_rl:
+                    if 'volumes=' in line:
+                        volumes = line.split('=')[1].strip('\n')    
+
+    # create argument list(s), depending on the number of volumes
+    args_list = []
+    if volumes > 0:
+        for v in list(range(volumes)):
+            args = []
+            args.append(options.last_executable)
+            args += ["-f", options.last_f]
+            args += ["-o", options.last_o + str(v) + ".tmp"]
+            args += ["-P", options.num_threads]
+            args += [" -K", options.num_hits]
+            args += [options.last_db + str(v)]
+            args += [options.last_query]   
+            args_list.append(args)
+    else:
+        args = []
         args.append(options.last_executable)
-
-    if options.last_f:
         args += ["-f", options.last_f]
-
-    if options.last_o:
         args += ["-o", options.last_o + ".tmp"]
-
-    if options.num_threads:
         args += ["-P", options.num_threads]
-
-    args += [" -K", options.num_hits]
-
-    if options.last_db:
+        args += [" -K", options.num_hits]
         args += [options.last_db]
-
-    if options.last_query:
         args += [options.last_query]
+        args_list.append(args)
 
     result = None
     try:
-        result = sysutils.getstatusoutput(" ".join(args))
-        rename(options.last_o + ".tmp", options.last_o)
+        if len(args_list) == 1:
+            result = sysutils.getstatusoutput(" ".join(args_list[0]))
+            rename(args_list[0][2], args_list[0][2].rsplit('.', 1)[0])
+        else:
+            for a in args_list:
+                result = sysutils.getstatusoutput(" ".join(a))
+                rename(a[2], a[2].rsplit('.', 1)[0])
+            out_list = glob.glob(options.last_o + '*')
+            with open(options.last_o, 'w') as outfile:
+                for fname in out_list:
+                    with open(fname) as infile:
+                        for line in infile:
+                            outfile.write(line)
+                    os.remove(fname)
     except:
         message = "Could not run FAST correctly"
         if result and len(result) > 1:
