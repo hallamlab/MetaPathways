@@ -11,6 +11,7 @@ try:
     import sys
     import re
     import glob
+    import os
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -204,12 +205,11 @@ def _execute_FAST(options, logger=None):
     # if there are then use the per-volume function
     volumes = 0
     with open(options.last_db + '.prj', 'r') as prj_in:
-        data = prj_in.read()
-        if 'volumes=' in data:
-            dat_rl = prj_in.readlines()
-            for line in dat_rl:
-                if 'volumes=' in line:
-                    volumes = line.split('=')[1].strip('\n')    
+        dat_rl = prj_in.readlines()
+        for line in dat_rl:
+            if 'volumes=' in line:
+                volumes = int(line.split('=')[1].strip('\n'))
+
     # create argument list(s), depending on the number of volumes
     args_list = []
     if volumes > 0:
@@ -237,12 +237,13 @@ def _execute_FAST(options, logger=None):
     result = None
     try:
         if len(args_list) == 1:
-            result = sysutils.getstatusoutput(" ".join(args_list[0]))
-            rename(args_list[0][2], args_list[0][2].rsplit('.', 1)[0])
+            a = args_list[0]
+            result = sysutils.getstatusoutput(" ".join(a))
+            rename(a[4], a[4].rsplit('.', 1)[0])
         else:
             for a in args_list:
                 result = sysutils.getstatusoutput(" ".join(a))
-                rename(a[2], a[2].rsplit('.', 1)[0])
+                rename(a[4], a[4].rsplit('.', 1)[0])
             out_list = glob.glob(options.last_o + '*')
             with open(options.last_o, 'w') as outfile:
                 for fname in out_list:
