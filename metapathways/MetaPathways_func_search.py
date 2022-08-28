@@ -200,19 +200,16 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
 
 def _execute_FAST(options, logger=None):
-    
-
     # open *.prj file to check if there are multiple volumes
-        # if there are then use the per-volume function
-        volumes = 0
-        with open(options.last_db + '.prj', 'r') as prj_in:
-            data = prj_in.read()
-            if 'volumes=' in data:
-                dat_rl = prj_in.readlines()
-                for line in dat_rl:
-                    if 'volumes=' in line:
-                        volumes = line.split('=')[1].strip('\n')    
-
+    # if there are then use the per-volume function
+    volumes = 0
+    with open(options.last_db + '.prj', 'r') as prj_in:
+        data = prj_in.read()
+        if 'volumes=' in data:
+            dat_rl = prj_in.readlines()
+            for line in dat_rl:
+                if 'volumes=' in line:
+                    volumes = line.split('=')[1].strip('\n')    
     # create argument list(s), depending on the number of volumes
     args_list = []
     if volumes > 0:
