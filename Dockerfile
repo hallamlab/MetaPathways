@@ -22,14 +22,13 @@ ARG git_branch=dev
 ### Install apt dependencies
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
-    				   	   	      python3 \
-						      zlib1g-dev \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      python3-pip \
 						      wget
 
 ## Create the mp_repo directory, and copy over the Makefile
-COPY Makefile        /opt/mp_repo/
+RUN mkdir /opt/mp_repo/
+
 
 # Install MetaPathways:
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
