@@ -19,10 +19,12 @@ Our container images are hosted at `Quay.io <https://quay.io/repository/hallamla
 The following commands assume that you are already familiar with installing and running Docker containers 
 via the ``docker`` or ``singularity`` executables:
 
-Using `Docker <https://sylabs.io/>`_::
+Using `Docker <https://sylabs.io/>`_:
+::
      sudo docker pull quay.io/hallamlab/metapathways
 
-Using `Singularity <https://sylabs.io/>`_::
+Using `Singularity <https://sylabs.io/>`_:
+::
    singularity build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
 
 More advanced container-related commands are available as Make targets in the ``Makefile``.
@@ -31,7 +33,7 @@ Installing with Pip and Conda
 =============
 
 We currently offer a way to use Pip to install the MetaPathways Python package,
-along with using `Conda <https://conda.io`_ to install all dependencies. We do not yet have a Conda 
+along with using `Conda <https://conda.io>`_ to install all dependencies. We do not yet have a Conda 
 package for MetaPathways. It is in the works for a future release.
 
 For this to work, we assume that you have the following already set up in your
