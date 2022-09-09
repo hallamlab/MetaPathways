@@ -65,7 +65,7 @@ following to get all of the dependencies except Conda:
                   python3-pip \
                   wget
 
-Installing Python Packae as Root
+Installing Python Package as Root
 ................................
 
 If you have root/administrator access, install the MetaPathways Python package using the following command:
