@@ -30,7 +30,20 @@ Using `Singularity <https://sylabs.io/>`_:
 More advanced container-related commands are available as Make targets in the ``Makefile``.
 
 Installing with Pip and Conda
-=============
+=============================
+
+Summary
+-------
+
+Assuming that you have all prerequisites satisfied, installng can be as simple as:
+::
+   pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
+   metapathways-install-deps.sh
+
+Read on to learn the details.
+
+Detailed Install
+----------------
 
 We currently offer a way to use Pip to install the MetaPathways Python package,
 along with using `Conda <https://conda.io>`_ to install all dependencies. We do not yet have a Conda 
@@ -52,16 +65,25 @@ following to get all of the dependencies except Conda:
                   python3-pip \
                   wget
 
+Installing Python Packae as Root
+................................
+
 If you have root/administrator access, install the MetaPathways Python package using the following command:
 ::
    pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
 
-Else, use this form to install the package to the user's home directory:
+Installing Python Package as an Unpriviledged User
+..................................................
+
+Use this form to install the package to the user's home directory:
 ::
    pip3 install --user git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
    
-If installing with the ``--user`` option, make sure to add ``$HOME/.local/bin`` to your ``$PATH`` environment variable. This will allow you 
+Make sure to add ``$HOME/.local/bin`` to your ``$PATH`` environment variable. This will allow you 
 to use the programs without having to type the full path each time.
+
+Conda-Based Setup
+.................
 
 Once you have installed the Python package, you will have the following executables either in the system Python install path, or in ``~/.local/bin``, so be sure to add those paths to your ``$PATH`` environment variable.
 ::
@@ -77,6 +99,17 @@ Execute ``metapathways-install-deps.sh`` to install pipeline dependencies using 
 
 Reference Sequences
 ===================
+
+Summary
+-------
+Assuming that you have MetaPathways installed, installing the reference DB can be as simple as:
+::
+   metapathways-data-install.sh /media/ref-db-dir stage_fast_full
+   
+Read on for detailed instructons.
+
+Details
+-------
 
 MetaPathways relies on reference databases of sequences to assign 
 functional and taxonomic annotations to the user's sequences. The 
