@@ -56,7 +56,7 @@ command line environment:
 
 * You have Python 3 (``python3``) and ``pip3`` installed
 * You have already `installed Conda <https://docs.conda.io/en/latest/miniconda.html>`_, and it is activated
-* Development files for ``zlib``, ``liblzma` and ``libbz2`` (required to install PySAM via pip)
+* Development files for ``zlib``, ``liblzma` and ``libbz2`` (required to install ``PySAM`` via ``pip``)
 * You have ``wget`` installed
 
 If you are using a version of Linux that uses ``apt``, and you have root access, then you can execute the 
