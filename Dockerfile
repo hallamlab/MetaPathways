@@ -24,6 +24,9 @@ ARG git_branch=dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      python3-pip \
+						      zlib1g-dev \
+						      liblzma-dev \
+						      libbz2-dev \
 						      wget
 
 ## Create the mp_repo directory, and copy over the Makefile
@@ -31,7 +34,9 @@ RUN mkdir /opt/mp_repo/
 
 
 # Install MetaPathways:
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
+RUN conda create --yes --name metapathways pip \
+    && /opt/conda/envs/metapathways/bin/pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
+
 
 ## Set up Conda:
 ## We do some umask munging to avoid having to use chmod later on,
@@ -40,6 +45,7 @@ RUN old_umask=`umask` && \
     umask 0000 && \
     metapathways-install-deps.sh && \
     umask $old_umask
+
 
 RUN mkdir /opt/pgdb_dir
 
