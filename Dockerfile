@@ -34,8 +34,8 @@ RUN mkdir /opt/mp_repo/
 
 
 # Install MetaPathways:
-RUN conda create --yes --name metapathways pip \
-    && /opt/conda/envs/metapathways/bin/pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
+#RUN 
+
 
 
 ## Set up Conda:
@@ -43,14 +43,16 @@ RUN conda create --yes --name metapathways pip \
 ## as it is painfully slow on large directores in Docker.
 RUN old_umask=`umask` && \
     umask 0000 && \
-    metapathways-install-deps.sh && \
+    conda create --yes --name metapathways gcc_linux-64 gxx_linux-64 pip && \
+    /opt/conda/envs/metapathways/bin/pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways && \
+    /opt/conda/envs/metapathways/bin/metapathways-install-deps.sh && \
     umask $old_umask
 
 
 RUN mkdir /opt/pgdb_dir
 
 ## Make things work for Singularity by relaxing the permissions:
-RUN chmod -R 755 /opt/mp_repo
+#RUN chmod -R 755 /opt/mp_repo
 #RUN chmod -R 755 /opt/conda
 
 ### EntryPoint source:
