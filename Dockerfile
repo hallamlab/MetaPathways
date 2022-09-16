@@ -45,7 +45,7 @@ RUN old_umask=`umask` && \
     umask 0000 && \
     conda create --yes --name metapathways gcc_linux-64 gxx_linux-64 pip && \
     /opt/conda/envs/metapathways/bin/pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways && \
-    /opt/conda/envs/metapathways/bin/metapathways-install-deps.sh && \
+    /opt/conda/envs/metapathways/bin/metapathways-install-deps.sh &&  \
     umask $old_umask
 
 
