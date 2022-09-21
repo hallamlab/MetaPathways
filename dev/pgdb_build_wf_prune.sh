@@ -18,7 +18,7 @@ tar -xf ${inputpath}/results/pgdb/*.tar.bz2 -C ${inputpath}/results/pgdb/ # unco
 
 rm -rf ${inputpath}/results/pgdb/*.tar.bz2 # removes tar archive
 
-python3 ${mpdpath}/make-camelot-file-generate-report-singularity.py ${inputpath}/results/pgdb/1.0/data ${inputpath}/results/pgdb ${inputpath}/results/pgdb/${sampleid}_pwy.tsv # creates a TSV file of the pathways that were predicted by PATHOLOGIC within Ptools
+python3 ${mpdpath}/make-camelot-file-generate-report-singularity_prune.py ${inputpath}/results/pgdb/1.0/data ${inputpath}/results/pgdb ${inputpath}/results/pgdb/${sampleid}_pwy.tsv # creates a TSV file of the pathways that were predicted by PATHOLOGIC within Ptools
 
 
 
