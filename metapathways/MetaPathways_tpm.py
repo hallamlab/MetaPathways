@@ -365,6 +365,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append(options.output)
     command.append('-t')
     command.append(options.num_threads)
+    command.append('--bam-file-cache-directory')
+    command.append(options.bwaFolder)
+    command.append('--discard-unmapped')
 
     rpkmstatus = 0
     rpkmtext = ''
