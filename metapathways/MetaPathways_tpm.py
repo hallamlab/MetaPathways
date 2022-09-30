@@ -363,6 +363,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append(options.contigs)
     command.append('--output-file')
     command.append(options.output)
+    command.append('-t')
+    command.append(options.num_threads)
 
     rpkmstatus = 0
     rpkmtext = ''
