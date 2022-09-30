@@ -352,9 +352,10 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     #     -r orf_prediction/.fna 
     #     --output-file .orf_counts.txt
 
-    command = ["coverm contig"]
-    command.append("-m count -m rpkm -m tpm")
-    command.append("-c")
+    command = [options.rpkmExec]
+    command.append('contig')
+    command.append('-m count -m rpkm -m tpm')
+    command.append('-c')
     for readgroup in readFiles:
         fastqs = readFiles[readgroup]
         for f in fastqs:
