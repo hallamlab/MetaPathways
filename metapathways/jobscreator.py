@@ -401,11 +401,7 @@ class ContextCreator:
         max_evalue = self.params.get('annotation', 'max_evalue', default = 0.000001)
         max_hits = self.params.get('annotation', 'max_hits', default = 5)
         min_score = self.params.get('annotation', 'min_score', default = 20)
-<<<<<<< HEAD
         run_mode = self.params.get('annotation', 'run_mode', default = 'default')
-=======
->>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
-
         num_threads = self.configs.NUM_CPUS
 
         dbstring = self.get_dbstring()
@@ -465,25 +461,16 @@ class ContextCreator:
                     "--last_o %s "
                     "--last_f 2 "
                     "--last_db %s "
-<<<<<<< HEAD
                     "--last_query %s "
                     "--run_mode %s") \
-=======
-                    "--last_query %s") \
->>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
                     %(pyScript,
                     s.algorithm ,
                     searchExec,
                     num_threads,
                     blastoutput,
                     refDbFullName,
-<<<<<<< HEAD
                     input_filtered_faa,
                     run_mode)
-=======
-                    input_filtered_faa)
->>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
-
                 context.message = self._Message("FASTING AMINO SEQS AGAINST " + db)
 
             context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
@@ -513,10 +500,6 @@ class ContextCreator:
         min_length = self.params.get('annotation', 'min_length', default = 100)
         max_evalue = self.params.get('annotation', 'max_evalue', default = 1000)
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
         dbstring = self.get_dbstring()
         dbs = [x.strip() for x in dbstring.split(",")  if len(x) != 0]
 
