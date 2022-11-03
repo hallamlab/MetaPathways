@@ -10,9 +10,12 @@ try:
     import traceback
     import sys
     import re
+<<<<<<< HEAD
     import glob
     import os
     import pandas as pd
+=======
+>>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -154,6 +157,7 @@ def createParser():
         help="The FAST executable",
     )
 
+<<<<<<< HEAD
     last_group.add_option(
         "--run_mode",
         dest="run_mode",
@@ -161,6 +165,8 @@ def createParser():
         help="Run large DBs normally (default) or per volume [pervol]",
     )
 
+=======
+>>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
     parser.add_option_group(last_group)
 
     return parser
@@ -209,6 +215,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
 
 def _execute_FAST(options, logger=None):
+<<<<<<< HEAD
     
     volumes = 0
     if options.run_mode == 'pervol':
@@ -265,6 +272,34 @@ def _execute_FAST(options, logger=None):
             last_df = pd.read_csv(options.last_o, sep='\t', header=None)
             last_df.sort_values(by = [0, 11], ascending = [True, False], inplace=True)
             last_df.to_csv(options.last_o, sep='\t', header=False, index=False)
+=======
+    args = []
+
+    if options.last_executable:
+        args.append(options.last_executable)
+
+    if options.last_f:
+        args += ["-f", options.last_f]
+
+    if options.last_o:
+        args += ["-o", options.last_o + ".tmp"]
+
+    if options.num_threads:
+        args += ["-P", options.num_threads]
+
+    args += [" -K", options.num_hits]
+
+    if options.last_db:
+        args += [options.last_db]
+
+    if options.last_query:
+        args += [options.last_query]
+
+    result = None
+    try:
+        result = sysutils.getstatusoutput(" ".join(args))
+        rename(options.last_o + ".tmp", options.last_o)
+>>>>>>> 8cc71521cccf0f779a427ef30fcb6309b518a050
     except:
         message = "Could not run FAST correctly"
         if result and len(result) > 1:

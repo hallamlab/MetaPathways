@@ -42,7 +42,6 @@ RUN old_umask=`umask` && \
 # Install MetaPathways:
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
 
-
 RUN mkdir /opt/pgdb_dir
 
 ## Make things work for Singularity by relaxing the permissions:
