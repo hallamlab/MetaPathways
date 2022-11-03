@@ -291,28 +291,17 @@ class LCAComputation:
     # this is use to compute the min support for each taxon in the tree
     # this is called before the  getMeganTaxonomy
     def compute_min_support_tree(self, annotate_gff_file, pickorfs, dbname="refseq"):
-        # print 'dbname' , dbname
         self.tax_dbname = dbname
         gffreader = mputils.GffFileParser(annotate_gff_file)
-        # print 'done'
         try:
-            #   if dbname=='refseq-nr-2014-01-18':
-            #       print  'refseq', len(pickorfs)
             for contig in gffreader:
-                # if dbname=='refseq-nr-2014-01-18':
-                #    print  'refseq',  contig
                 for orf in gffreader.orf_dictionary[contig]:
                     shortORFId = mputils.getShortORFId(orf["id"])
                     if re.search(r"Xrefseq", dbname):
                         print("refseq", contig, shortORFId, self.tax_dbname)
 
-                    # print shortORFId, orf['id']
-
                     if not shortORFId in pickorfs:
                         continue
-                    #           if dbname=='refseq-nr-2014-01-18':
-                    #              print  'refseq',  contig , shortORFId
-                    # print ">", shortORFId, orf['id']
 
                     taxonomy = None
                     species = []
@@ -323,21 +312,15 @@ class LCAComputation:
                             print(self.results_dictionary[self.tax_dbname].keys())
 
                         if shortORFId in self.results_dictionary[self.tax_dbname]:
-                            # compute the top hit wrt score
                             top_score = 0
                             for hit in self.results_dictionary[self.tax_dbname][
                                 shortORFId
                             ]:
-                                # print hit #,hit['bitscore'], self.lca_min_score, top_score
-
                                 if (
                                     hit["bitscore"] >= self.lca_min_score
                                     and hit["bitscore"] >= top_score
                                 ):
                                     top_score = hit["bitscore"]
-                            #                       if dbname=='refseq-nr-2014-01-18':
-                            #                            print  'hit',  hit
-
                             for hit in self.results_dictionary[self.tax_dbname][
                                 shortORFId
                             ]:
@@ -347,19 +330,8 @@ class LCAComputation:
                                     names = self.get_species(hit)
                                     if names:
                                         species.append(names)
-                            # print self.results_dictionary[dbname][shortORFId][0]['product']
-                            # print  orf['id']
-                            # print  orf['id'], species
-                            # print  orf['id'], len(self.results_dictionary[dbname][shortORFId]), species
                     taxonomy = self.getTaxonomy(species)
-                    # taxonomy_id = self.getTaxonomy(species, return_id=True)
-                    # print taxonomy
-                    # print taxonomy_id
-                    # print taxonomy,  orf['id'], species
                     self.update_taxon_support_count(taxonomy)
-                    # preferred_taxonomy = self.get_preferred_taxonomy(taxonomy_id)
-                    # print taxonomy
-                    # print preferred_taxonomy
                     pickorfs[shortORFId] = taxonomy
 
         except:

@@ -1007,6 +1007,14 @@ def process_product(product, database, similarity_threshold=0.9):
             processed_product = product
             comment = ''
     
+    elif 'eggnog' in database:
+        if ' n=' in product: # helps with edge cases
+            processed_product = product.rsplit(' n=', 1)[0]
+            comment = ' n=' + product.rsplit(' n=', 1)[1]
+        else:
+            processed_product = product
+            comment = ''
+
     else: # no defline cleaning
         processed_product = product
         comment = ''
