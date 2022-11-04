@@ -22,25 +22,24 @@ ARG git_branch=dev
 ### Install apt dependencies
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y make \
-    				   	   	      python3 \
-						      zlib1g-dev \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      python3-pip \
 						      wget
 
 ## Create the mp_repo directory, and copy over the Makefile
-COPY Makefile        /opt/mp_repo/
+RUN mkdir /opt/mp_repo/
+
+
+# Install MetaPathways:
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
 
 ## Set up Conda:
 ## We do some umask munging to avoid having to use chmod later on,
 ## as it is painfully slow on large directores in Docker.
 RUN old_umask=`umask` && \
     umask 0000 && \
-    make -C mp_repo conda-install-deps && \
+    metapathways-install-deps.sh && \
     umask $old_umask
-
-# Install MetaPathways:
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
 
 RUN mkdir /opt/pgdb_dir
 
