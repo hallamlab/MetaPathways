@@ -285,7 +285,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     ec_df.dropna(subset = ['EC'], inplace=True)
     ec_df = ec_df.copy().query('UniProtKB in @trim_set_list')
     ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
-    ec_dict = ec_df.groupby('UniProtKB')['EC'].apply(list).to_dict()
+    ec_dict = ec_df.groupby('UniProtKB', group_keys=True)['EC'].apply(list).to_dict()
     rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
     rxn_df = rxn_df.query('MC in @trim_set_list')
     rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
@@ -304,10 +304,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 id  =  attrib['id']
                 shortid = ""
                 compactid = ""
-                try:
-                    del attrib['ec'] # do this for now, but it should be cleaned up better
-                except:
-                    1 + 1
+                #try:
+                #    del attrib['ec'] # do this for now, but it should be cleaned up better
+                #except:
+                #    1 + 1
 
                 if attrib['feature'] == 'CDS':
                     shortid = prefix + mputils.ShortenORFId(attrib['id'])
@@ -467,9 +467,12 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
             gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
     elif 'ec' in attrib:
-        ec_list = list(set(attrib['ec']))
-        for ec_val in ec_list:
+        ec_val = attrib['ec']
+        if ec_val:
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
+        #ec_list = list(set(attrib['ec']))
+        #for ec_val in ec_list:
+        #    gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
     if 'taxon' in attrib:
         gutils.fprintf(pfFile, "TAXONOMIC-ANNOT\tTAX-%s\n", attrib['taxon'])
