@@ -1195,6 +1195,8 @@ def compute_annotation_value(data):
 
     if not re.search(r"hypothetical protein", data["product"]):
         score += word_information(data["product"])
+    if data["target"]: # Hypotheticals with target IDs are better than plain hypotheticals
+        score += 1
 
     return score
 
@@ -1221,13 +1223,11 @@ def process_parsed_blastoutput(
             annotation["comment"] = comm
             annotation["value"] = compute_annotation_value(annotation) * weight
             annotation["bitscore"] = data["bitscore"]
-
             if not data["query"] in annotation_results:
                 annotation_results[data["query"]] = {"value": 0, "bitscore": 0.0}
             if annotation_results[data["query"]]["bitscore"] <= annotation["bitscore"]:
                 if annotation_results[data["query"]]["value"] < annotation["value"]:
                     annotation_results[data["query"]] = annotation.copy()
-
     count = len(annotation_results.keys())
     return count
 

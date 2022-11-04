@@ -220,7 +220,7 @@ class LCAComputation:
         IDs = []
         for name_group in name_groups:
             if taxid:
-                id = int(name_group)
+                id = name_group
             else:
                 id = self.get_a_Valid_ID(name_group)
             if id != -1:
@@ -231,12 +231,12 @@ class LCAComputation:
         return consensus
 
     # extracts taxon names for a refseq annotation
-    def get_species(self, hit):
+    def get_species(self, hit, dbname):
         accession_PATT = re.compile(r"ref\|(.*)\|")
         if not "comment" in hit and not "target" in hit:
             return None
 
-        species = []
+        species = ""
 
         try:
             # extracting taxon names here
@@ -247,11 +247,13 @@ class LCAComputation:
             #      if gi in self.accession_to_taxon_map:
             #        species.append(self.accession_to_taxon_map[gi])
             # else:
-            m = re.findall(r"\[([^\[]+?)\]", hit["comment"])
-            if m != None:
-                copyList(m, species)
-                # print hit['product']
-                # print species
+            if 'eggnog' in dbname:
+                m = hit['target'].split('.', 1)[0]
+                species = str(m)
+            #else:
+            #    m = re.findall(r"\[([^\[]+?)\]", hit["comment"])
+            #    if m != None:
+            #        copyList(m, species)
         except:
             return None
 
@@ -283,7 +285,7 @@ class LCAComputation:
 
                 for hit in self.results_dictionary[self.tax_dbname][orfid]:
                     if (100 - self.lca_top_percent) * top_score / 100 < hit["bitscore"]:
-                        names = self.get_species(hit)
+                        names = self.get_species(hit, dbname)
                         if names:
                             species.append(names)
 
@@ -330,9 +332,9 @@ class LCAComputation:
                                 if (100 - self.lca_top_percent) * top_score / 100 < hit[
                                     "bitscore"
                                 ]:
-                                    names = self.get_species(hit)
-                                    if names:
-                                        species.append(names)
+                                    name = self.get_species(hit, dbname)
+                                    if name:
+                                        species.append(name)
                     if 'eggnog' in dbname:
                         taxonomy = self.getTaxonomy(species, taxid=True)
                     else:
