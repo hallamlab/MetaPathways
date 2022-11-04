@@ -56,4 +56,4 @@ RUN mkdir /opt/pgdb_dir
 #RUN chmod -R 755 /opt/conda
 
 ### EntryPoint source:
-## TODO
+ENTRYPOINT [ "conda", "run", "--no-capture-output", "-n", "metapathways", "MetaPathways" ]
