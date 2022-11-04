@@ -216,10 +216,13 @@ class LCAComputation:
     # given a set of sets of names it computes an lca
     # in the format [ [name1, name2], [name3, name4,....namex] ...]
     # here name1 and name2 are synonyms and so are name3 through namex
-    def getTaxonomy(self, name_groups, return_id=False):
+    def getTaxonomy(self, name_groups, taxid=False, return_id=False):
         IDs = []
         for name_group in name_groups:
-            id = self.get_a_Valid_ID(name_group)
+            if taxid:
+                id = int(name_group)
+            else:
+                id = self.get_a_Valid_ID(name_group)
             if id != -1:
                 IDs.append(id)
         consensus = self.get_lca(IDs, return_id)
@@ -330,7 +333,10 @@ class LCAComputation:
                                     names = self.get_species(hit)
                                     if names:
                                         species.append(names)
-                    taxonomy = self.getTaxonomy(species)
+                    if 'eggnog' in dbname:
+                        taxonomy = self.getTaxonomy(species, taxid=True)
+                    else:
+                        taxonomy = self.getTaxonomy(species)
                     self.update_taxon_support_count(taxonomy)
                     pickorfs[shortORFId] = taxonomy
 

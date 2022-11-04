@@ -769,6 +769,7 @@ def create_annotation(
     sample_name,
     compact_output=False,
 ):
+
     orf_dictionary = {}
     #    process_gff_file(input_gff, orf_dictionary)
     gffreader = GffFileParser(input_gff)
@@ -1008,12 +1009,8 @@ def process_product(product, database, similarity_threshold=0.9):
             comment = ''
     
     elif 'eggnog' in database:
-        if ' n=' in product: # helps with edge cases
-            processed_product = product.rsplit(' n=', 1)[0]
-            comment = ' n=' + product.rsplit(' n=', 1)[1]
-        else:
-            processed_product = product
-            comment = ''
+        processed_product = product
+        comment = ''
 
     else: # no defline cleaning
         processed_product = product
