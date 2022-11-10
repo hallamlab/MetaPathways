@@ -23,10 +23,11 @@ ARG git_branch=dev
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
-						      python3-pip \		      						      zlib1g-dev \
-						      liblzma-dev \
-						      libbz2-dev \
-						      wget
+							python3-pip \		  
+							zlib1g-dev \
+							liblzma-dev \
+							libbz2-dev \
+							wget
 
 
 ## Create the mp_repo directory, and copy over the Makefile
