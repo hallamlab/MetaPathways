@@ -284,7 +284,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         return 1
 
     readFiles = getReadFiles(options.readsdir, options.sample_name)
-
+    """
     # index for BWA
     bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
     indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile)
@@ -343,10 +343,37 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
     for bamfile in bamFiles:
         command.append("--sam " + bamfile)
+    """
+
+    # Add CoverM command here #
+    # coverm contig \
+    #     -m count -m rpkm -m tpm 
+    #     -1 _R1.qc.fq.gz -2 _R2.qc.fq.gz 
+    #     -r orf_prediction/.fna 
+    #     --output-file .orf_counts.txt
+
+    command = [options.rpkmExec]
+    command.append('contig')
+    command.append('-m count -m rpkm -m tpm')
+    command.append('-c')
+    for readgroup in readFiles:
+        fastqs = readFiles[readgroup]
+        for f in fastqs:
+            command.append(f)
+    command.append('-r')
+    command.append(options.contigs)
+    command.append('--output-file')
+    command.append(options.output)
+    command.append('-t')
+    command.append(options.num_threads)
+    command.append('--bam-file-cache-directory')
+    command.append(options.bwaFolder)
+    command.append('--discard-unmapped')
 
     rpkmstatus = 0
+    rpkmtext = ''
     try:
-        rpkmstatus = runRPKMCommand(runcommand=" ".join(command))
+        rpkmstatus, rpkmtext = runRPKMCommand(runcommand=" ".join(command))
     except:
         rpkmstatus = 1
         pass
@@ -356,6 +383,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
         # exit_process("ERROR\tFailed to run RPKM" )
+
+    with open(options.stats, 'w') as stat_out:
+        stat_out.write(rpkmtext)
 
     return rpkmstatus
 
@@ -367,7 +397,7 @@ def runRPKMCommand(runcommand=None):
     result = sysutils.getstatusoutput(runcommand)
     if result[1]:
         print(result[1])
-    return result[0]
+    return result[0], result[1]
 
 
 # this is the portion of the code that fixes the name

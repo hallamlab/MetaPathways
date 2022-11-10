@@ -381,7 +381,7 @@ def process(argv):
         "FAST_EXECUTABLE"      : 'fastal',
         "PRODIGAL_EXECUTABLE"  : 'pprodigal',
         "SCAN_tRNA_EXECUTABLE" : 'tRNAscan-SE',
-        "RPKM_EXECUTABLE"      : 'metacount',
+        "RPKM_EXECUTABLE"      : 'coverm',
         "NUM_CPUS"             : opts.num_cpus,
         "REFDBS"               : opts.refdb_dir
     }
