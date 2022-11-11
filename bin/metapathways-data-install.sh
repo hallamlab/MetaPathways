@@ -5,7 +5,7 @@ command="$2"
 metapathways_pkg_dir=`python3 -c "import metapathways; print(metapathways.__path__[0])"`
 
 eval "$(conda shell.bash hook)"
-conda activate snakemake
+conda activate metapathways
 
 snakemake --cores 1 \
 	  --config ref_db_dir="$data_dir" \

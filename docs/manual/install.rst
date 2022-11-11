@@ -37,9 +37,11 @@ Summary
 
 Assuming that you have all prerequisites satisfied, installng can be as simple as:
 ::
+   conda create --name metapathways
+   conda activate metapathways
    pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
    metapathways-install-deps.sh
-
+   
 Read on to learn the details.
 
 Detailed Install
@@ -54,6 +56,7 @@ command line environment:
 
 * You have Python 3 (``python3``) and ``pip3`` installed
 * You have already `installed Conda <https://docs.conda.io/en/latest/miniconda.html>`_, and it is activated
+* Development files for ``zlib``, ``liblzma` and ``libbz2`` (required to install ``PySAM`` via ``pip``)
 * You have ``wget`` installed
 
 If you are using a version of Linux that uses ``apt``, and you have root access, then you can execute the 
@@ -63,6 +66,9 @@ following to get all of the dependencies except Conda:
    sudo apt-get install -y \
                   python3 \
                   python3-pip \
+		  zlib1g-dev \
+		  liblzma-dev \
+		  libbz2-dev \
                   wget
 
 Installing Python Package as Root

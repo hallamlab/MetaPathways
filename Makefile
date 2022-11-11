@@ -76,8 +76,8 @@ docker-run:
 	git_branch=$$(git symbolic-ref --short -q HEAD)
 	sudo docker run -it --network=host --rm \
 		-v $(CURDIR):/input \
-		-v $(CURDIR)/out:/output
-		quay.io/hallamlab/metapathways:$$git_branch bash 
+		-v $(CURDIR)/out:/output \
+		quay.io/hallamlab/metapathways:$$git_branch
 
 docker-test:
 	cp $(CURDIR)/regtests/input/A1.fasta /tmp
