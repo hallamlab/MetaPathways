@@ -70,9 +70,8 @@ def createParser():
                       help="location of the raw fastq data for RPKM and TPM [optional]")
     
     parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
-                      help="max number of cores to use in multhreaded steps [DEFAULT 1]")
+                      help="max number of cores to use in multithreaded steps [DEFAULT 1]")
 
-    #ith out of order completion \ time-stamps in the \'workflow_log.txt\'
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print lots of information on the stdout [default]")
@@ -88,7 +87,7 @@ def valid_arguments(opts, args):
     """ checks if the supplied arguments are adequate """
     isvalid = True
     if opts.parameter_fp == None:
-       gutils.eprintf("ERROR\tParameter file for run configuration is not providedl\n")
+       gutils.eprintf("ERROR\tParameter file for run configuration is not provided.\n")
        isvalid = False
 
     if opts.output_dir == None:
