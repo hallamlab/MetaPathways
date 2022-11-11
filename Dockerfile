@@ -31,29 +31,28 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 
 ## Create the mp_repo directory, and copy over the Makefile
 RUN mkdir /opt/mp_repo/
+RUN mkdir /opt/pgdb_dir
 
+# Create the environment:
+#RUN conda create --yes --name metapathways gcc_linux-64 gxx_linux-64 pip
+# Make RUN commands use the new environment:
+#SHELL ["conda", "run", "-n", "metapathways", "/bin/bash", "-c"]
 
-# Install MetaPathways:
-#RUN 
+# Install MetaPathways and dependencies
+RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
+RUN metapathways-install-deps.sh
+# Demonstrate the environment is activated:
+RUN echo "Make sure MetaPathways is installed:"
+RUN MetaPathways -h
 
+# The code to run when container is started:
+#ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "metapathways", "MetaPathways"]
 
-
-## Set up Conda:
 ## We do some umask munging to avoid having to use chmod later on,
 ## as it is painfully slow on large directores in Docker.
 RUN old_umask=`umask` && \
     umask 0000 && \
-    conda create --yes --name metapathways gcc_linux-64 gxx_linux-64 pip && \
-    /opt/conda/envs/metapathways/bin/pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways && \
-    /opt/conda/envs/metapathways/bin/metapathways-install-deps.sh &&  \
     umask $old_umask
 
 
-RUN mkdir /opt/pgdb_dir
 
-## Make things work for Singularity by relaxing the permissions:
-#RUN chmod -R 755 /opt/mp_repo
-#RUN chmod -R 755 /opt/conda
-
-### EntryPoint source:
-ENTRYPOINT [ "conda", "run", "--no-capture-output", "-n", "metapathways", "MetaPathways" ]
