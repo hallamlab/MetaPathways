@@ -24,28 +24,27 @@ ARG git_branch=dev
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      python3-pip \
+						      zlib1g-dev \
+						      liblzma-dev \
+						      libbz2-dev \
 						      wget
 
 ## Create the mp_repo directory, and copy over the Makefile
 RUN mkdir /opt/mp_repo/
+RUN mkdir /opt/pgdb_dir
 
-
-# Install MetaPathways:
+# Install MetaPathways and dependencies
 RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
+RUN metapathways-install-deps.sh
+# Demonstrate the environment is activated:
+RUN echo "Make sure MetaPathways is installed:"
+RUN MetaPathways -h
 
-## Set up Conda:
 ## We do some umask munging to avoid having to use chmod later on,
 ## as it is painfully slow on large directores in Docker.
 RUN old_umask=`umask` && \
     umask 0000 && \
-    metapathways-install-deps.sh && \
     umask $old_umask
 
-RUN mkdir /opt/pgdb_dir
 
-## Make things work for Singularity by relaxing the permissions:
-RUN chmod -R 755 /opt/mp_repo
-#RUN chmod -R 755 /opt/conda
 
-### EntryPoint source:
-## TODO
