@@ -28,13 +28,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      liblzma-dev \
 						      libbz2-dev \
 						      wget
+RUN DEBIAN_FRONTEND=noninteractive apt-get install libtinfo6
+
 
 ## Create the mp_repo directory, and copy over the Makefile
 RUN mkdir /opt/mp_repo/
 RUN mkdir /opt/pgdb_dir
 
 # Create the environment:
-RUN conda create -n metapathways python=3.10
+RUN conda create -n metapathways python=3
 
 # Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "metapathways", "/bin/bash", "-c"]
