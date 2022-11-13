@@ -554,7 +554,10 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         #attributes += ";" + "ec="
         output_line += "\t" + attributes
 
-    elif tag == "_tRNA":
+    elif ((tag == "_tRNA") & 
+        ((str(f_rec["feature"]) == 'pseudogene') | 
+            (str(f_rec["feature"]) == 'tRNA')
+            )):
         output_line += "\t" + str(f_rec["source"])
         output_line += "\t" + str(f_rec["feature"])
         output_line += "\t" + str(f_rec["start"])
