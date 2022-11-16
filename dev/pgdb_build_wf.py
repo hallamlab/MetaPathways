@@ -1,0 +1,268 @@
+#!/usr/bin/env python
+## -*- python -*-
+"""PGDB Workflow
+
+Usage:
+	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --pt <pt_repo> --mp_dev <mp_dev> --tmp_dir <tmp_dir> [--tag <tag>]
+
+Options:
+	-h --help	Show this screen.
+	--version	Show version.
+	--mp_out=DIR	MP3 output directory.
+	--sif=FILE	Path to the Ptools SIF file.
+	--pt=DIR	Path to `ptools-container` repository.
+	--mp_dev=DIR	Path to `metapathways/dev` dir within MP3 repo.
+	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
+	--tag=STR	Tag for metagenome PGDB [default: community].
+"""
+
+
+import sys
+import pandas
+import os
+import subprocess
+import shutil
+import glob
+from pathlib import Path
+from sexpdata import loads, dumps, Symbol
+from docopt import docopt
+from camelot_frs.camelot_frs import get_kb, get_frame, get_frame_all_children, frame_parent_of_frame_p, frame_object_p
+from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
+from camelot_frs.pgdb_api    import genes_of_pathway
+
+
+def create_pgdb(pt_inputs, pt_outputs, sif_file,
+				mp_dev, pt_repo, tmp_dir, tag
+				):
+
+	rename_pgdb(pt_inputs, tag)
+
+	# Clear TMPDIR of any Ptools intermeditates
+	pl_dir = tmp_dir + '/ptools-local'
+	try:
+		shutil.rmtree(pl_dir)
+	except OSError as e:
+	    print ("Error: %s - %s." % (e.filename, e.strerror))
+	
+	# Create output dir if doesn't exist
+	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
+
+	# Run Singularity images for Ptools
+	bind_str = ''.join([pt_inputs, ':/pt_inputs,',
+						pt_outputs, ':/pt_outputs,',
+						mp_dev, ':/mpdevpath,',
+						pt_repo, ':/pt_src,',
+						tmp_dir, ':/data'
+						])
+	pt_cmd = ['singularity', 'run', '-B', bind_str, sif_file,
+				'/mpdevpath/run-pathway-tools-and-copy-pgdb-singularity.sh',
+				'/pt_inputs', '/pt_outputs', '/pt_src'
+				]
+	pt_out = subprocess.run(pt_cmd) #, capture_output=True, text=True).stdout
+	
+	# Clear TMPDIR of any Ptools intermeditates
+	try:
+		shutil.rmtree(pl_dir)
+	except OSError as e:
+	    print ("Error: %s - %s." % (e.filename, e.strerror))
+
+	# Uncompress PGDB to create PWYs table
+	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
+	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
+	tar_out = subprocess.run(tar_cmd) #, capture_output=True, text=True).stdout
+
+
+def rename_pgdb(pt_inputs, tag):
+	o_params = os.path.join(pt_inputs, 'organism-params.dat')
+	attr_list = ['ID', 'NAME', 'ABBREV-NAME']
+	with open(o_params, 'r') as in_par:
+		data = in_par.readlines()
+		with open(o_params + '.tmp', 'w') as out_par:
+			for line in data:
+				line = line.strip('\n')
+				split_line = line.split('\t')
+				if split_line[0] in attr_list:
+					split_line[1] = tag
+				new_line = '\t'.join(split_line) + '\n'
+				out_par.write(new_line)
+	os.rename(o_params + '.tmp', o_params)
+
+
+def extract_pwy(pt_outputs):
+	## version.dat file is not in expected directory, create it
+	pt_id = os.path.basename(glob.glob(pt_outputs + '/*.tar.bz2')[0]).split('cyc', 1)[0]
+	flatpath = os.path.join(pt_outputs, '1.0/data')
+	pwy_outfile = os.path.join(pt_outputs, pt_id + '_pwy.tsv')
+	verfile = os.path.join(flatpath.rsplit('/', 2)[0], 'default-version')
+	new_verfile = os.path.join(flatpath, 'version.dat')
+	shutil.copyfile(verfile, new_verfile)
+
+	## Need to create a custom sample_id since org_id is blank
+	
+	## Create the .camelot file:
+	org_id = make_camelot_file(flatpath, pt_outputs)
+	print('SAMPLE_ID:', pt_id)
+	print('ORGANISM_ID:', org_id)
+
+	## Load the PGDB:
+	load_pgdb(pt_outputs + '/' + org_id + '.camelot')
+
+	curr_kb = get_kb(org_id)
+
+	# Build Pathway Inference Data Dictionary from contents of ./reports/ dirextory
+	reportspath = os.path.dirname(flatpath) + '/reports'
+	pwy_inf_data = get_pwy_inf(reportspath)
+
+	## Generate the report:
+	headers = [ "SAMPLE",
+	            "PWY_NAME",
+	            "PWY_COMMON_NAME",
+	            "PWY_SCORE",
+	            "NUM_REACTIONS",
+	            "NUM_COVERED_REACTIONS",
+	    	    "ORF_COUNT",
+	            "ORFS" 
+	           ]
+
+	with open(pwy_outfile,"w") as report_fp:
+
+	    print('\t'.join(headers),
+	          file=report_fp)
+
+	    for pwy in get_frame_all_children(get_frame(curr_kb, 'Pathways'), frame_types='instance'):
+	        if not frame_parent_of_frame_p(get_frame(curr_kb, 'Super-Pathways'),
+	                                       pwy):
+	            
+	            
+	            pwy_rxn_dict = get_present_rxns(pwy)
+	            
+	            enz_rxn_count = 0
+	            for rxn in pwy.get_slot_values('REACTION-LIST'):
+	                if 'ENZYMATIC-REACTION' in rxn.slots:
+	                    enz_rxn_count += 1
+	            
+	            covered_rxn_count = len(pwy_rxn_dict['REACTIONS-PRESENT'])
+
+	            pscore = pwy_inf_data[pwy.frame_id]['SCORE']
+	            print(pwy, pscore, covered_rxn_count)
+
+	            try:
+	                pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
+	            except Exception:
+	                pwy_genes_names = ['EcoCyc','error']
+	            print('\t'.join([pt_id, #  curr_kb.kb_name,
+	                             pwy.frame_id,
+	                             pwy.get_slot_values('COMMON-NAME')[0],
+	                             pscore,
+	                             str(len(pwy.get_slot_values('REACTION-LIST'))),
+	                             str(covered_rxn_count),
+	                             str(len(pwy_gene_names)),
+	                             ','.join(pwy_gene_names)]),
+	                  file = report_fp)
+
+
+def get_pwy_inf(reports_dir):
+    """
+    Accepts the path to the 'reports' directory within
+    Ptools flatfile output.
+
+    Returns dictionary of all values found in
+    'pwy-inference-report_YYYY-MM-DD.txt' file.
+    """
+    pwy_inf_rec_list = []
+    pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
+
+    with open(pwy_inf_file, 'r') as pwy_inf_in:
+
+        data = pwy_inf_in.read()
+        trim_dat = data.split('::: Pathway Inference Report')
+        if len(trim_dat) == 3:
+            keep_dat = trim_dat[2]
+        else:
+            keep_dat = trim_dat[1]
+        keep_dat = keep_dat.split('List of pathways pruned')[0]
+
+        pwy_inf_rec = ''
+        start = False
+        for line in keep_dat.split('\n'):
+            if line[:2] == ' (': # start of record
+                if pwy_inf_rec != '': # add if there is something to add
+                    pwy_inf_rec_list.append(pwy_inf_rec)
+                    pwy_inf_rec = line
+                else: # start a new record
+                    pwy_inf_rec = line
+                start = True
+            elif start == True:
+                pwy_inf_rec = pwy_inf_rec + line
+        pwy_inf_rec_list.append(pwy_inf_rec) # add last record
+    pwy_inf_dict = {}
+    for p_rec in pwy_inf_rec_list:
+        parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
+        pwy_id = parsed_sexpr[0]
+        pwy_conf = parsed_sexpr[2]
+        pwy_score = parsed_sexpr[5]
+        pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
+
+    return pwy_inf_dict
+
+
+def get_present_rxns(pwy_frame):
+    pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
+    pwy_rxns = {}
+    for r in pwy_expl:
+        if isinstance(r, Symbol):
+            r = r.value()
+        elif isinstance(r, list):
+            for rr in r:
+                if isinstance(rr, Symbol):
+                    rr = rr.value()
+                    rr_key = rr
+                elif isinstance(rr, list):
+                    rrr_vals = []            
+                    for rrr in rr:
+                        if isinstance(rrr, Symbol):
+                            rrr = rrr.value()
+                            rrr_vals.append(rrr)
+                        else:
+                            rrr = str(rrr)
+                    pwy_rxns[rr_key] = rrr_vals
+
+    return pwy_rxns
+
+
+###############################################################
+# Collect inputs
+arguments = docopt(__doc__, version='PGDB Workflow 1.0')
+
+mp_dir = arguments['<mp_dir>']
+sif_file = arguments['<sif_file>']
+pt_repo = arguments['<pt_repo>']
+mp_dev = arguments['<mp_dev>']
+tmp_dir = arguments['<tmp_dir>']
+if arguments['<tag>'] == None:
+	tag = 'community'
+else:
+	tag = arguments['<tag>']
+
+# Build Community-level PGDB
+pt_in = os.path.join(mp_dir, 'ptools')
+pt_out = os.path.join(mp_dir, 'results/pgdb/community')
+create_pgdb(pt_in, pt_out, sif_file, mp_dev, pt_repo, tmp_dir, tag)
+# Parse PGDB flatfiles to create PWYs TSV table
+extract_pwy(pt_out)
+
+
+# Build MAG-level PGDBs if they exist
+ms_dir = os.path.join(mp_dir, 'magsplitter/results')
+if os.path.exists(ms_dir):
+	mag_list = glob.glob(ms_dir + '/*')
+	for pt_mag in mag_list:
+		mag_id = os.path.basename(pt_mag)
+		mag_tag = tag + '_' + mag_id
+		pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
+		create_pgdb(pt_mag, pt_out, sif_file, mp_dev,
+					pt_repo, tmp_dir, mag_tag
+					)
+		# Parse PGDB flatfiles to create PWYs TSV table
+		extract_pwy(pt_out)
+

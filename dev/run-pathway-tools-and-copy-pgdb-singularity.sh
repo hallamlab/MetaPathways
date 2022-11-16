@@ -1,9 +1,8 @@
 #!/bin/bash
 
-ppath=$1  # path to MP3 main output diretory
-ptoolpath=${ppath}/ptools
-pgdbpath=${ppath}/results/pgdb
-srcpath=$2  # path to ptools-container directory
+ptoolpath=$1 # path to ../ptools for community-level
+pgdbpath=$2  # path to ../results/pgdb
+srcpath=$3   # path to ptools-container directory
 
 mkdir -p /data/ptools-local/pgdbs/user
 mkdir -p /data/blastdb
