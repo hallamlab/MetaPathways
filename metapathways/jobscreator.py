@@ -401,7 +401,7 @@ class ContextCreator:
         max_evalue = self.params.get('annotation', 'max_evalue', default = 0.000001)
         max_hits = self.params.get('annotation', 'max_hits', default = 5)
         min_score = self.params.get('annotation', 'min_score', default = 20)
-
+        run_mode = self.params.get('annotation', 'run_mode', default = 'default')
         num_threads = self.configs.NUM_CPUS
 
         dbstring = self.get_dbstring()
@@ -461,15 +461,16 @@ class ContextCreator:
                     "--last_o %s "
                     "--last_f 2 "
                     "--last_db %s "
-                    "--last_query %s") \
+                    "--last_query %s "
+                    "--run_mode %s") \
                     %(pyScript,
                     s.algorithm ,
                     searchExec,
                     num_threads,
                     blastoutput,
                     refDbFullName,
-                    input_filtered_faa)
-
+                    input_filtered_faa,
+                    run_mode)
                 context.message = self._Message("FASTING AMINO SEQS AGAINST " + db)
 
             context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
@@ -499,7 +500,6 @@ class ContextCreator:
         min_length = self.params.get('annotation', 'min_length', default = 100)
         max_evalue = self.params.get('annotation', 'max_evalue', default = 1000)
 
-
         dbstring = self.get_dbstring()
         dbs = [x.strip() for x in dbstring.split(",")  if len(x) != 0]
 
@@ -525,10 +525,10 @@ class ContextCreator:
 
             context.outputs = { 'output_db_blast_parse':output_db_blast_parse}
 
-            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s"\
+            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s --parsedoutput %s" \
                   %( pyScript, db, context.inputs['input_db_blastout'],\
                   context.inputs['dbmapFile'],  context.inputs['refscorefile'],\
-                  min_bsr, min_score, min_length, max_evalue)
+                  min_bsr, min_score, min_length, max_evalue, output_db_blast_parse)
 
             if s.algorithm == 'FAST':
                 cmd = cmd + ' --algorithm FAST'
@@ -974,7 +974,7 @@ class ContextCreator:
         rpkm_input = s.rpkm_input_dir
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
-        output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
+        output_fas = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
 
         rpkmExec = self.configs.RPKM_EXECUTABLE
         bwaExec = self.configs.BWA_EXECUTABLE

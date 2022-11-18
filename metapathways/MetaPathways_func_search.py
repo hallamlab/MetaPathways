@@ -10,6 +10,9 @@ try:
     import traceback
     import sys
     import re
+    import glob
+    import os
+    import pandas as pd
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -151,6 +154,13 @@ def createParser():
         help="The FAST executable",
     )
 
+    last_group.add_option(
+        "--run_mode",
+        dest="run_mode",
+        default='default',
+        help="Run large DBs normally (default) or per volume [pervol]",
+    )
+
     parser.add_option_group(last_group)
 
     return parser
@@ -199,32 +209,62 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
 
 def _execute_FAST(options, logger=None):
-    args = []
+    
+    volumes = 0
+    if options.run_mode == 'pervol':
+        # open *.prj file to check if there are multiple volumes
+        # if there are then use the per-volume function
+        with open(options.last_db + '.prj', 'r') as prj_in:
+            dat_rl = prj_in.readlines()
+            for line in dat_rl:
+                if 'volumes=' in line:
+                    volumes = int(line.split('=')[1].strip('\n'))
 
-    if options.last_executable:
+    # create argument list(s), depending on the number of volumes
+    args_list = []
+    if volumes > 0:
+        for v in list(range(volumes)):
+            args = []
+            args.append(options.last_executable)
+            args += ["-f", options.last_f]
+            args += ["-o", options.last_o + str(v) + ".tmp"]
+            args += ["-P", options.num_threads]
+            args += [" -K", options.num_hits]
+            args += [options.last_db + str(v)]
+            args += [options.last_query]   
+            args_list.append(args)
+    else: # if only one volume OR running in default mode
+        args = []
         args.append(options.last_executable)
-
-    if options.last_f:
         args += ["-f", options.last_f]
-
-    if options.last_o:
         args += ["-o", options.last_o + ".tmp"]
-
-    if options.num_threads:
         args += ["-P", options.num_threads]
-
-    args += [" -K", options.num_hits]
-
-    if options.last_db:
+        args += [" -K", options.num_hits]
         args += [options.last_db]
-
-    if options.last_query:
         args += [options.last_query]
+        args_list.append(args)
 
     result = None
     try:
-        result = sysutils.getstatusoutput(" ".join(args))
-        rename(options.last_o + ".tmp", options.last_o)
+        if len(args_list) == 1:
+            a = args_list[0]
+            result = sysutils.getstatusoutput(" ".join(a))
+            rename(a[4], a[4].rsplit('.', 1)[0])
+        else:
+            for a in args_list:
+                result = sysutils.getstatusoutput(" ".join(a))
+                rename(a[4], a[4].rsplit('.', 1)[0])
+            out_list = glob.glob(options.last_o + '*')
+            with open(options.last_o, 'w') as outfile:
+                for fname in out_list:
+                    with open(fname) as infile:
+                        for line in infile:
+                            outfile.write(line)
+                    os.remove(fname)
+            # sort the final table on ORF and Bitscore
+            last_df = pd.read_csv(options.last_o, sep='\t', header=None)
+            last_df.sort_values(by = [0, 11], ascending = [True, False], inplace=True)
+            last_df.to_csv(options.last_o, sep='\t', header=False, index=False)
     except:
         message = "Could not run FAST correctly"
         if result and len(result) > 1:

@@ -554,7 +554,10 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         #attributes += ";" + "ec="
         output_line += "\t" + attributes
 
-    elif tag == "_tRNA":
+    elif ((tag == "_tRNA") & 
+        ((str(f_rec["feature"]) == 'pseudogene') | 
+            (str(f_rec["feature"]) == 'tRNA')
+            )):
         output_line += "\t" + str(f_rec["source"])
         output_line += "\t" + str(f_rec["feature"])
         output_line += "\t" + str(f_rec["start"])
@@ -769,6 +772,7 @@ def create_annotation(
     sample_name,
     compact_output=False,
 ):
+
     orf_dictionary = {}
     #    process_gff_file(input_gff, orf_dictionary)
     gffreader = GffFileParser(input_gff)
@@ -1007,6 +1011,10 @@ def process_product(product, database, similarity_threshold=0.9):
             processed_product = product
             comment = ''
     
+    elif 'eggnog' in database:
+        processed_product = product
+        comment = ''
+
     else: # no defline cleaning
         processed_product = product
         comment = ''
@@ -1190,6 +1198,8 @@ def compute_annotation_value(data):
 
     if not re.search(r"hypothetical protein", data["product"]):
         score += word_information(data["product"])
+    if data["target"]: # Hypotheticals with target IDs are better than plain hypotheticals
+        score += 1
 
     return score
 
@@ -1216,13 +1226,11 @@ def process_parsed_blastoutput(
             annotation["comment"] = comm
             annotation["value"] = compute_annotation_value(annotation) * weight
             annotation["bitscore"] = data["bitscore"]
-
             if not data["query"] in annotation_results:
                 annotation_results[data["query"]] = {"value": 0, "bitscore": 0.0}
             if annotation_results[data["query"]]["bitscore"] <= annotation["bitscore"]:
                 if annotation_results[data["query"]]["value"] < annotation["value"]:
                     annotation_results[data["query"]] = annotation.copy()
-
     count = len(annotation_results.keys())
     return count
 
