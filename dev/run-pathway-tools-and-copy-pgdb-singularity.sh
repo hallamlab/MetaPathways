@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ptoolpath=$1 # path to ../ptools for community-level
-pgdbpath=$2  # path to ../results/pgdb
-srcpath=$3   # path to ptools-container directory
+ptoolpath=$1 # path to ../ptools input
+pgdbpath=$2  # path to ../results/pgdb output
 
-mkdir -p /data/ptools-local/pgdbs/user
+rm -rf /data/ptools-local # clear any previous runs
+mkdir -p /data/ptools-local/pgdbs/user # create the required dirs and files
 mkdir -p /data/blastdb
-cp ${srcpath}/ptools-init.dat /data/ptools-local/ptools-init.dat
+cp /opt/sandbox/ptools-init.dat /data/ptools-local/ptools-init.dat
 
 Xvfb :${DISPLAY#*:} &
 
@@ -25,5 +25,5 @@ sub_id=$(echo ${org_id} | tr '[:upper:]' '[:lower:]')
 subpath=/data/ptools-local/pgdbs/user/${sub_id}cyc
 tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${subpath} .
 
-
+rm -rf /data/ptools-local # clear present run
 

@@ -3,15 +3,13 @@
 """PGDB Workflow
 
 Usage:
-	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --pt <pt_repo> --mp_dev <mp_dev> --tmp_dir <tmp_dir> [--tag <tag>]
+	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir> [--tag <tag>]
 
 Options:
 	-h --help	Show this screen.
 	--version	Show version.
 	--mp_out=DIR	MP3 output directory.
 	--sif=FILE	Path to the Ptools SIF file.
-	--pt=DIR	Path to `ptools-container` repository.
-	--mp_dev=DIR	Path to `metapathways/dev` dir within MP3 repo.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
 	--tag=STR	Tag for metagenome PGDB [default: community].
 """
@@ -32,40 +30,31 @@ from camelot_frs.pgdb_api    import genes_of_pathway
 
 
 def create_pgdb(pt_inputs, pt_outputs, sif_file,
-				mp_dev, pt_repo, tmp_dir, tag
+				tmp_dir, tag
 				):
 
 	rename_pgdb(pt_inputs, tag)
 
-	# Clear TMPDIR of any Ptools intermeditates
-	pl_dir = tmp_dir + '/ptools-local'
-	try:
-		shutil.rmtree(pl_dir)
-	except OSError as e:
-	    print ("Error: %s - %s." % (e.filename, e.strerror))
-	
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
+
+	# Get $PATH
+	my_path = os.environ.copy()['PATH']
 
 	# Run Singularity images for Ptools
 	bind_str = ''.join([pt_inputs, ':/pt_inputs,',
 						pt_outputs, ':/pt_outputs,',
-						mp_dev, ':/mpdevpath,',
-						pt_repo, ':/pt_src,',
 						tmp_dir, ':/data'
 						])
-	pt_cmd = ['singularity', 'run', '-B', bind_str, sif_file,
-				'/mpdevpath/run-pathway-tools-and-copy-pgdb-singularity.sh',
-				'/pt_inputs', '/pt_outputs', '/pt_src'
+	pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
+				'-B', bind_str, sif_file,
+				'run-pathway-tools-and-copy-pgdb-singularity.sh',
+				'/pt_inputs', '/pt_outputs'
 				]
-	pt_out = subprocess.run(pt_cmd) #, capture_output=True, text=True).stdout
+	pt_out = subprocess.run(' '.join(pt_cmd),
+							shell=True
+							) #, capture_output=True, text=True).stdout
 	
-	# Clear TMPDIR of any Ptools intermeditates
-	try:
-		shutil.rmtree(pl_dir)
-	except OSError as e:
-	    print ("Error: %s - %s." % (e.filename, e.strerror))
-
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
 	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
@@ -236,8 +225,6 @@ arguments = docopt(__doc__, version='PGDB Workflow 1.0')
 
 mp_dir = arguments['<mp_dir>']
 sif_file = arguments['<sif_file>']
-pt_repo = arguments['<pt_repo>']
-mp_dev = arguments['<mp_dev>']
 tmp_dir = arguments['<tmp_dir>']
 if arguments['<tag>'] == None:
 	tag = 'community'
@@ -247,7 +234,7 @@ else:
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-create_pgdb(pt_in, pt_out, sif_file, mp_dev, pt_repo, tmp_dir, tag)
+create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
 extract_pwy(pt_out)
 
@@ -260,9 +247,7 @@ if os.path.exists(ms_dir):
 		mag_id = os.path.basename(pt_mag)
 		mag_tag = tag + '_' + mag_id
 		pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-		create_pgdb(pt_mag, pt_out, sif_file, mp_dev,
-					pt_repo, tmp_dir, mag_tag
-					)
+		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, mag_tag)
 		# Parse PGDB flatfiles to create PWYs TSV table
 		extract_pwy(pt_out)
 
