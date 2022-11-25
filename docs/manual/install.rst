@@ -37,7 +37,7 @@ Summary
 
 Assuming that you have all prerequisites satisfied, installng can be as simple as:
 ::
-   conda create --name metapathways
+   conda create --name metapathways python=3.10
    conda activate metapathways
    pip3 install git+https://bitbucket.org/BCB2/metapathways.git@dev#egg=MetaPathways
    metapathways-install-deps.sh
