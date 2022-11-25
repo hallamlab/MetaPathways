@@ -36,7 +36,7 @@ RUN mkdir /opt/mp_repo/
 RUN mkdir /opt/pgdb_dir
 
 # Create the environment:
-RUN conda create -n metapathways python=3
+RUN conda create -n metapathways python=3.10
 
 # Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "metapathways", "/bin/bash", "-c"]
