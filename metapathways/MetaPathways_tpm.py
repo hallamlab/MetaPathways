@@ -284,69 +284,28 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         return 1
 
     readFiles = getReadFiles(options.readsdir, options.sample_name)
-
-    # index for BWA
-    bwaIndexFile = options.bwaFolder + PATHDELIM + options.sample_name
-    indexSuccess = indexForBWA(options.bwaExec, options.contigs, bwaIndexFile)
-    # indexSuccess=True
-
-    if not indexSuccess:
-        gutils.eprintf("\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs)
-        if errorlogger:
-            gutils.eprintf(
-                "\n\tERROR:\tCannot index the preprocessed file %s!\n", options.contigs
-            )
-            errormod.insert_error(10)
-        return 1
-        # exit_process("ERROR\tMissing read files!\n")
-
-    # run BWA
+    command = [options.rpkmExec]
+    command.append('contig')
+    command.append('-m count -m rpkm -m tpm')
+    command.append('-c')
     for readgroup in readFiles:
-        bwaRunSuccess = runUsingBWA(options.bwaExec,
-                                    options.sample_name,
-                                    bwaIndexFile,
-                                    readgroup,
-                                    readFiles[readgroup],
-                                    options.bwaFolder,
-                                    int(options.num_threads),
-                                   )
-        # bwaRunSuccess = True
-
-        if bwaRunSuccess:
-            gutils.eprintf("\n\tINFO:\tSuccessfully ran bwa: {}!\n".format(' '.join(readFiles[readgroup])))
-        else:
-            gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
-            if errorlogger:
-                gutils.eprintf("\n\tERROR:\tCannot successfully run BWA for file %s!\n", options.contigs)
-            errormod.insert_error(10)
-          # exit_process("ERROR\tFailed to run BWA!\n")
-            # END of running BWA
-            # make sure you get the latest set of sam file after the bwa
-
-    # make sure you get the latest set of sam file after the bwa
-    bamFiles = getBamFiles(options.bwaFolder, options.sample_name)
-
-    command = [
-        "%s " % (options.rpkmExec)
-        #   "--read-counts",
-        #   "--genome_equivalent %0.10f" %(genome_equivalent)
-    ]
-    if options.orfgff:
-        command.append(" --gff {}".format(options.orfgff))
-
-    if options.output:
-        command.append("--estimate-type ALL")
-        command.append("--out-file %s" % (options.output))
-        command.append("--print-stats")
-        command.append("--stats-out-file %s" % (options.stats))
-
-
-    for bamfile in bamFiles:
-        command.append("--sam " + bamfile)
+        fastqs = readFiles[readgroup]
+        for f in fastqs:
+            command.append(f)
+    command.append('-r')
+    command.append(options.contigs)
+    command.append('--output-file')
+    command.append(options.output)
+    command.append('-t')
+    command.append(options.num_threads)
+    command.append('--bam-file-cache-directory')
+    command.append(options.bwaFolder)
+    command.append('--discard-unmapped')
 
     rpkmstatus = 0
+    rpkmtext = ''
     try:
-        rpkmstatus = runRPKMCommand(runcommand=" ".join(command))
+        rpkmstatus, rpkmtext = runRPKMCommand(runcommand=" ".join(command))
     except:
         rpkmstatus = 1
         pass
@@ -356,6 +315,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
         # exit_process("ERROR\tFailed to run RPKM" )
+
+    with open(options.stats, 'w') as stat_out:
+        stat_out.write(rpkmtext)
 
     return rpkmstatus
 
@@ -367,7 +329,7 @@ def runRPKMCommand(runcommand=None):
     result = sysutils.getstatusoutput(runcommand)
     if result[1]:
         print(result[1])
-    return result[0]
+    return result[0], result[1]
 
 
 # this is the portion of the code that fixes the name

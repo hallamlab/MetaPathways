@@ -974,7 +974,7 @@ class ContextCreator:
         rpkm_input = s.rpkm_input_dir
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
-        output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
+        output_fas = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
 
         rpkmExec = self.configs.RPKM_EXECUTABLE
         bwaExec = self.configs.BWA_EXECUTABLE

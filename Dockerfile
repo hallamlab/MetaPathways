@@ -28,6 +28,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
 						      liblzma-dev \
 						      libbz2-dev \
 						      wget
+RUN DEBIAN_FRONTEND=noninteractive apt-get install libtinfo6
+
 
 ## Create the mp_repo directory, and copy over the Makefile
 RUN mkdir /opt/mp_repo/
