@@ -14,7 +14,7 @@ resource_list = config["resource_list"]
 nthreads = config["nthreads"]
 mail_opt = config["mail_opt"]
 email = config["email"]
-pbs_logs = config["pbs_logs"]
+logs = config["logs"]
 #######################
 
 ### For SRA inputs ###
@@ -27,14 +27,14 @@ sra_fastq = config["sra_fastq"]
 sra_gz = config["sra_gz"]
 ######################
 
-dir_list = [pbs_logs, sra_gz]
+dir_list = [logs, sra_gz]
 for d in dir_list:
 	isExist = os.path.exists(d)
 	if not isExist:
 	        os.makedirs(d)
 
 ### Download all SRA data in Accession list ###
-sra_log_list = glob.glob(os.path.join(pbs_logs, "*.log"))
+sra_log_list = glob.glob(os.path.join(logs, "*.log"))
 sra_log_ids = []
 for sra_log in sra_log_list:
         s_id = os.path.basename(sra_log).split(".", 1)[0]
@@ -63,20 +63,20 @@ for s_file in sra_file_list:
 # a pseudo-rule that collects the target files
 rule all:
 	input:
-		[os.path.join(pbs_logs, f"{id}.log") for id in sra_id_list]
+		[os.path.join(logs, f"{id}.log") for id in sra_id_list]
 
 rule run_fasterq:
 	input:  
 		sra_in = os.path.join(sra_download, "{id}/{id}.sra")
 	output: 
-		out_log = os.path.join(pbs_logs, "{id}.log")
+		out_log = os.path.join(logs, "{id}.log")
 	threads:
 		nthreads
 	params:
 		# PBS rule-specific params
 		name = "{id}",
-		pbs_out = os.path.join(pbs_logs, "{id}.out.txt"),
-		pbs_err = os.path.join(pbs_logs, "{id}.err.txt")
+		pbs_out = os.path.join(logs, "{id}.out.txt"),
+		pbs_err = os.path.join(logs, "{id}.err.txt")
 	conda:
 		conda_env
 	shell:

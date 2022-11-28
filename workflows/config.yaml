@@ -1,13 +1,14 @@
 # PBSpro inputs (optional)
-account: "[account code]"
-resource_list: "walltime=6:00:00,select=1:ncpus=16:mem=32gb"
-nthreads: 8
-mail_opt: "a"
-email: "[email]"
-pbs_logs: "[PBS log PATH]"
+account: "" # account code
+resource_list: "" # "walltime=6:00:00,select=1:ncpus=16:mem=32gb"
+mail_opt: ""# "a"
+email: "" #"[email]"
+
 
 # Prefetch and Fasterq
 conda_env: "sratk"
+logs: "./logs"
+nthreads: 2
 prefetch_ex: "prefetch"
 fasterq_ex: "fasterq-dump"
 sra_list: "./SRA_accession_test.lst"
