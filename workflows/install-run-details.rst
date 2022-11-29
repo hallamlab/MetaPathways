@@ -23,4 +23,4 @@ process completes. The final outputs are located in `SRA_gz` which will contain
 all the extracted FASTQs that have been gzipped to save space.
 ::
 	conda activate sratk
-	./run.sh
+	./run_SRA_download.sh
