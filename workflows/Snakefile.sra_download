@@ -1,8 +1,9 @@
 ### Usage: ###
-#snakemake -p -s Snakefile --cluster 'qsub -l {resource_list} -N {params.name} -A {account} -m {mail_opt} -M {email} -V -o {params.pbs_out} -e {params.pbs_err}' -j 10 --keep-going --use-conda --conda-frontend conda
+# see run.sh
 
 import os
 import glob
+import uuid
 
 # read config info into this namespace
 configfile: "config.yaml"
@@ -32,27 +33,30 @@ for d in dir_list:
 	isExist = os.path.exists(d)
 	if not isExist:
 	        os.makedirs(d)
+main_id = uuid.uuid4().hex
+if not os.path.exists(f'cache/{main_id}'):
+	os.system(f'mkdir cache && touch cache/{main_id}')
 
-### Download all SRA data in Accession list ###
-sra_log_list = glob.glob(os.path.join(logs, "*.log"))
-sra_log_ids = []
-for sra_log in sra_log_list:
-        s_id = os.path.basename(sra_log).split(".", 1)[0]
-        sra_log_ids.append(s_id)
+	### Download all SRA data in Accession list ###
+	sra_log_list = glob.glob(os.path.join(logs, "*.log"))
+	sra_log_ids = []
+	for sra_log in sra_log_list:
+			s_id = os.path.basename(sra_log).split(".", 1)[0]
+			sra_log_ids.append(s_id)
 
-with open(sra_list, 'r') as s_list:
-	sra_data = s_list.read().split('\n')
+	with open(sra_list, 'r') as s_list:
+		sra_data = s_list.read().split('\n')
 
-for s_id in sra_data:
-	if s_id not in sra_log_ids and s_id:
-		prefetch_cmd = [prefetch_ex, "-p", "-O",
-				sra_download, "--max-size",
-				"420000000000", s_id
-				]
-		run_prefetch = subprocess.run(prefetch_cmd, stdin=None,
-						stdout=None, stderr=None,
-						shell=False
-						)
+	for s_id in sra_data:
+		if s_id not in sra_log_ids and s_id:
+			prefetch_cmd = [prefetch_ex, "-p", "-O",
+					sra_download, "--max-size",
+					"420000000000", s_id
+					]
+			run_prefetch = subprocess.run(prefetch_cmd, stdin=None,
+							stdout=None, stderr=None,
+							shell=False
+							)
 
 sra_file_list = glob.glob(os.path.join(sra_download, "*/*.sra"))
 sra_id_list = []
