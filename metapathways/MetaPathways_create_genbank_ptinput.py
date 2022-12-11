@@ -304,11 +304,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 id  =  attrib['id']
                 shortid = ""
                 compactid = ""
-                #try:
-                #    del attrib['ec'] # do this for now, but it should be cleaned up better
-                #except:
-                #    1 + 1
-
                 if attrib['feature'] == 'CDS':
                     shortid = prefix + mputils.ShortenORFId(attrib['id'])
                     compactid = mputils.ShortenORFId(attrib['id'])
@@ -373,12 +368,13 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                             attrib['ec'].extend(ec_dict[target])
                                         else:
                                             attrib['ec'] = ec_dict[target]
-                            elif (('uniref' in db_dict) & ('rxn' not in attrib) & ('ec' not in attrib)):
+                            elif (('uniref' in db_dict) & ('rxn' not in attrib)):
                                 for db in db_dict['uniref']:
                                     target = db_targ_dict[db]
                                     if target in ec_dict:
                                         if 'ec' in attrib:
-                                            attrib['ec'].extend(ec_dict[target])
+                                            if ec_dict[target] not in attrib['ec']:
+                                                attrib['ec'].extend(ec_dict[target])
                                         else:
                                             attrib['ec'] = ec_dict[target]
 
