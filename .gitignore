@@ -55,3 +55,9 @@ docs/_build/*/*
 docs/_templates/*/*
 docs/_static/*/*
 *~
+
+workflows/.snakemake
+workflows/logs
+workflows/SRA_download
+workflows/SRA_fastq
+workflows/SRA_gz
