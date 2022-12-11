@@ -373,11 +373,15 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                     target = db_targ_dict[db]
                                     if target in ec_dict:
                                         if 'ec' in attrib:
-                                            if ec_dict[target] not in attrib['ec']:
+                                            if isinstance(attrib['ec'], str):
+                                                if attrib['ec'] == "":
+                                                    attrib['ec'] = []
+                                                else:
+                                                    attrib['ec'] = [attrib['ec']]
+
                                                 attrib['ec'].extend(ec_dict[target])
                                         else:
-                                            attrib['ec'] = ec_dict[target]
-
+                                            attrib['ec'] = [ec_dict[target]]
                             if compactid in orf_to_taxonid:
                                 attrib['taxon'] = orf_to_taxonid[compactid]
                             # add ORF record to pf file
@@ -389,6 +393,9 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                 append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
                         elif l_func in cprod_dict:
                             cprod_dict[l_func].append(shortid)
+                    # Remove any duplicate ECs
+                    if attrib['ec']:
+                        attrib['ec'] = list(set(attrib['ec']))
                     #endfor
 
 
@@ -464,11 +471,11 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
 
     elif 'ec' in attrib:
         ec_val = attrib['ec']
-        if ec_val:
-            gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
-        #ec_list = list(set(attrib['ec']))
-        #for ec_val in ec_list:
+        #if ec_val:
         #    gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
+        ec_list = list(set(attrib['ec']))
+        for ec_val in ec_list:
+            gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
     if 'taxon' in attrib:
         gutils.fprintf(pfFile, "TAXONOMIC-ANNOT\tTAX-%s\n", attrib['taxon'])
