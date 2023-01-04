@@ -1,0 +1,93 @@
+### Usage: ###
+# see run.sh
+
+import os
+import glob
+import uuid
+
+# read config info into this namespace
+configfile: "config.yaml"
+
+### For PBSpro only ###
+# PBS params
+account = config["account"]
+resource_list = config["resource_list"]
+nthreads = config["nthreads"]
+mail_opt = config["mail_opt"]
+email = config["email"]
+logs = config["logs"]
+#######################
+
+### For SRA inputs ###
+conda_env = config["conda_env"]
+prefetch_ex = config["prefetch_ex"]
+fasterq_ex = config["fasterq_ex"]
+sra_list = config["sra_list"]
+sra_download = config["sra_download"]
+sra_fastq = config["sra_fastq"]
+sra_gz = config["sra_gz"]
+######################
+
+dir_list = [logs, sra_gz]
+for d in dir_list:
+	isExist = os.path.exists(d)
+	if not isExist:
+	        os.makedirs(d)
+main_id = uuid.uuid4().hex
+if not os.path.exists(f'cache/{main_id}'):
+	os.system(f'mkdir cache && touch cache/{main_id}')
+
+	### Download all SRA data in Accession list ###
+	sra_log_list = glob.glob(os.path.join(logs, "*.log"))
+	sra_log_ids = []
+	for sra_log in sra_log_list:
+			s_id = os.path.basename(sra_log).split(".", 1)[0]
+			sra_log_ids.append(s_id)
+
+	with open(sra_list, 'r') as s_list:
+		sra_data = s_list.read().split('\n')
+
+	for s_id in sra_data:
+		if s_id not in sra_log_ids and s_id:
+			prefetch_cmd = [prefetch_ex, "-p", "-O",
+					sra_download, "--max-size",
+					"420000000000", s_id
+					]
+			run_prefetch = subprocess.run(prefetch_cmd, stdin=None,
+							stdout=None, stderr=None,
+							shell=False
+							)
+
+sra_file_list = glob.glob(os.path.join(sra_download, "*/*.sra"))
+sra_id_list = []
+for s_file in sra_file_list:
+	s_id = os.path.basename(s_file).split(".", 1)[0]
+	sra_id_list.append(s_id)
+######################
+# a pseudo-rule that collects the target files
+rule all:
+	input:
+		[os.path.join(logs, f"{id}.log") for id in sra_id_list]
+
+rule run_fasterq:
+	input:  
+		sra_in = os.path.join(sra_download, "{id}/{id}.sra")
+	output: 
+		out_log = os.path.join(logs, "{id}.log")
+	threads:
+		nthreads
+	params:
+		# PBS rule-specific params
+		name = "{id}",
+		pbs_out = os.path.join(logs, "{id}.out.txt"),
+		pbs_err = os.path.join(logs, "{id}.err.txt")
+	conda:
+		conda_env
+	shell:
+		"""
+		{fasterq_ex} -p -S -3 -e {threads} -f -O {sra_fastq} {input.sra_in}
+		pigz -p {threads} {sra_fastq}/{params.name}*
+		mv {sra_fastq}/{params.name}*.gz {sra_gz}/
+		rm -rf {sra_download}/{params.name}		
+		touch {output.out_log}
+		"""

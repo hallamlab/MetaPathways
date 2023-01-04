@@ -51,7 +51,6 @@ setup(
                       'camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs',
                       'pandas',
                       'tqdm',
-                      'pybedtools',
                       'pprodigal',
                       'sexpdata'
                       ],
