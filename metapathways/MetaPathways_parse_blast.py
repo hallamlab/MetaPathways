@@ -612,7 +612,7 @@ class BlastOutputParser(object):
                 data["product"] = "hypothetical protein"
 
         try:
-            m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", annot_map[words[1]][1])
+            m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", annot_map[words[1]][1].split(' ', 1)[1])
             if m != None:
                 data["ec"] = m.group(0)
             else:

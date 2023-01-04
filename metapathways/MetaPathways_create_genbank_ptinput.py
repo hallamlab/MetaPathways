@@ -306,17 +306,9 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 shortid = ""
                 compactid = ""
                 if attrib['feature'] == 'CDS':
+
                     shortid = prefix + mputils.ShortenORFId(attrib['id'])
                     compactid = mputils.ShortenORFId(attrib['id'])
-
-                #elif attrib['feature'] == 'rRNA':
-                #    shortid = prefix + mputils.ShortenrRNAId(attrib['id'])
-                #    compactid = mputils.ShortenrRNAId(attrib['id'])
-
-                #elif attrib['feature'] == 'tRNA':
-                #    shortid = prefix + mputils.ShortentRNAId(attrib['id'])
-                #    compactid = mputils.ShortentRNAId(attrib['id'])
-
                     # clean function
                     l_func = attrib['product']
                     if l_func != '':
@@ -385,6 +377,8 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                             attrib['ec'] = [ec_dict[target]]
                             if compactid in orf_to_taxonid:
                                 attrib['taxon'] = orf_to_taxonid[compactid]
+                            if isinstance(attrib['ec'], str):
+                                attrib['ec'] = [attrib['ec']]
                             # add ORF record to pf file
                             write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
                             cprod_dict[l_func].append(shortid)
@@ -398,6 +392,32 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                     if attrib['ec']:
                         attrib['ec'] = list(set(attrib['ec']))
                     #endfor
+
+                elif attrib['feature'] == 'rRNA':
+                    print(attrib)
+                    shortid = prefix + mputils.ShortenrRNAId(attrib['locus_tag'])
+                    compactid = mputils.ShortenrRNAId(attrib['locus_tag'])
+                    if compactid in orf_to_taxonid:
+                        attrib['taxon'] = orf_to_taxonid[compactid]
+                    # add ORF record to pf file
+                    write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+
+                    # append to the gen elements file
+                    if compact_output==False:
+                        append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+
+                elif attrib['feature'] == 'tRNA':
+                    print(attrib)
+                    shortid = prefix + mputils.ShortentRNAId(attrib['locus_tag'])
+                    compactid = mputils.ShortentRNAId(attrib['locus_tag'])
+                    if compactid in orf_to_taxonid:
+                        attrib['taxon'] = orf_to_taxonid[compactid]
+                    # add ORF record to pf file
+                    write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+
+                    # append to the gen elements file
+                    if compact_output==False:
+                        append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
 
 
             #write the sequence now only once per contig
@@ -461,7 +481,9 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
         gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
         gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
 
-    gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+    if 'product' in attrib:
+        gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+    
     if 'gene-comment' in attrib:
         gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", attrib['gene-comment'])
 
@@ -492,54 +514,6 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
 
     gutils.fprintf(pfFile, "//\n")
 
-'''
-def get_funct(_attrib):
-    prod = _attrib['product']
-    srcdb = _attrib['sourcedb']
-    prod = prod.replace('MULTISPECIES: ', '')  # If present
-    if ' OS ' in prod:  # if has taxa info
-        split_p = prod.split(' OS ', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    elif ' TaxID ' in prod:
-        print(_attrib)
-        split_p = prod.rsplit(' n ', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    elif 'metacyc' in srcdb:
-        split_p = prod.rsplit(' (', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    else:
-        p_func = prod
-        _attrib['function'] = p_func
-
-    return _attrib
-
-
-def clean_prod(_target, _product):  # TODO: this and get_funct should be joined
-    prod = str(_product)
-    prod = prod.replace('MULTISPECIES: ', '')  # If present
-    if ' OS ' in prod:  # if has taxa info
-        split_p = prod.split(' OS ', 1)
-        p_func = split_p[0]
-    elif ' TaxID ' in prod:
-        split_p = prod.rsplit(' n ', 1)
-        p_func = split_p[0]
-    elif 'gnl|META|' in _target:
-        split_p = prod.rsplit(' (', 1)
-        p_func = split_p[0]
-    else:
-        p_func = prod
-
-    return p_func
-'''
 
 def clean_up_function_text(_product):
      _fields = [ x.strip() for x in  _product.split(' ')]
