@@ -235,25 +235,14 @@ class LCAComputation:
         accession_PATT = re.compile(r"ref\|(.*)\|")
         if not "comment" in hit and not "target" in hit:
             return None
-
         species = ""
-
         try:
-            # extracting taxon names here
-            # if 'target' in hit:
-            #   gires = accession_PATT.search(hit['target'])
-            #   if gires:
-            #      gi = gires.group(1)
-            #      if gi in self.accession_to_taxon_map:
-            #        species.append(self.accession_to_taxon_map[gi])
-            # else:
-            if 'eggnog' in dbname:
+            if 'eggnog' in dbname.lower():
                 m = hit['target'].split('.', 1)[0]
                 species = str(m)
-            #else:
-            #    m = re.findall(r"\[([^\[]+?)\]", hit["comment"])
-            #    if m != None:
-            #        copyList(m, species)
+            elif 'uniref' in dbname.lower():
+                m = hit['product'].split('TaxID ', 1)[1].split(' ')[0]
+                species = str(m)
         except:
             return None
 
@@ -266,33 +255,6 @@ class LCAComputation:
     def set_results_dictionary(self, results_dictionary):
         self.results_dictionary = results_dictionary
 
-    # this returns the megan taxonomy, i.e., it computes the lca but at the same time
-    # takes into consideration the parameters, min score, min support and top percent
-    def getMeganTaxonomy(self, orfid):
-        # compute the top hit wrt score
-        names = []
-        species = []
-        if self.tax_dbname in self.results_dictionary:
-            if orfid in self.results_dictionary[self.tax_dbname]:
-
-                top_score = 0
-                for hit in self.results_dictionary[self.tax_dbname][orfid]:
-                    if (
-                        hit["bitscore"] >= self.lca_min_score
-                        and hit["bitscore"] >= top_score
-                    ):
-                        top_score = hit["bitscore"]
-
-                for hit in self.results_dictionary[self.tax_dbname][orfid]:
-                    if (100 - self.lca_top_percent) * top_score / 100 < hit["bitscore"]:
-                        names = self.get_species(hit, dbname)
-                        if names:
-                            species.append(names)
-
-        taxonomy = self.getTaxonomy(species)
-        meganTaxonomy = self.get_supported_taxon(taxonomy)
-        return meganTaxonomy
-
     # this is use to compute the min support for each taxon in the tree
     # this is called before the  getMeganTaxonomy
     def compute_min_support_tree(self, annotate_gff_file, pickorfs, dbname="refseq"):
@@ -302,20 +264,11 @@ class LCAComputation:
             for contig in gffreader:
                 for orf in gffreader.orf_dictionary[contig]:
                     shortORFId = mputils.getShortORFId(orf["id"])
-                    if re.search(r"Xrefseq", dbname):
-                        print("refseq", contig, shortORFId, self.tax_dbname)
-
                     if not shortORFId in pickorfs:
                         continue
-
                     taxonomy = None
                     species = []
-
                     if self.tax_dbname in self.results_dictionary:
-                        if re.search(r"Xrefseq", dbname):
-                            print("hit", len(self.results_dictionary[self.tax_dbname]))
-                            print(self.results_dictionary[self.tax_dbname].keys())
-
                         if shortORFId in self.results_dictionary[self.tax_dbname]:
                             top_score = 0
                             for hit in self.results_dictionary[self.tax_dbname][
@@ -335,10 +288,7 @@ class LCAComputation:
                                     name = self.get_species(hit, dbname)
                                     if name:
                                         species.append(name)
-                    if 'eggnog' in dbname:
-                        taxonomy = self.getTaxonomy(species, taxid=True)
-                    else:
-                        taxonomy = self.getTaxonomy(species)
+                    taxonomy = self.getTaxonomy(species, taxid=True)
                     self.update_taxon_support_count(taxonomy)
                     pickorfs[shortORFId] = taxonomy
 
