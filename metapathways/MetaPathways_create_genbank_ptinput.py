@@ -273,7 +273,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             trim_t_list.append(trim_t)
         elif 'uniref' in d:
             trim_t = t.split('_', 1)[1]
-            trim_t_list.append(trim_t)
+            trim_t_list.append(t) #trim_t)
         else:
             trim_t_list.append('NONE')
     anno_df['trim_target'] = trim_t_list
@@ -283,9 +283,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     # Load all mapping files, subset to only annotated targets, create dicts
     ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
     ec_df.dropna(subset = ['EC'], inplace=True)
-    ec_df = ec_df.copy().query('UniProtKB in @trim_set_list')
+    ec_df = ec_df.copy().query('UniRefID in @trim_set_list')
+    ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
     ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
-    ec_dict = ec_df.groupby('UniProtKB', group_keys=True)['EC'].apply(list).to_dict()
+    ec_dict = ec_df.groupby('UniRefID', group_keys=True)['EC'].apply(list).to_dict()
     rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
     rxn_df = rxn_df.query('MC in @trim_set_list')
     rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
