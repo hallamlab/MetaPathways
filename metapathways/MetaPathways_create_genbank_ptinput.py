@@ -378,7 +378,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                             if compactid in orf_to_taxonid:
                                 attrib['taxon'] = orf_to_taxonid[compactid]
                             if isinstance(attrib['ec'], str):
-                                attrib['ec'] = [attrib['ec']]
+                                if attrib['ec'] == "":
+                                    attrib['ec'] = []
+                                else:
+                                    attrib['ec'] = [attrib['ec']]
                             # add ORF record to pf file
                             write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
                             cprod_dict[l_func].append(shortid)
@@ -394,7 +397,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                     #endfor
 
                 elif attrib['feature'] == 'rRNA':
-                    print(attrib)
                     shortid = prefix + mputils.ShortenrRNAId(attrib['locus_tag'])
                     compactid = mputils.ShortenrRNAId(attrib['locus_tag'])
                     if compactid in orf_to_taxonid:
@@ -407,7 +409,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                         append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
 
                 elif attrib['feature'] == 'tRNA':
-                    print(attrib)
                     shortid = prefix + mputils.ShortentRNAId(attrib['locus_tag'])
                     compactid = mputils.ShortentRNAId(attrib['locus_tag'])
                     if compactid in orf_to_taxonid:
