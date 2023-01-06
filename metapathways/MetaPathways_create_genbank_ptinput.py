@@ -263,7 +263,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
     anno_df['orf_id']  = anno_df['orf_id'].ffill()
     anno_df.dropna(subset = ['target'], inplace=True)
-    anno_full_df = anno_df.copy() # save the big table
     
     # load funct/tax table
     ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
@@ -314,8 +313,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     # Add EC and RXN to anno table
     anno_df['EC'] = ['|'.join(list(set(ec_m_dict[x]))) if x in ec_m_dict else np.nan for x in anno_df['trim_target']]
     anno_df['RXN'] = ['|'.join(list(set(rxn_dict[x]))) if x in rxn_dict else np.nan for x in anno_df['trim_target']]
-    # subset to only annos with either EC or RXN or Both
-    anno_df.dropna(subset=['EC', 'RXN'], how='all', inplace=True)
     anno_df.to_csv(anno_dir_path + "/" + sample_name + ".EC_RXN_map.tsv", sep='\t', index=False)
 
     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
