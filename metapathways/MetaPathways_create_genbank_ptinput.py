@@ -232,11 +232,22 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
 def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict, \
         protein_seq_dict, compact_output, orf_to_taxonid={}):
      
+    # check if EC available in attributes
+    ec_map = {} 
+    for key in contig_dict:
+        for attrib in contig_dict[key]:
+            if attrib['feature'] == 'CDS':
+                ec = attrib['ec']
+                if ec:
+                    ec_map[attrib['target']] = [str(ec)]
+    
+    # Get all required mapping files
     output_dir_name = outfiles['ptinput']
     ec_map_file = outfiles['ec_mapping']
     rxn_map_file = outfiles['rxn_mapping']
     anno_file = outfiles['annotation_table']
     ft_file = outfiles['taxonomy_table']
+    anno_dir_path = path.dirname(ft_file)
 
     try:
         gutils.remove_dir(output_dir_name)
@@ -252,6 +263,8 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
     anno_df['orf_id']  = anno_df['orf_id'].ffill()
     anno_df.dropna(subset = ['target'], inplace=True)
+    anno_full_df = anno_df.copy() # save the big table
+    
     # load funct/tax table
     ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
     ft_df.dropna(subset = ['target'], inplace=True)
@@ -260,8 +273,6 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     cprod_dict = {k : [] for k in set(ft_df['product'])}
     rep_orf_list = list(ft_df.drop_duplicates('product')['orf_id'])
 
-    # subset annotable to only rep ORFs
-    anno_df = anno_df.copy().query('orf_id in @rep_orf_list')
     # modify target headers for later mapping
     trim_t_list = []
     for d,t in zip(anno_df['ref dbname'], anno_df['target']):
@@ -274,11 +285,17 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
         elif 'uniref' in d:
             trim_t = t.split('_', 1)[1]
             trim_t_list.append(t) #trim_t)
+        elif 'eggnog' in d:
+            trim_t = t
+            trim_t_list.append(t)
         else:
             trim_t_list.append('NONE')
     anno_df['trim_target'] = trim_t_list
     # remove uninformative targets
-    anno_df = anno_df.query("trim_target != 'NONE'")
+    anno_sub_df = anno_df.query("trim_target != 'NONE'")
+    # subset annotable to only rep ORFs
+    anno_sub_df = anno_sub_df.copy().query('orf_id in @rep_orf_list')
+
     trim_set_list = list(set(trim_t_list))
     # Load all mapping files, subset to only annotated targets, create dicts
     ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
@@ -290,6 +307,16 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
     rxn_df = rxn_df.query('MC in @trim_set_list')
     rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
+
+    # Merge the ec_map from earlier attrib search and ec_dict
+    ec_m_dict = ec_dict | ec_map
+
+    # Add EC and RXN to anno table
+    anno_df['EC'] = ['|'.join(list(set(ec_m_dict[x]))) if x in ec_m_dict else np.nan for x in anno_df['trim_target']]
+    anno_df['RXN'] = ['|'.join(list(set(rxn_dict[x]))) if x in rxn_dict else np.nan for x in anno_df['trim_target']]
+    # subset to only annos with either EC or RXN or Both
+    anno_df.dropna(subset=['EC', 'RXN'], how='all', inplace=True)
+    anno_df.to_csv(anno_dir_path + "/" + sample_name + ".EC_RXN_map.tsv", sep='\t', index=False)
 
     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
         # iterate over every contig sequence
@@ -324,7 +351,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                 print(attrib)
                                 sys.exit(0)
                             # find all DBs and map to general DB names
-                            orf_anno_df = anno_df.query('orf_id == @compactid')
+                            orf_anno_df = anno_sub_df.query('orf_id == @compactid')
                             db_dict = {}
                             for dbname in set(orf_anno_df['ref dbname']):
                                 if 'metacyc' in dbname:
