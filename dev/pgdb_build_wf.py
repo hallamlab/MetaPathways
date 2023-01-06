@@ -261,9 +261,9 @@ else:
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-#create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
+create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
-#extract_pwy(pt_out)
+extract_pwy(pt_out)
 # Map inferred pwys to ORFs and ECs/RXNs used
 map_orfs2pwys(mp_dir, pt_out)
 
@@ -279,4 +279,5 @@ if os.path.exists(ms_dir):
 		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, mag_tag)
 		# Parse PGDB flatfiles to create PWYs TSV table
 		extract_pwy(pt_out)
+		map_orfs2pwys(mp_dir, pt_out)
 
