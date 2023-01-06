@@ -18,6 +18,7 @@ Options:
 import sys
 import pandas as pd
 import os
+import numpy as np
 import subprocess
 import shutil
 import glob
@@ -229,7 +230,14 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 	orf_exp_list = []
 	for i, row in pwy_out_df.iterrows():
 		r_list = list(row)
-		orf_list = row['ORFS'].split(',')
+		orfs = str(row['ORFS'])
+		if orfs != 'nan':
+			if ',' in orfs:
+				orf_list = row['ORFS'].split(',')
+			else:
+				orf_list = [orfs]
+		else:
+			orfs = [""]
 		for orf_id in orf_list:
 			clean_id = orf_id.split('_', 1)[1]
 			new_row = [clean_id]
@@ -261,11 +269,11 @@ else:
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
+#create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
-extract_pwy(pt_out)
+#extract_pwy(pt_out)
 # Map inferred pwys to ORFs and ECs/RXNs used
-map_orfs2pwys(mp_dir, pt_out)
+#map_orfs2pwys(mp_dir, pt_out)
 
 
 # Build MAG-level PGDBs if they exist
@@ -276,8 +284,8 @@ if os.path.exists(ms_dir):
 		mag_id = os.path.basename(pt_mag)
 		mag_tag = tag + '_' + mag_id
 		pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, mag_tag)
+		#create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, mag_tag)
 		# Parse PGDB flatfiles to create PWYs TSV table
-		extract_pwy(pt_out)
+		#extract_pwy(pt_out)
 		map_orfs2pwys(mp_dir, pt_out)
 
