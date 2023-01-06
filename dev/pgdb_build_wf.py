@@ -16,7 +16,7 @@ Options:
 
 
 import sys
-import pandas
+import pandas as pd
 import os
 import subprocess
 import shutil
@@ -219,6 +219,33 @@ def get_present_rxns(pwy_frame):
     return pwy_rxns
 
 
+def map_orfs2pwys(mp_outdir, pt_outdir):
+	pt_id = os.path.basename(glob.glob(pt_outdir + '/*.tar.bz2')[0]).split('cyc', 1)[0]
+	orf_mapfile = glob.glob(os.path.join(mp_outdir, 'results/annotation_table/*.EC_RXN_map.tsv'))[0]
+	pwy_outfile = os.path.join(pt_outdir, pt_id + '_pwy.tsv')
+	pwy2orf_outfile = os.path.join(pt_outdir, pt_id + '_pwy2orf.tsv')
+	orf_map_df = pd.read_csv(orf_mapfile, sep='\t', header=0)
+	pwy_out_df = pd.read_csv(pwy_outfile, sep='\t', header=0)
+	orf_exp_list = []
+	for i, row in pwy_out_df.iterrows():
+		r_list = list(row)
+		orf_list = row['ORFS'].split(',')
+		for orf_id in orf_list:
+			clean_id = orf_id.split('_', 1)[1]
+			new_row = [clean_id]
+			new_row.extend(r_list)
+			orf_exp_list.append(new_row)
+	new_cols = ['orf_id']
+	new_cols.extend(pwy_out_df.columns)
+	orf_exp_df = pd.DataFrame(orf_exp_list, columns=new_cols)
+	pwy2orf_df = orf_map_df.merge(orf_exp_df, on='orf_id', how='outer')
+	pwy2orf_df.dropna(subset=['SAMPLE'], inplace=True)
+	pwy2orf_df = pwy2orf_df[['orf_id', 'SAMPLE', 'EC', 'RXN', 'PWY_COMMON_NAME', 'ref dbname',
+							 'target', 'product', 'value', 'trim_target', 'PWY_NAME', 'PWY_SCORE',
+							 'NUM_REACTIONS', 'NUM_COVERED_REACTIONS', 'ORF_COUNT', 'ORFS'
+							 ]]
+	pwy2orf_df.to_csv(pwy2orf_outfile, sep='\t', index=False)
+
 ###############################################################
 # Collect inputs
 arguments = docopt(__doc__, version='PGDB Workflow 1.0')
@@ -234,9 +261,11 @@ else:
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
+#create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
-extract_pwy(pt_out)
+#extract_pwy(pt_out)
+# Map inferred pwys to ORFs and ECs/RXNs used
+map_orfs2pwys(mp_dir, pt_out)
 
 
 # Build MAG-level PGDBs if they exist
