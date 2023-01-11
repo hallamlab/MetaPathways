@@ -138,34 +138,3 @@ for d in tqdm(data):
 enzrxns_df = pd.DataFrame(enzrxn_list, columns=['MC', 'RXN'])
 enzrxns_df.to_csv('MetaCyc-26-monomer-rxn-pairs.tsv', sep='\t', index=False)
 '''
-
-
-egg_ids_file = 'e5.uniq_id.txt'
-egg_ids_df = pd.read_csv(egg_ids_file, sep='\t', names=['accesion'])
-
-egg_aliase_file = 'e5.EC_REFSEQ.tsv'
-egg_aliase_df = pd.read_csv(egg_aliase_file, sep='\t', names=['accesion', 'value', 'source'])
-
-egg_dict = {}
-for i, line in egg_ids_df.iterrows():
-	key = line['accesion']
-	egg_dict[key] = ['no_product', 'no_EC']
-
-for i, line in egg_aliase_df.iterrows():
-	key = line['accesion']
-	source = line['source']
-	value = line['value']
-	if 'RefSeq_product' in source:
-		egg_dict[key][0] = value
-	if 'BLAST_KEGG_EC' in source:
-		egg_dict[key][1] = value
-
-egg_map = []
-for k in egg_dict:
-	v = egg_dict[k]
-	egg_map.append([k, v[0], v[1]])
-
-egg_map_df = pd.DataFrame(egg_map)
-egg_map_df.to_csv('eggnog-v5-names.txt', header=False,
-				  index=False, sep='\t'
-				  )
