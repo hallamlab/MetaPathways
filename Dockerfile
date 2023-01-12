@@ -13,7 +13,7 @@ MAINTAINER Tomer Altman, Altman Analytics LLC
 ################
 
 # Create the environment:
-# packages from `metapathways-data-install.sh` are included in the yml
+# packages from `metapathways-install-deps.sh` are included in the yml
 COPY ./conda_env.yml /opt/
 RUN mamba env create -f /opt/conda_env.yml
 ENV PATH /opt/conda/envs/metapathways/bin:$PATH
