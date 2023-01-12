@@ -1,0 +1,19 @@
+name: metapathways
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - snakemake
+  - curl
+  - ncurses
+  - pysam
+  - pybedtools
+  - coverm
+  - blast
+  - prodigal
+  - bwa
+  - samtools
+  - barrnap
+  - trnascan-se

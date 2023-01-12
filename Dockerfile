@@ -1,4 +1,5 @@
-FROM continuumio/miniconda3
+FROM condaforge/mambaforge as build-env
+# https://mamba.readthedocs.io/en/latest/user_guide/mamba.html
 MAINTAINER Tomer Altman, Altman Analytics LLC
 
 ### EXAMPLES ###
@@ -11,42 +12,25 @@ MAINTAINER Tomer Altman, Altman Analytics LLC
 
 ################
 
-Workdir /opt
-
-### Definitions:
-
-ENV PYTHONPATH=/opt/mp_repo:/opt/mp_repo/libs
-
-ARG git_branch=dev
-
-### Install apt dependencies
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get update -y 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3 \
-						      python3-pip \
-						      zlib1g-dev \
-						      liblzma-dev \
-						      libbz2-dev \
-						      wget
-RUN DEBIAN_FRONTEND=noninteractive apt-get install libtinfo6
-
-
-## Create the mp_repo directory, and copy over the Makefile
-RUN mkdir /opt/mp_repo/
-RUN mkdir /opt/pgdb_dir
-
 # Create the environment:
-RUN conda create -n metapathways python=3.10
-
-# Make RUN commands use the new environment:
-SHELL ["conda", "run", "-n", "metapathways", "/bin/bash", "-c"]
+# packages from `metapathways-data-install.sh` are included in the yml
+COPY ./conda_env.yml /opt/
+RUN mamba env create -f /opt/conda_env.yml
+ENV PATH /opt/conda/envs/metapathways/bin:$PATH
 
 # Install MetaPathways and dependencies
-RUN pip3 install git+https://bitbucket.org/BCB2/metapathways.git@${git_branch}#egg=MetaPathways
-RUN metapathways-install-deps.sh
-# Demonstrate the environment is activated:
+# use the local install so local builds are up to date
+# !! remember to run `make create-package` at least once !!
+COPY ./dist/*.gz /opt/pip_dist/
+RUN pip3 install /opt/pip_dist/*.gz
 RUN echo "Make sure MetaPathways is installed:"
 RUN MetaPathways -h
+
+# Singularity uses tini, but raises warnings
+# we set it up here correctly for singularity
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
 
 ## We do some umask munging to avoid having to use chmod later on,
 ## as it is painfully slow on large directores in Docker.
@@ -54,10 +38,12 @@ RUN old_umask=`umask` && \
     umask 0000 && \
     umask $old_umask
 
-# The code to run when container is started:
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "metapathways"]
+# move to clean execution environment
+# which includes dependencies like wget & libtinfo6
+FROM ubuntu
+COPY --from=build-env /opt/conda/envs/metapathways /opt/conda/envs/metapathways
+COPY --from=build-env /tini /tini
+ENV PATH /opt/conda/envs/metapathways/bin:$PATH
 
-
-
-
-
+# singularity doesn't use the -s flag, and that causes warnings
+ENTRYPOINT ["/tini", "-s", "--"]

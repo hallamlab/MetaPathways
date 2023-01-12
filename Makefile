@@ -77,7 +77,7 @@ docker-run:
 	sudo docker run -it --network=host --rm \
 		-v $(CURDIR):/input \
 		-v $(CURDIR)/out:/output \
-		quay.io/hallamlab/metapathways:$$git_branch
+		quay.io/hallamlab/metapathways:$$git_branch /bin/bash
 
 docker-test:
 	cp $(CURDIR)/regtests/input/A1.fasta /tmp
@@ -99,7 +99,9 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+	git_branch=$$(git symbolic-ref --short -q HEAD) \
+		|| git_branch=$$(git describe --tags)
+	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:$$git_branch
 
 singularity-local-shell:
 	singularity shell metapathways-dev.sif

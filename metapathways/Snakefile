@@ -171,8 +171,8 @@ rule make_silva_fast_db:
     shell:
         """
         cd {params.target_dir}/taxonomic
-        fastdb formatted/SILVA_{arb_release}_LSURef_tax_silva {lsu_silva_file}
-        fastdb formatted/SILVA_{arb_release}_SSURef_tax_silva {ssu_silva_file}
+        fastdb formatted/SILVA_{arb_release}_LSURef_tax_silva {input.lsu_silva_file}
+        fastdb formatted/SILVA_{arb_release}_SSURef_tax_silva {input.ssu_silva_file}
         """
 
 rule fetch_uniprot_swissprot_db:
