@@ -216,10 +216,13 @@ class LCAComputation:
     # given a set of sets of names it computes an lca
     # in the format [ [name1, name2], [name3, name4,....namex] ...]
     # here name1 and name2 are synonyms and so are name3 through namex
-    def getTaxonomy(self, name_groups, return_id=False):
+    def getTaxonomy(self, name_groups, taxid=False, return_id=False):
         IDs = []
         for name_group in name_groups:
-            id = self.get_a_Valid_ID(name_group)
+            if taxid:
+                id = name_group
+            else:
+                id = self.get_a_Valid_ID(name_group)
             if id != -1:
                 IDs.append(id)
         consensus = self.get_lca(IDs, return_id)
@@ -228,27 +231,18 @@ class LCAComputation:
         return consensus
 
     # extracts taxon names for a refseq annotation
-    def get_species(self, hit):
+    def get_species(self, hit, dbname):
         accession_PATT = re.compile(r"ref\|(.*)\|")
         if not "comment" in hit and not "target" in hit:
             return None
-
-        species = []
-
+        species = ""
         try:
-            # extracting taxon names here
-            # if 'target' in hit:
-            #   gires = accession_PATT.search(hit['target'])
-            #   if gires:
-            #      gi = gires.group(1)
-            #      if gi in self.accession_to_taxon_map:
-            #        species.append(self.accession_to_taxon_map[gi])
-            # else:
-            m = re.findall(r"\[([^\[]+?)\]", hit["comment"])
-            if m != None:
-                copyList(m, species)
-                # print hit['product']
-                # print species
+            if 'eggnog' in dbname.lower():
+                m = hit['target'].split('.', 1)[0]
+                species = str(m)
+            elif 'uniref' in dbname.lower():
+                m = hit['product'].split('TaxID ', 1)[1].split(' ')[0]
+                species = str(m)
         except:
             return None
 
@@ -261,105 +255,41 @@ class LCAComputation:
     def set_results_dictionary(self, results_dictionary):
         self.results_dictionary = results_dictionary
 
-    # this returns the megan taxonomy, i.e., it computes the lca but at the same time
-    # takes into consideration the parameters, min score, min support and top percent
-    def getMeganTaxonomy(self, orfid):
-        # compute the top hit wrt score
-        names = []
-        species = []
-        if self.tax_dbname in self.results_dictionary:
-            if orfid in self.results_dictionary[self.tax_dbname]:
-
-                top_score = 0
-                for hit in self.results_dictionary[self.tax_dbname][orfid]:
-                    if (
-                        hit["bitscore"] >= self.lca_min_score
-                        and hit["bitscore"] >= top_score
-                    ):
-                        top_score = hit["bitscore"]
-
-                for hit in self.results_dictionary[self.tax_dbname][orfid]:
-                    if (100 - self.lca_top_percent) * top_score / 100 < hit["bitscore"]:
-                        names = self.get_species(hit)
-                        if names:
-                            species.append(names)
-
-        taxonomy = self.getTaxonomy(species)
-        meganTaxonomy = self.get_supported_taxon(taxonomy)
-        return meganTaxonomy
-
     # this is use to compute the min support for each taxon in the tree
     # this is called before the  getMeganTaxonomy
     def compute_min_support_tree(self, annotate_gff_file, pickorfs, dbname="refseq"):
-        # print 'dbname' , dbname
         self.tax_dbname = dbname
         gffreader = mputils.GffFileParser(annotate_gff_file)
-        # print 'done'
         try:
-            #   if dbname=='refseq-nr-2014-01-18':
-            #       print  'refseq', len(pickorfs)
             for contig in gffreader:
-                # if dbname=='refseq-nr-2014-01-18':
-                #    print  'refseq',  contig
                 for orf in gffreader.orf_dictionary[contig]:
                     shortORFId = mputils.getShortORFId(orf["id"])
-                    if re.search(r"Xrefseq", dbname):
-                        print("refseq", contig, shortORFId, self.tax_dbname)
-
-                    # print shortORFId, orf['id']
-
                     if not shortORFId in pickorfs:
                         continue
-                    #           if dbname=='refseq-nr-2014-01-18':
-                    #              print  'refseq',  contig , shortORFId
-                    # print ">", shortORFId, orf['id']
-
                     taxonomy = None
                     species = []
-
                     if self.tax_dbname in self.results_dictionary:
-                        if re.search(r"Xrefseq", dbname):
-                            print("hit", len(self.results_dictionary[self.tax_dbname]))
-                            print(self.results_dictionary[self.tax_dbname].keys())
-
                         if shortORFId in self.results_dictionary[self.tax_dbname]:
-                            # compute the top hit wrt score
                             top_score = 0
                             for hit in self.results_dictionary[self.tax_dbname][
                                 shortORFId
                             ]:
-                                # print hit #,hit['bitscore'], self.lca_min_score, top_score
-
                                 if (
                                     hit["bitscore"] >= self.lca_min_score
                                     and hit["bitscore"] >= top_score
                                 ):
                                     top_score = hit["bitscore"]
-                            #                       if dbname=='refseq-nr-2014-01-18':
-                            #                            print  'hit',  hit
-
                             for hit in self.results_dictionary[self.tax_dbname][
                                 shortORFId
                             ]:
                                 if (100 - self.lca_top_percent) * top_score / 100 < hit[
                                     "bitscore"
                                 ]:
-                                    names = self.get_species(hit)
-                                    if names:
-                                        species.append(names)
-                            # print self.results_dictionary[dbname][shortORFId][0]['product']
-                            # print  orf['id']
-                            # print  orf['id'], species
-                            # print  orf['id'], len(self.results_dictionary[dbname][shortORFId]), species
-                    taxonomy = self.getTaxonomy(species)
-                    # taxonomy_id = self.getTaxonomy(species, return_id=True)
-                    # print taxonomy
-                    # print taxonomy_id
-                    # print taxonomy,  orf['id'], species
+                                    name = self.get_species(hit, dbname)
+                                    if name:
+                                        species.append(name)
+                    taxonomy = self.getTaxonomy(species, taxid=True)
                     self.update_taxon_support_count(taxonomy)
-                    # preferred_taxonomy = self.get_preferred_taxonomy(taxonomy_id)
-                    # print taxonomy
-                    # print preferred_taxonomy
                     pickorfs[shortORFId] = taxonomy
 
         except:

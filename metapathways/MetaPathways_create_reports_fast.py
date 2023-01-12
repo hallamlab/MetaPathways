@@ -1350,9 +1350,15 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
         results_dictionary = {}
         for dbname, blastoutput in zip(database_names, input_blastouts):
-            results = re.search(r"refseq", dbname, re.I)
+            
+            if re.search(r"eggnog", dbname, re.I):
+                results = re.search(r"eggnog", dbname, re.I)
+            elif re.search(r"uniref", dbname, re.I):
+                results = re.search(r"uniref", dbname, re.I)
+            else:
+                results = False
+
             if results:
-                # if True:
                 try:
                     results_dictionary[dbname] = {}
                     gutils.eprintf("\nScanning database : %s...", dbname)
