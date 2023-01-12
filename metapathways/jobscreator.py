@@ -525,10 +525,10 @@ class ContextCreator:
 
             context.outputs = { 'output_db_blast_parse':output_db_blast_parse}
 
-            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s"\
+            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s --parsedoutput %s" \
                   %( pyScript, db, context.inputs['input_db_blastout'],\
                   context.inputs['dbmapFile'],  context.inputs['refscorefile'],\
-                  min_bsr, min_score, min_length, max_evalue)
+                  min_bsr, min_score, min_length, max_evalue, output_db_blast_parse)
 
             if s.algorithm == 'FAST':
                 cmd = cmd + ' --algorithm FAST'
