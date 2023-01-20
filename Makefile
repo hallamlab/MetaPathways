@@ -101,7 +101,7 @@ docker-fetch:
 singularity-local-build:
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
 		|| git_branch=$$(git describe --tags)
-	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:$$git_branch
+	sudo /usr/local/bin/singularity build metapathways-$$git_branch.sif docker-daemon://quay.io/hallamlab/metapathways:$$git_branch
 
 singularity-local-shell:
 	singularity shell metapathways-dev.sif

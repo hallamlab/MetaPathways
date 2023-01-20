@@ -15,7 +15,7 @@ MAINTAINER Tomer Altman, Altman Analytics LLC
 # Create the environment:
 # packages from `metapathways-install-deps.sh` are included in the yml
 COPY ./conda_env.yml /opt/
-RUN mamba env create -f /opt/conda_env.yml
+RUN mamba env create --no-default-packages -f /opt/conda_env.yml
 ENV PATH /opt/conda/envs/metapathways/bin:$PATH
 
 # Install MetaPathways and dependencies
