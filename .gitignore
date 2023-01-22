@@ -43,11 +43,12 @@ config/template_param.txt
 regtests/template_config.txt
 regtests/template_param.txt
 
-dist/*
+dist
+docker/dist
 src/MetaPathways.egg-info/*
 MetaPathways.egg-info
 
-build/*
+build
 docs/_build/*
 docs/_templates/*
 docs/_static/*

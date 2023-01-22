@@ -68,6 +68,7 @@ docker-start:
 docker-build: #pre-docker-builds
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
 		|| git_branch=$$(git describe --tags)
+	cd docker
 	sudo docker build --network=host \
 			--build-arg git_branch=$$git_branch \
 			-t quay.io/hallamlab/metapathways:$$git_branch .
@@ -137,9 +138,10 @@ conda-install-deps:
 create-package: clean-package
 	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
 	$(PYTHON) setup.py sdist bdist_wheel --universal
+	cp -r dist docker/dist
 
 clean-package:
-	rm -rf dist MetaPathways.egg-info build
+	rm -rf dist MetaPathways.egg-info build docker/dist
 
 install-package:
 	$(PYTHON) -m pip install --user .
