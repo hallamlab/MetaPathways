@@ -3,7 +3,7 @@
 """PGDB Workflow
 
 Usage:
-	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir> [--tag <tag>]
+	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir> [--taxprune <taxprune> ] [--tag <tag>]
 
 Options:
 	-h --help	Show this screen.
@@ -11,6 +11,7 @@ Options:
 	--mp_out=DIR	MP3 output directory.
 	--sif=FILE	Path to the Ptools SIF file.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
+	--taxprune	Use taxonomic pruning when building PGDBs [True or False; default: False]
 	--tag=STR	Tag for metagenome PGDB [default: community].
 """
 
@@ -27,11 +28,13 @@ from sexpdata import loads, dumps, Symbol
 from docopt import docopt
 from camelot_frs.camelot_frs import get_kb, get_frame, get_frame_all_children, frame_parent_of_frame_p, frame_object_p
 from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
-from camelot_frs.pgdb_api    import genes_of_pathway
+from camelot_frs.pgdb_api import genes_of_pathway
+import html2text
+
 
 
 def create_pgdb(pt_inputs, pt_outputs, sif_file,
-				tmp_dir, tag
+				tmp_dir,  tprune, tag
 				):
 
 	rename_pgdb(pt_inputs, tag)
@@ -47,11 +50,18 @@ def create_pgdb(pt_inputs, pt_outputs, sif_file,
 						pt_outputs, ':/pt_outputs,',
 						tmp_dir, ':/data'
 						])
-	pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
-				'-B', bind_str, sif_file,
-				'run-pathway-tools-and-copy-pgdb-singularity.sh',
-				'/pt_inputs', '/pt_outputs'
-				]
+	if tprune == 'True':
+		pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
+					'-B', bind_str, sif_file,
+					'run-pathway-tools-and-copy-pgdb-singularity_taxprune.sh',
+					'/pt_inputs', '/pt_outputs'
+					]
+	elif tprune == 'False':
+		pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
+					'-B', bind_str, sif_file,
+					'run-pathway-tools-and-copy-pgdb-singularity.sh',
+					'/pt_inputs', '/pt_outputs'
+					]
 	pt_out = subprocess.run(' '.join(pt_cmd),
 							shell=True
 							) #, capture_output=True, text=True).stdout
@@ -103,19 +113,20 @@ def extract_pwy(pt_outputs):
 	reportspath = os.path.dirname(flatpath) + '/reports'
 	pwy_inf_data = get_pwy_inf(reportspath)
 
+	# Build Pathway/Superpathway Data Dictionary for reactions:
+	pwy_evi_data = get_superpath_rxns(reportspath)
 	## Generate the report:
 	headers = [ "SAMPLE",
-	            "PWY_NAME",
-	            "PWY_COMMON_NAME",
-	            "PWY_SCORE",
-	            "NUM_REACTIONS",
-	            "NUM_COVERED_REACTIONS",
-	    	    "ORF_COUNT",
-	            "ORFS" 
-	           ]
+				"PWY_NAME",
+				"PWY_COMMON_NAME",
+				"PWY_SCORE",
+				"NUM_REACTIONS",
+				"NUM_COVERED_REACTIONS",
+				"ORF_COUNT",
+				"ORFS" 
+			   ]
 
 	with open(pwy_outfile,"w") as report_fp:
-
 	    print('\t'.join(headers),
 	          file=report_fp)
 
@@ -150,19 +161,18 @@ def extract_pwy(pt_outputs):
 
 
 def get_pwy_inf(reports_dir):
-    """
-    Accepts the path to the 'reports' directory within
-    Ptools flatfile output.
+	"""
+	Accepts the path to the 'reports' directory within
+	Ptools flatfile output.
 
-    Returns dictionary of all values found in
-    'pwy-inference-report_YYYY-MM-DD.txt' file.
-    """
-    pwy_inf_rec_list = []
-    pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
+	Returns dictionary of all values found in
+	'pwy-inference-report_YYYY-MM-DD.txt' file.
+	"""
+	pwy_inf_rec_list = []
+	pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
 
-    with open(pwy_inf_file, 'r') as pwy_inf_in:
-
-        data = pwy_inf_in.read()
+	with open(pwy_inf_file, 'r') as pwy_inf_in:
+            data = pwy_inf_in.read()
         trim_dat = data.split('::: Pathway Inference Report')
         keep_dat = []
         for t_rec in trim_dat:
@@ -190,41 +200,68 @@ def get_pwy_inf(reports_dir):
                     if ((start == True) & (line[0] == ' ')):
                         pwy_inf_rec = pwy_inf_rec + line
         pwy_inf_rec_list.append(pwy_inf_rec) # add last record
-    pwy_inf_dict = {}
-    for p_rec in pwy_inf_rec_list:
-        parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
-        pwy_id = parsed_sexpr[0]
-        pwy_pass = parsed_sexpr[1]
-        pwy_conf = parsed_sexpr[2]
-        pwy_score = parsed_sexpr[5]
-        if pwy_pass == 'T':
-            pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
+        pwy_inf_dict = {}
+        for p_rec in pwy_inf_rec_list:
+            parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
+            pwy_id = parsed_sexpr[0]
+            pwy_pass = parsed_sexpr[1]
+            pwy_conf = parsed_sexpr[2]
+            pwy_score = parsed_sexpr[5]
+            if pwy_pass == 'T':
+                pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
+	return pwy_inf_dict
 
-    return pwy_inf_dict
+
+def get_superpath_rxns(reports_dir):
+	"""
+	Accepts the path to the 'reports' directory within
+	Ptools flatfile output.
+
+	Returns dictionary of all values found in
+	'pwy-evidence-list.dat' file.
+	"""
+	pwy_evi_rec_list = []
+	pwy_evi_file = glob.glob(os.path.join(reports_dir, 'pwy-evidence-list.dat'))[0]
+
+	with open(pwy_evi_file, 'r') as pwy_evi_in:
+		data = pwy_evi_in.read()
+		for line in data.split('\n'):
+			if ';;;' not in line[:3]: # start of record
+				pwy_evi_rec_list.append(line)
+	pwy_evi_dict = {}
+	for e_rec in pwy_evi_rec_list:
+		if e_rec:
+			parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(e_rec)]
+			pwy_id = parsed_sexpr[0]
+			rxns = parsed_sexpr[1:]
+			pwy_evi_dict[pwy_id] = {'RXNs': rxns}
+
+	return pwy_evi_dict
 
 
-def get_present_rxns(pwy_frame):
-    pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
-    pwy_rxns = {}
-    for r in pwy_expl:
-        if isinstance(r, Symbol):
-            r = r.value()
-        elif isinstance(r, list):
-            for rr in r:
-                if isinstance(rr, Symbol):
-                    rr = rr.value()
-                    rr_key = rr
-                elif isinstance(rr, list):
-                    rrr_vals = []            
-                    for rrr in rr:
-                        if isinstance(rrr, Symbol):
-                            rrr = rrr.value()
-                            rrr_vals.append(rrr)
-                        else:
-                            rrr = str(rrr)
-                    pwy_rxns[rr_key] = rrr_vals
+def get_present_rxns(pwy_frame, pwy_evi_dict):
 
-    return pwy_rxns
+	pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
+	pwy_rxns = {}
+	for r in pwy_expl:
+		if isinstance(r, Symbol):
+			r = r.value()
+		elif isinstance(r, list):
+			for rr in r:
+				if isinstance(rr, Symbol):
+					rr = rr.value()
+					rr_key = rr
+				elif isinstance(rr, list):
+					rrr_vals = []			
+					for rrr in rr:
+						if isinstance(rrr, Symbol):
+							rrr = rrr.value()
+							rrr_vals.append(rrr)
+						else:
+							rrr = str(rrr)
+					pwy_rxns[rr_key] = rrr_vals
+
+	return pwy_rxns
 
 
 def map_orfs2pwys(mp_outdir, pt_outdir):
@@ -238,18 +275,19 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 	for i, row in pwy_out_df.iterrows():
 		r_list = list(row)
 		orfs = str(row['ORFS'])
-		if orfs != 'nan':
+		if ((orfs != 'nan') & (orfs != ['nan']) & (orfs != '')):
 			if ',' in orfs:
 				orf_list = row['ORFS'].split(',')
 			else:
 				orf_list = [orfs]
 		else:
-			orfs = [""]
+			orf_list = [""]
 		for orf_id in orf_list:
-			clean_id = orf_id.split('_', 1)[1]
-			new_row = [clean_id]
-			new_row.extend(r_list)
-			orf_exp_list.append(new_row)
+			if orf_id:
+				clean_id = orf_id.split('_', 1)[1]
+				new_row = [clean_id]
+				new_row.extend(r_list)
+				orf_exp_list.append(new_row)
 	new_cols = ['orf_id']
 	new_cols.extend(pwy_out_df.columns)
 	orf_exp_df = pd.DataFrame(orf_exp_list, columns=new_cols)
@@ -268,6 +306,11 @@ arguments = docopt(__doc__, version='PGDB Workflow 1.0')
 mp_dir = arguments['<mp_dir>']
 sif_file = arguments['<sif_file>']
 tmp_dir = arguments['<tmp_dir>']
+if arguments['<taxprune>'] == None:
+	taxprune = 'False'
+else:
+	taxprune = arguments['<taxprune>']
+	
 if arguments['<tag>'] == None:
 	tag = 'community'
 else:
@@ -276,7 +319,7 @@ else:
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-create_pgdb(pt_in, pt_out, sif_file, tmp_dir, tag)
+create_pgdb(pt_in, pt_out, sif_file, tmp_dir, taxprune, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
 extract_pwy(pt_out)
 # Map inferred pwys to ORFs and ECs/RXNs used
@@ -291,7 +334,7 @@ if os.path.exists(ms_dir):
 		mag_id = os.path.basename(pt_mag)
 		mag_tag = tag + '_' + mag_id
 		pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, mag_tag)
+		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, taxprune, mag_tag)
 		# Parse PGDB flatfiles to create PWYs TSV table
 		extract_pwy(pt_out)
 		# Map inferred pwys to ORFs and ECs/RXNs used
