@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/mcglock/anaconda3/envs/mpdev/bin/python3.10
 ## -*- python -*-
 """PGDB Workflow
 
@@ -130,9 +130,7 @@ def extract_pwy(pt_outputs):
 	            for rxn in pwy.get_slot_values('REACTION-LIST'):
 	                if 'ENZYMATIC-REACTION' in rxn.slots:
 	                    enz_rxn_count += 1
-	            
 	            covered_rxn_count = len(pwy_rxn_dict['REACTIONS-PRESENT'])
-
 	            pscore = pwy_inf_data[pwy.frame_id]['SCORE']
 	            print(pwy, pscore, covered_rxn_count)
 
@@ -166,32 +164,41 @@ def get_pwy_inf(reports_dir):
 
         data = pwy_inf_in.read()
         trim_dat = data.split('::: Pathway Inference Report')
-        if len(trim_dat) == 3:
-            keep_dat = trim_dat[2]
-        else:
-            keep_dat = trim_dat[1]
-        keep_dat = keep_dat.split('List of pathways pruned')[0]
-
+        keep_dat = []
+        for t_rec in trim_dat:
+            if 'List of pathways pruned' in t_rec:
+                k_rec = t_rec.split('List of pathways pruned')[0]
+                keep_dat.append(k_rec)
+        keep_dat = data #'\n'.join(keep_dat)
         pwy_inf_rec = ''
         start = False
+        skip = False
         for line in keep_dat.split('\n'):
-            if line[:2] == ' (': # start of record
-                if pwy_inf_rec != '': # add if there is something to add
-                    pwy_inf_rec_list.append(pwy_inf_rec)
-                    pwy_inf_rec = line
-                else: # start a new record
-                    pwy_inf_rec = line
-                start = True
-            elif start == True:
-                pwy_inf_rec = pwy_inf_rec + line
+            if 'List of pathways pruned' in line:
+                skip = True
+            if ':::' in line:
+                skip = False
+            if skip == False:
+                if line[:2] == ' (': # start of record
+                    if pwy_inf_rec != '': # add if there is something to add
+                        pwy_inf_rec_list.append(pwy_inf_rec)
+                        pwy_inf_rec = line
+                    else: # start a new record
+                        pwy_inf_rec = line
+                    start = True
+                elif line != '':
+                    if ((start == True) & (line[0] == ' ')):
+                        pwy_inf_rec = pwy_inf_rec + line
         pwy_inf_rec_list.append(pwy_inf_rec) # add last record
     pwy_inf_dict = {}
     for p_rec in pwy_inf_rec_list:
         parsed_sexpr = [r.value() if isinstance(r, Symbol) else str(r) for r in loads(p_rec)]
         pwy_id = parsed_sexpr[0]
+        pwy_pass = parsed_sexpr[1]
         pwy_conf = parsed_sexpr[2]
         pwy_score = parsed_sexpr[5]
-        pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
+        if pwy_pass == 'T':
+            pwy_inf_dict[pwy_id] = {'SCORE': pwy_score, 'CONFIDENCE': pwy_conf}
 
     return pwy_inf_dict
 
