@@ -16,7 +16,7 @@ CLASSIFIERS = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
@@ -36,8 +36,7 @@ setup(
     ),
     license="MIT",
     keywords="metagenomics pipeline",
-    url="http://packages.python.org/",
-    download_url="https://github.com/kishori82/MetaPathways_Python.3.0/archive/kmk-develop.zip",
+    url="https://bitbucket.org/BCB2/metapathways/",
     packages=find_packages(),
     scripts=["bin/metapathways-install-deps.sh",
              "bin/metapathways-data-install.sh",
