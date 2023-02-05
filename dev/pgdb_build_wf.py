@@ -1,4 +1,4 @@
-#!/home/mcglock/anaconda3/envs/mpdev/bin/python3.10
+#!/usr/bin/env python3
 ## -*- python -*-
 """PGDB Workflow
 
@@ -239,7 +239,7 @@ def get_superpath_rxns(reports_dir):
 	return pwy_evi_dict
 
 
-def get_present_rxns(pwy_frame, pwy_evi_dict):
+def get_present_rxns(pwy_frame):
 
 	pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
 	pwy_rxns = {}
