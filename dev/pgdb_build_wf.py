@@ -134,7 +134,7 @@ def extract_pwy(pt_outputs):
 			if not frame_parent_of_frame_p(get_frame(curr_kb, 'Super-Pathways'),
 										   pwy):
 				
-				
+				print(pwy)
 				pwy_rxn_dict = get_present_rxns(pwy)
 				
 				enz_rxn_count = 0
@@ -240,27 +240,30 @@ def get_superpath_rxns(reports_dir):
 
 
 def get_present_rxns(pwy_frame):
-
-	pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
-	pwy_rxns = {}
-	for r in pwy_expl:
-		if isinstance(r, Symbol):
-			r = r.value()
-		elif isinstance(r, list):
-			for rr in r:
-				if isinstance(rr, Symbol):
-					rr = rr.value()
-					rr_key = rr
-				elif isinstance(rr, list):
-					rrr_vals = []			
-					for rrr in rr:
-						if isinstance(rrr, Symbol):
-							rrr = rrr.value()
-							rrr_vals.append(rrr)
-						else:
-							rrr = str(rrr)
-					pwy_rxns[rr_key] = rrr_vals
-
+	
+	expl_code = pwy_frame.get_slot_values('EXPLANATION-CODE')[0]
+	if expl_code != 'PWY-HAS-NON-COMPUTATIONAL-EVIDENCE':
+		pwy_expl = loads(pwy_frame.get_slot_values('EXPLANATION-CODE')[0])
+		pwy_rxns = {}
+		for r in pwy_expl:
+			if isinstance(r, Symbol):
+				r = r.value()
+			elif isinstance(r, list):
+				for rr in r:
+					if isinstance(rr, Symbol):
+						rr = rr.value()
+						rr_key = rr
+					elif isinstance(rr, list):
+						rrr_vals = []			
+						for rrr in rr:
+							if isinstance(rrr, Symbol):
+								rrr = rrr.value()
+								rrr_vals.append(rrr)
+							else:
+								rrr = str(rrr)
+						pwy_rxns[rr_key] = rrr_vals
+	else:
+		pwy_rxns = {'REACTIONS-PRESENT': []}
 	return pwy_rxns
 
 
