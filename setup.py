@@ -52,7 +52,8 @@ setup(
                       'pandas',
                       'tqdm',
                       'pprodigal',
-                      'sexpdata'
+                      'sexpdata',
+                      'html2text'
                       ],
     entry_points={"console_scripts": ["MetaPathways=metapathways.pipeline:main"]},
     long_description=read("README.md"),
