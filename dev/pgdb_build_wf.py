@@ -147,8 +147,10 @@ def extract_pwy(pt_outputs):
 
 				try:
 					pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
-				except Exception:
-					pwy_genes_names = ['EcoCyc','error']
+				except:
+					pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')) for gene in genes_of_pathway(pwy) ]
+					if pwy_gene_names[0] == '[]':
+						pwy_gene_names = [str(f).split(':')[1] for f in genes_of_pathway(pwy)]
 				print('\t'.join([pt_id, #  curr_kb.kb_name,
 								 pwy.frame_id,
 								 pwy.get_slot_values('COMMON-NAME')[0],
