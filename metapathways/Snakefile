@@ -56,7 +56,7 @@ rule stage_blast_full:
         expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
                func_db = functional_db_names),
         expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
+               tax_db = taxonomic_db_names)
 
         
 rule stage_blast_lite:
