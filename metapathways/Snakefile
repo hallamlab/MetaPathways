@@ -53,6 +53,10 @@ rule stage_blast_full:
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.pdb',
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.pdb',
         config["ref_db_dir"] + '/functional/formatted/refseq_protein.26.psq'
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
 
         
 rule stage_blast_lite:
@@ -63,6 +67,10 @@ rule stage_blast_lite:
         config["ref_db_dir"] + '/functional/formatted/kegg-uniprot-2018-12-20.pdb',
         config["ref_db_dir"] + '/functional/formatted/cazy-2020-06-01.pdb',
         config["ref_db_dir"] + '/functional/formatted/metacyc-2020-08-10.pdb'
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names)
 
 # silva is still blast...
 rule stage_fast_lite:
