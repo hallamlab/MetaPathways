@@ -147,8 +147,10 @@ def extract_pwy(pt_outputs):
 
 				try:
 					pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')[0]).lstrip('frame:') for gene in genes_of_pathway(pwy) ]
-				except Exception:
-					pwy_genes_names = ['EcoCyc','error']
+				except:
+					pwy_gene_names = [ str(gene.get_slot_values('COMMON-NAME')) for gene in genes_of_pathway(pwy) ]
+					if pwy_gene_names[0] == '[]':
+						pwy_gene_names = [str(f).split(':')[1] for f in genes_of_pathway(pwy)]
 				print('\t'.join([pt_id, #  curr_kb.kb_name,
 								 pwy.frame_id,
 								 pwy.get_slot_values('COMMON-NAME')[0],
@@ -334,12 +336,13 @@ ms_dir = os.path.join(mp_dir, 'magsplitter/results')
 if os.path.exists(ms_dir):
 	mag_list = glob.glob(ms_dir + '/*')
 	for pt_mag in mag_list:
-		mag_id = os.path.basename(pt_mag)
-		mag_tag = tag + '_' + mag_id
-		pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-		create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, taxprune, mag_tag)
-		# Parse PGDB flatfiles to create PWYs TSV table
-		extract_pwy(pt_out)
-		# Map inferred pwys to ORFs and ECs/RXNs used
-		map_orfs2pwys(mp_dir, pt_out)
+		if "non_binned" not in pt_mag:
+			mag_id = os.path.basename(pt_mag)
+			mag_tag = tag + '_' + mag_id
+			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
+			create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, taxprune, mag_tag)
+			# Parse PGDB flatfiles to create PWYs TSV table
+			extract_pwy(pt_out)
+			# Map inferred pwys to ORFs and ECs/RXNs used
+			map_orfs2pwys(mp_dir, pt_out)
 
