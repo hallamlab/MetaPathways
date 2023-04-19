@@ -93,8 +93,8 @@ docker-test:
 
 
 docker-deploy:
-	sudo docker login quay.io
-	sudo docker push quay.io/hallamlab/metapathways:dev
+	git_branch=$$(git symbolic-ref --short -q HEAD)
+	sudo docker push quay.io/hallamlab/metapathways:$$git_branch
 
 docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
