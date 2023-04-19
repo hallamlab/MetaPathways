@@ -35,7 +35,7 @@ for d in dir_list:
 	        os.makedirs(d)
 main_id = uuid.uuid4().hex
 if not os.path.exists(f'cache/{main_id}'):
-	os.system(f'mkdir cache && touch cache/{main_id}')
+	os.system(f'mkdir -p cache && touch cache/{main_id}')
 
 	### Download all SRA data in Accession list ###
 	sra_log_list = glob.glob(os.path.join(logs, "*.log"))
