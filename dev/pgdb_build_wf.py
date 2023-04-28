@@ -112,7 +112,7 @@ def extract_pwy(pt_outputs):
 	# Build Pathway Inference Data Dictionary from contents of ./reports/ dirextory
 	reportspath = os.path.dirname(flatpath) + '/reports'
 	pwy_inf_data = get_pwy_inf(reportspath)
-
+	print(pwy_inf_data)
 	# Build Pathway/Superpathway Data Dictionary for reactions:
 	pwy_evi_data = get_superpath_rxns(reportspath)
 	## Generate the report:
@@ -136,12 +136,13 @@ def extract_pwy(pt_outputs):
 				
 				print(pwy)
 				pwy_rxn_dict = get_present_rxns(pwy)
-				
+				print(pwy_rxn_dict)
 				enz_rxn_count = 0
 				for rxn in pwy.get_slot_values('REACTION-LIST'):
 					if 'ENZYMATIC-REACTION' in rxn.slots:
 						enz_rxn_count += 1
 				covered_rxn_count = len(pwy_rxn_dict['REACTIONS-PRESENT'])
+				print(pwy_inf_data[pwy.frame_id])
 				pscore = pwy_inf_data[pwy.frame_id]['SCORE']
 				print(pwy, pscore, covered_rxn_count)
 
