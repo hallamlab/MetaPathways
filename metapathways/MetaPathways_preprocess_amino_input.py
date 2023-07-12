@@ -261,14 +261,14 @@ def main(argv, errorlogger=None, runstatslogger=None):
             if mapfile == None:
                 gutils.fprintf(outfile, "%s\n", seqname)
             else:
-                contigID = sample_name + "_" + str(seq_count)
-                orfID = sample_name + "_" + str(seq_count) + "_1"
+                contigID = sample_name + "-C" + str(seq_count)
+                orfID = sample_name + "-C" + str(seq_count) + "-G1"
 
                 gutils.fprintf(outfile, ">%s\n", contigID)
                 gutils.fprintf(outfilefna, ">%s\n", orfID)
                 gutils.fprintf(outfilefaa, ">%s\n", orfID)
 
-                gffString = sample_name + "_" + str(seq_count)
+                gffString = sample_name + "-C" + str(seq_count)
                 gffString += "\t" + "AMINO_ACID_SEQ"
                 gffString += "\t" + "CDS"
                 gffString += "\t" + "0"
@@ -288,9 +288,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 gutils.fprintf(
                     mapfile,
                     "%s\n",
-                    sample_name
-                    + "_"
-                    + str(seq_count)
+                    contigID,
                     + "\t"
                     + key
                     + "\t"

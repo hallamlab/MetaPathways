@@ -333,13 +333,13 @@ def main(argv, errorlogger=None, runstatslogger=None):
             if mapfile == None:
                 gutils.fprintf(outfile, "%s\n", seqname)
             else:
-                gutils.fprintf(outfile, ">%s\n", sample_name + "_" + str(seq_count))
+                gutils.fprintf(outfile, ">%s\n", sample_name + "-C" + str(seq_count))
                 key = re.sub(r"^>", "", seqname)
                 gutils.fprintf(
                     mapfile,
                     "%s\n",
                     sample_name
-                    + "_"
+                    + "-C"
                     + str(seq_count)
                     + "\t"
                     + key

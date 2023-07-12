@@ -837,6 +837,7 @@ class WorkflowLogger(object):
 
 def ShortenORFId(_orfname, RNA=False):
 
+    '''
     ORFIdPATT = re.compile("(\\d+_\\d+)$")
     RNAPATT = re.compile("(\\d+_\\d+_[tr]RNA)$")
 
@@ -847,13 +848,21 @@ def ShortenORFId(_orfname, RNA=False):
 
     if result:
         shortORFname = result.group(1)
+    '''
+    if RNA:
+        result = _orfname.rsplit('-', 1)[1]
+    else:
+        result = _orfname.rsplit('-', 2)[1] + '-' + _orfname.rsplit('-', 2)[2]
+    if result:
+        shortORFname = result
     else:
         return ""
+
     return shortORFname
 
 
 def ShortentRNAId(_orfname):
-    ORFIdPATT = re.compile("(\\d+_\\d+_tRNA)$")
+    ORFIdPATT = re.compile("(\\d+_\\d+.tRNA)$")
 
     result = ORFIdPATT.search(_orfname)
 
@@ -866,7 +875,7 @@ def ShortentRNAId(_orfname):
 
 
 def ShortenrRNAId(_orfname):
-    ORFIdPATT = re.compile("(\\d+_\\d+_rRNA)$")
+    ORFIdPATT = re.compile("(\\d+_\\d+.rRNA)$")
 
     result = ORFIdPATT.search(_orfname)
     if result:

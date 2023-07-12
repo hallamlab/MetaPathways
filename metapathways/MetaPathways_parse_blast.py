@@ -821,5 +821,6 @@ def MetaPathways_parse_blast(argv, errorlogger=None, runstatslogger=None):
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
-    if len(sys.len) > 1:
+    #if len(sys.len) > 1:
+    if len(sys.argv) > 1:
        main(sys.argv[1:])

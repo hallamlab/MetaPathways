@@ -267,7 +267,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     # load funct/tax table
     ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
     ft_df.dropna(subset = ['target'], inplace=True)
-    ft_df['orf_id'] = [mputils.ShortenORFId(x) for x in ft_df['ORF_ID']]
+    ft_df['orf_id'] = [x for x in ft_df['ORF_ID']]
     # build product dictionary to remove duplicate ORF annotations
     cprod_dict = {k : [] for k in set(ft_df['product'])}
     rep_orf_list = list(ft_df.drop_duplicates('product')['orf_id'])
@@ -331,8 +331,8 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 compactid = ""
                 if attrib['feature'] == 'CDS':
 
-                    shortid = prefix + mputils.ShortenORFId(attrib['id'])
-                    compactid = mputils.ShortenORFId(attrib['id'])
+                    shortid = prefix + attrib['id']
+                    compactid = attrib['id']
                     # clean function
                     l_func = attrib['product']
                     if l_func != '':

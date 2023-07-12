@@ -386,7 +386,8 @@ def create_annotation(
                 continue # it has to have a seqname
             if orf['feature'] != 'CDS':
                 continue # has to be a CDS
-            shortORFId = mputils.getShortORFId(orf["id"])
+            #shortORFId = mputils.getShortORFId(orf["id"])
+            shortORFId = orf["id"]
             count += 1
             # shortORFId = ShortenORFId(orf['id'])
             if shortORFId not in orfsPicked:
@@ -647,7 +648,8 @@ def process_parsed_blastoutput(
                 for field in fields:
                     if field in data:
                         if field == "query":
-                            shortORFId = mputils.getShortORFId(data[field])
+                            #shortORFId = mputils.getShortORFId(data[field])
+                            shortORFId = data[field]
                             annotation[field] = shortORFId
                         elif field == "product":
                             pprod, comm = anno_fast.process_product(data["product"], dbname)
@@ -958,7 +960,8 @@ def get_list_of_queries(annotated_gff):
     count = 0
     for contig in gffreader:
         for orf in gffreader.orf_dictionary[contig]:
-            orfid = mputils.getShortORFId(orf["id"])
+            #orfid = mputils.getShortORFId(orf["id"])
+            orfid = orf["id"]
             orfList[orfid] = 1
             count += 1
     #      if count%500000==0:
@@ -1065,7 +1068,8 @@ def merge_sorted_parsed_files(
             next(iterate)
             line = readerhandles[i].getProcessedLine()
             fields = [x.strip() for x in line.split("\t")]
-            shortORFId = mputils.getShortORFId(fields[0])
+            #shortORFId = mputils.getShortORFId(fields[0])
+            shortORFId = fields[0]
             values.append((i, shortORFId, line))
         except:
             outputfile.close()
@@ -1088,7 +1092,8 @@ def merge_sorted_parsed_files(
             line = readerhandles[values[0][0]].getProcessedLine()
             fields = [x.strip() for x in line.split("\t")]
 
-            shortORFId = mputils.getShortORFId(fields[0])
+            #shortORFId = mputils.getShortORFId(fields[0])
+            shortORFId = fields[0]
             #  if dbname=='kegg-pep-2011-06-18':
             #     print shortORFId
 
