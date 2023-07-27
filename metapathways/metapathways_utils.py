@@ -862,24 +862,26 @@ def ShortenORFId(_orfname, RNA=False):
 
 
 def ShortentRNAId(_orfname):
-    ORFIdPATT = re.compile("(\\d+_\\d+.tRNA)$")
-
-    result = ORFIdPATT.search(_orfname)
-
+    #ORFIdPATT = re.compile("(\\d+_tRNA)$")
+    #result = ORFIdPATT.search(_orfname)
+    result = _orfname.rsplit('-', 2)[2]
+    #if result:
+    #    shortORFname = result.group(1)
     if result:
-        shortORFname = result.group(1)
-
+        shortORFname = result
     else:
         return ""
     return shortORFname
 
 
 def ShortenrRNAId(_orfname):
-    ORFIdPATT = re.compile("(\\d+_\\d+.rRNA)$")
-
-    result = ORFIdPATT.search(_orfname)
+    #ORFIdPATT = re.compile("\\d+_rRNA)$")
+    #result = ORFIdPATT.search(_orfname)
+    result = _orfname.rsplit('-', 2)[2]
+    #if result:
+    #    shortORFname = result.group(1)
     if result:
-        shortORFname = result.group(1)
+        shortORFname = result
     else:
         return ""
     return shortORFname

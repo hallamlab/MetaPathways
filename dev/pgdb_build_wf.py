@@ -3,7 +3,7 @@
 """PGDB Workflow
 
 Usage:
-	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir> [--taxprune <taxprune> ] [--tag <tag>]
+	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir>  --tag <tag> [--taxprune <taxprune> ]
 
 Options:
 	-h --help	Show this screen.
@@ -11,8 +11,8 @@ Options:
 	--mp_out=DIR	MP3 output directory.
 	--sif=FILE	Path to the Ptools SIF file.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
+	--tag=STR	Tag for metagenome PGDB.
 	--taxprune	Use taxonomic pruning when building PGDBs [True or False; default: False]
-	--tag=STR	Tag for metagenome PGDB [default: community].
 """
 
 
@@ -290,7 +290,7 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 			orf_list = [""]
 		for orf_id in orf_list:
 			if orf_id:
-				clean_id = orf_id.split('_', 1)[1]
+				clean_id = orf_id
 				new_row = [clean_id]
 				new_row.extend(r_list)
 				orf_exp_list.append(new_row)
@@ -312,15 +312,11 @@ arguments = docopt(__doc__, version='PGDB Workflow 1.0')
 mp_dir = arguments['<mp_dir>']
 sif_file = arguments['<sif_file>']
 tmp_dir = arguments['<tmp_dir>']
+tag = arguments['<tag>']
 if arguments['<taxprune>'] == None:
 	taxprune = 'False'
 else:
-	taxprune = arguments['<taxprune>']
-	
-if arguments['<tag>'] == None:
-	tag = 'community'
-else:
-	tag = arguments['<tag>']
+	taxprune = arguments['<taxprune>']	
 
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
@@ -339,7 +335,7 @@ if os.path.exists(ms_dir):
 	for pt_mag in mag_list:
 		if "non_binned" not in pt_mag:
 			mag_id = os.path.basename(pt_mag)
-			mag_tag = tag + '_' + mag_id
+			mag_tag = mag_id
 			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
 			create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, taxprune, mag_tag)
 			# Parse PGDB flatfiles to create PWYs TSV table

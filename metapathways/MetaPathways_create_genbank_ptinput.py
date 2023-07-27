@@ -318,7 +318,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
         # iterate over every contig sequence
         if compact_output:
-            prefix = 'O_'
+            prefix = '' #'O_'
         else:
             prefix = sample_name + '_'
 
