@@ -301,6 +301,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append('--bam-file-cache-directory')
     command.append(options.bwaFolder)
     command.append('--discard-unmapped')
+    command.append('--min-read-percent-identity-pair 97')
+    command.append('--min-read-aligned-percent-pair 97')
+    command.append('--proper-pairs-only')
 
     rpkmstatus = 0
     rpkmtext = ''
@@ -317,6 +320,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tFailed to run RPKM" )
 
     with open(options.stats, 'w') as stat_out:
+        stat_out.write(command)
+        stat_out.write('\n\n')
         stat_out.write(rpkmtext)
 
     return rpkmstatus

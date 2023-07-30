@@ -322,7 +322,7 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
             continue
         words.pop(0)
         if len(words) == 0:
-            annotation = "hypothetical protein"
+            annotation = "<unannotated protein>"
         else:
             annotation = words
         annot_map[name] = annotation
@@ -609,7 +609,7 @@ class BlastOutputParser(object):
                         "Number of sequence absent in map file %s exceeds %d"
                         % (self.blastoutput, self.ERROR_COUNT)
                     )
-                data["product"] = "hypothetical protein"
+                data["product"] = "<unannotated protein>"
 
         try:
             m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", annot_map[words[1]][1].split(' ', 1)[1])

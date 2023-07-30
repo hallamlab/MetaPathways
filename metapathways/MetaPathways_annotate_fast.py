@@ -520,7 +520,7 @@ def write_annotation_for_orf(
             attributes += ";" + "target=" + str("")
             attributes += ";" + "annotvalue=" + str("0")
             attributes += ";" + "ec=" + str("")
-            attributes += ";" + "product=" + "hypothetical protein"
+            attributes += ";" + "product=" + "<unannotated protein>" #"hypothetical protein"
 
         output_line += "\t" + attributes
 
@@ -1157,7 +1157,7 @@ def word_information(string_of_words):
     wordlist = {}
     underscore_pattern = re.compile("_")
     for word in words:
-        if not word in [
+        if not word.lower() in [
             "",
             "is",
             "have",
@@ -1181,6 +1181,10 @@ def word_information(string_of_words):
             "predicted",
             "protein",
             "conserved",
+            "unannotated",
+            "protein>",
+            "<unannotated",
+            
         ]:
             if not underscore_pattern.search(word):
                 wordlist[word] = 1
