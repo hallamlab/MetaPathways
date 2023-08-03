@@ -319,34 +319,42 @@ def insert_orf_into_dict(line, contig_dict, shortenorfid=False):
     attributes = {}
 
     seqname = fields[0]
-    try:
-        if shortenorfid:
-            seqname = mputils.ShortenContigId(fields[0])
-        else:
+    keep_feat = ["CDS", "tRNA", "rRNA"]
+    feature_type = fields[2]
+    if feature_type in keep_feat: # only certain features are used here
+        try:
+            if shortenorfid:
+                seqname = mputils.ShortenContigId(fields[0])
+            else:
+                seqname = fields[0]
+        except:
             seqname = fields[0]
-    except:
-        seqname = fields[0]
 
-    attributes["seqname"] = seqname  # this is a bit of a  duplication
-    attributes["source"] = fields[1]
-    attributes["feature"] = fields[2]
-    attributes["start"] = int(fields[3])
-    attributes["end"] = int(fields[4])
+        attributes["seqname"] = seqname  # this is a bit of a  duplication
+        attributes["source"] = fields[1]
+        attributes["feature"] = fields[2]
+        attributes["start"] = int(fields[3])
+        attributes["end"] = int(fields[4])
 
-    try:
-        attributes["score"] = float(fields[5])
-    except:
-        attributes["score"] = fields[5]
+        try:
+            attributes["score"] = float(fields[5])
+        except:
+            attributes["score"] = fields[5]
 
-    attributes["strand"] = fields[6]
-    attributes["frame"] = fields[7]
+        attributes["strand"] = fields[6]
+        attributes["frame"] = fields[7]
 
-    split_attributes(fields[8], attributes)
+        split_attributes(fields[8], attributes)
+        if feature_type == "tRNA":
+            seqname = attributes["orf_id"]
+            attributes["seqname"] = seqname
+        if feature_type == "rRNA":
+            seqname = seqname + "." + attributes["name"] + "_" + str(fields[3])
+            attributes["seqname"] = seqname
+        if not seqname in contig_dict:
+            contig_dict[seqname] = []
 
-    if not seqname in contig_dict:
-        contig_dict[seqname] = []
-
-    contig_dict[seqname].append(attributes)
+        contig_dict[seqname].append(attributes)
 
 
 class GffFileParser(object):
@@ -535,7 +543,7 @@ def write_annotation_for_orf(
 
 
 def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
-    output_line = str(f_rec["seqname"])
+    output_line = str(f_rec["seqname"]).split('.', 1)[0]
     length = abs(f_rec["end"] - f_rec["start"])
     if tag == "_rRNA":
         output_line += "\t" + str(f_rec["source"])
@@ -545,8 +553,8 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["name"])
-        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes += ";" + "locus_tag=" + str(f_rec["name"])
         attributes += ";" + "orf_length=" + str(length)
         #attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
         attributes += ";" + "product=" + f_rec["product"]
@@ -565,8 +573,8 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["name"])
-        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes += ";" + "locus_tag=" + str(f_rec["name"])
         attributes += ";" + "orf_length="  + str(length)
         #attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
         #attributes += ";" + "product=" + f_rec["product"]
@@ -1344,7 +1352,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
             "%s\tTotal Protein Annotations\t%s\n" % (str(priority), str(count))
         )
 
-    # create the annotations from he results
+    # create the annotations from the results
     create_annotation(
         dbname_weight,
         results_dictionary,

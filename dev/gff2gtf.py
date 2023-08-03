@@ -3,6 +3,7 @@
 import argparse
 import pandas as pd
 
+
 def extract_gene_id(gff_row):
     seqname = gff_row['seqname']
     feature = gff_row['feature']
@@ -10,12 +11,15 @@ def extract_gene_id(gff_row):
     end = gff_row['end']
     attribute_str = gff_row['attribute']
     attributes = attribute_str.split(';')
+    #if feature == 'CDS':
     for attribute in attributes:
         key, value = attribute.strip().split('=')
         if key == 'ID':
-            val_list = [seqname, value, str(start), str(end)]
-            gene_id = "gene_id \"" + "|".join(val_list) + "\""        
+            gene_id = "gene_id \"" + value + "\""
+    #else:
+    #    gene_id = "gene_id \"" + seqname + "\""
     return gene_id
+
 
 def gff_to_gtf(input_file, output_file, feature_types):
     # Read the GFF file into a pandas DataFrame

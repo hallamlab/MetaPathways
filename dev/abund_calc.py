@@ -103,7 +103,7 @@ def main():
     merged_df.drop(columns=["gene_id"], inplace=True)
 
     # Clean up the Gene_ID now that all the merging is done
-    merged_df['Gene_ID'] = merged_df.apply(clean_gene_id, axis=1)
+    #merged_df['Gene_ID'] = merged_df.apply(clean_gene_id, axis=1)
 
     # Save the merged results to a tab-separated file using pandas
     merged_df.to_csv(args.output, sep="\t", index=False)

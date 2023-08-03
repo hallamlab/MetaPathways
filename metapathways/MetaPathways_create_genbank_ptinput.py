@@ -422,8 +422,8 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                     #endfor
 
                 elif attrib['feature'] == 'rRNA':
-                    shortid = prefix + mputils.ShortenrRNAId(attrib['locus_tag'])
-                    compactid = mputils.ShortenrRNAId(attrib['locus_tag'])
+                    shortid = prefix + attrib['id']  #mputils.ShortenrRNAId(attrib['id'])
+                    compactid = attrib['id']  #mputils.ShortenrRNAId(attrib['id'])
                     if compactid in orf_to_taxonid:
                         attrib['taxon'] = orf_to_taxonid[compactid]
                     # add ORF record to pf file
@@ -434,8 +434,8 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                         append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
 
                 elif attrib['feature'] == 'tRNA':
-                    shortid = prefix + mputils.ShortentRNAId(attrib['locus_tag'])
-                    compactid = mputils.ShortentRNAId(attrib['locus_tag'])
+                    shortid = prefix + attrib['id']  #mputils.ShortentRNAId(attrib['id'])
+                    compactid = attrib['id']  #mputils.ShortentRNAId(attrib['id'])
                     if compactid in orf_to_taxonid:
                         attrib['taxon'] = orf_to_taxonid[compactid]
                     # add ORF record to pf file
@@ -446,6 +446,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                         append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
 
 
+            '''
             #write the sequence now only once per contig
             try:
                 contig_seq =  nucleotide_seq_dict[key]
@@ -463,6 +464,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
             if compact_output==False:
                 write_input_sequence_file(output_dir_name, shortid, fastaStr)
+            '''
         #endif
     # Save the complete list of ORFs that were deduped
     with open(output_dir_name + "/" + "orf_map.txt", 'w') as map_out:
