@@ -115,16 +115,17 @@ class ContextCreator:
         contexts.append(context)
         return contexts
 
-
+    '''
     def create_preprocess_input_aminos_cmd(self, s):
         """ PREPROCESS_AMINOS """
+        flurp
         contexts = []
 
-        '''inputs'''
+        # inputs
         input_file = s.input_file
 
 
-        '''outputs'''
+        # outputs
         output_fasta = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
         mapping_file =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
         nuc_stats_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".nuc.stats"
@@ -134,7 +135,7 @@ class ContextCreator:
         output_fna = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
         output_gff = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".unannot.gff"
 
-        '''params'''
+        # params
 
         context = contextmod.Context()
         context.name = 'PREPROCESS_AMINOS'
@@ -164,7 +165,7 @@ class ContextCreator:
         context.commands = [cmd]
         contexts.append(context)
         return contexts
-
+    '''
 
     def  convert_gbk_to_fna_faa_gff_annotated(self, s):
         contexts = self._convert_gbk_to_fna_faa_gff(s, annotated = True,\
@@ -314,7 +315,7 @@ class ContextCreator:
         return contexts
 
 
-    def create_create_filtered_amino_acid_sequences_cmd(self, s):
+    def create_filtered_amino_acid_sequences_cmd(self, s):
         """FILTER_AMINOS"""
         contexts = []
 
@@ -670,6 +671,7 @@ class ContextCreator:
 
         '''inputs'''
         input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
+        input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
         rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
@@ -692,7 +694,7 @@ class ContextCreator:
             'input_unannotated_gff':input_unannotated_gff
         }
         context.inputs1 = {
-            'mapping_txt':mapping_txt,
+            'mapping_txt':mapping_txt, 'qced_faa': input_filtered_faa
         }
         context.outputs = {
            'output_annotated_gff':output_annotated_gff,
@@ -740,6 +742,7 @@ class ContextCreator:
         cmd = cmd + " -m " + context.inputs1['mapping_txt']
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name
         cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
+        cmd = cmd + " --qced_faa " + context.inputs1['qced_faa']
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]
@@ -1048,10 +1051,10 @@ class ContextCreator:
         self.factory['GBK_TO_FNA_FAA_GFF'] = self.convert_gbk_to_fna_faa_gff_unannotated
         self.factory['GBK_TO_FNA_FAA_GFF_ANNOT'] = self.convert_gbk_to_fna_faa_gff_annotated
         self.factory['PREPROCESS_INPUT'] = self.create_quality_check_cmd
-        self.factory['PREPROCESS_AMINOS'] = self.create_preprocess_input_aminos_cmd
+        #self.factory['PREPROCESS_AMINOS'] = self.create_preprocess_input_aminos_cmd
         self.factory['ORF_PREDICTION'] = self.create_orf_prediction_cmd
         self.factory['ORF_TO_AMINO'] = self.create_aa_orf_sequences_cmd
-        self.factory['FILTER_AMINOS'] = self.create_create_filtered_amino_acid_sequences_cmd
+        self.factory['FILTER_AMINOS'] = self.create_filtered_amino_acid_sequences_cmd
         self.factory['COMPUTE_REFSCORES'] = self.create_refscores_compute_cmd
         self.factory['FUNC_SEARCH'] = self.create_blastp_against_refdb_cmd
         self.factory['PARSE_FUNC_SEARCH'] = self.create_parse_blast_cmd
