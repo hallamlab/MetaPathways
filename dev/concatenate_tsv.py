@@ -136,22 +136,26 @@ def compute_similarity_matrix(grouped_and_pivoted_data):
 
     return pd.DataFrame(similarity_matrix, columns=index_values, index=index_values)
 
-def filter_by_tpm_and_uniref_threshold(grouped_and_pivoted_data, tpm_threshold=0.001):
+def filter_by_tpm_and_uniref_threshold(grouped_and_pivoted_data, tpm_threshold=0.0000000000000001):
     # Define strings to exclude from 'uniref90(product)'
     excluded_strings = ["uncharacterized", "hypothetical",
-                        "(fragment)", "unannotated", "unknown",
-                        "domain-containing", "ATP", "ABC",
-                        "transporter", "non-specific"]
+                        "(fragment)", "unannotated", "unknown",]
+                        #"domain-containing", "non-specific"]
+    include_strings = ["nitr"]
     #Exclude rows with 'uniref90(product)' containing the specified strings
     exclude_df = grouped_and_pivoted_data[~grouped_and_pivoted_data['uniref90(product)'
                                          ].str.lower().str.contains('|'.join(excluded_strings),
+                                            case=False)
+                                         ]
+    include_df = exclude_df[exclude_df['uniref90(product)'
+                                         ].str.lower().str.contains('|'.join(include_strings),
                                             case=False)
                                          ]
 
     # Calculate the total TPM for each column
     total_tpm_per_column = exclude_df.drop(columns=['uniref90(product)']).sum()
 
-    # Filter rows that have at least 0.1% of the total TPM for at least one column
+    # Filter rows that have at least 0.01% of the total TPM for at least one column
     valid_rows = exclude_df[exclude_df.drop(columns=['uniref90(product)'])
          .apply(lambda row: any(row >= total_tpm_per_column * tpm_threshold), axis=1)
          ]
@@ -173,24 +177,71 @@ def save_as_tsv(df, file_path):
     print(f"Data saved to {file_path}")
 
 def save_heatmap_to_pdf(summed_data, output_file):
-    summed_data.set_index('uniref90(product)', inplace=True)
+    #summed_data.set_index('uniref90(product)', inplace=True)
 
-    # Create a heatmap using seaborn
-    plt.figure(figsize=(24, 36))
+    # Replace NaN values with 0
+    summed_data.fillna(0, inplace=True)
 
-    # Plot the heatmap
-    sns.heatmap(summed_data, cmap='YlGnBu', annot=True, fmt=".1f", linewidths=0.5, cbar_kws={"label": "TPM Sum"})
+    # Use the sns.clustermap function to create a heatmap with clustering on both axes
+    heatmap = sns.clustermap(summed_data, cmap='RdBu_r', annot=True, fmt=".1f",
+                             linewidths=0.5, cbar_kws={"label": "TPM Sum"},
+                             figsize=(16, 36), dendrogram_ratio=(0.1, 0.1),
+                             cbar_pos=(0.02, 0.9, 0.02, 0.02)
+                             )
 
     plt.title('Summed TPM Heatmap', fontsize=16)  # Set the title
-    plt.xlabel('Filename', fontsize=12)  # Set the x-axis label
+    plt.xlabel('Sample', fontsize=12)  # Set the x-axis label
     plt.ylabel('uniref90(product)', fontsize=12)  # Set the y-axis label
     plt.tight_layout()
 
     # Save the heatmap to PDF
     plt.savefig(output_file, format='pdf', bbox_inches="tight")
     plt.close()
-    
     print(f"Heatmap saved to {output_file}")
+
+def save_top_100_rows(grouped_and_pivoted_data, output_file):
+    grouped_and_pivoted_data.set_index('uniref90(product)', inplace=True)
+
+    top_100_rows = set()
+    for column in grouped_and_pivoted_data.columns:
+        top_100_rows.update(grouped_and_pivoted_data.nlargest(100, column).index)
+
+    # Create a new DataFrame containing the top 100 rows for each column
+    top_100_rows_df = grouped_and_pivoted_data.loc[top_100_rows]
+
+    # Save the top 100 rows DataFrame to TSV
+    top_100_rows_df.to_csv(output_file, sep='\t')
+
+    print(f"Top 100 rows for each column saved to {output_file}")
+
+    return top_100_rows_df
+
+def save_hca_dendrogram(grouped_and_pivoted_data, output_file):
+    #grouped_and_pivoted_data.set_index('uniref90(product)', inplace=True)
+
+    # Transpose the DataFrame to perform clustering by filename
+    transposed_data = grouped_and_pivoted_data.T
+
+    # Replace NaN values with 0
+    transposed_data.fillna(0, inplace=True)
+
+    # Perform hierarchical clustering and get the clustered column indices (filenames)
+    col_linkage = hierarchy.linkage(transposed_data.values, method='average', metric='euclidean')
+    col_dendrogram = hierarchy.dendrogram(col_linkage, labels=transposed_data.index)
+
+    plt.title('Hierarchical Cluster Analysis Dendrogram by Sample', fontsize=16)  # Set the title
+    plt.xlabel('Sample', fontsize=12)  # Set the x-axis label
+    plt.ylabel('Distance', fontsize=12)  # Set the y-axis label
+    # Rotate the x-axis labels 90 degrees
+    plt.xticks(rotation=90)
+
+    plt.tight_layout()
+
+    # Save the dendrogram to PDF
+    plt.savefig(output_file, format='pdf', bbox_inches="tight")
+    plt.close()
+    print(f"HCA dendrogram by filename saved to {output_file}")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Concatenate TSV files, add a filename column, and group the data.')
@@ -280,8 +331,15 @@ if __name__ == '__main__':
         print("Summed TPM Data:")
         print(summed_data)
 
+        # Save the top 100 rows for each column as a TSV
+        top_100_rows_df = save_top_100_rows(filtered_data, 'top_100_rows_per_column.tsv')
+
         # Save the summed TPM data as a clustered heatmap to PDF
-        save_heatmap_to_pdf(summed_data, 'summed_tpm_heatmap.pdf')
+        save_heatmap_to_pdf(top_100_rows_df, 'summed_tpm_heatmap.pdf')
+
+        # Save the HCA dendrogram as a PDF
+        save_hca_dendrogram(top_100_rows_df, 'hca_dendrogram.pdf')
+
 
     except Exception as e:
         print("An error occurred:", str(e))

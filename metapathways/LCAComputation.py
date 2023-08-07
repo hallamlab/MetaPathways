@@ -263,7 +263,7 @@ class LCAComputation:
         try:
             for contig in gffreader:
                 for orf in gffreader.orf_dictionary[contig]:
-                    shortORFId = mputils.getShortORFId(orf["id"])
+                    shortORFId = orf["id"] # mputils.getShortORFId(orf["id"])
                     if not shortORFId in pickorfs:
                         continue
                     taxonomy = None
