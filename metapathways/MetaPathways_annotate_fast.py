@@ -945,6 +945,8 @@ def create_annotation(
                     )
                 else:  # if it was not a hit then it is a hypothetical protein
                     # print gffreader.orf_dictionary
+                    gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
+                    gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
                     write_annotation_for_orf(
                         outputgff_file,
                         "None",
