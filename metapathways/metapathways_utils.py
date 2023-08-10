@@ -852,7 +852,7 @@ def ShortenORFId(_orfname, RNA=False):
     if RNA:
         result = _orfname.rsplit('-', 1)[1]
     else:
-        result = _orfname.rsplit('-', 2)[1] + '-' + _orfname.rsplit('-', 2)[2]
+        result = 'C' + _orfname.rsplit('-C', 1)[1] #_orfname.rsplit('-', 2)[1] + '-' + _orfname.rsplit('-', 2)[2]
     if result:
         shortORFname = result
     else:
