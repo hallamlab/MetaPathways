@@ -14,8 +14,10 @@ def calculate_rpkm(counts, gene_lengths):
     """
     rpkm_values = []
     total_reads = sum(counts)
+    tot_per_million = total_reads / 1e6
     for count, length in zip(counts, gene_lengths):
-        rpkm = (count / (length / 1000.0)) / (total_reads / 1e6)
+        rpm = count / tot_per_million
+        rpkm = rpm / (length / 1000.0)
         rpkm_values.append(rpkm)
     return rpkm_values
 
@@ -29,11 +31,10 @@ def calculate_tpm(counts, gene_lengths):
     :return: List of TPM values for each gene.
     """
     tpm_values = []
-    total_reads = sum(counts)
     counts_per_gene = [count / (length / 1000.0) for count, length in zip(counts, gene_lengths)]
-    sum_counts_per_gene = sum(counts_per_gene)
-    for count in counts_per_gene:
-        tpm = (count / sum_counts_per_gene) * 1e6
+    counts_per_million = sum(counts_per_gene) / 1e6
+    for rpk in counts_per_gene:
+        tpm = rpk / counts_per_million
         tpm_values.append(tpm)
     return tpm_values
 
