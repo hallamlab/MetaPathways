@@ -532,7 +532,7 @@ def write_annotation_for_orf(
                 ";" + "product=" + results_dictionary[candidatedbname][orfid]["product"]
             )
         else:
-            attributes += ";" + "target=" + str("")
+            attributes += ";" + "target=" + str("<no accession>")
             attributes += ";" + "annotvalue=" + str("0")
             attributes += ";" + "ec=" + str("")
             attributes += ";" + "product=" + "<unannotated protein>" #"hypothetical protein"
