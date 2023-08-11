@@ -1047,11 +1047,11 @@ def process_product(product, database, similarity_threshold=0.9):
     else:
         words = [processed_product]
     filtered_words = []
-    underscore_pattern = re.compile("_")
-    arrow_pattern = re.compile(">")
+    #underscore_pattern = re.compile("_")
+    #arrow_pattern = re.compile(">")
     for word in words:
-        if not underscore_pattern.search(word) and not arrow_pattern.search(word):
-            filtered_words.append(word)
+        #if not underscore_pattern.search(word) and not arrow_pattern.search(word):
+        filtered_words.append(word)
 
     processed_product = remove_repeats(filtered_words)
     processed_product = re.sub(";", "", processed_product)

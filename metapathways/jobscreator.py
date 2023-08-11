@@ -115,10 +115,9 @@ class ContextCreator:
         contexts.append(context)
         return contexts
 
-    '''
+    
     def create_preprocess_input_aminos_cmd(self, s):
         """ PREPROCESS_AMINOS """
-        flurp
         contexts = []
 
         # inputs
@@ -165,7 +164,6 @@ class ContextCreator:
         context.commands = [cmd]
         contexts.append(context)
         return contexts
-    '''
 
     def  convert_gbk_to_fna_faa_gff_annotated(self, s):
         contexts = self._convert_gbk_to_fna_faa_gff(s, annotated = True,\
@@ -704,10 +702,11 @@ class ContextCreator:
         }
 
         context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
-
+        
         '''use rRNA stats if they are available'''
         options = ''
-        if rRNAdbs:
+        
+        if rRNAdbs and os.path.exists(rRNA_gff_output):
             context.inputs['rRNA_gff_file']  = rRNA_gff_output
             options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
 
@@ -719,12 +718,13 @@ class ContextCreator:
                 options += " --rRNA " +  context.inputs['rRNA_stat_results']
 
         '''use tRNA stats'''
-        context.inputs['tRNA_gff_file']  = tRNA_gff_output
-        options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
+        if os.path.exists(tRNA_gff_output):
+            context.inputs['tRNA_gff_file']  = tRNA_gff_output
+            options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
 
-        context.inputs['tRNA_stat_results'] = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
-        options += " --tRNA " +  context.inputs['tRNA_stat_results']
-    
+            context.inputs['tRNA_stat_results'] = s.output_results_tRNA_dir + PATHDELIM + s.sample_name + '.tRNA.results.txt'
+            options += " --tRNA " +  context.inputs['tRNA_stat_results']
+
         pyScript = self.configs.ANNOTATE_ORFS
         cmd = "%s --input_gff  %s -o %s  %s --output-comparative-annotation %s \
                   --algorithm %s "\
@@ -1051,7 +1051,7 @@ class ContextCreator:
         self.factory['GBK_TO_FNA_FAA_GFF'] = self.convert_gbk_to_fna_faa_gff_unannotated
         self.factory['GBK_TO_FNA_FAA_GFF_ANNOT'] = self.convert_gbk_to_fna_faa_gff_annotated
         self.factory['PREPROCESS_INPUT'] = self.create_quality_check_cmd
-        #self.factory['PREPROCESS_AMINOS'] = self.create_preprocess_input_aminos_cmd
+        self.factory['PREPROCESS_AMINOS'] = self.create_preprocess_input_aminos_cmd
         self.factory['ORF_PREDICTION'] = self.create_orf_prediction_cmd
         self.factory['ORF_TO_AMINO'] = self.create_aa_orf_sequences_cmd
         self.factory['FILTER_AMINOS'] = self.create_filtered_amino_acid_sequences_cmd
