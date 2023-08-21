@@ -2,6 +2,7 @@
 ## -*- python -*-
 import argparse
 import pandas as pd
+import numpy as np
 
 
 def calculate_rpkm(counts, gene_lengths):
@@ -12,13 +13,13 @@ def calculate_rpkm(counts, gene_lengths):
     :param gene_lengths: List of gene lengths in base pairs.
     :return: List of RPKM values for each gene.
     """
-    rpkm_values = []
+    
+    counts = np.array(counts)
+    gene_lengths = np.array(gene_lengths)
     total_reads = sum(counts)
     tot_per_million = total_reads / 1e6
-    for count, length in zip(counts, gene_lengths):
-        rpm = count / tot_per_million
-        rpkm = rpm / (length / 1000.0)
-        rpkm_values.append(rpkm)
+    rpkm_values = counts / (gene_lengths/1000 * tot_per_million)
+    
     return rpkm_values
 
 
@@ -30,26 +31,16 @@ def calculate_tpm(counts, gene_lengths):
     :param gene_lengths: List of gene lengths in base pairs.
     :return: List of TPM values for each gene.
     """
+
+    counts = np.array(counts)
+    gene_lengths = np.array(gene_lengths)
     tpm_values = []
-    counts_per_gene = [count / (length / 1000.0) for count, length in zip(counts, gene_lengths)]
+    counts_per_gene = counts / (gene_lengths / 1000.0)
     counts_per_million = sum(counts_per_gene) / 1e6
-    for rpk in counts_per_gene:
-        tpm = rpk / counts_per_million
-        tpm_values.append(tpm)
+    tpm_values = counts_per_gene / counts_per_million
+
     return tpm_values
 
-
-def clean_gene_id(merge_row):
-    gen_id = merge_row["Gene_ID"]
-    feature = merge_row["feature"]
-    if feature == "CDS":
-        gene_id = gen_id.split("|")[1]
-    elif feature == "rRNA":
-        gene_id = gen_id.split("|")[0].split('-')[-1] + '-' + gen_id.split("|")[1]
-    elif ((feature == 'tRNA') | (feature == 'pseudogene')):
-        gene_id = gen_id.split("|")[1].split('-', 2)[2]
-    return gene_id
-    
 
 def main():
     parser = argparse.ArgumentParser(description="Calculate RPKM and TPM values for gene expression data.")
