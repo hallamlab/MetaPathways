@@ -49,7 +49,7 @@ FROM ubuntu
 ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:99 \
     INSTALLER_DIR=/opt/bin \
-    INSTALL_EXE=./docker/ptools-container/pathway-tools-27.0-linux-64-tier1-install
+    INSTALL_EXE=docker/ptools-container/pathway-tools-27.0-linux-64-koonkie-install
 
 ## Ubuntu installs:
 RUN apt-get update && \

@@ -19,6 +19,7 @@ coverage.xml
 pathologic.log
 *.sif
 \#*
+*pathway-tools-*-install
 
 executables-DELETE-ME
 test
