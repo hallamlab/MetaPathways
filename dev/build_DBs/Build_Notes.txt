@@ -1,0 +1,38 @@
+# Functional DBs
+mkdir -p functional/formatted
+mkdir functional_categories
+mkdir ncbi_tree
+mkdir -p taxonomic/formatted
+
+# MetaCyc
+wget --user [user_login] --password [password] http://bioinformatics.ai.sri.com/ecocyc/dist/Koonkie/biocyc/27.0/meta.tar.gz
+tar xvzf meta.tar.gz
+python metacyc_mapping_build.py
+fastdb -p ~/SABer_dat/MMAP_DBs_230314/functional/formatted/metacyc ~/SABer_dat/MMAP_DBs_230314/27.0/data/protseq.fsa
+grep '>' ~/SABer_dat/MMAP_DBs_230314/27.0/data/protseq.fsa > ~/SABer_dat/MMAP_DBs_230314/functional/formatted/metacyc-names.txt
+
+
+# UniRef90
+wget https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
+tar xvzf uniref90.fasta.gz
+fastdb -p uniref90 uniref90.fasta
+grep '>' uniref90.fasta > uniref90-names.txt
+
+# Mapping UniRef90 to ECs
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
+wget https://ftp.expasy.org/databases/enzyme/enzyme.dat
+
+zgrep 'UniRef90_' idmapping.dat.gz > UniRef90_idmapping.dat
+python uniref90_mapper.py
+
+# taxmap
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+tar xvzf new_taxdump.tar.gz 
+python build_taxmap.py
+
+
+# CAZymes
+wget https://bcb.unl.edu/dbCAN2/download/CAZyDB.07262023.fa
+fastdb -p ~/SABer_dat/MMAP_DBs_230314/functional/formatted/cazydb CAZyDB.07262023.fa
+grep '>' CAZyDB.07262023.fa > ~/SABer_dat/MMAP_DBs_230314/functional/formatted/cazydb-names.txt
+

@@ -3,7 +3,7 @@
 """PGDB Workflow
 
 Usage:
-	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir> [--taxprune <taxprune> ] [--tag <tag>]
+	pgdb_build_wf.py --mp_out <mp_dir> --sif <sif_file> --tmp_dir <tmp_dir>  --tag <tag> [--taxprune <taxprune> ]
 
 Options:
 	-h --help	Show this screen.
@@ -11,8 +11,8 @@ Options:
 	--mp_out=DIR	MP3 output directory.
 	--sif=FILE	Path to the Ptools SIF file.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
+	--tag=STR	Tag for metagenome PGDB.
 	--taxprune	Use taxonomic pruning when building PGDBs [True or False; default: False]
-	--tag=STR	Tag for metagenome PGDB [default: community].
 """
 
 
@@ -25,7 +25,7 @@ import shutil
 import glob
 from pathlib import Path
 from sexpdata import loads, dumps, Symbol
-from docopt import docopt
+import argparse
 from camelot_frs.camelot_frs import get_kb, get_frame, get_frame_all_children, frame_parent_of_frame_p, frame_object_p
 from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
 from camelot_frs.pgdb_api import genes_of_pathway
@@ -33,8 +33,7 @@ import html2text
 
 
 
-def create_pgdb(pt_inputs, pt_outputs, sif_file,
-				tmp_dir,  tprune, tag
+def create_pgdb(pt_inputs, pt_outputs, tprune, tag
 				):
 
 	rename_pgdb(pt_inputs, tag)
@@ -42,35 +41,22 @@ def create_pgdb(pt_inputs, pt_outputs, sif_file,
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
 
-	# Get $PATH
-	my_path = os.environ.copy()['PATH']
-
-	# Run Singularity images for Ptools
-	bind_str = ''.join([pt_inputs, ':/pt_inputs,',
-						pt_outputs, ':/pt_outputs,',
-						tmp_dir, ':/data'
-						])
-	if tprune == 'True':
-		pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
-					'-B', bind_str, sif_file,
-					'run-pathway-tools-and-copy-pgdb-singularity_taxprune.sh',
-					'/pt_inputs', '/pt_outputs'
+	if tprune == True:
+		pt_cmd = ['run-pathway-tools-and-copy-pgdb-singularity_taxprune.sh',
+					pt_inputs, pt_outputs
 					]
-	elif tprune == 'False':
-		pt_cmd = ['singularity', 'run', '--env', 'APPEND_PATH=' + my_path,
-					'-B', bind_str, sif_file,
-					'run-pathway-tools-and-copy-pgdb-singularity.sh',
-					'/pt_inputs', '/pt_outputs'
+	elif tprune == False:
+		pt_cmd = ['run-pathway-tools-and-copy-pgdb-singularity.sh',
+					pt_inputs, pt_outputs
 					]
 	pt_out = subprocess.run(' '.join(pt_cmd),
 							shell=True
-							) #, capture_output=True, text=True).stdout
+							)
 	
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
 	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
-	tar_out = subprocess.run(tar_cmd) #, capture_output=True, text=True).stdout
-
+	tar_out = subprocess.run(tar_cmd)
 
 def rename_pgdb(pt_inputs, tag):
 	o_params = os.path.join(pt_inputs, 'organism-params.dat')
@@ -290,7 +276,7 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 			orf_list = [""]
 		for orf_id in orf_list:
 			if orf_id:
-				clean_id = orf_id.split('_', 1)[1]
+				clean_id = orf_id
 				new_row = [clean_id]
 				new_row.extend(r_list)
 				orf_exp_list.append(new_row)
@@ -307,30 +293,27 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 
 ###############################################################
 # Collect inputs
-arguments = docopt(__doc__, version='PGDB Workflow 1.0')
+parser = argparse.ArgumentParser(description="Run Ptools on MP output and collect outputs.")
+parser.add_argument("--mp_out", type=str, help="MP3 output directory.", required=True)
+parser.add_argument("--tag", type=str, help="Tag for metagenome PGDB.", required=True)
+parser.add_argument("--taxprune", action='store_true',
+					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
+					required=False
+					)
+args = parser.parse_args()
 
-mp_dir = arguments['<mp_dir>']
-sif_file = arguments['<sif_file>']
-tmp_dir = arguments['<tmp_dir>']
-if arguments['<taxprune>'] == None:
-	taxprune = 'False'
-else:
-	taxprune = arguments['<taxprune>']
-	
-if arguments['<tag>'] == None:
-	tag = 'community'
-else:
-	tag = arguments['<tag>']
+mp_dir = args.mp_out
+tag = args.tag
+taxprune = args.taxprune
 
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-create_pgdb(pt_in, pt_out, sif_file, tmp_dir, taxprune, tag)
+create_pgdb(pt_in, pt_out, taxprune, tag)
 # Parse PGDB flatfiles to create PWYs TSV table
 extract_pwy(pt_out)
 # Map inferred pwys to ORFs and ECs/RXNs used
 map_orfs2pwys(mp_dir, pt_out)
-
 
 # Build MAG-level PGDBs if they exist
 ms_dir = os.path.join(mp_dir, 'magsplitter/results')
@@ -339,9 +322,9 @@ if os.path.exists(ms_dir):
 	for pt_mag in mag_list:
 		if "non_binned" not in pt_mag:
 			mag_id = os.path.basename(pt_mag)
-			mag_tag = tag + '_' + mag_id
+			mag_tag = mag_id
 			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-			create_pgdb(pt_mag, pt_out, sif_file, tmp_dir, taxprune, mag_tag)
+			create_pgdb(pt_mag, pt_out, taxprune, mag_tag)
 			# Parse PGDB flatfiles to create PWYs TSV table
 			extract_pwy(pt_out)
 			# Map inferred pwys to ORFs and ECs/RXNs used

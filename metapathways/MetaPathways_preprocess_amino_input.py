@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Processes amino acid inputs"""
 
 __author__ = "Kishori M Konwar"
@@ -238,7 +240,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         if length > stats[MAX_LENGTH][BEFORE]:
             stats[MAX_LENGTH][BEFORE] = length
 
-        if length < MIN_LENGTH:
+        if length < min_length:
             stats[NUMSEQ_SHORTER][BEFORE] += 1
 
         stats[AVG_LENGTH][BEFORE] = stats[AVG_LENGTH][BEFORE] + length
@@ -261,14 +263,14 @@ def main(argv, errorlogger=None, runstatslogger=None):
             if mapfile == None:
                 gutils.fprintf(outfile, "%s\n", seqname)
             else:
-                contigID = sample_name + "_" + str(seq_count)
-                orfID = sample_name + "_" + str(seq_count) + "_1"
+                contigID = sample_name + "-C" + str(seq_count)
+                orfID = sample_name + "-C" + str(seq_count) + "-G1"
 
                 gutils.fprintf(outfile, ">%s\n", contigID)
                 gutils.fprintf(outfilefna, ">%s\n", orfID)
                 gutils.fprintf(outfilefaa, ">%s\n", orfID)
 
-                gffString = sample_name + "_" + str(seq_count)
+                gffString = sample_name + "-C" + str(seq_count)
                 gffString += "\t" + "AMINO_ACID_SEQ"
                 gffString += "\t" + "CDS"
                 gffString += "\t" + "0"
@@ -285,17 +287,8 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 gutils.fprintf(outfilegff, "%s\n", gffString)
 
                 key = re.sub(r"^>", "", seqname)
-                gutils.fprintf(
-                    mapfile,
-                    "%s\n",
-                    sample_name
-                    + "_"
-                    + str(seq_count)
-                    + "\t"
-                    + key
-                    + "\t"
-                    + str(seqlen),
-                )
+                gutils.fprintf(mapfile, "%s\n",
+                    ''.join([contigID, "\t", key, "\t", str(seqlen)]))
                 seq_count += 1
 
             gutils.fprintf(outfile, "%s\n", "DUMMY CONTIGS FOR AMINO ACID SEQUENCES")

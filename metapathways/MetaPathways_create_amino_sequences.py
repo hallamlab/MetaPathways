@@ -244,7 +244,7 @@ def create_the_gene_IDs(contig_dict, nucleotide_seq_dict):
     for key in contig_dict:
         count = 0
         for elem in contig_dict[key]:
-            name = elem["seqname"] + "_%d" % (count + 1)
+            name = elem["seqname"] + "-G%d" % (count + 1)
             contig_dict[key][count]["ID"] = name
             contig_dict[key][count]["contig_length"] = len(nucleotide_seq_dict[key])
             count += 1

@@ -232,9 +232,9 @@ def getReadFiles(readdir, sample_name):
        fastqfile = re.sub(r'.gz$','', _fastqfile, flags=re.IGNORECASE) 
        fastqfile = re.sub(r'.fastq$','', fastqfile, flags=re.IGNORECASE) 
        fastqfile = re.sub(r'.fq$','', fastqfile, flags=re.IGNORECASE) 
-       trimmedfastq = path.basename(re.sub(r'_R[12]$', '', fastqfile))
+       trimmedfastq = path.basename(re.sub(r'_[12]$', '', fastqfile))
        if len(trimmedfastq.rsplit('.', 1)) > 1: # goofy hack to get batches to work, need to improve
-           trimmedfastq = re.sub(r'_R[12]', '', trimmedfastq.rsplit('.', 1)[0]) + '.' + trimmedfastq.rsplit('.', 1)[1]
+           trimmedfastq = re.sub(r'_[12]', '', trimmedfastq.rsplit('.', 1)[0]) + '.' + trimmedfastq.rsplit('.', 1)[1]
 
        if trimmedfastq not in fastqgroups:
            fastqgroups[trimmedfastq] = []
@@ -301,6 +301,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append('--bam-file-cache-directory')
     command.append(options.bwaFolder)
     command.append('--discard-unmapped')
+    command.append('--min-read-percent-identity-pair 97')
+    command.append('--min-read-aligned-percent-pair 97')
+    command.append('--proper-pairs-only')
 
     rpkmstatus = 0
     rpkmtext = ''
@@ -317,6 +320,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tFailed to run RPKM" )
 
     with open(options.stats, 'w') as stat_out:
+        stat_out.write(command)
+        stat_out.write('\n\n')
         stat_out.write(rpkmtext)
 
     return rpkmstatus

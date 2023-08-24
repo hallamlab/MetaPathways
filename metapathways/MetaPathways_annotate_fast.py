@@ -144,6 +144,13 @@ def createParser():
         help="path to diagnostics directory",
     )
 
+    parser.add_option(
+        "--qced_faa",
+        dest="qced_faa",
+        default=None,
+        help="the QCed Amino Acid FASTA",
+    )
+
     cutoffs_group = OptionGroup(parser, "Cuttoff Related Options")
 
     cutoffs_group.add_option(
@@ -319,34 +326,42 @@ def insert_orf_into_dict(line, contig_dict, shortenorfid=False):
     attributes = {}
 
     seqname = fields[0]
-    try:
-        if shortenorfid:
-            seqname = mputils.ShortenContigId(fields[0])
-        else:
+    keep_feat = ["CDS", "tRNA", "rRNA"]
+    feature_type = fields[2]
+    if feature_type in keep_feat: # only certain features are used here
+        try:
+            if shortenorfid:
+                seqname = mputils.ShortenContigId(fields[0])
+            else:
+                seqname = fields[0]
+        except:
             seqname = fields[0]
-    except:
-        seqname = fields[0]
 
-    attributes["seqname"] = seqname  # this is a bit of a  duplication
-    attributes["source"] = fields[1]
-    attributes["feature"] = fields[2]
-    attributes["start"] = int(fields[3])
-    attributes["end"] = int(fields[4])
+        attributes["seqname"] = seqname  # this is a bit of a  duplication
+        attributes["source"] = fields[1]
+        attributes["feature"] = fields[2]
+        attributes["start"] = int(fields[3])
+        attributes["end"] = int(fields[4])
 
-    try:
-        attributes["score"] = float(fields[5])
-    except:
-        attributes["score"] = fields[5]
+        try:
+            attributes["score"] = float(fields[5])
+        except:
+            attributes["score"] = fields[5]
 
-    attributes["strand"] = fields[6]
-    attributes["frame"] = fields[7]
+        attributes["strand"] = fields[6]
+        attributes["frame"] = fields[7]
 
-    split_attributes(fields[8], attributes)
+        split_attributes(fields[8], attributes)
+        if feature_type == "tRNA":
+            seqname = attributes["orf_id"]
+            attributes["seqname"] = seqname
+        if feature_type == "rRNA":
+            seqname = seqname + "." + attributes["name"] + "_" + str(fields[3])
+            attributes["seqname"] = seqname
+        if not seqname in contig_dict:
+            contig_dict[seqname] = []
 
-    if not seqname in contig_dict:
-        contig_dict[seqname] = []
-
-    contig_dict[seqname].append(attributes)
+        contig_dict[seqname].append(attributes)
 
 
 class GffFileParser(object):
@@ -517,10 +532,10 @@ def write_annotation_for_orf(
                 ";" + "product=" + results_dictionary[candidatedbname][orfid]["product"]
             )
         else:
-            attributes += ";" + "target=" + str("")
+            attributes += ";" + "target=" + str("<no accession>")
             attributes += ";" + "annotvalue=" + str("0")
             attributes += ";" + "ec=" + str("")
-            attributes += ";" + "product=" + "hypothetical protein"
+            attributes += ";" + "product=" + "<unannotated protein>" #"hypothetical protein"
 
         output_line += "\t" + attributes
 
@@ -535,7 +550,7 @@ def write_annotation_for_orf(
 
 
 def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
-    output_line = str(f_rec["seqname"])
+    output_line = str(f_rec["seqname"]).split('.', 1)[0]
     length = abs(f_rec["end"] - f_rec["start"])
     if tag == "_rRNA":
         output_line += "\t" + str(f_rec["source"])
@@ -545,8 +560,8 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["name"])
-        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes += ";" + "locus_tag=" + str(f_rec["name"])
         attributes += ";" + "orf_length=" + str(length)
         #attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
         attributes += ";" + "product=" + f_rec["product"]
@@ -565,8 +580,8 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["name"])
-        attributes += ";" + "locus_tag=" + str(f_rec["seqname"]) + tag
+        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes += ";" + "locus_tag=" + str(f_rec["name"])
         attributes += ";" + "orf_length="  + str(length)
         #attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
         #attributes += ";" + "product=" + f_rec["product"]
@@ -769,6 +784,7 @@ def create_annotation(
     output_gff,
     output_comparative_annotation,
     contig_lengths,
+    qced_orfs,
     sample_name,
     compact_output=False,
 ):
@@ -836,106 +852,113 @@ def create_annotation(
         count = 0
         for orf in gffreader.orf_dictionary[contig]:
             orf_id = orf['orf_id']
-            for dbname in dbnames:
-                values[dbname] = 0.0001
-            success = False
-            output_comp_annot_file1_Str = ""
-            output_comp_annot_file2_Str = ""
-            orf_id = orf["id"]
-            best_anno_dict = {'DB': 'None', 'weighted_value': 0}
-            # check the annotation of the orf by dbname
-            for dbname in dbnames:
-                weight = dbname_weight[dbname]
-                if orf_id in results_dictionary[dbname]:
-                    if float(values[dbname]) < float(results_dictionary[dbname][orf_id]["value"]):
-                        values[dbname] = float(results_dictionary[dbname][orf_id]["value"])
-                        success = True
-                        candidate_orf_pos = count
-                        wt_val = results_dictionary[dbname][orf_id]["value"] * float(weight)
-                        if wt_val > best_anno_dict['weighted_value']:
-                            best_anno_dict['weighted_value'] = wt_val
-                            best_anno_dict['DB'] = dbname
-                        if output_comp_annot_file1_Str:
-                            output_comp_annot_file1_Str += (
-                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
-                                    "",
-                                    dbname,
+            if orf_id in qced_orfs:
+                for dbname in dbnames:
+                    values[dbname] = 0.0001
+                success = False
+                output_comp_annot_file1_Str = ""
+                output_comp_annot_file2_Str = ""
+                orf_id = orf["id"]
+                best_anno_dict = {'DB': 'None', 'weighted_value': 0}
+                # check the annotation of the orf by dbname
+                for dbname in dbnames:
+                    weight = dbname_weight[dbname]
+                    if orf_id in results_dictionary[dbname]:
+                        if float(values[dbname]) < float(results_dictionary[dbname][orf_id]["value"]):
+                            values[dbname] = float(results_dictionary[dbname][orf_id]["value"])
+                            success = True
+                            candidate_orf_pos = count
+                            wt_val = results_dictionary[dbname][orf_id]["value"] * float(weight)
+                            if wt_val > best_anno_dict['weighted_value']:
+                                best_anno_dict['weighted_value'] = wt_val
+                                best_anno_dict['DB'] = dbname
+                            if output_comp_annot_file1_Str:
+                                output_comp_annot_file1_Str += (
+                                    "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
+                                        "",
+                                        dbname,
+                                        results_dictionary[dbname][orf_id]["target"],
+                                        results_dictionary[dbname][orf_id]["product"],
+                                        str(wt_val),
+                                    )
+                                )
+                            else:
+                                output_comp_annot_file1_Str += (
+                                    "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
+                                        orf_id,
+                                        dbname,
+                                        results_dictionary[dbname][orf_id]["target"],
+                                        results_dictionary[dbname][orf_id]["product"],
+                                        str(wt_val),
+                                    )
+                                )
+
+                            if output_comp_annot_file2_Str:
+                                output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
                                     results_dictionary[dbname][orf_id]["target"],
                                     results_dictionary[dbname][orf_id]["product"],
                                     str(wt_val),
                                 )
+                            else:
+                                output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
+                                    orf_id,
+                                    results_dictionary[dbname][orf_id]["target"],
+                                    results_dictionary[dbname][orf_id]["product"],
+                                    str(wt_val),
+                                )
+
+                    else:
+                        if not output_comp_annot_file1_Str:
+                            output_comp_annot_file1_Str += (
+                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(orf_id, dbname, "<no accession>", "<unannotated protein>", "0.0")
                             )
                         else:
                             output_comp_annot_file1_Str += (
-                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
-                                    orf_id,
-                                    dbname,
-                                    results_dictionary[dbname][orf_id]["target"],
-                                    results_dictionary[dbname][orf_id]["product"],
-                                    str(wt_val),
-                                )
+                                "{0}\t{1}\t{2}\t{3}\t{4}\n".format("", dbname, "<no accession>", "<unannotated protein>", "0.0")
                             )
 
                         if output_comp_annot_file2_Str:
                             output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
-                                results_dictionary[dbname][orf_id]["target"],
-                                results_dictionary[dbname][orf_id]["product"],
-                                str(wt_val),
+                                "<no accession>", "<unannotated protein>", "0.0"
                             )
                         else:
                             output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
-                                orf_id,
-                                results_dictionary[dbname][orf_id]["target"],
-                                results_dictionary[dbname][orf_id]["product"],
-                                str(wt_val),
+                                orf_id, "<no accession>", "<unannotated protein>", "0.0"
                             )
 
-                else:
-                    if not output_comp_annot_file1_Str:
-                        output_comp_annot_file1_Str += (
-                            "{0}\t{1}\t{2}\t{3}\t{4}\n".format(orf_id, "", "", "", "")
-                        )
+                # end of for all dbname
 
-                    if output_comp_annot_file2_Str:
-                        output_comp_annot_file2_Str += "\t{0}\t{1}\t{2}".format(
-                            "", "", ""
-                        )
-                    else:
-                        output_comp_annot_file2_Str += "{0}\t{1}\t{2}\t{3}".format(
-                            orf_id, "", "", "", ""
-                        )
-
-            # end of for all dbname
-
-            if success:  # there was a database hit
-                gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
-                gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
-                write_annotation_for_orf(
-                    outputgff_file,
-                    best_anno_dict['DB'],
-                    dbname_weight[best_anno_dict['DB']],
-                    results_dictionary,
-                    gffreader.orf_dictionary,
-                    contig,
-                    candidate_orf_pos,
-                    orf_id,
-                    sample_name,
-                    compact_output=compact_output,
-                )
-            else:  # if it was not a hit then it is a hypothetical protein
-                # print gffreader.orf_dictionary
-                write_annotation_for_orf(
-                    outputgff_file,
-                    "None",
-                    "0",
-                    results_dictionary,
-                    gffreader.orf_dictionary,
-                    contig,
-                    count,
-                    orf_id,
-                    sample_name,
-                    compact_output=compact_output,
-                )
+                if success:  # there was a database hit
+                    gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
+                    gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
+                    write_annotation_for_orf(
+                        outputgff_file,
+                        best_anno_dict['DB'],
+                        dbname_weight[best_anno_dict['DB']],
+                        results_dictionary,
+                        gffreader.orf_dictionary,
+                        contig,
+                        candidate_orf_pos,
+                        orf_id,
+                        sample_name,
+                        compact_output=compact_output,
+                    )
+                else:  # if it was not a hit then it is a hypothetical protein
+                    # print gffreader.orf_dictionary
+                    gutils.fprintf(output_comp_annot_file1, "%s\n", output_comp_annot_file1_Str)
+                    gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
+                    write_annotation_for_orf(
+                        outputgff_file,
+                        "None",
+                        "0",
+                        results_dictionary,
+                        gffreader.orf_dictionary,
+                        contig,
+                        count,
+                        orf_id,
+                        sample_name,
+                        compact_output=compact_output,
+                    )
 
             count += 1  # move to the next orf
     output_comp_annot_file1.close()
@@ -1019,13 +1042,16 @@ def process_product(product, database, similarity_threshold=0.9):
         processed_product = product
         comment = ''
 
-    words = [x.strip() for x in processed_product.split()]
+    if ' ' in processed_product:
+        words = [x.strip() for x in processed_product.split()]
+    else:
+        words = [processed_product]
     filtered_words = []
-    underscore_pattern = re.compile("_")
-    arrow_pattern = re.compile(">")
+    #underscore_pattern = re.compile("_")
+    #arrow_pattern = re.compile(">")
     for word in words:
-        if not underscore_pattern.search(word) and not arrow_pattern.search(word):
-            filtered_words.append(word)
+        #if not underscore_pattern.search(word) and not arrow_pattern.search(word):
+        filtered_words.append(word)
 
     processed_product = remove_repeats(filtered_words)
     processed_product = re.sub(";", "", processed_product)
@@ -1157,7 +1183,7 @@ def word_information(string_of_words):
     wordlist = {}
     underscore_pattern = re.compile("_")
     for word in words:
-        if not word in [
+        if not word.lower() in [
             "",
             "is",
             "have",
@@ -1181,6 +1207,10 @@ def word_information(string_of_words):
             "predicted",
             "protein",
             "conserved",
+            "unannotated",
+            "protein>",
+            "<unannotated",
+            
         ]:
             if not underscore_pattern.search(word):
                 wordlist[word] = 1
@@ -1339,8 +1369,17 @@ def main(argv, errorlogger=None, runstatslogger=None):
         runstatslogger.write(
             "%s\tTotal Protein Annotations\t%s\n" % (str(priority), str(count))
         )
+        
+    # Need to remove any ORFs that aren't in the QCed faa
+    qced_orfs = []
+    with open(opts.qced_faa, 'r') as faa_file:
+        data = faa_file.readlines()
+        for line in data:
+            if line[0] == '>':
+                l = line[1:].strip('\n')
+                qced_orfs.append(l)
 
-    # create the annotations from he results
+    # create the annotations from the results
     create_annotation(
         dbname_weight,
         results_dictionary,
@@ -1352,6 +1391,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         opts.output_gff,
         opts.output_comparative_annotation,
         contig_lengths,
+        qced_orfs,
         sample_name=opts.sample_name,
         compact_output=opts.compact_output,
     )
