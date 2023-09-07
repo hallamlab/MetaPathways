@@ -706,7 +706,9 @@ class ContextCreator:
         '''use rRNA stats if they are available'''
         options = ''
         
-        if rRNAdbs and os.path.exists(rRNA_gff_output):
+        #if rRNAdbs and os.path.exists(rRNA_gff_output):
+        rRNA_status = self.params.get('metapaths_steps','SCAN_rRNA')
+        if ((rRNA_status == 'yes') | (rRNA_status == 'redo')):
             context.inputs['rRNA_gff_file']  = rRNA_gff_output
             options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
 
@@ -718,7 +720,9 @@ class ContextCreator:
                 options += " --rRNA " +  context.inputs['rRNA_stat_results']
 
         '''use tRNA stats'''
-        if os.path.exists(tRNA_gff_output):
+        #if os.path.exists(tRNA_gff_output):
+        tRNA_status = self.params.get('metapaths_steps','SCAN_tRNA')
+        if ((tRNA_status == 'yes') | (tRNA_status == 'redo')):
             context.inputs['tRNA_gff_file']  = tRNA_gff_output
             options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
 

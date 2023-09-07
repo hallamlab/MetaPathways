@@ -30,7 +30,7 @@ from camelot_frs.camelot_frs import get_kb, get_frame, get_frame_all_children, f
 from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
 from camelot_frs.pgdb_api import genes_of_pathway
 import html2text
-
+import time
 
 
 def create_pgdb(pt_inputs, pt_outputs, tprune, tag
@@ -49,10 +49,10 @@ def create_pgdb(pt_inputs, pt_outputs, tprune, tag
 		pt_cmd = ['run-pathway-tools-and-copy-pgdb-singularity.sh',
 					pt_inputs, pt_outputs
 					]
-	pt_out = subprocess.run(' '.join(pt_cmd),
-							shell=True
-							)
-	
+	#pt_out = subprocess.run(' '.join(pt_cmd),
+	#						shell=True
+	#						)
+	os.system(' '.join(pt_cmd))
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
 	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
@@ -306,14 +306,21 @@ mp_dir = args.mp_out
 tag = args.tag
 taxprune = args.taxprune
 
+
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
+print("Building Community-level PGDB.")
 create_pgdb(pt_in, pt_out, taxprune, tag)
+print("Completed Community-level PGDB.")
 # Parse PGDB flatfiles to create PWYs TSV table
+print("Extracting Community-level PGDB.")
 extract_pwy(pt_out)
+print("Extracting Complete.")
 # Map inferred pwys to ORFs and ECs/RXNs used
+print("Mapping ORFs to Inferred Pathways.")
 map_orfs2pwys(mp_dir, pt_out)
+print("Mapping Complete.")
 
 # Build MAG-level PGDBs if they exist
 ms_dir = os.path.join(mp_dir, 'magsplitter/results')
@@ -324,9 +331,14 @@ if os.path.exists(ms_dir):
 			mag_id = os.path.basename(pt_mag)
 			mag_tag = mag_id
 			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
+			print(f"Building PGDB for {mag_id}.")
 			create_pgdb(pt_mag, pt_out, taxprune, mag_tag)
+			print("Completed PGDB.")
 			# Parse PGDB flatfiles to create PWYs TSV table
+			print(f"Extracting PGDB for {mag_id}.")
 			extract_pwy(pt_out)
+			print("Extracting Complete.")
 			# Map inferred pwys to ORFs and ECs/RXNs used
+			print(f"Mapping {mag_id} ORFs to Inferred Pathways.")
 			map_orfs2pwys(mp_dir, pt_out)
-
+			print("Mapping Complete.")
