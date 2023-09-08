@@ -14,7 +14,7 @@ MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
 
 ## Ubuntu installs:
 RUN apt-get update && \
-    apt-get install -y libsqlite3-dev python-tk libffi-dev gcc
+    apt-get install -y gcc g++
     
 # Create the environment:
 COPY metapathways/docker/conda_GAPP_env.yml /opt/
@@ -59,7 +59,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 ## Ubuntu installs:
 RUN apt-get update && \
     apt-get install -y xterm openssl inetutils-ping libxml2 xvfb libxm4 && \
-    apt-get install -y emacs-nox less wget procps libssl-dev pigz libsqlite3-dev python-tk libffi-dev gcc
+    apt-get install -y emacs-nox less wget procps libssl-dev pigz gcc g++
 
 ## PTools installs:
 COPY metapathways/docker/ptools-container/ptools-init.dat /opt/sandbox/ptools-init.dat
