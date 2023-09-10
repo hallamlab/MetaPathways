@@ -2,10 +2,11 @@
 
 data_dir="$1"
 command="$2"
-metapathways_pkg_dir=`python3 -c "import metapathways; print(metapathways.__path__[0])"`
 
-eval "$(conda shell.bash hook)"
-conda activate metapathways
+metapathways_pkg_dir=$(python -c "import site; print(site.getsitepackages()[0])")/metapathways
+
+# eval "$(conda shell.bash hook)"
+# conda activate metapathways
 
 snakemake --cores 1 \
 	  --config ref_db_dir="$data_dir" \
@@ -14,4 +15,4 @@ snakemake --cores 1 \
 	  -- \
 	  "$command"
 
-conda deactivate
+# conda deactivate

@@ -3,9 +3,9 @@ import sys
 import pandas as pd
 
 
-class_file = "classes.dat"
-path_file = "pathways.dat"
-
+mc_dir = sys.argv[1] # './tier12-26.5/metacyc/26.5/data/'
+class_file = os.path.join(mc_dir, "classes.dat")
+path_file = os.path.join(mc_dir, "pathways.dat")
 
 with open(class_file, 'rb') as class_in:
 	data = class_in.read().decode(errors='replace').split('\n//')
@@ -127,6 +127,6 @@ path_hier_df = pd.DataFrame(path_hier_list,
 									 'Common_Name',
 									 'MetaCyc_hierarchy_IDs',
 									 'MetaCyc_hierarchy_Names'])
-path_hier_df.to_csv('MetaCyc_PWY_Hierarchy.tsv', sep='\t',
-					index=False
+path_hier_df.to_csv(os.path.join(mc_dir, 'MetaCyc_PWY_Hierarchy.tsv'),
+					sep='\t', index=False
 					)

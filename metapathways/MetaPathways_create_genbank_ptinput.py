@@ -232,11 +232,22 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
 def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict, \
         protein_seq_dict, compact_output, orf_to_taxonid={}):
      
+    # check if EC available in attributes
+    ec_map = {} 
+    for key in contig_dict:
+        for attrib in contig_dict[key]:
+            if attrib['feature'] == 'CDS':
+                ec = attrib['ec']
+                if ec:
+                    ec_map[attrib['target']] = [str(ec)]
+    
+    # Get all required mapping files
     output_dir_name = outfiles['ptinput']
     ec_map_file = outfiles['ec_mapping']
     rxn_map_file = outfiles['rxn_mapping']
     anno_file = outfiles['annotation_table']
     ft_file = outfiles['taxonomy_table']
+    anno_dir_path = path.dirname(ft_file)
 
     try:
         gutils.remove_dir(output_dir_name)
@@ -252,48 +263,65 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
     anno_df['orf_id']  = anno_df['orf_id'].ffill()
     anno_df.dropna(subset = ['target'], inplace=True)
+    
     # load funct/tax table
     ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
     ft_df.dropna(subset = ['target'], inplace=True)
-    ft_df['orf_id'] = [mputils.ShortenORFId(x) for x in ft_df['ORF_ID']]
+    ft_df['orf_id'] = [x for x in ft_df['ORF_ID']]
     # build product dictionary to remove duplicate ORF annotations
     cprod_dict = {k : [] for k in set(ft_df['product'])}
     rep_orf_list = list(ft_df.drop_duplicates('product')['orf_id'])
 
-    # subset annotable to only rep ORFs
-    anno_df = anno_df.copy().query('orf_id in @rep_orf_list')
     # modify target headers for later mapping
     trim_t_list = []
     for d,t in zip(anno_df['ref dbname'], anno_df['target']):
-        if 'metacyc' in d:
-            trim_t = t.split('|', 2)[2]
-            trim_t_list.append(trim_t)
-        elif 'sprot' in d:
-            trim_t = t.split('|', 2)[1]
-            trim_t_list.append(trim_t)
-        elif 'uniref' in d:
-            trim_t = t.split('_', 1)[1]
-            trim_t_list.append(trim_t)
+        if t != "<no accession>":
+            if 'metacyc' in d:
+                trim_t = t.split('|', 2)[2]
+                trim_t_list.append(trim_t)
+            elif 'sprot' in d:
+                trim_t = t.split('|', 2)[1]
+                trim_t_list.append(trim_t)
+            elif 'uniref' in d:
+                trim_t = t.split('_', 1)[1]
+                trim_t_list.append(t) #trim_t)
+            elif 'eggnog' in d:
+                trim_t = t
+                trim_t_list.append(t)
+            else:
+                trim_t_list.append('NONE')
         else:
-            trim_t_list.append('NONE')
+                trim_t_list.append('NONE')
     anno_df['trim_target'] = trim_t_list
     # remove uninformative targets
-    anno_df = anno_df.query("trim_target != 'NONE'")
+    anno_sub_df = anno_df.query("trim_target != 'NONE'")
+    # subset annotable to only rep ORFs
+    anno_sub_df = anno_sub_df.copy().query('orf_id in @rep_orf_list')
+
     trim_set_list = list(set(trim_t_list))
     # Load all mapping files, subset to only annotated targets, create dicts
     ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
     ec_df.dropna(subset = ['EC'], inplace=True)
-    ec_df = ec_df.copy().query('UniProtKB in @trim_set_list')
+    ec_df = ec_df.copy().query('UniRefID in @trim_set_list')
+    ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
     ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
-    ec_dict = ec_df.groupby('UniProtKB')['EC'].apply(list).to_dict()
+    ec_dict = ec_df.groupby('UniRefID', group_keys=True)['EC'].apply(list).to_dict()
     rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
     rxn_df = rxn_df.query('MC in @trim_set_list')
     rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
 
+    # Merge the ec_map from earlier attrib search and ec_dict
+    ec_m_dict = ec_dict | ec_map
+
+    # Add EC and RXN to anno table
+    anno_df['EC'] = ['|'.join(list(set(ec_m_dict[x]))) if x in ec_m_dict else np.nan for x in anno_df['trim_target']]
+    anno_df['RXN'] = ['|'.join(list(set(rxn_dict[x]))) if x in rxn_dict else np.nan for x in anno_df['trim_target']]
+    anno_df.to_csv(anno_dir_path + "/" + sample_name + ".EC_RXN_map.tsv", sep='\t', index=False)
+    pt_attrib_dict = {}
     with open(output_dir_name + "/" + "0.pf", 'w') as pfFile:
         # iterate over every contig sequence
         if compact_output:
-            prefix = 'O_'
+            prefix = '' #'O_'
         else:
             prefix = sample_name + '_'
 
@@ -304,98 +332,128 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 id  =  attrib['id']
                 shortid = ""
                 compactid = ""
-                try:
-                    del attrib['ec'] # do this for now, but it should be cleaned up better
-                except:
-                    1 + 1
-
                 if attrib['feature'] == 'CDS':
-                    shortid = prefix + mputils.ShortenORFId(attrib['id'])
-                    compactid = mputils.ShortenORFId(attrib['id'])
-
-                #elif attrib['feature'] == 'rRNA':
-                #    shortid = prefix + mputils.ShortenrRNAId(attrib['id'])
-                #    compactid = mputils.ShortenrRNAId(attrib['id'])
-
-                #elif attrib['feature'] == 'tRNA':
-                #    shortid = prefix + mputils.ShortentRNAId(attrib['id'])
-                #    compactid = mputils.ShortentRNAId(attrib['id'])
-
+                    shortid = prefix + attrib['id']
+                    compactid = attrib['id']
                     # clean function
                     l_func = attrib['product']
                     if l_func != '':
+                        try:
+                            protein_seq = protein_seq_dict[id]
+                        except:
+                            protein_seq = ""
+                        try:
+                            if ((attrib['product']=='hypothetical protein') |
+                                (attrib['product']=='<unannotated protein>')):
+                                continue
+                        except:
+                            print(attrib)
+                            sys.exit(0)
+                        # find all DBs and map to general DB names
+                        orf_anno_df = anno_sub_df.query('orf_id == @compactid')
+                        db_dict = {}
+                        for dbname in set(orf_anno_df['ref dbname']):
+                            if 'metacyc' in dbname:
+                                if 'metacyc' in db_dict:
+                                    db_dict['metacyc'].append(dbname)
+                                else:
+                                    db_dict['metacyc'] = [dbname]
+                            elif 'sprot' in dbname:
+                                if 'sprot' in db_dict:
+                                    db_dict['sprot'].append(dbname)
+                                else:
+                                    db_dict['sprot'] = [dbname]
+                            elif 'uniref' in dbname:
+                                if 'uniref' in db_dict:
+                                    db_dict['uniref'].append(dbname)
+                                else:
+                                    db_dict['uniref'] = [dbname]
+
+                        # map all DBs to targets and add attributes if RXNs or ECs exist
+                        db_targ_dict = dict(zip(orf_anno_df['ref dbname'], orf_anno_df['trim_target']))
+                        if 'metacyc' in db_dict:
+                            for db in db_dict['metacyc']:
+                                target = db_targ_dict[db]
+                                if target in rxn_dict:
+                                    if 'rxn' in attrib:
+                                        attrib['rxn'].extend(rxn_dict[target])
+                                    else:
+                                        attrib['rxn'] = rxn_dict[target]
+                        if (('sprot' in db_dict) & ('rxn' not in attrib)):
+                            for db in db_dict['sprot']:
+                                target = db_targ_dict[db]
+                                if target in ec_dict:
+                                    if 'ec' in attrib:
+                                        attrib['ec'].extend(ec_dict[target])
+                                    else:
+                                        attrib['ec'] = ec_dict[target]
+                        if (('uniref' in db_dict) & ('rxn' not in attrib)):
+                            for db in db_dict['uniref']:
+                                target = db_targ_dict[db]
+                                if target in ec_dict:
+                                    if 'ec' in attrib:
+                                        if isinstance(attrib['ec'], str):
+                                            if attrib['ec'] == "":
+                                                attrib['ec'] = []
+                                            else:
+                                                attrib['ec'] = [attrib['ec']]
+
+                                            attrib['ec'].extend(ec_dict[target])
+                                    else:
+                                        attrib['ec'] = [ec_dict[target]]
+                        if compactid in orf_to_taxonid:
+                            attrib['taxon'] = orf_to_taxonid[compactid]
+                        if isinstance(attrib['ec'], str):
+                            if attrib['ec'] == "":
+                                attrib['ec'] = []
+                            else:
+                                attrib['ec'] = [attrib['ec']]
+                        
+                        # keep all ORFs used for Ptools
+                        pt_attrib_dict[shortid] = attrib
+                        
                         if compactid in rep_orf_list: # only want to keep one ORF/functional annotation
-                            try:
-                                protein_seq = protein_seq_dict[id]
-                            except:
-                                protein_seq = ""
-                            try:
-                                if attrib['product']=='hypothetical protein':
-                                    continue
-                            except:
-                                print(attrib)
-                                sys.exit(0)
-                            # find all DBs and map to general DB names
-                            orf_anno_df = anno_df.query('orf_id == @compactid')
-                            db_dict = {}
-                            for dbname in set(orf_anno_df['ref dbname']):
-                                if 'metacyc' in dbname:
-                                    if 'metacyc' in db_dict:
-                                        db_dict['metacyc'].append(dbname)
-                                    else:
-                                        db_dict['metacyc'] = [dbname]
-                                elif 'sprot' in dbname:
-                                    if 'sprot' in db_dict:
-                                        db_dict['sprot'].append(dbname)
-                                    else:
-                                        db_dict['sprot'] = [dbname]
-                                elif 'uniref' in dbname:
-                                    if 'uniref' in db_dict:
-                                        db_dict['uniref'].append(dbname)
-                                    else:
-                                        db_dict['uniref'] = [dbname]
-
-                            # map all DBs to targets and add attributes if RXNs or ECs exist
-                            db_targ_dict = dict(zip(orf_anno_df['ref dbname'], orf_anno_df['trim_target']))
-                            if 'metacyc' in db_dict:
-                                for db in db_dict['metacyc']:
-                                    target = db_targ_dict[db]
-                                    if target in rxn_dict:
-                                        if 'rxn' in attrib:
-                                            attrib['rxn'].extend(rxn_dict[target])
-                                        else:
-                                            attrib['rxn'] = rxn_dict[target]
-                            elif (('sprot' in db_dict) & ('rxn' not in attrib)):
-                                for db in db_dict['sprot']:
-                                    target = db_targ_dict[db]
-                                    if target in ec_dict:
-                                        if 'ec' in attrib:
-                                            attrib['ec'].extend(ec_dict[target])
-                                        else:
-                                            attrib['ec'] = ec_dict[target]
-                            elif (('uniref' in db_dict) & ('rxn' not in attrib) & ('ec' not in attrib)):
-                                for db in db_dict['uniref']:
-                                    target = db_targ_dict[db]
-                                    if target in ec_dict:
-                                        if 'ec' in attrib:
-                                            attrib['ec'].extend(ec_dict[target])
-                                        else:
-                                            attrib['ec'] = ec_dict[target]
-
-                            if compactid in orf_to_taxonid:
-                                attrib['taxon'] = orf_to_taxonid[compactid]
                             # add ORF record to pf file
                             write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
                             cprod_dict[l_func].append(shortid)
-
                             # append to the gen elements file
                             if compact_output==False:
                                 append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
                         elif l_func in cprod_dict:
                             cprod_dict[l_func].append(shortid)
+                    # Remove any duplicate ECs
+                    if attrib['ec']:
+                        attrib['ec'] = list(set(attrib['ec']))
                     #endfor
 
+                elif attrib['feature'] == 'rRNA':
+                    shortid = prefix + attrib['id']  #mputils.ShortenrRNAId(attrib['id'])
+                    compactid = attrib['id']  #mputils.ShortenrRNAId(attrib['id'])
+                    if compactid in orf_to_taxonid:
+                        attrib['taxon'] = orf_to_taxonid[compactid]
+                    # add ORF record to pf file
+                    write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+                    pt_attrib_dict[shortid] = attrib
 
+                    # append to the gen elements file
+                    if compact_output==False:
+                        append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+
+                elif attrib['feature'] == 'tRNA':
+                    shortid = prefix + attrib['id']  #mputils.ShortentRNAId(attrib['id'])
+                    compactid = attrib['id']  #mputils.ShortentRNAId(attrib['id'])
+                    if compactid in orf_to_taxonid:
+                        attrib['taxon'] = orf_to_taxonid[compactid]
+                    # add ORF record to pf file
+                    write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output=True)
+                    pt_attrib_dict[shortid] = attrib
+
+                    # append to the gen elements file
+                    if compact_output==False:
+                        append_genetic_elements_file(genetic_elements_file, output_dir_name, shortid)
+
+
+            '''
             #write the sequence now only once per contig
             try:
                 contig_seq =  nucleotide_seq_dict[key]
@@ -413,7 +471,16 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             #write_ptools_input_files(genetic_elements_file, output_dir_name, shortid, fastaStr)
             if compact_output==False:
                 write_input_sequence_file(output_dir_name, shortid, fastaStr)
+            '''
         #endif
+    pt_attrib_df = pd.DataFrame.from_dict(pt_attrib_dict, orient='index')
+    pt_attrib_df['ec'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['ec']]
+    pt_attrib_df['rxn'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['rxn']]
+    pt_attrib_df.rename(columns={'id': 'orf_id'}, inplace=True) 
+    orf = pt_attrib_df['orf_id']
+    pt_attrib_df.drop(labels=['orf_id'], axis=1,inplace = True)
+    pt_attrib_df.insert(0, 'orf_id', orf)
+    pt_attrib_df.to_csv(anno_dir_path + "/" + sample_name + ".ptinput.tsv", sep='\t', index=False)
     # Save the complete list of ORFs that were deduped
     with open(output_dir_name + "/" + "orf_map.txt", 'w') as map_out:
         for l in cprod_dict.keys():
@@ -457,7 +524,9 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
         gutils.fprintf(pfFile, "STARTBASE\t%s\n", attrib['end'])
         gutils.fprintf(pfFile, "ENDBASE\t%s\n", attrib['start'])
 
-    gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+    if 'product' in attrib:
+        gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
+    
     if 'gene-comment' in attrib:
         gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", attrib['gene-comment'])
 
@@ -466,7 +535,10 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
         for rxn_val in rxn_list:
             gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
-    elif 'ec' in attrib:
+    if 'ec' in attrib:
+        ec_val = attrib['ec']
+        #if ec_val:
+        #    gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
         ec_list = list(set(attrib['ec']))
         for ec_val in ec_list:
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
@@ -485,54 +557,6 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
 
     gutils.fprintf(pfFile, "//\n")
 
-'''
-def get_funct(_attrib):
-    prod = _attrib['product']
-    srcdb = _attrib['sourcedb']
-    prod = prod.replace('MULTISPECIES: ', '')  # If present
-    if ' OS ' in prod:  # if has taxa info
-        split_p = prod.split(' OS ', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    elif ' TaxID ' in prod:
-        print(_attrib)
-        split_p = prod.rsplit(' n ', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    elif 'metacyc' in srcdb:
-        split_p = prod.rsplit(' (', 1)
-        p_func = split_p[0]
-        p_note = split_p[1]
-        _attrib['function'] = p_func
-        _attrib['gene-comment'] = p_note
-    else:
-        p_func = prod
-        _attrib['function'] = p_func
-
-    return _attrib
-
-
-def clean_prod(_target, _product):  # TODO: this and get_funct should be joined
-    prod = str(_product)
-    prod = prod.replace('MULTISPECIES: ', '')  # If present
-    if ' OS ' in prod:  # if has taxa info
-        split_p = prod.split(' OS ', 1)
-        p_func = split_p[0]
-    elif ' TaxID ' in prod:
-        split_p = prod.rsplit(' n ', 1)
-        p_func = split_p[0]
-    elif 'gnl|META|' in _target:
-        split_p = prod.rsplit(' (', 1)
-        p_func = split_p[0]
-    else:
-        p_func = prod
-
-    return p_func
-'''
 
 def clean_up_function_text(_product):
      _fields = [ x.strip() for x in  _product.split(' ')]

@@ -68,6 +68,7 @@ docker-start:
 docker-build: #pre-docker-builds
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
 		|| git_branch=$$(git describe --tags)
+	cd docker
 	sudo docker build --network=host \
 			--build-arg git_branch=$$git_branch \
 			-t quay.io/hallamlab/metapathways:$$git_branch .
@@ -77,7 +78,7 @@ docker-run:
 	sudo docker run -it --network=host --rm \
 		-v $(CURDIR):/input \
 		-v $(CURDIR)/out:/output \
-		quay.io/hallamlab/metapathways:$$git_branch
+		quay.io/hallamlab/metapathways:$$git_branch /bin/bash
 
 docker-test:
 	cp $(CURDIR)/regtests/input/A1.fasta /tmp
@@ -99,13 +100,15 @@ docker-fetch:
 	sudo docker pull quay.io/hallamlab/metapathways
 
 singularity-local-build:
-	sudo /usr/local/bin/singularity build metapathways-dev.sif docker-daemon://quay.io/hallamlab/metapathways:dev
+	git_branch=$$(git symbolic-ref --short -q HEAD) \
+		|| git_branch=$$(git describe --tags)
+	sudo singularity build metapathways-$$git_branch.sif docker-daemon://quay.io/hallamlab/metapathways:$$git_branch
 
 singularity-local-shell:
 	singularity shell metapathways-dev.sif
 
 singularity-docker-build:
-	sudo /usr/local/bin/singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
+	sudo singularity build metapathways-dev.sif docker://quay.io/hallamlab/metapathways:dev
 
 singularity-docker-shell:
 	singularity shell docker://quay.io/hallamlab/metapathways:dev
@@ -135,9 +138,10 @@ conda-install-deps:
 create-package: clean-package
 	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
 	$(PYTHON) setup.py sdist bdist_wheel --universal
+	cp -r dist docker/dist
 
 clean-package:
-	rm -rf dist MetaPathways.egg-info build
+	rm -rf dist MetaPathways.egg-info build docker/dist
 
 install-package:
 	$(PYTHON) -m pip install --user .

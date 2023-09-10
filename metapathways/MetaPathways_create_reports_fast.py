@@ -386,7 +386,8 @@ def create_annotation(
                 continue # it has to have a seqname
             if orf['feature'] != 'CDS':
                 continue # has to be a CDS
-            shortORFId = mputils.getShortORFId(orf["id"])
+            #shortORFId = mputils.getShortORFId(orf["id"])
+            shortORFId = orf["id"]
             count += 1
             # shortORFId = ShortenORFId(orf['id'])
             if shortORFId not in orfsPicked:
@@ -395,12 +396,9 @@ def create_annotation(
             orfToContig[shortORFId] = contig
 
             taxonomy = None
-            # _results = re.search(r'refseq', opts_global.database_name, re.I)
             if shortORFId in Taxons:
                 taxonomy1 = Taxons[shortORFId]
-                # print taxonomy1, shortORFId
                 taxonomy_id = lca.get_supported_taxon(taxonomy1, return_id=True)
-                # print taxonomy_id
                 preferred_taxonomy = lca.get_preferred_taxonomy(taxonomy_id)
 
                 if preferred_taxonomy:
@@ -647,7 +645,8 @@ def process_parsed_blastoutput(
                 for field in fields:
                     if field in data:
                         if field == "query":
-                            shortORFId = mputils.getShortORFId(data[field])
+                            #shortORFId = mputils.getShortORFId(data[field])
+                            shortORFId = data[field]
                             annotation[field] = shortORFId
                         elif field == "product":
                             pprod, comm = anno_fast.process_product(data["product"], dbname)
@@ -958,7 +957,8 @@ def get_list_of_queries(annotated_gff):
     count = 0
     for contig in gffreader:
         for orf in gffreader.orf_dictionary[contig]:
-            orfid = mputils.getShortORFId(orf["id"])
+            #orfid = mputils.getShortORFId(orf["id"])
+            orfid = orf["id"]
             orfList[orfid] = 1
             count += 1
     #      if count%500000==0:
@@ -1065,7 +1065,8 @@ def merge_sorted_parsed_files(
             next(iterate)
             line = readerhandles[i].getProcessedLine()
             fields = [x.strip() for x in line.split("\t")]
-            shortORFId = mputils.getShortORFId(fields[0])
+            #shortORFId = mputils.getShortORFId(fields[0])
+            shortORFId = fields[0]
             values.append((i, shortORFId, line))
         except:
             outputfile.close()
@@ -1088,7 +1089,8 @@ def merge_sorted_parsed_files(
             line = readerhandles[values[0][0]].getProcessedLine()
             fields = [x.strip() for x in line.split("\t")]
 
-            shortORFId = mputils.getShortORFId(fields[0])
+            #shortORFId = mputils.getShortORFId(fields[0])
+            shortORFId = fields[0]
             #  if dbname=='kegg-pep-2011-06-18':
             #     print shortORFId
 
@@ -1347,12 +1349,15 @@ def main(argv, errorlogger=None, runstatslogger=None):
             pickorfs[listOfOrfs[i]] = "root"
         start = last
         # print 'Num of Min support orfs ' + str(start)
-
         results_dictionary = {}
         for dbname, blastoutput in zip(database_names, input_blastouts):
-            results = re.search(r"refseq", dbname, re.I)
+            if "eggnog" in dbname:
+                results = "eggnog"
+            elif "uniref" in dbname:
+                results = "uniref"
+            else:
+                results = False
             if results:
-                # if True:
                 try:
                     results_dictionary[dbname] = {}
                     gutils.eprintf("\nScanning database : %s...", dbname)
@@ -1364,7 +1369,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
                         pickorfs,
                         callnum=1,
                     )
-
                     lca.set_results_dictionary(results_dictionary)
                     lca.compute_min_support_tree(
                         opts.input_annotated_gff, pickorfs, dbname=dbname
@@ -1375,7 +1379,6 @@ def main(argv, errorlogger=None, runstatslogger=None):
                     gutils.eprintf("ERROR: while training for min support tree %s\n", dbname)
                     errormod.insert_error(errorcode)
                     traceback.print_exc()
-
     for dbname in results_dictionary.keys():
         gutils.eprintf(
             "\n\tINFO:\tNumber of collected in block  hits in {}: {}".format(

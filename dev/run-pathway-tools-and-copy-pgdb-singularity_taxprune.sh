@@ -11,7 +11,7 @@ cp /opt/sandbox/ptools-init.dat /data/ptools-local/ptools-init.dat
 Xvfb :${DISPLAY#*:} &
 
 ## This builds the PGDB:
-/opt/pathway-tools/pathway-tools -patho ${ptoolpath} -no-taxonomic-pruning -no-web-cel-overview -no-patch-download -tip -no-cel-overview -disable-metadata-saving -nologfile
+/opt/pathway-tools/pathway-tools -patho ${ptoolpath} -no-web-cel-overview -no-patch-download -tip -no-cel-overview -disable-metadata-saving -nologfile
 
 ## Get the Org ID of the just-built PGDB:
 org_id=$(awk -F"\t" '$1 == "ID" { print $2 }' /data/ptools-local/pgdbs/user/*cyc/1.0/input/organism.dat)

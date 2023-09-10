@@ -18,4 +18,4 @@ from metapathways import MetaPathways_annotate_fast
 from metapathways import MetaPathways_create_genbank_ptinput
 from metapathways import MetaPathways_create_reports_fast
 from metapathways import MetaPathways_tpm
-##import MetaPathways_preprocess_amino_input
+from metapathways import MetaPathways_preprocess_amino_input

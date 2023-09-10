@@ -31,8 +31,15 @@ usage = (
 
 errorcode = 5
 def createParser():
-    epilog = """This script parses BLAST/LAST search results of the amino acid sequences against the reference protein databases, in a tabular format. In the context of MetaPathways these files are available in the in the folder blast_results. The tabular results are put in individual files, one for each of the databases and algorithms combinations. This script parses these results  and uses the hits based on the specified cutoffs for the evalue, bit score ratio, etc the parsed results are put in file named according to the format
-<samplename><dbname><algorithm>out.parsed.txt. These parsed files are in a tabular format and each row contains information about the hits in terms of start, end, query name, match name, bit score ratio, etc."""
+    epilog = """
+            This script parses BLAST/LAST search results of the amino acid sequences against the reference protein databases, 
+            in a tabular format. In the context of MetaPathways these files are available in the in the folder blast_results. 
+            The tabular results are put in individual files, one for each of the databases and algorithms combinations. 
+            This script parses these results  and uses the hits based on the specified cutoffs for the evalue, bit score ratio, 
+            etc the parsed results are put in file named according to the format <samplename><dbname><algorithm>out.parsed.txt. 
+            These parsed files are in a tabular format and each row contains information about the hits in terms of start, end, 
+            query name, match name, bit score ratio, etc.
+            """
 
     parser = OptionParser(usage, epilog=epilog)
     parser.add_option(
@@ -305,21 +312,20 @@ def create_dictionary(databasemapfile, annot_map, query_dictionary, errorlogger=
         mputils.exit_process("ERROR: Cannot open database map file %s\n" % (databasemapfile))
 
     for line in dbmapfile:
-        
-        if  seq_beg_pattern.search(line):
-            words = line.rstrip().split()
-            name = words[0].replace(">", "", 1)
-
-            if not name in query_dictionary:
-                continue
-
-            words.pop(0)
-            if len(words) == 0:
-                annotation = "hypothetical protein"
-            else:
-                annotation = " ".join(words)
-
-            annot_map[name] = annotation
+        #if seq_beg_pattern.search(line):
+        if line[0] == '>':
+            words = line.lstrip('>').rstrip('\n').split(' ', 1)
+        else:
+            words = line.rstrip('\n').split('\t')
+        name = words[0]
+        if not name in query_dictionary:
+            continue
+        words.pop(0)
+        if len(words) == 0:
+            annotation = "<unannotated protein>"
+        else:
+            annotation = words
+        annot_map[name] = annotation
     dbmapfile.close()
 
     if len(annot_map) == 0:
@@ -580,30 +586,33 @@ class BlastOutputParser(object):
             data["identity"] = 0
 
         try:
-            data["product"] = annot_map[words[1]]
+            data["product"] = annot_map[words[1]][0]
         except:
-            gutils.eprintf(
-                'Sequence with name "' + words[1] + '" is not present in map file\n'
-            )
-            if self.error_and_warning_logger:
-                self.error_and_warning_logger.write(
-                    "Sequence with name %s is not present in map file " % (words[1])
+            try:
+                data["product"] = annot_map[words[1]]
+            except:
+                gutils.eprintf(
+                    'Sequence with name "' + words[1] + '" is not present in map file\n'
                 )
-            self.incErrorCount()
-            if self.maxErrorsReached():
                 if self.error_and_warning_logger:
                     self.error_and_warning_logger.write(
+                        "Sequence with name %s is not present in map file " % (words[1])
+                    )
+                self.incErrorCount()
+                if self.maxErrorsReached():
+                    if self.error_and_warning_logger:
+                        self.error_and_warning_logger.write(
+                            "Number of sequence absent in map file %s exceeds %d"
+                            % (self.blastoutput, self.ERROR_COUNT)
+                        )
+                    mputils.exit_process(
                         "Number of sequence absent in map file %s exceeds %d"
                         % (self.blastoutput, self.ERROR_COUNT)
                     )
-                mputils.exit_process(
-                    "Number of sequence absent in map file %s exceeds %d"
-                    % (self.blastoutput, self.ERROR_COUNT)
-                )
-            data["product"] = "hypothetical protein"
+                data["product"] = "<unannotated protein>"
 
         try:
-            m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", data["product"])
+            m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", annot_map[words[1]][1].split(' ', 1)[1])
             if m != None:
                 data["ec"] = m.group(0)
             else:
@@ -744,7 +753,8 @@ def process_blastoutput(
             return count, len(uniques)
 
         for field in fields:
-            gutils.fprintf(outputfile, "\t%s", data[field])
+            value = data[field]
+            gutils.fprintf(outputfile, "\t%s", value)
         gutils.fprintf(outputfile, "\n")
         count += 1
 
@@ -811,5 +821,6 @@ def MetaPathways_parse_blast(argv, errorlogger=None, runstatslogger=None):
 # the main function of metapaths
 if __name__ == "__main__":
     createParser()
-    if len(sys.len) > 1:
+    #if len(sys.len) > 1:
+    if len(sys.argv) > 1:
        main(sys.argv[1:])
