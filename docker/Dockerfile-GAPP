@@ -95,6 +95,7 @@ COPY AnnotationPipeline/apps/annotation/metapathways/*.py ./
 COPY AnnotationPipeline/apps/annotation/magsplitter/*.py ./
 COPY AnnotationPipeline/apps/annotation/pathwaytools/*.py ./
 COPY AnnotationPipeline/apps/annotation/treesapp/*.py ./
+COPY AnnotationPipeline/apps/gapp_json_creation ./gapp_json_creation
 
 ## We do some umask munging to avoid having to use chmod later on,
 ## as it is painfully slow on large directores in Docker.
