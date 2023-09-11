@@ -176,12 +176,6 @@ def build_rxnenz_dict(dat):
 
 
 # MetaCyc
-prot_fsa = '/home/ryan/Desktop/metacyc26_hier/metacyc/26.0/data/protseq.fsa'
-prot_file = '/home/ryan/Desktop/metacyc26_hier/metacyc/26.0/data/proteins.dat'
-enzrxns_file = '/home/ryan/Desktop/metacyc26_hier/metacyc/26.0/data/enzrxns.dat'
-=======
-
-# MetaCyc
 mc_dir = sys.argv[1] # './tier12-26.5/metacyc/26.5/data/'
 pwy_dat = os.path.join(mc_dir, 'pathways.dat')
 cmp_dat = os.path.join(mc_dir, 'compounds.dat')
@@ -189,7 +183,6 @@ rxn_dat = os.path.join(mc_dir, 'reactions.dat')
 enzrxns_file = os.path.join(mc_dir, 'enzrxns.dat')
 prot_fsa = os.path.join(mc_dir, 'protseq.fsa')
 prot_file = os.path.join(mc_dir, 'proteins.dat')
->>>>>>> 745b4b55aefcac83a3d8312ce274cb8fe295d30a
 
 # Collect all Monomer IDs
 mono_list = []
@@ -252,16 +245,11 @@ for m in prot2enz_dict:
             enzrxn_list.append([m, r])
 
 enzrxns_df = pd.DataFrame(enzrxn_list, columns=['MC', 'RXN'])
-enzrxns_df.to_csv(os.path.join(mc_dir, 'MetaCyc-26-monomer-rxn-pairs.tsv'),
+enzrxns_df.to_csv(os.path.join(mc_dir, 'MetaCyc-monomer-rxn-pairs.tsv'),
                   sep='\t', index=False
                   )
 
 ###### Pathways -> Compounds ######
-# MetaCyc
-pwy_dat = '/home/ryan/Desktop/Junk_Drawer/metacyc26_hier/metacyc/26.0/data/pathways.dat'
-cmp_dat = '/home/ryan/Desktop/Junk_Drawer/metacyc26_hier/metacyc/26.0/data/compounds.dat'
-rxn_dat = '/home/ryan/Desktop/Junk_Drawer/metacyc26_hier/metacyc/26.0/data/reactions.dat'
-enzrxns_file = '/home/ryan/Desktop/Junk_Drawer/metacyc26_hier/metacyc/26.0/data/enzrxns.dat'
 
 # Build compounds dictionary
 cmp_dict = build_cmp_dict(cmp_dat)
@@ -297,7 +285,7 @@ pwy_rxn_cmp_df = pd.DataFrame(pwy_rxn_cmp_list,
     columns=['PWY_ID', 'PWY_NAME', 'RXN', 'RXN_NAME', 'ENZ_ID', 'ENZ_NAME',
              'left_primary', 'right_primary', 'direction', 'direction_note'
              ])
-pwy_rxn_cmp_df.to_csv(os.path.join(mc_dir, 'MetaCyc-26-PWY-RXN-CMP-map.tsv'),
+pwy_rxn_cmp_df.to_csv(os.path.join(mc_dir, 'MetaCyc-PWY-RXN-CMP-map.tsv'),
                       sep='\t', index=False
                       )
 

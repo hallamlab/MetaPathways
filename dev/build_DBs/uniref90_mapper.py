@@ -1,10 +1,13 @@
 import pandas as pd
 import re
+import sys
+import os
 
 
-expasy_dat = "enzyme.dat"
-uniref_file = "UniRef90_idmapping.dat"
-kegg2ec_file = "Uniprot_KEGG_EC_map.tsv"
+expasy_dat = sys.argv[1] #"enzyme.dat"
+fc_dir = sys.argv[2]
+uniref_file = os.path.join(fc_dir, "UniRef90_idmapping.dat")
+xref2ec_file = os.path.join(fc_dir, "EC_map.uniref90.tsv")
 
 with open(expasy_dat, 'r') as ex_handle:
     ex_dat = ex_handle.read().split('//')
@@ -24,7 +27,6 @@ for rec in ex_dat:
                             xref2ec_dict[acc].append(ec_id)
                         else:
                             xref2ec_dict[acc] = [ec_id]
-print(xref2ec_dict)
 
 ur90_dat = pd.read_csv(uniref_file, sep='\t', names=['UniProtKB', 'dattype', 'UniRefID'])
 ur90_dict = pd.Series(ur90_dat['UniRefID'].values, index=ur90_dat['UniProtKB']).to_dict()
@@ -34,7 +36,7 @@ for k in ur90_dict:
     if k in xref2ec_dict:
         ecs = xref2ec_dict[k]
         for ec in ecs:
-            ur902ec_list.append([k, ec, v])
+            ur902ec_list.append([v, ec])
 
-ur902ec_df = pd.DataFrame(ur902ec_list, columns=['UniProtKB', 'EC', 'UniRefID'])
-ur902ec_df.to_csv("Uniprot_KEGG_EC_map.tsv", sep='\t', index=False)
+ur902ec_df = pd.DataFrame(ur902ec_list, columns=['AccID', 'EC'])
+ur902ec_df.to_csv(xref2ec_file, sep='\t', index=False)

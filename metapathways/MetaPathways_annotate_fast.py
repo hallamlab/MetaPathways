@@ -1018,7 +1018,7 @@ def process_product(product, database, similarity_threshold=0.9):
             processed_product = product
             comment = ''
 
-    elif 'sprot' in database:
+    elif 'swissprot' in database:
         if ' OS=' in product: # helps with edge cases
             processed_product = product.rsplit(' OS=', 1)[0]
             comment = ' OS=' + product.rsplit(' OS=', 1)[1]

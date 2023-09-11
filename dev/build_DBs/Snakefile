@@ -1,0 +1,409 @@
+## -*- python -*-
+
+#### Snakemake file for MetaPathways
+
+## This is currently used for orchestrating the staging of reference databases used by end-users.
+## In the future this will be used to integrate new functionality into MetaPathways.
+
+## Example run: snakemake -p -s Snakefile --use-conda --cores all 
+
+## User-configurations are set in the config YAML file, not in this Snakemake file:
+configfile: "snakemake_config.yaml"
+
+### Local Definitions:
+## Database versions:
+arb_release = "138.1"
+
+functional_db_names_full = ["metacyc",
+                       "swissprot",
+                       "uniref90",
+                       "cazy"
+                       
+                       ]
+
+functional_db_names_lite = ["metacyc",
+                       "swissprot"
+                       ]
+
+functional_db_names_noMeta = ["swissprot"]
+
+taxonomic_db_names = ["SILVA_" + arb_release + "_LSURef_NR99_tax_silva_trunc",
+                      "SILVA_" + arb_release + "_SSURef_NR99_tax_silva_trunc"
+                      ]
+
+# Start off the build
+os.system('mkdir -p ' + config["ref_db_dir"])
+os.system('touch ' + config["ref_db_dir"] + '/starting_build')
+
+### DB Staging Rules:
+rule stage_blast_full:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/swissprot.pdb',
+        config["ref_db_dir"] + '/functional/formatted/metacyc.pdb',
+        config["ref_db_dir"] + '/functional/formatted/cazy.pdb',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names_full),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+rule stage_blast_lite:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/swissprot.pdb',
+        config["ref_db_dir"] + '/functional/formatted/metacyc.pdb',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names_lite),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+# silva is still blast...
+rule stage_fast_full:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/swissprot.prj',
+        config["ref_db_dir"] + '/functional/formatted/metacyc.prj',
+        config["ref_db_dir"] + '/functional/formatted/cazy.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names_full),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+rule stage_fast_lite:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/swissprot.prj',
+        config["ref_db_dir"] + '/functional/formatted/metacyc.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names_lite),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+rule stage_fast_noMeta:
+    input:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        config["ref_db_dir"] + '/functional/formatted/swissprot.prj',
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
+               func_db = functional_db_names_noMeta),
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
+               tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+rule create_dirs_local_files:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config["ref_db_dir"]
+    output:
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
+    shell:
+        """
+        mkdir -p {params.target_dir}/functional/formatted
+	mkdir -p {params.target_dir}/functional_categories
+	mkdir -p {params.target_dir}/ncbi_tree
+	mkdir -p {params.target_dir}/taxonomic/formatted
+	touch {params.target_dir}/taxonomic/formatted/done
+        """
+        
+rule fetch_silva_db:
+    input:
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
+    params:
+        target_dir = config["ref_db_dir"],
+        arb_release = arb_release
+    output:
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc', arb_release=arb_release),
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc', arb_release=arb_release)
+    shell:
+        """
+        cd {params.target_dir}/taxonomic
+        wget -O SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.fasta.gz
+        wget -O SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.fasta.gz
+        gunzip {output.lsu_silva_file}.gz
+        gunzip {output.ssu_silva_file}.gz
+        """
+
+rule make_silva_blast_db:
+    input:
+        lsu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc', arb_release=arb_release),
+        ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc', arb_release=arb_release)
+    params:
+        target_dir = config["ref_db_dir"],
+        arb_release = arb_release
+    output:
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release)
+    shell:
+        """
+        cd {params.target_dir}/taxonomic
+        makeblastdb -in SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc
+        makeblastdb -in SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc           """
+
+rule fetch_uniref90_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/uniref90'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        wget -O uniref90.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
+        gunzip uniref90.gz
+        """
+
+rule make_uniref90_blast_db:
+    input:
+        config["ref_db_dir"] + '/functional/uniref90'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/uniref90.pdb'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/uniref90
+        """
+
+rule make_uniref90_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/uniref90'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/uniref90.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        fastdb -p formatted/uniref90 {input}
+        """
+
+rule fetch_swissprot_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/swissprot'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        wget -O swissprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+        gunzip swissprot.gz
+        """
+
+rule make_swissprot_blast_db:
+    input:
+        config["ref_db_dir"] + '/functional/swissprot'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/swissprot.pdb'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/swissprot
+        """
+
+rule make_swissprot_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/swissprot'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/swissprot.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        fastdb -p formatted/swissprot {input}
+        """
+
+rule fetch_cazy_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/cazy'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        wget -O {params.target_dir}/functional/cazy https://bcb.unl.edu/dbCAN2/download/Databases/V12/CAZyDB.07262023.fa
+        """
+
+rule make_cazy_blast_db:
+    input:
+        config["ref_db_dir"] + '/functional/cazy'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/cazy.pdb'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/cazy
+        """
+
+rule make_cazy_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/cazy'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/cazy.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        fastdb -p formatted/cazy {input}
+        """
+       
+rule fetch_metacyc_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir'],
+        username = config['metacyc_username'],
+        password = config['metacyc_password']
+    output:
+        config["ref_db_dir"] + '/functional/metacyc'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        wget -O {params.target_dir}/functional/meta.tar.gz --user {params.username} --password {params.password} https://brg-files.ai.sri.com/public/dist/meta.tar.gz
+        tar -xvzf {params.target_dir}/functional/meta.tar.gz -C {params.target_dir}/functional/
+        cp {params.target_dir}/functional/*/data/protseq.fsa metacyc
+        """
+
+rule make_metacyc_blast_db:
+    input:
+        config["ref_db_dir"] + '/functional/metacyc'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/metacyc.pdb'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/metacyc
+        """
+
+rule make_metacyc_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/metacyc'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/metacyc.prj'
+    shell:
+        """
+        cd {params.target_dir}/functional
+        fastdb -p formatted/metacyc {input}
+        """
+
+### Rule for making the *-names.txt files:
+rule make_seq_names_file:
+    input:
+        config['ref_db_dir'] + '{annot_dir}/{db_name}'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '{annot_dir}/formatted/{db_name}-names.txt'
+    shell:
+        """
+        grep "^>" {input} > {output}
+        """
+
+### Rule for mapping MetaCyc Monomers to Reaction IDs:
+rule mono_2_rxn:
+    input:
+        config["ref_db_dir"] + '/functional/metacyc'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv'
+    shell:
+        """
+        base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
+	python metacyc_mapping_build.py $base
+	cp $base/MetaCyc-*.tsv {params.target_dir}/functional_categories/
+        """
+
+rule fetch_ec_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/enzyme.dat'
+    shell:
+        """
+        wget -O {params.target_dir}/functional_categories/enzyme.dat https://ftp.expasy.org/databases/enzyme/enzyme.dat
+        """
+
+### Rule for mapping SwissProt to EC numbers:
+rule swiss_2_ec:
+    input:
+        config["ref_db_dir"] + '/functional/swissprot',
+        config['ref_db_dir'] + '/functional_categories/enzyme.dat'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv'
+    shell:
+        """
+        python swissprot_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        """
+
+### Rule for mapping Uniref90 to EC numbers:
+rule uniref90_2_ec:
+    input:
+        config["ref_db_dir"] + '/functional/uniref90',
+        config['ref_db_dir'] + '/functional_categories/enzyme.dat'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv'
+    shell:
+        """
+        wget -O {params.target_dir}/functional_categories/idmapping.dat.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
+        zgrep 'UniRef90_' {params.target_dir}/functional_categories/idmapping.dat.gz > {params.target_dir}/functional_categories/UniRef90_idmapping.dat
+        python uniref90_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        """
+
+### Rule for building taxmapping for LCA:
+rule build_taxmap:
+    input:
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+    shell:
+        """
+        wget -O {params.target_dir}/ncbi_tree/new_taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+        tar xvzf {params.target_dir}/ncbi_tree/new_taxdump.tar.gz -C {params.target_dir}/ncbi_tree/
+        python taxmap_build.py {params.target_dir}/ncbi_tree/
+        """
+
+

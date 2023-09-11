@@ -1,0 +1,65 @@
+# Functional DBs
+mkdir -p functional/formatted
+mkdir functional_categories
+mkdir ncbi_tree
+mkdir -p taxonomic/formatted
+
+# SwissProt
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+gunzip uniprot_sprot.fasta.gz
+mv uniprot_sprot.fasta swissprot_$(date -u '+%Y-%m-%d').fasta
+fastdb -p formatted/swissprot swissprot_$(date -u '+%Y-%m-%d').fasta
+grep '>' swissprot_$(date -u '+%Y-%m-%d').fasta > formatted/swissprot-names.txt
+
+# Mapping SwissProt to ECs
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
+wget https://ftp.expasy.org/databases/enzyme/enzyme.dat
+python swissprot_mapper.py enzyme.dat ./
+
+# MetaCyc
+wget --user [user_login] --password [password] https://brg-files.ai.sri.com/public/dist/meta.tar.gz
+tar xvzf meta.tar.gz
+python metacyc_mapping_build.py [MetaCyc_dir]/data/
+cp [MetaCyc_dir]/data/MetaCyc-*.tsv ../functional_categories/
+fastdb -p formatted/metacyc [MetaCyc_dir]/data/protseq.fsa
+grep '>' 27.1/data/protseq.fsa > formatted/metacyc-names.txt
+
+# taxmap
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+tar xvzf new_taxdump.tar.gz 
+python build_taxmap.py
+
+# SILVA
+wget https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_138.1_SSURef_NR99_tax_silva_trunc.fasta.gz
+wget https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta.gz
+gunzip *.gz
+makeblastdb -in SILVA_138.1_SSURef_NR99_tax_silva_trunc.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_138.1_SSURef_NR99_tax_silva_trunc
+makeblastdb -in SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta -dbtype nucl -parse_seqids -out formatted/SILVA_138.1_LSURef_NR99_tax_silva_trunc
+grep '>' SILVA_138.1_SSURef_NR99_tax_silva_trunc.fasta > formatted/SILVA_138.1_SSURef_NR99_tax_silva_trunc-names.txt
+grep '>' SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta > formatted/SILVA_138.1_LSURef_NR99_tax_silva_trunc-names.txt
+mv SILVA_138.1_SSURef_NR99_tax_silva_trunc.fasta SILVA_138.1_SSURef_NR99_tax_silva_trunc
+mv SILVA_138.1_LSURef_NR99_tax_silva_trunc.fasta SILVA_138.1_LSURef_NR99_tax_silva_trunc
+
+
+
+
+
+
+# UniRef90
+wget https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
+tar xvzf uniref90.fasta.gz
+fastdb -p uniref90 uniref90.fasta
+grep '>' uniref90.fasta > uniref90-names.txt
+
+# Mapping UniRef90 to ECs
+wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
+wget https://ftp.expasy.org/databases/enzyme/enzyme.dat
+
+zgrep 'UniRef90_' idmapping.dat.gz > UniRef90_idmapping.dat
+python uniref90_mapper.py
+
+# CAZymes
+wget https://bcb.unl.edu/dbCAN2/download/CAZyDB.07262023.fa
+fastdb -p ~/SABer_dat/MMAP_DBs_230314/functional/formatted/cazydb CAZyDB.07262023.fa
+grep '>' CAZyDB.07262023.fa > ~/SABer_dat/MMAP_DBs_230314/functional/formatted/cazydb-names.txt
+
