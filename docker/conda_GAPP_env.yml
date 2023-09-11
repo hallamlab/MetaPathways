@@ -26,3 +26,4 @@ dependencies:
   - git
   - requests
   - mafft 
+  - checkm-genome
