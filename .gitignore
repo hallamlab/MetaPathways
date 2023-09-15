@@ -20,6 +20,7 @@ pathologic.log
 *.sif
 \#*
 *pathway-tools-*-install
+__pycache__
 
 executables-DELETE-ME
 test
