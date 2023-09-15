@@ -1,13 +1,14 @@
 import pandas as pd
 
+'''
 # NCBI Taxonomy
-ranklin_dmp = 'rankedlineage.dmp'
+ranklin_dmp = 'new_taxdump/rankedlineage.dmp'
 ranklin_df = pd.read_csv(ranklin_dmp, sep='\t\|\t', header=None,
     engine='python', usecols=[0, 1]
     )
 ranklin_df.columns = ['taxid', 'name']
 print(ranklin_df.head())
-taxlin_dmp = 'taxidlineage.dmp'
+taxlin_dmp = 'new_taxdump/taxidlineage.dmp'
 taxlin_df = pd.read_csv(taxlin_dmp, sep='\t\|\t', header=None, 
     engine='python'
     )
@@ -20,4 +21,4 @@ print(merge_df.head())
 final_df = merge_df[['name', 'taxid', 'parent']]
 print(final_df.head())
 final_df.to_csv('ncbi_taxonomy_tree.txt', sep='\t', index=False, header=False)
-
+'''

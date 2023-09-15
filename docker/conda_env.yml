@@ -17,3 +17,5 @@ dependencies:
   - barrnap
   - trnascan-se
   - subread
+  - tqdm
+  - pyfastx

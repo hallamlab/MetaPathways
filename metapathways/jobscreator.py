@@ -810,7 +810,7 @@ class ContextCreator:
         taxonomy_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.functional_and_taxonomic_table.txt'
         annotation_table = s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.1.txt'
         basefunct = self.configs.REFDBS + PATHDELIM + 'functional_categories'
-        ec_mapping = basefunct + PATHDELIM + 'Uniprot_KEGG_EC_map.tsv'
+        ec_mapping = basefunct + PATHDELIM + 'EC_map.*.tsv'
         rxn_mapping = basefunct + PATHDELIM + 'MetaCyc-monomer-rxn-pairs.tsv'
         
         '''outputs'''

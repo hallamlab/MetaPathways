@@ -175,7 +175,6 @@ def build_rxnenz_dict(dat):
 
 
 
-
 # MetaCyc
 mc_dir = sys.argv[1] # './tier12-26.5/metacyc/26.5/data/'
 pwy_dat = os.path.join(mc_dir, 'pathways.dat')
@@ -246,12 +245,12 @@ for m in prot2enz_dict:
             enzrxn_list.append([m, r])
 
 enzrxns_df = pd.DataFrame(enzrxn_list, columns=['MC', 'RXN'])
-enzrxns_df.to_csv(os.path.join(mc_dir, 'MetaCyc-26-monomer-rxn-pairs.tsv'),
+enzrxns_df.to_csv(os.path.join(mc_dir, 'MetaCyc-monomer-rxn-pairs.tsv'),
                   sep='\t', index=False
                   )
 
-
 ###### Pathways -> Compounds ######
+
 # Build compounds dictionary
 cmp_dict = build_cmp_dict(cmp_dat)
 
@@ -263,6 +262,9 @@ enz_dict, rxn2enz_dict = build_rxnenz_dict(enzrxns_file)
 
 # Build Pathway to Compounds dictionary
 pwy_dict, pwy2cmp_dict = build_pwycmp_dict(pwy_dat, cmp_dict)
+
+print(pwy_dict['METH-ACETATE-PWY'])
+print(pwy2cmp_dict['METH-ACETATE-PWY'])
 
 # Create Pathway -> Reactions -> Compounds
 pwy_rxn_cmp_list = []
@@ -283,7 +285,7 @@ pwy_rxn_cmp_df = pd.DataFrame(pwy_rxn_cmp_list,
     columns=['PWY_ID', 'PWY_NAME', 'RXN', 'RXN_NAME', 'ENZ_ID', 'ENZ_NAME',
              'left_primary', 'right_primary', 'direction', 'direction_note'
              ])
-pwy_rxn_cmp_df.to_csv(os.path.join(mc_dir, 'MetaCyc-26-PWY-RXN-CMP-map.tsv'),
+pwy_rxn_cmp_df.to_csv(os.path.join(mc_dir, 'MetaCyc-PWY-RXN-CMP-map.tsv'),
                       sep='\t', index=False
                       )
 

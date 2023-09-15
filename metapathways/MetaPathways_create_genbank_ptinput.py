@@ -243,7 +243,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     
     # Get all required mapping files
     output_dir_name = outfiles['ptinput']
-    ec_map_file = outfiles['ec_mapping']
+    ec_map_files = outfiles['ec_mapping']
     rxn_map_file = outfiles['rxn_mapping']
     anno_file = outfiles['annotation_table']
     ft_file = outfiles['taxonomy_table']
@@ -279,7 +279,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             if 'metacyc' in d:
                 trim_t = t.split('|', 2)[2]
                 trim_t_list.append(trim_t)
-            elif 'sprot' in d:
+            elif 'swissprot' in d:
                 trim_t = t.split('|', 2)[1]
                 trim_t_list.append(trim_t)
             elif 'uniref' in d:
@@ -300,16 +300,25 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
 
     trim_set_list = list(set(trim_t_list))
     # Load all mapping files, subset to only annotated targets, create dicts
-    ec_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
-    ec_df.dropna(subset = ['EC'], inplace=True)
-    ec_df = ec_df.copy().query('UniRefID in @trim_set_list')
-    ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
-    ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
-    ec_dict = ec_df.groupby('UniRefID', group_keys=True)['EC'].apply(list).to_dict()
-    rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
-    rxn_df = rxn_df.query('MC in @trim_set_list')
-    rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
-
+    ec_dfs = []
+    if ec_map_files:
+        for ec_map_file in glob.glob(ec_map_files):
+            ec_map_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
+            ec_dfs.append(ec_map_df)
+        ec_df = pd.concat(ec_dfs)
+        ec_df.dropna(subset = ['EC'], inplace=True)
+        ec_df = ec_df.copy().query('AccID in @trim_set_list')
+        ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
+        ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
+        ec_dict = ec_df.groupby('AccID', group_keys=True)['EC'].apply(list).to_dict()
+    else:
+        ec_dict = {}
+    if path.exists(rxn_map_file):
+        rxn_df = pd.read_csv(rxn_map_file, sep='\t', header=0, low_memory=False)
+        rxn_df = rxn_df.query('MC in @trim_set_list')
+        rxn_dict = rxn_df.groupby('MC')['RXN'].apply(list).to_dict()
+    else:
+        rxn_dict = {}
     # Merge the ec_map from earlier attrib search and ec_dict
     ec_m_dict = ec_dict | ec_map
 
@@ -358,11 +367,11 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                     db_dict['metacyc'].append(dbname)
                                 else:
                                     db_dict['metacyc'] = [dbname]
-                            elif 'sprot' in dbname:
-                                if 'sprot' in db_dict:
-                                    db_dict['sprot'].append(dbname)
+                            elif 'swissprot' in dbname:
+                                if 'swissprot' in db_dict:
+                                    db_dict['swissprot'].append(dbname)
                                 else:
-                                    db_dict['sprot'] = [dbname]
+                                    db_dict['swissprot'] = [dbname]
                             elif 'uniref' in dbname:
                                 if 'uniref' in db_dict:
                                     db_dict['uniref'].append(dbname)
@@ -379,15 +388,21 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                                         attrib['rxn'].extend(rxn_dict[target])
                                     else:
                                         attrib['rxn'] = rxn_dict[target]
-                        if (('sprot' in db_dict) & ('rxn' not in attrib)):
-                            for db in db_dict['sprot']:
+                        if 'swissprot' in db_dict:
+                            for db in db_dict['swissprot']:
                                 target = db_targ_dict[db]
                                 if target in ec_dict:
                                     if 'ec' in attrib:
-                                        attrib['ec'].extend(ec_dict[target])
+                                        if isinstance(attrib['ec'], str):
+                                            if attrib['ec'] == "":
+                                                attrib['ec'] = []
+                                            else:
+                                                attrib['ec'] = [attrib['ec']]
+
+                                            attrib['ec'].extend(ec_dict[target])
                                     else:
                                         attrib['ec'] = ec_dict[target]
-                        if (('uniref' in db_dict) & ('rxn' not in attrib)):
+                        if 'uniref' in db_dict:
                             for db in db_dict['uniref']:
                                 target = db_targ_dict[db]
                                 if target in ec_dict:
@@ -474,8 +489,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             '''
         #endif
     pt_attrib_df = pd.DataFrame.from_dict(pt_attrib_dict, orient='index')
-    pt_attrib_df['ec'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['ec']]
-    pt_attrib_df['rxn'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['rxn']]
+    if 'ec' in pt_attrib_df.columns:
+        pt_attrib_df['ec'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['ec']]
+    if 'rxn' in pt_attrib_df.columns:
+        pt_attrib_df['rxn'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['rxn']]
     pt_attrib_df.rename(columns={'id': 'orf_id'}, inplace=True) 
     orf = pt_attrib_df['orf_id']
     pt_attrib_df.drop(labels=['orf_id'], axis=1,inplace = True)
