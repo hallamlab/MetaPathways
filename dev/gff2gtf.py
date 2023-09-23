@@ -13,7 +13,7 @@ def extract_gene_id(gff_row):
     attributes = attribute_str.split(';')
     #if feature == 'CDS':
     for attribute in attributes:
-        key, value = attribute.strip().split('=')
+        key, value = attribute.strip().split('=', 1)
         if key == 'ID':
             gene_id = "gene_id \"" + value + "\""
     #else:
