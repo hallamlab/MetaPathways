@@ -3,11 +3,9 @@ import sys
 import pandas as pd
 
 
-
 mc_dir = sys.argv[1] # './tier12-26.5/metacyc/26.5/data/'
 class_file = os.path.join(mc_dir, "classes.dat")
 path_file = os.path.join(mc_dir, "pathways.dat")
-
 
 with open(class_file, 'rb') as class_in:
 	data = class_in.read().decode(errors='replace').split('\n//')
