@@ -1,6 +1,6 @@
 FROM condaforge/mambaforge as build-env
 # https://mamba.readthedocs.io/en/latest/user_guide/mamba.html
-MAINTAINER Tomer Altman, Altman Analytics LLC
+MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
 
 ### EXAMPLES ###
 
@@ -15,7 +15,7 @@ MAINTAINER Tomer Altman, Altman Analytics LLC
 # Create the environment:
 # packages from `metapathways-install-deps.sh` are included in the yml
 COPY ./docker/conda_env.yml /opt/
-RUN mamba env create --no-default-packages -f /opt/conda_env.yml
+RUN mamba env create --no-default-packages -f /opt/conda_base.yml
 
 # move to clean execution environment
 # which includes dependencies like wget & libtinfo6

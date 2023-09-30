@@ -378,7 +378,7 @@ def process(argv):
         "BWA_EXECUTABLE"       : 'bwa',
         "FASTDB_EXECUTABLE"    : 'fastdb',
         "FAST_EXECUTABLE"      : 'fastal',
-        "PRODIGAL_EXECUTABLE"  : 'pprodigal',
+        "PRODIGAL_EXECUTABLE"  : 'prodigal',
         "SCAN_tRNA_EXECUTABLE" : 'tRNAscan-SE',
         "RPKM_EXECUTABLE"      : 'coverm',
         "NUM_CPUS"             : opts.num_cpus,

@@ -114,26 +114,11 @@ singularity-docker-shell:
 	singularity shell docker://quay.io/hallamlab/metapathways:dev
 
 
-### Conda Packaging
+
+### Packaging:
 ##
 
-## Conda Installation:
-conda-install: conda-install-deps #extensions-install 
-
-## Install conda build tools:
-conda-build-init:
-	conda init bash
-	conda install --yes conda-build
-
-conda-install-deps:
-	bin/metapathways-install-deps.sh
-
-
-### Python PyPI Packaging:
-##
-##
-
-### Python installs:
+### PyPi:
 
 create-package: clean-package
 	$(PYTHON) -m pip install --user --upgrade setuptools wheel twine
@@ -141,7 +126,7 @@ create-package: clean-package
 	cp -r dist docker/dist
 
 clean-package:
-	rm -rf dist MetaPathways.egg-info build docker/dist
+	rm -rf dist metapathways.egg-info build docker/dist
 
 install-package:
 	$(PYTHON) -m pip install --user .
@@ -150,10 +135,37 @@ install-dev-package:
 	$(PYTHON) -m pip install --user --upgrade -e .
 
 install-dist-package:
-	$(PYTHON) -m pip install --user dist/MetaPathways-*-py*-none-any.whl
+	$(PYTHON) -m pip install --user dist/metapathways-*-py*-none-any.whl
 
 deploy-package-to-pypi:
 	twine upload dist/*
+
+### Conda:
+
+# legacy
+# conda-install: conda-install-deps #extensions-install 
+
+# conda-build-init:
+# 	conda init bash
+# 	conda install --yes conda-build
+
+# conda-install-deps:
+# 	bin/metapathways-install-deps.sh
+
+CONDA ?= mamba
+ENV_NAME ?= mpw_dev
+
+create-dev-env:
+	$(CONDA) env create --no-default-packages -n $(ENV_NAME) -f ./docker/conda_env.yml
+	$(CONDA) env update -n $(ENV_NAME) -f ./docker/conda_dev.yml
+
+create-conda:
+	[ -f ./conda_build ] && rm -r ./conda_build
+	$(PYTHON) ./conda_recipe/compile_recipe.py
+	./conda_recipackage-to-pypipe/call_build.sh
+
+deploy-conda:
+	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload %
 
 ### Build & Install Extensions
 ##

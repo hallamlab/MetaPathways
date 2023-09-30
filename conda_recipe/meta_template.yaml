@@ -1,0 +1,36 @@
+package:
+  name: <NAME>
+  version: <VERSION>
+
+source:
+  url: <TAR>
+  
+build:
+  noarch: python
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv
+  entry_points:
+<ENTRY>
+
+test:
+  imports:
+    - metapathways
+  commands:
+    - pip check
+    - metapathways --help
+  requires:
+    - pip
+
+requirements:
+  host:
+    - python=3.10
+    - pip
+
+  run:
+<REQUIREMENTS>
+
+about:
+  home: https://bitbucket.org/BCB2/metapathways/
+  summary: metagenomics pipeline
+  license: 'MIT'
+  license_file: ../LICENSE
