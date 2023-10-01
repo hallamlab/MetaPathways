@@ -13,7 +13,7 @@ try:
     import inspect
     import shutil
 
-    from os import makedirs, sys, listdir, environ, path, _exit
+    from os import makedirs, sys, listdir, environ, path, _exit, system
     from optparse import OptionParser
 
     from metapathways import errorcodes as errormod
@@ -49,10 +49,10 @@ script_info['script_description'] = \
 script_info['script_usage'] = []
 
 
-usage=  """Metapathways -i input_dir -o output_dir -p parameters.txt
-          \t for more options:  ./MetaPathways.py -h"""
-
 def createParser():
+    usage = """Metapathways run -i input_dir -o output_dir -p parameters.txt
+              \t for more options: MetaPathways run -h"""
+
     parser = OptionParser(usage)
     parser.add_option("-i", "--input_file", dest="input_fp",
                       help='the input fasta file/input dir [REQUIRED]')
@@ -83,25 +83,62 @@ def createParser():
                       help="process only specific samples [-s sample1 -s sample2]" )
 
     return parser
-def valid_arguments(opts, args):
+
+
+def dbParser():
+    usage = """Metapathways build_db -i input_dir -o output_dir -p parameters.txt
+              \t for more options: MetaPathways build_db -h"""
+
+    parser = OptionParser(usage)
+    parser.add_option("-o", "--output_dir", dest="output_dir",
+                      help='path to save reference database [REQUIRED]')
+
+    parser.add_option('-b','--db_type', dest="db_type",
+                       help=
+                       '''build version of database [REQUIRED]
+                        acceptable values are:
+                        stage_fast_full
+                        stage_fast_lite
+                        stage_fast_noMeta
+                        stage_blast_full
+                        stage_blast_lite'''
+                        )    
+    parser.add_option("-t", "--threads", dest="num_cpus", default = 'all', 
+                      help="max number of cores to use in multithreaded steps [DEFAULT all]")
+    parser.add_option("-u", "--metacyc_user", dest="metacyc_user", default = '', 
+                      help="MetaCyc username for data download")
+    parser.add_option("-p", "--metacyc_pswd", dest="metacyc_pswd", default = '', 
+                      help="MetaCyc password for data download")
+    return parser
+
+
+def valid_arguments(func, opts, args):
     """ checks if the supplied arguments are adequate """
     isvalid = True
-    if opts.parameter_fp == None:
-       gutils.eprintf("ERROR\tParameter file for run configuration is not provided.\n")
-       isvalid = False
+    if func == "run":
+        if opts.parameter_fp == None:
+           gutils.eprintf("ERROR\tParameter file for run configuration is not provided.\n")
+           isvalid = False
 
-    if opts.output_dir == None:
-       gutils.eprintf("ERROR\tOutput directory is not provided.\n")
-       isvalid = False
+        if opts.output_dir == None:
+           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
+           isvalid = False
 
-    if opts.input_fp == None:
-       gutils.eprintf("ERROR\tInput directory is not provided.\n")
-       isvalid = False
+        if opts.input_fp == None:
+           gutils.eprintf("ERROR\tInput directory is not provided.\n")
+           isvalid = False
 
-    if opts.refdb_dir == None:
-       gutils.eprintf("ERROR\tThe reference data folder is not provided.\n")
-       isvalid = False
+        if opts.refdb_dir == None:
+           gutils.eprintf("ERROR\tThe reference data folder is not provided.\n")
+           isvalid = False
+    elif func == "build_db":
+        if opts.output_dir == None:
+           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
+           isvalid = False
 
+        if opts.db_type == None:
+           gutils.eprintf("ERROR\tValid DB Type not provided.\n")
+           isvalid = False
 
     return isvalid
 
@@ -253,14 +290,15 @@ def report_missing_filenames(input_output_list, sample_subset, logger=None):
              logger.printf("ERROR\tCannot file input for sample %s!\n", sample_in_subset)
 
 
-def process(argv):
+def run():
+    argv = sys.argv
     parser = createParser()
     (opts, args) = parser.parse_args(argv)
     if opts.version:
        print("MetaPathways: Version " + __version__)
        sys.exit(0)
 
-    if not valid_arguments(opts, args):
+    if not valid_arguments("run", opts, args):
        print(usage)
        sys.exit(0)
 
@@ -378,7 +416,7 @@ def process(argv):
         "BWA_EXECUTABLE"       : 'bwa',
         "FASTDB_EXECUTABLE"    : 'fastdb',
         "FAST_EXECUTABLE"      : 'fastal',
-        "PRODIGAL_EXECUTABLE"  : 'prodigal',
+        "PRODIGAL_EXECUTABLE"  : 'pprodigal',
         "SCAN_tRNA_EXECUTABLE" : 'tRNAscan-SE',
         "RPKM_EXECUTABLE"      : 'coverm',
         "NUM_CPUS"             : opts.num_cpus,
@@ -439,17 +477,59 @@ def process(argv):
     #mputils.halt_process(opts.delay)
     #mputils.halt_process(3, verbose=opts.verbose)
 
+
+def build_db():
+    argv = sys.argv
+    parser = dbParser()
+    (opts, args) = parser.parse_args(argv)
+    
+    if not valid_arguments("build_db", opts, args):
+       print(usage)
+       sys.exit(0)
+    gutils.eprintf("Building Refenence DB:")
+    gutils.eprintf(f' metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} {opts.metacyc_user} {opts.metacyc_pswd}')
+    system(f'metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} {opts.metacyc_user} {opts.metacyc_pswd}')
+
+def help():
+    print("""\
+        MetaPathways v3.5.0
+        https://metapathways.readthedocs.io
+        https://bitbucket.org/BCB2/metapathways
+
+        Syntax: MetaPathways COMMAND [OPTIONS]
+
+        Where COMMAND is one of :
+            help
+            build_db
+            run
+
+        for addional help, use:
+            MetaPathways COMMAND -h
+        """)
+
+
 def main():
-    process(sys.argv)
-    sys.exit(errormod.get_recent_error())
-    mputils.halt_process(1)
+    if len(sys.argv) <= 1:
+        help()
+        return
+    {
+        "help": help,
+        "build_db" : build_db,
+        "run": run
+    }.get(
+        sys.argv[1],
+        help # default
+    )()
+    #process(sys.argv)
+    #sys.exit(errormod.get_recent_error())
+    #mputils.halt_process(1)
 
 # the main function of metapaths
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-      print('hello')
-      process(sys.argv)
-      sys.exit(errormod.get_recent_error())
-      mputils.halt_process(1)
+    main(sys.argv)
+    #if len(sys.argv) > 1:
+    #  process(sys.argv)
+      #sys.exit(errormod.get_recent_error())
+      #mputils.halt_process(1)
 
 

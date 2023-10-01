@@ -8,7 +8,7 @@
 ## Example run: snakemake -p -s Snakefile --use-conda --cores all 
 
 ## User-configurations are set in the config YAML file, not in this Snakemake file:
-configfile: "snakemake_config.yaml"
+#configfile: "snakemake_config.yaml"
 
 ### Local Definitions:
 ## Database versions:
@@ -30,6 +30,8 @@ functional_db_names_noMeta = ["swissprot"]
 taxonomic_db_names = ["SILVA_" + arb_release + "_LSURef_NR99_tax_silva_trunc",
                       "SILVA_" + arb_release + "_SSURef_NR99_tax_silva_trunc"
                       ]
+
+script_path = config["script_path"]
 
 # Start off the build
 os.system('mkdir -p ' + config["ref_db_dir"])
@@ -344,7 +346,7 @@ rule mono_2_rxn:
     shell:
         """
         base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
-	python metacyc_mapping_build.py $base
+	python {script_path}/metacyc_mapping_build.py $base
 	cp $base/MetaCyc-*.tsv {params.target_dir}/functional_categories/
         """
 
@@ -371,7 +373,7 @@ rule swiss_2_ec:
         config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv'
     shell:
         """
-        python swissprot_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        python {script_path}/swissprot_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
         """
 
 ### Rule for mapping Uniref90 to EC numbers:
@@ -387,7 +389,7 @@ rule uniref90_2_ec:
         """
         wget -O {params.target_dir}/functional_categories/idmapping.dat.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
         zgrep 'UniRef90_' {params.target_dir}/functional_categories/idmapping.dat.gz > {params.target_dir}/functional_categories/UniRef90_idmapping.dat
-        python uniref90_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        python {script_path}/uniref90_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
         """
 
 ### Rule for building taxmapping for LCA:
@@ -402,7 +404,7 @@ rule build_taxmap:
         """
         wget -O {params.target_dir}/ncbi_tree/new_taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
         tar xvzf {params.target_dir}/ncbi_tree/new_taxdump.tar.gz -C {params.target_dir}/ncbi_tree/
-        python taxmap_build.py {params.target_dir}/ncbi_tree/
+        python {script_path}/taxmap_build.py {params.target_dir}/ncbi_tree/
         """
 
 

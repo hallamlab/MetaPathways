@@ -1,7 +1,7 @@
 include docs/*
 include README.md
 include Makefile
-include metapathways/Snakefile
+include metapathways/build_DBs/*
 include metapathways/resources/*
 include metapathways/tests/*
 include metapathways/tests/data/*
