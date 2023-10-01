@@ -49,11 +49,11 @@ script_info['script_description'] = \
 script_info['script_usage'] = []
 
 
+USAGE = """Metapathways run -i input_dir -o output_dir -p parameters.txt
+            \t for more options: MetaPathways run -h"""
 def createParser():
-    usage = """Metapathways run -i input_dir -o output_dir -p parameters.txt
-              \t for more options: MetaPathways run -h"""
 
-    parser = OptionParser(usage)
+    parser = OptionParser(USAGE)
     parser.add_option("-i", "--input_file", dest="input_fp",
                       help='the input fasta file/input dir [REQUIRED]')
 
@@ -299,7 +299,7 @@ def run():
        sys.exit(0)
 
     if not valid_arguments("run", opts, args):
-       print(usage)
+       print(USAGE)
        sys.exit(0)
 
     gutils.eprintf("%-10s:%s\n" %('COMMAND', argv[0] + ' ' +  ' '.join(argv)) )
@@ -484,7 +484,7 @@ def build_db():
     (opts, args) = parser.parse_args(argv)
     
     if not valid_arguments("build_db", opts, args):
-       print(usage)
+       print(USAGE)
        sys.exit(0)
     gutils.eprintf("Building Refenence DB:")
     gutils.eprintf(f' metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} {opts.metacyc_user} {opts.metacyc_pswd}')
