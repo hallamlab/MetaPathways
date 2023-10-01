@@ -159,10 +159,13 @@ create-dev-env:
 	$(CONDA) env create --no-default-packages -n $(ENV_NAME) -f ./docker/conda_env.yml
 	$(CONDA) env update -n $(ENV_NAME) -f ./docker/conda_dev.yml
 
+# requires
+# - pypi package from create-package
+# - conda env from create-dev-env
 create-conda:
 	[ -f ./conda_build ] && rm -r ./conda_build
 	$(PYTHON) ./conda_recipe/compile_recipe.py
-	./conda_recipackage-to-pypipe/call_build.sh
+	./conda_recipe/call_build.sh
 
 deploy-conda:
 	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload %
