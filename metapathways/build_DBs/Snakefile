@@ -137,9 +137,8 @@ rule fetch_silva_db:
         ssu_silva_file = expand(config["ref_db_dir"] + '/taxonomic/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc', arb_release=arb_release)
     shell:
         """
-        cd {params.target_dir}/taxonomic
-        wget -O SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.fasta.gz
-        wget -O SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.fasta.gz
+        wget -O {output.lsu_silva_file}.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.fasta.gz
+        wget -O {output.ssu_silva_file}.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.fasta.gz
         gunzip {output.lsu_silva_file}.gz
         gunzip {output.ssu_silva_file}.gz
         """
@@ -156,9 +155,11 @@ rule make_silva_blast_db:
         expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release)
     shell:
         """
-        cd {params.target_dir}/taxonomic
-        makeblastdb -in SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc
-        makeblastdb -in SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc -dbtype nucl -parse_seqids -out formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc           """
+        makeblastdb -in {params.target_dir}/taxonomic/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc \
+        	-dbtype nucl -parse_seqids -out {params.target_dir}/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc
+        makeblastdb -in {params.target_dir}/taxonomic/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc \
+        	-dbtype nucl -parse_seqids -out {params.target_dir}/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc
+        """
 
 rule fetch_uniref90_db:
     input:
@@ -169,9 +170,8 @@ rule fetch_uniref90_db:
         config["ref_db_dir"] + '/functional/uniref90'
     shell:
         """
-        cd {params.target_dir}/functional
-        wget -O uniref90.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
-        gunzip uniref90.gz
+        wget -O {params.target_dir}/functional/uniref90.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
+        gunzip {params.target_dir}/functional//uniref90.gz
         """
 
 rule make_uniref90_blast_db:
@@ -183,8 +183,7 @@ rule make_uniref90_blast_db:
         config["ref_db_dir"] + '/functional/formatted/uniref90.pdb'
     shell:
         """
-        cd {params.target_dir}/functional
-        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/uniref90
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/uniref90
         """
 
 rule make_uniref90_fast_db:
@@ -196,8 +195,7 @@ rule make_uniref90_fast_db:
         config["ref_db_dir"] + '/functional/formatted/uniref90.prj'
     shell:
         """
-        cd {params.target_dir}/functional
-        fastdb -p formatted/uniref90 {input}
+        fastdb -p {params.target_dir}/functional/formatted/uniref90 {input}
         """
 
 rule fetch_swissprot_db:
@@ -209,9 +207,8 @@ rule fetch_swissprot_db:
         config["ref_db_dir"] + '/functional/swissprot'
     shell:
         """
-        cd {params.target_dir}/functional
-        wget -O swissprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
-        gunzip swissprot.gz
+        wget -O {params.target_dir}/functional/swissprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+        gunzip {params.target_dir}/functional/swissprot.gz
         """
 
 rule make_swissprot_blast_db:
@@ -223,8 +220,7 @@ rule make_swissprot_blast_db:
         config["ref_db_dir"] + '/functional/formatted/swissprot.pdb'
     shell:
         """
-        cd {params.target_dir}/functional
-        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/swissprot
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/swissprot
         """
 
 rule make_swissprot_fast_db:
@@ -236,8 +232,7 @@ rule make_swissprot_fast_db:
         config["ref_db_dir"] + '/functional/formatted/swissprot.prj'
     shell:
         """
-        cd {params.target_dir}/functional
-        fastdb -p formatted/swissprot {input}
+        fastdb -p {params.target_dir}/functional/formatted/swissprot {input}
         """
 
 rule fetch_cazy_db:
@@ -249,7 +244,6 @@ rule fetch_cazy_db:
         config["ref_db_dir"] + '/functional/cazy'
     shell:
         """
-        cd {params.target_dir}/functional
         wget -O {params.target_dir}/functional/cazy https://bcb.unl.edu/dbCAN2/download/Databases/V12/CAZyDB.07262023.fa
         """
 
@@ -262,8 +256,7 @@ rule make_cazy_blast_db:
         config["ref_db_dir"] + '/functional/formatted/cazy.pdb'
     shell:
         """
-        cd {params.target_dir}/functional
-        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/cazy
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/cazy
         """
 
 rule make_cazy_fast_db:
@@ -275,8 +268,7 @@ rule make_cazy_fast_db:
         config["ref_db_dir"] + '/functional/formatted/cazy.prj'
     shell:
         """
-        cd {params.target_dir}/functional
-        fastdb -p formatted/cazy {input}
+        fastdb -p {params.target_dir}/functional/formatted/cazy {input}
         """
        
 rule fetch_metacyc_db:
@@ -290,10 +282,9 @@ rule fetch_metacyc_db:
         config["ref_db_dir"] + '/functional/metacyc'
     shell:
         """
-        cd {params.target_dir}/functional
         wget -O {params.target_dir}/functional/meta.tar.gz --user {params.username} --password {params.password} https://brg-files.ai.sri.com/public/dist/meta.tar.gz
         tar -xvzf {params.target_dir}/functional/meta.tar.gz -C {params.target_dir}/functional/
-        cp {params.target_dir}/functional/*/data/protseq.fsa metacyc
+        cp {params.target_dir}/functional/*/data/protseq.fsa {params.target_dir}/functional/metacyc
         """
 
 rule make_metacyc_blast_db:
@@ -305,8 +296,7 @@ rule make_metacyc_blast_db:
         config["ref_db_dir"] + '/functional/formatted/metacyc.pdb'
     shell:
         """
-        cd {params.target_dir}/functional
-        makeblastdb -in {input} -dbtype prot -parse_seqids -out formatted/metacyc
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/metacyc
         """
 
 rule make_metacyc_fast_db:
@@ -318,8 +308,7 @@ rule make_metacyc_fast_db:
         config["ref_db_dir"] + '/functional/formatted/metacyc.prj'
     shell:
         """
-        cd {params.target_dir}/functional
-        fastdb -p formatted/metacyc {input}
+        fastdb -p {params.target_dir}/functional/formatted/metacyc {input}
         """
 
 ### Rule for making the *-names.txt files:
