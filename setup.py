@@ -62,6 +62,6 @@ if __name__ == "__main__":
         },
         python_requires=">=3.10",
         install_requires=[
-            "camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs"
+            # "camelot_frs @ git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs"
         ],
     )
