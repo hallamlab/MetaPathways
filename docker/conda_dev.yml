@@ -9,3 +9,4 @@ dependencies:
   - pip:
     - twine
     - build
+    - git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs
