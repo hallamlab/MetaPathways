@@ -12,6 +12,8 @@ try:
     import re
     import inspect
     import shutil
+    import glob
+    import getpass
 
     from os import makedirs, sys, listdir, environ, path, _exit, system
     from optparse import OptionParser
@@ -56,29 +58,21 @@ def createParser():
     parser = OptionParser(USAGE)
     parser.add_option("-i", "--input_file", dest="input_fp",
                       help='the input fasta file/input dir [REQUIRED]')
-
     parser.add_option("-o", "--output_dir", dest="output_dir",
                       help='the input fasta file/input dir [REQUIRED]')
-
     parser.add_option('-p','--parameter_fp', dest="parameter_fp",
                        help='path to the parameter file [REQUIRED]')
-
     parser.add_option("-d", "--dirref", dest="refdb_dir",
                       help="location of the reference DB [REQUIRED]")
-
     parser.add_option("-r", "--readsdir", dest="readsdir",
                       help="location of the raw fastq data for RPKM and TPM [optional]")
-    
     parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
                       help="max number of cores to use in multithreaded steps [DEFAULT 1]")
-
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print lots of information on the stdout [default]")
-
     parser.add_option("--version", action="store_true", dest="version", default=False,
                       help="print MetaPathways version")
-
     parser.add_option("-s", "--samples", dest="sample_subset", action="append", default=[],
                       help="process only specific samples [-s sample1 -s sample2]" )
 
@@ -86,13 +80,12 @@ def createParser():
 
 
 def dbParser():
-    usage = """Metapathways build_db -i input_dir -o output_dir -p parameters.txt
+    usage = """Metapathways build_db -o output_dir -b db_type
               \t for more options: MetaPathways build_db -h"""
 
     parser = OptionParser(usage)
     parser.add_option("-o", "--output_dir", dest="output_dir",
                       help='path to save reference database [REQUIRED]')
-
     parser.add_option('-b','--db_type', dest="db_type",
                        help=
                        '''build version of database [REQUIRED]
@@ -105,10 +98,32 @@ def dbParser():
                         )    
     parser.add_option("-t", "--threads", dest="num_cpus", default = 'all', 
                       help="max number of cores to use in multithreaded steps [DEFAULT all]")
-    parser.add_option("-u", "--metacyc_user", dest="metacyc_user", default = '', 
-                      help="MetaCyc username for data download")
-    parser.add_option("-p", "--metacyc_pswd", dest="metacyc_pswd", default = '', 
-                      help="MetaCyc password for data download")
+    return parser
+
+
+def msParser():
+    usage = """Metapathways mag_split -o output_dir -m contig_mag_map
+              \t for more options: MetaPathways mag_split -h"""
+
+    parser = OptionParser(usage)
+    parser.add_option("-o", "--output_dir", dest="output_dir",
+                      help='path where MP output was saved [REQUIRED]')
+    parser.add_option("-m", "--contig_mag_map", dest="mag_map",
+                      help="TSV file that contains contig-to-MAG mapping [REQUIRED]")
+    return parser
+
+
+def ptParser():
+    usage = """Metapathways ptools -o output_dir
+              \t for more options: MetaPathways ptools -h"""
+
+    parser = OptionParser(usage)
+    parser.add_option("-o", "--output_dir", dest="output_dir",
+                      help='path where MP output was saved [REQUIRED]')
+    parser.add_option("--tag", dest="tag",
+                      help="Custom name for ePGDB [optional]")
+    parser.add_option("--container", action="store_true", dest="container", default=False,
+                      help="Flag only used in containerized env [special flag]")
     return parser
 
 
@@ -139,7 +154,17 @@ def valid_arguments(func, opts, args):
         if opts.db_type == None:
            gutils.eprintf("ERROR\tValid DB Type not provided.\n")
            isvalid = False
-
+    elif func == "mag_split":
+        if opts.output_dir == None:
+           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
+           isvalid = False
+        if opts.mag_map == None:
+           gutils.eprintf("ERROR\tContig-to-MAG map is not provided.\n")
+           isvalid = False
+    elif func == "ptools":
+        if opts.output_dir == None:
+           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
+           isvalid = False
     return isvalid
 
 def derive_sample_name(filename):
@@ -482,13 +507,99 @@ def build_db():
     argv = sys.argv
     parser = dbParser()
     (opts, args) = parser.parse_args(argv)
-    
     if not valid_arguments("build_db", opts, args):
        print(USAGE)
        sys.exit(0)
     gutils.eprintf("Building Refenence DB:")
-    gutils.eprintf(f' metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} {opts.metacyc_user} {opts.metacyc_pswd}')
-    system(f'metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} {opts.metacyc_user} {opts.metacyc_pswd}')
+    mc_list = ['stage_fast_full', 'stage_fast_lite',
+               'stage_blast_full', 'stage_blast_lite'
+               ]
+    if opts.db_type in mc_list:
+        gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
+        # Get the username and password securely
+        metacyc_user = input("Enter your MetaCyc username: ")
+        metacyc_pswd = getpass.getpass("Enter your MetaCyc password: ")
+    else:
+        metacyc_user = ''
+        metacyc_pswd = ''
+
+    db_dir = opts.output_dir
+    isExist = path.exists(db_dir)
+    if not isExist:
+        makedirs(db_dir)
+
+    add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
+
+    gutils.eprintf(f' metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} \n')
+    system(f'metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus}')
+
+
+def add_netrc_entry(machine, login, password):
+    # Get the user's home directory
+    home_directory = path.expanduser("~")
+
+    # Define the path to the .netrc file
+    netrc_path = path.join(home_directory, ".netrc")
+
+    # Check if the .netrc file already exists
+    if path.exists(netrc_path):
+        # Read the existing .netrc file
+        with open(netrc_path, 'r') as netrc_file:
+            existing_entries = netrc_file.read()
+            # Check if an entry for the specified machine already exists
+            if f"machine {machine}" in existing_entries:
+                print(f"An entry for '{machine}' already exists in .netrc. Not adding a duplicate entry.")
+                return
+
+    # If it doesn't exist or the entry doesn't exist, open the .netrc file in append mode
+    with open(netrc_path, 'a') as netrc_file:
+        # Write the new entry to the file
+        netrc_file.write(f"machine {machine}\n")
+        netrc_file.write(f"login {login}\n")
+        netrc_file.write(f"password {password}\n")
+
+
+def mag_split():
+    argv = sys.argv
+    parser = msParser()
+    (opts, args) = parser.parse_args(argv)
+    
+    if not valid_arguments("mag_split", opts, args):
+       print(USAGE)
+       sys.exit(0)
+    gutils.eprintf("Mapping Ptools inputs to MAGs:")
+
+    pf_file = path.join(opts.output_dir, 'ptools/0.pf')
+    orf_map = path.join(opts.output_dir, 'ptools/orf_map.txt')
+    orf_contig_map = glob.glob(path.join(opts.output_dir, 'results/annotation_table/*.ORF_annotation_table.txt'))[0]
+    contig_map = glob.glob(path.join(opts.output_dir, 'preprocessed/*.mapping.txt'))[0]
+    mag_map = opts.mag_map
+    ms_outdir = path.join(opts.output_dir, 'magsplitter')
+
+    isExist = path.exists(ms_outdir)
+    if not isExist:
+       makedirs(ms_outdir)
+
+    gutils.eprintf(f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir} \n')
+    system(f'magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}')
+
+
+def ptools():
+    argv = sys.argv
+    parser = ptParser()
+    (opts, args) = parser.parse_args(argv)
+    
+    if not valid_arguments("ptools", opts, args):
+       print(USAGE)
+       sys.exit(0)
+    if opts.tag:
+        tag = opts.tag
+    else:
+        tag = path.basename(opts.output_dir.rstrip('/'))
+    gutils.eprintf("Building ePGDBs:")
+    gutils.eprintf(f' pgdb_build_wf.py --mp_out {opts.output_dir} --tag {tag} \n')
+    system(f'pgdb_build_wf.py --mp_out {opts.output_dir} --tag {tag}')
+
 
 def help():
     print("""\
@@ -502,6 +613,8 @@ def help():
             help
             build_db
             run
+            mag_split
+            ptools
 
         for addional help, use:
             MetaPathways COMMAND -h
@@ -515,21 +628,14 @@ def main():
     {
         "help": help,
         "build_db" : build_db,
-        "run": run
+        "run": run,
+        "mag_split": mag_split,
+        "ptools": ptools
     }.get(
         sys.argv[1],
         help # default
     )()
-    #process(sys.argv)
-    #sys.exit(errormod.get_recent_error())
-    #mputils.halt_process(1)
 
 # the main function of metapaths
 if __name__ == "__main__":
     main(sys.argv)
-    #if len(sys.argv) > 1:
-    #  process(sys.argv)
-      #sys.exit(errormod.get_recent_error())
-      #mputils.halt_process(1)
-
-

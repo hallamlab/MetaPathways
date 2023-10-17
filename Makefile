@@ -168,7 +168,7 @@ create-conda:
 	./conda_recipe/call_build.sh
 
 deploy-conda:
-	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload %
+	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload --user hallamlab %
 
 ### Build & Install Extensions
 ##

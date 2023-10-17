@@ -10,3 +10,4 @@ dependencies:
     - twine
     - build
     - git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs
+    - git+https://github.com/hallamlab/MAGSplitter.git@main

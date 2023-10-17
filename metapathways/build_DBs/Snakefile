@@ -276,13 +276,11 @@ rule fetch_metacyc_db:
         config["ref_db_dir"] + '/starting_build'
     params:
         target_dir = config['ref_db_dir'],
-        username = config['metacyc_username'],
-        password = config['metacyc_password']
     output:
         config["ref_db_dir"] + '/functional/metacyc'
     shell:
         """
-        wget -O {params.target_dir}/functional/meta.tar.gz --user {params.username} --password {params.password} https://brg-files.ai.sri.com/public/dist/meta.tar.gz
+        wget --netrc=on -O {params.target_dir}/functional/meta.tar.gz https://brg-files.ai.sri.com/public/dist/meta.tar.gz
         tar -xvzf {params.target_dir}/functional/meta.tar.gz -C {params.target_dir}/functional/
         cp {params.target_dir}/functional/*/data/protseq.fsa {params.target_dir}/functional/metacyc
         """

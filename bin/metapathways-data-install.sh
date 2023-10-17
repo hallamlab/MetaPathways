@@ -12,8 +12,6 @@ print_help() {
   echo "			stage_blast_full"
   echo "			stage_blast_lite"
   echo "	nthreads - number of threads to use. [all]"
-  echo "	metacyc_user - username for MetaCyc data download."
-  echo "	metacyc_pswd - password for MetaCyc data download. "  
   echo "  -h, --help       Display this help message."
 }
 
@@ -42,8 +40,6 @@ fi
 data_dir="$1"
 db_type="$2"
 nthreads="${3:-all}"
-metacyc_user="${4:-}"
-metacyc_pswd="${5:-}"
 
 metapathways_pkg_dir=$(python -c "import site; print(site.getsitepackages()[0])")/metapathways/build_DBs
 
@@ -53,7 +49,5 @@ snakemake \
   --cores "$nthreads" \
   --until "$db_type" \
   --config ref_db_dir="$data_dir" \
-  metacyc_username="$metacyc_user" \
-  metacyc_password="$metacyc_pswd" \
   script_path="$metapathways_pkg_dir"
 
