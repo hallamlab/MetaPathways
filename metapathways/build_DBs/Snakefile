@@ -141,6 +141,8 @@ rule fetch_silva_db:
         wget -O {output.ssu_silva_file}.gz https://www.arb-silva.de/fileadmin/silva_databases/current/Exports/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.fasta.gz
         gunzip {output.lsu_silva_file}.gz
         gunzip {output.ssu_silva_file}.gz
+        date > {params.target_dir}/functional_categories/SILVA_reldate.txt
+        echo "Release: " {arb_release} >> {params.target_dir}/functional_categories/SILVA_reldate.txt
         """
 
 rule make_silva_blast_db:
@@ -172,6 +174,10 @@ rule fetch_uniref90_db:
         """
         wget -O {params.target_dir}/functional/uniref90.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
         gunzip {params.target_dir}/functional//uniref90.gz
+        wget -O {params.target_dir}/functional_categories/uniref90.release_note https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.release_note
+        date > {params.target_dir}/functional_categories/UniRef90_reldate.txt
+        cat {params.target_dir}/functional_categories/uniref90.release_note >> {params.target_dir}/functional_categories/UniRef90_reldate.txt
+        rm {params.target_dir}/functional_categories/uniref90.release_note
         """
 
 rule make_uniref90_blast_db:
@@ -209,6 +215,10 @@ rule fetch_swissprot_db:
         """
         wget -O {params.target_dir}/functional/swissprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
         gunzip {params.target_dir}/functional/swissprot.gz
+        wget -O {params.target_dir}/functional_categories/swissprot_reldate.txt https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/reldate.txt
+        date > {params.target_dir}/functional_categories/SwissProt_reldate.txt
+        cat {params.target_dir}/functional_categories/swissprot_reldate.txt >> {params.target_dir}/functional_categories/SwissProt_reldate.txt
+        rm {params.target_dir}/functional_categories/swissprot_reldate.txt
         """
 
 rule make_swissprot_blast_db:
@@ -245,6 +255,8 @@ rule fetch_cazy_db:
     shell:
         """
         wget -O {params.target_dir}/functional/cazy https://bcb.unl.edu/dbCAN2/download/Databases/V12/CAZyDB.07262023.fa
+        date > {params.target_dir}/functional_categories/CAZyDB_reldate.txt
+        echo "Release: V12_07262023" >> {params.target_dir}/functional_categories/CAZyDB_reldate.txt
         """
 
 rule make_cazy_blast_db:
@@ -283,6 +295,9 @@ rule fetch_metacyc_db:
         wget --netrc=on -O {params.target_dir}/functional/meta.tar.gz https://brg-files.ai.sri.com/public/dist/meta.tar.gz
         tar -xvzf {params.target_dir}/functional/meta.tar.gz -C {params.target_dir}/functional/
         cp {params.target_dir}/functional/*/data/protseq.fsa {params.target_dir}/functional/metacyc
+        version=$(echo {params.target_dir}/functional/*/data/protseq.fsa | rev | cut -d'/' -f3 | rev)
+        date > {params.target_dir}/functional_categories/MetaCyc_reldate.txt
+        echo "Release: " $version >> {params.target_dir}/functional_categories/MetaCyc_reldate.txt
         """
 
 rule make_metacyc_blast_db:
@@ -347,6 +362,10 @@ rule fetch_ec_db:
     shell:
         """
         wget -O {params.target_dir}/functional_categories/enzyme.dat https://ftp.expasy.org/databases/enzyme/enzyme.dat
+        wget -O {params.target_dir}/functional_categories/enzclass.txt https://ftp.expasy.org/databases/enzyme/enzclass.txt
+        date > {params.target_dir}/functional_categories/Expasy_reldate.txt
+        grep '^Release: ' {params.target_dir}/functional_categories/enzclass.txt >> {params.target_dir}/functional_categories/Expasy_reldate.txt
+        rm {params.target_dir}/functional_categories/enzclass.txt
         """
 
 ### Rule for mapping SwissProt to EC numbers:
