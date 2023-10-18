@@ -981,15 +981,15 @@ class ContextCreator:
         rpkm_input = s.rpkm_input_dir
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
-        output_fas = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".fna"
+        output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
 
         rpkmExec = self.configs.RPKM_EXECUTABLE
         bwaExec = self.configs.BWA_EXECUTABLE
 
 
         '''output'''
-        rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_counts.txt"
-        stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".orf_counts_stats.txt"
+        rpkm_output = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".contig_counts.tsv"
+        stats_file = s.output_results_rpkm_dir  + PATHDELIM + s.sample_name + ".contig_counts_log.txt"
 
         num_threads = self.configs.NUM_CPUS
 
