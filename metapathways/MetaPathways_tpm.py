@@ -63,61 +63,43 @@ def createParser():
 
     # Input options
     parser.add_option(
-        "-c", "--contigs", dest="contigs", default=None, help="the contigs file"
-    )
-
+        "-c", "--contigs", dest="contigs",
+        default=None, help="the contigs file"
+        )
     parser.add_option(
-        "-o", "--output", dest="output", default=None, help="orfwise read count file"
-    )
-
+        "-o", "--output", dest="output",
+        default=None, help="orfwise read count file"
+        )
     parser.add_option(
-        "-m",
-        "--microbecensusoutput",
-        dest="microbecensusoutput",
-        default=None,
-        help="output from the MicrobeCensus run",
-    )
-
+        "--stats", dest="stats", default=None,
+        help="output stats for ORFs into file"
+        )
     parser.add_option(
-        "--stats", dest="stats", default=None, help="output stats for ORFs  into file"
-    )
-
+        "-r", "--readsdir", dest="readsdir",
+        default=None, help="the directory that should have the read files"
+        )
     parser.add_option(
-        "-r",
-        "--readsdir",
-        dest="readsdir",
-        default=None,
-        help="the directory that should have the read files",
-    )
-
+        "-g", "--orfgff", dest="orfgff",
+        default=None, help="annotated GFF file"
+        )
     parser.add_option(
-        "-O", "--orfgff", dest="orfgff", default=None, help="folder of the PGDB"
-    )
-
+        "-s", "--sample_name", dest="sample_name",
+        default=None, help="name of the sample"
+        )
     parser.add_option(
-        "-s",
-        "--sample_name",
-        dest="sample_name",
-        default=None,
-        help="name of the sample",
-    )
-
+        "--rpkmExec", dest="rpkmExec",
+        default=None, help="RPKM Executable"
+        )
+    parser.add_option("--bwaExec", dest="bwaExec",
+        default=None, help="BWA Executable"
+        )
+    parser.add_option("--bwaFolder", dest="bwaFolder",
+        default=None, help="BWA Folder"
+        )
     parser.add_option(
-        "--rpkmExec", dest="rpkmExec", default=None, help="RPKM Executable"
-    )
-
-    parser.add_option("--bwaExec", dest="bwaExec", default=None, help="BWA Executable")
-
-    parser.add_option("--bwaFolder", dest="bwaFolder", default=None, help="BWA Folder")
-
-    parser.add_option(
-        "-n",
-        "--num_threads",
-        dest="num_threads",
-        default=1,
-        help="number of threads",
-    )
-
+        "-n", "--num_threads", dest="num_threads",
+        default=1, help="number of threads",
+        )
 
     return parser
 
@@ -300,11 +282,11 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append(options.num_threads)
     command.append('--bam-file-cache-directory')
     command.append(options.bwaFolder)
-    command.append('--discard-unmapped')
-    command.append('--min-read-percent-identity-pair 97')
-    command.append('--min-read-aligned-percent-pair 97')
-    command.append('--proper-pairs-only')
-
+    #command.append('--discard-unmapped')
+    #command.append('--min-read-percent-identity-pair 97')
+    #command.append('--min-read-aligned-percent-pair 97')
+    #command.append('--proper-pairs-only')
+    #print(command)
     rpkmstatus = 0
     rpkmtext = ''
     try:
@@ -320,7 +302,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tFailed to run RPKM" )
 
     with open(options.stats, 'w') as stat_out:
-        stat_out.write(command)
+        stat_out.write(' '.join(command))
         stat_out.write('\n\n')
         stat_out.write(rpkmtext)
 

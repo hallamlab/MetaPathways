@@ -3,8 +3,6 @@
 ptoolpath=$1 # path to ../ptools input
 pgdbpath=$2  # path to ../results/pgdb output
 
-Xvfb :${DISPLAY#*:} &
-
 ## This builds the PGDB:
 pathway-tools -patho ${ptoolpath} -no-web-cel-overview -no-patch-download -tip -no-cel-overview -disable-metadata-saving -nologfile
 

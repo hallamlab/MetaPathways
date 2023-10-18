@@ -1017,7 +1017,7 @@ class ContextCreator:
 
         pyScript = self.configs.RPKM_CALCULATION
 
-        cmd = "%s -c %s --rpkmExec %s --readsdir %s -O %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
+        cmd = "%s -c %s --rpkmExec %s --readsdir %s -g %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
               % (pyScript, context.inputs['output_fas'], 
                  context1.inputs['rpkmExec'],\
                  context.inputs['rpkm_input'], context.inputs['output_gff'],\

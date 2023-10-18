@@ -367,8 +367,9 @@ def run():
 
     if not path.exists(parameter_fp):
         gutils.eprintf("%-10s: No parameters file %s found!\n" %('WARNING', parameter_fp))
-        gutils.eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
-        mputils.create_metapaths_parameters(parameter_fp, cmd_folder)
+        sys.exit(2)
+        #gutils.eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
+        #mputils.create_metapaths_parameters(parameter_fp, cmd_folder)
 
     params=parsemod.parse_metapaths_parameters(parameter_fp)
 
