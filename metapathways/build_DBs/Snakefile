@@ -49,6 +49,7 @@ rule stage_blast_full:
         expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
                tax_db = taxonomic_db_names),
         config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
@@ -64,6 +65,7 @@ rule stage_blast_lite:
         expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
                tax_db = taxonomic_db_names),
         config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
 
@@ -79,6 +81,7 @@ rule stage_fast_full:
         expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
                tax_db = taxonomic_db_names),
         config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
@@ -94,6 +97,7 @@ rule stage_fast_lite:
         expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
                tax_db = taxonomic_db_names),
         config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
         config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
 
@@ -350,6 +354,21 @@ rule mono_2_rxn:
         base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
 	python {script_path}/metacyc_mapping_build.py $base
 	cp $base/MetaCyc-*.tsv {params.target_dir}/functional_categories/
+        """
+
+### Rule for building the MetaCyc Ontology:
+rule pwy_2_ont:
+    input:
+        config["ref_db_dir"] + '/functional/metacyc'
+    params:
+        target_dir = config['ref_db_dir'],
+        output_dir = config['ref_db_dir'] + '/functional_categories/',
+    output:
+        output_file = config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv'
+    shell:
+        """
+        base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
+	python {script_path}/metacyc_build_ont.py $base {params.output_dir}
         """
 
 rule fetch_ec_db:
