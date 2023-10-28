@@ -8,7 +8,7 @@ source:
 build:
   noarch: python
   number: 0
-  script: {{ PYTHON }} -m pip install git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs && {{ PYTHON }} -m pip install . -vv
+  script: {{ PYTHON }} -m pip install git+https://github.com/hallamlab/MAGSplitter.git@main && {{ PYTHON }} -m pip install git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs && {{ PYTHON }} -m pip install . -vv
   entry_points:
 <ENTRY>
 
