@@ -73,58 +73,26 @@ class Parameters:
 
     def initializeExpectations(self):
         self.acceptableValues = {
-            "INPUT": {
-                "format": {
-                    "fasta": True,
-                    "gbk-annotated": True,
-                    "gbk-unannotated": True,
-                    "fasta-amino": True,
-                }
-            },
+            "INPUT": {"format": {"fasta": True, "fasta-amino": True}},
             "quality_control": {"delete_replicates": {"yes": True, "no": True}},
             "orf_prediction": {"algorithm": {"prodigal": True}},
             "annotation": {"algorithm": {"FAST": True, "BLAST": True}},
-            # e.g. blast or last
-            # annotation:dbs metacyc-v4-2011-07-03,refseq-nr-2014-01-18,COG_2013-12-27,kegg-pep-2011-06-18,seed-2014-01-30
-            # rRNA annotation parameters
-            # rRNA:refdbs GREENGENES_gg16S-2012-11-06,LSURef_115_tax_silva,SSURef_NR99_115_tax_silva
-            # e.g. rRNA:refdbs GREENGENES_gg16S,SSURef_111_NR_tax_silva,LSURef_111_tax_silva
-            # pathway tools parameters
             "ptools_settings": {"taxonomic_pruning": {"yes": True, "no": True}},
-            "rRNA": {"refdbs": {}},
-            # grid settings
             "metapaths_steps": {
                 "PREPROCESS_INPUT": {"yes": True, "skip": True, "redo": True},
                 "ORF_PREDICTION": {"yes": True, "skip": True, "redo": True},
                 "GFF_TO_AMINO": {"yes": True, "skip": True, "redo": True},
                 "FILTER_AMINOS": {"yes": True, "skip": True, "redo": True},
-                "COMPUTE_REFSCORES": {
-                    "yes": True,
-                    "skip": True,
-                    "redo": True,
-                },
+                "COMPUTE_REFSCORES": {"yes": True, "skip": True, "redo": True,},
                 "FUNC_SEARCH": {"yes": True, "skip": True, "redo": True, "grid": True},
                 "PARSE_FUNC_SEARCH": {"yes": True, "skip": True, "redo": True},
                 "SCAN_rRNA": {"yes": True, "skip": True, "redo": True},
                 "SCAN_tRNA": {"yes": True, "skip": True, "redo": True},
                 "ANNOTATE_ORFS": {"yes": True, "skip": True, "redo": True},
                 "PATHOLOGIC_INPUT": {"yes": True, "skip": True, "redo": True},
-                "GENBANK_FILE": {
-                    "yes": True,
-                    "skip": True,
-                    "redo": True,
-                },
+                "GENBANK_FILE": {"yes": True, "skip": True, "redo": True},
                 "CREATE_ANNOT_REPORTS": {"yes": True, "skip": True, "redo": True},
-                "BUILD_PGDB": {
-                    "yes": True,
-                    "skip": True,
-                    "redo": True,
-                },
-                "COMPUTE_RPKM": {
-                    "yes": True,
-                    "skip": True,
-                    "redo": True,
-                },
+                "COMPUTE_RPKM": {"yes": True, "skip": True, "redo": True},
             },
         }
 

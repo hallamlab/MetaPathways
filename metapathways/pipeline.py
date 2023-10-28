@@ -1,11 +1,5 @@
 """The main script that calls the pipeline """
 
-__author__ = "Kishori M Konwar"
-__version__ = "3.5.0"
-__copyright__ = "Copyright 2020, MetaPathways"
-__maintainer__ = "Kishori M Konwar"
-__status__ = "Release"
-
 try:
     import sys
     import traceback
@@ -16,7 +10,7 @@ try:
     import getpass
 
     from os import makedirs, sys, listdir, environ, path, _exit, system
-    from optparse import OptionParser
+    import argparse
 
     from metapathways import errorcodes as errormod
     from metapathways import metapathways_utils  as mputils
@@ -27,10 +21,17 @@ try:
     from metapathways import diagnoze as diagnoze
     from metapathways import sampledata as sampledata
     from metapathways import general_utils as gutils
+    from metapathways import _version
 except:
    print("""Could not load some user defined  module functions""")
    print(traceback.print_exc(10))
    sys.exit(3)
+
+__author__ = _version.__author__
+__version__ = _version.__version__
+__copyright__ = _version.__copyright__
+__maintainer__ = _version.__maintainer__
+__status__ = _version.__status__
 
 cmd_folder = path.abspath(path.split(inspect.getfile( inspect.currentframe() ))[0])
 
@@ -51,121 +52,186 @@ script_info['script_description'] = \
 script_info['script_usage'] = []
 
 
-USAGE = """Metapathways run -i input_dir -o output_dir -p parameters.txt
-            \t for more options: MetaPathways run -h"""
-def createParser():
 
-    parser = OptionParser(USAGE)
-    parser.add_option("-i", "--input_file", dest="input_fp",
-                      help='the input fasta file/input dir [REQUIRED]')
-    parser.add_option("-o", "--output_dir", dest="output_dir",
-                      help='the input fasta file/input dir [REQUIRED]')
-    parser.add_option('-p','--parameter_fp', dest="parameter_fp",
-                       help='path to the parameter file [REQUIRED]')
-    parser.add_option("-d", "--dirref", dest="refdb_dir",
-                      help="location of the reference DB [REQUIRED]")
-    parser.add_option("-r", "--readsdir", dest="readsdir",
-                      help="location of the raw fastq data for RPKM and TPM [optional]")
-    parser.add_option("-t", "--threads", dest="num_cpus", default = 4, type = int, 
-                      help="max number of cores to use in multithreaded steps [DEFAULT 1]")
-    parser.add_option("-v", "--verbose",
-                      action="store_true", dest="verbose", default=False,
-                      help="print lots of information on the stdout [default]")
-    parser.add_option("--version", action="store_true", dest="version", default=False,
-                      help="print MetaPathways version")
-    parser.add_option("-s", "--samples", dest="sample_subset", action="append", default=[],
-                      help="process only specific samples [-s sample1 -s sample2]" )
+def runParser():
+    parser = argparse.ArgumentParser(description='MetaPathways command-line tool for annotation of contigs.')
+    subparsers = parser.add_subparsers(dest="command")
+    run_parser = subparsers.add_parser(
+        'run',
+        description='Minimum REQUIRED Command:\n'
+                    'MetaPathways run -i INPUT_FILE -o OUTPUT_DIR -d REFDB_DIR\n\n',
+        usage='Metapathways run [options]', formatter_class=argparse.RawTextHelpFormatter)
+    
+    # Minimum required args
+    req_args = run_parser.add_argument_group('Minimum Required Arguments')
+    req_args.add_argument("-i", "--input_file", required=True,
+                        help='path to the input fasta file/input dir [REQUIRED]')
+    req_args.add_argument("-o", "--output_dir", required=True,
+                        help='path to the output directory [REQUIRED]')
+    req_args.add_argument("-d", "--refdb_dir", required=True,
+                        help="path to the reference DB [REQUIRED]")
+    
+    
+    ### OPTIONAL ARGUMENTS ###
+
+    # Quality Control
+    qc_args = run_parser.add_argument_group('Quality Controls Arguments')
+    qc_args.add_argument('--input_format', type=str, default='fasta', choices=['fasta', 'fasta-amino'],
+                         help='Input format, FASTA support only [fasta]')
+    qc_args.add_argument('--qc_min_length', type=int, default=180,
+                         help='Minimum length for quality control [180]')
+    qc_args.add_argument('--qc_delete_replicates', type=str, default='yes', choices=['yes', 'no'],
+                         help='Delete replicates in quality control [yes]')
+
+    # ORF prediction
+    orf_args = run_parser.add_argument_group('ORF Prediction Arguments')
+    orf_args.add_argument('--orf_strand', type=str, default='both', choices=['pos', 'neg', 'both'],
+                          help='Strand for ORF prediction [both]')
+    orf_args.add_argument('--orf_algorithm', type=str, default='prodigal',
+                          help='Algorithm for ORF prediction, Prodigal support only [prodigal]')
+    orf_args.add_argument('--orf_min_length', type=int, default=60,
+                          help='Minimum ORF length [60]')
+    orf_args.add_argument('--orf_translation_table', type=int, default=11,
+                          help='Translation table for ORF prediction, see Prodigal for translation tables [11] ')
+    orf_args.add_argument('--orf_mode', type=str, default='meta', choices=['single', 'meta'],
+                          help='Mode for ORF prediction [meta]')
+
+    # Functional annotation
+    func_args = run_parser.add_argument_group('Functional Annotation Arguments')
+    func_args.add_argument('--annotation_algorithm', type=str, default='FAST', choices=['FAST', 'BLAST'],
+                           help='Algorithm for ORF annotation [FAST]')
+    func_args.add_argument('--annotation_dbs', nargs='+', default=['swissprot'],
+                           help='Database(s) for annotation, space-separated list [swissprot]')
+    func_args.add_argument('--annotation_min_bsr', type=float, default=0.4,
+                           help='Minimum BSR for annotation [0.4]')
+    func_args.add_argument('--annotation_max_evalue', type=float, default=0.000001,
+                           help='Maximum e-value for annotation [0.000001]')
+    func_args.add_argument('--annotation_min_score', type=int, default=20,
+                           help='Minimum score for annotation [20]')
+    func_args.add_argument('--annotation_min_length', type=int, default=45,
+                           help='Minimum length for annotation [45]')
+    func_args.add_argument('--annotation_max_hits', type=int, default=5,
+                           help='Maximum hits for annotation [5]')
+    func_args.add_argument('--annotation_run_mode', type=str, default='pervol', choices=['default', 'pervol'],
+                           help='Run mode for annotation, FAST only [pervol]')
+
+    # rRNA annotation
+    rrna_args = run_parser.add_argument_group('rRNA Annotation Arguments')
+    rrna_args.add_argument('--rRNA_refdbs', type=str, nargs='+',
+                           default=['SILVA_138.1_LSURef_NR99_tax_silva_trunc', 'SILVA_138.1_SSURef_NR99_tax_silva_trunc'],
+                           help='Reference databases for rRNA annotation, space-separated list\n' \
+                           '[SILVA_138.1_LSURef_NR99_tax_silva_trunc SILVA_138.1_SSURef_NR99_tax_silva_trunc]')
+    rrna_args.add_argument('--rRNA_max_evalue', type=float, default=0.000001,
+                           help='Maximum e-value for rRNA annotation [0.000001]')
+    rrna_args.add_argument('--rRNA_min_identity', type=int, default=20,
+                           help='Minimum identity for rRNA annotation [20]')
+    rrna_args.add_argument('--rRNA_min_bitscore', type=int, default=50,
+                           help='Minimum bitscore for rRNA annotation [50]')
+
+    # Pathway tools
+    ptools_args = run_parser.add_argument_group('Pathway Tools Preprocessing Arguments')
+    ptools_args.add_argument('--ptools_taxonomic_pruning', type=str, default='no', choices=['yes', 'no'],
+                             help='Taxonomic pruning in pathway tools [no]')
+
+    # Read mapping
+    reads_args = run_parser.add_argument_group('Read Mapping Arguments')
+    reads_args.add_argument("-r", "--readsdir",
+                        help="location of the raw fastq data for RPKM and TPM [optional]")
+
+    # Pipeline execution flags
+    pipe_args = run_parser.add_argument_group('Pipeline Step Arguments')
+    pipe_args.add_argument('--PREPROCESS_INPUT', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: PREPROCESS_INPUT [yes]')
+    pipe_args.add_argument('--ORF_PREDICTION', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: ORF_PREDICTION [yes]')
+    pipe_args.add_argument('--FILTER_AMINOS', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: FILTER_AMINOS [yes]')
+    pipe_args.add_argument('--SCAN_rRNA', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: SCAN_rRNA [yes]')
+    pipe_args.add_argument('--SCAN_tRNA', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: SCAN_tRNA [yes]')
+    pipe_args.add_argument('--FUNC_SEARCH', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: FUNC_SEARCH [yes]')
+    pipe_args.add_argument('--PARSE_FUNC_SEARCH', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: PARSE_FUNC_SEARCH [yes]')
+    pipe_args.add_argument('--ANNOTATE_ORFS', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: ANNOTATE_ORFS [yes]')
+    pipe_args.add_argument('--GENBANK_FILE', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: GENBANK_FILE [yes]')
+    pipe_args.add_argument('--CREATE_ANNOT_REPORTS', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: CREATE_ANNOT_REPORTS [yes]')
+    pipe_args.add_argument('--PATHOLOGIC_INPUT', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: PATHOLOGIC_INPUT [yes]')
+    pipe_args.add_argument('--COMPUTE_TPM', type=str, default='yes', choices=['yes', 'skip', 'redo'],
+                           help='Step: COMPUTE_TPM [yes]')
+
+    # Other arguments
+    misc_args = run_parser.add_argument_group('Miscellaneous Arguments')
+    misc_args.add_argument("-s", "--samples", nargs='+', action="append", default=[],
+                        help="process only specific samples, space-separated list")
+    misc_args.add_argument("-t", "--threads", default=4, type=int,
+                        help="max number of cores to use in multithreaded steps [4]")
+    misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
+                        help="print more information on the stdout")
 
     return parser
 
 
 def dbParser():
-    usage = """Metapathways build_db -o output_dir -b db_type
-              \t for more options: MetaPathways build_db -h"""
+    parser = argparse.ArgumentParser(description='MetaPathways command-line tool for building databases.')
+    subparsers = parser.add_subparsers(dest="command")
+    build_parser = subparsers.add_parser(
+        'build_db',
+        description='Minimum REQUIRED Command:\n'
+                    'Metapathways build_db -o output_dir -b db_type\n\n',
+        usage='Metapathways build_db [options]', formatter_class=argparse.RawTextHelpFormatter)
 
-    parser = OptionParser(usage)
-    parser.add_option("-o", "--output_dir", dest="output_dir",
-                      help='path to save reference database [REQUIRED]')
-    parser.add_option('-b','--db_type', dest="db_type",
-                       help=
-                       '''build version of database [REQUIRED]
-                        acceptable values are:
-                        stage_fast_full
-                        stage_fast_lite
-                        stage_fast_noMeta
-                        stage_blast_full
-                        stage_blast_lite'''
-                        )    
-    parser.add_option("-t", "--threads", dest="num_cpus", default = 'all', 
-                      help="max number of cores to use in multithreaded steps [DEFAULT all]")
+    build_parser.add_argument("-o", "--output_dir", dest="output_dir", required=True,
+                        help='path to save reference database [REQUIRED]')
+    build_parser.add_argument('-b', '--db_type', dest="db_type", required=True,
+                        help="Build version of database [REQUIRED].\nacceptable values are:" \
+                            "\n\tstage_fast_full,\n\tstage_fast_lite,\n\tstage_fast_noMeta," \
+                            "\n\tstage_blast_full,\n\tstage_blast_lite")
+    build_parser.add_argument("-t", "--threads", dest="num_cpus", default='all',
+                        help="max number of cores to use in multithreaded steps [DEFAULT all]")
+
     return parser
 
-
 def msParser():
-    usage = """Metapathways mag_split -o output_dir -m contig_mag_map
-              \t for more options: MetaPathways mag_split -h"""
+    parser = argparse.ArgumentParser(description='MetaPathways command-line tool for MAG splitting.')
+    subparsers = parser.add_subparsers(dest="command")
+    mag_parser = subparsers.add_parser(
+        'mag_split',
+        description='Minimum REQUIRED Command:\n'
+                    'Metapathways mag_split -o output_dir -m contig_mag_map\n\n',
+        usage='Metapathways mag_split [options]', formatter_class=argparse.RawTextHelpFormatter)
 
-    parser = OptionParser(usage)
-    parser.add_option("-o", "--output_dir", dest="output_dir",
-                      help='path where MP output was saved [REQUIRED]')
-    parser.add_option("-m", "--contig_mag_map", dest="mag_map",
-                      help="TSV file that contains contig-to-MAG mapping [REQUIRED]")
+    mag_parser.add_argument("-o", "--output_dir", dest="output_dir", required=True,
+                        help='path where MP output was saved [REQUIRED]')
+    mag_parser.add_argument("-m", "--contig_mag_map", dest="mag_map", required=True,
+                        help="TSV file that contains contig-to-MAG mapping [REQUIRED]")
+
     return parser
 
 
 def ptParser():
-    usage = """Metapathways ptools -o output_dir
-              \t for more options: MetaPathways ptools -h"""
+    parser = argparse.ArgumentParser(description='MetaPathways command-line tool for ptools.')
+    subparsers = parser.add_subparsers(dest="command")
+    ptools_parser = subparsers.add_parser(
+        'ptools',
+        description='Minimum REQUIRED Command:\n'
+                    'Metapathways ptools -o output_dir\n\n',
+        usage='Metapathways ptools [options]', formatter_class=argparse.RawTextHelpFormatter)
 
-    parser = OptionParser(usage)
-    parser.add_option("-o", "--output_dir", dest="output_dir",
-                      help='path where MP output was saved [REQUIRED]')
-    parser.add_option("--tag", dest="tag",
-                      help="Custom name for ePGDB [optional]")
-    parser.add_option("--container", action="store_true", dest="container", default=False,
-                      help="Flag only used in containerized env [special flag]")
+    ptools_parser.add_argument("-o", "--output_dir", dest="output_dir", required=True,
+                        help='path where MP output was saved [REQUIRED]')
+    ptools_parser.add_argument("--tag", dest="tag",
+                        help="Custom name for ePGDB [optional]")
+    ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
+                        help="Flag only used in containerized env [special flag]")
+
     return parser
 
-
-def valid_arguments(func, opts, args):
-    """ checks if the supplied arguments are adequate """
-    isvalid = True
-    if func == "run":
-        if opts.parameter_fp == None:
-           gutils.eprintf("ERROR\tParameter file for run configuration is not provided.\n")
-           isvalid = False
-
-        if opts.output_dir == None:
-           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
-           isvalid = False
-
-        if opts.input_fp == None:
-           gutils.eprintf("ERROR\tInput directory is not provided.\n")
-           isvalid = False
-
-        if opts.refdb_dir == None:
-           gutils.eprintf("ERROR\tThe reference data folder is not provided.\n")
-           isvalid = False
-    elif func == "build_db":
-        if opts.output_dir == None:
-           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
-           isvalid = False
-
-        if opts.db_type == None:
-           gutils.eprintf("ERROR\tValid DB Type not provided.\n")
-           isvalid = False
-    elif func == "mag_split":
-        if opts.output_dir == None:
-           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
-           isvalid = False
-        if opts.mag_map == None:
-           gutils.eprintf("ERROR\tContig-to-MAG map is not provided.\n")
-           isvalid = False
-    elif func == "ptools":
-        if opts.output_dir == None:
-           gutils.eprintf("ERROR\tOutput directory is not provided.\n")
-           isvalid = False
-    return isvalid
 
 def derive_sample_name(filename):
     basename = path.basename(filename)
@@ -194,28 +260,16 @@ def check_for_error_in_input_file_name(shortname, globalerrorlogger=None):
 
     """  creates a list of  input output pairs if input is  an input dir """
     clean = True
-    if not re.search(r'^[a-zA-Z]',shortname):
-         gutils.eprintf("ERROR\tSample name %s must begin with an alphabet!\n",shortname)
-         if globalerrorlogger:
-            globalerrorlogger.printf("ERROR\tSample name %s must begin with an alphabet!\tConsider prefixing an alphabet to the front\n",shortname)
-         clean = False
-
     if re.search(r'[.]',shortname):
          gutils.eprintf("ERROR\tSample name %s contains a '.' in its name!\n",shortname)
          if globalerrorlogger:
             globalerrorlogger.printf("ERROR\tSample name %s contains a '.' in its name!\n",shortname)
          clean = False
 
-    if len(shortname)<2:
-         gutils.eprintf("ERROR\tSample name %s is too short!\n",shortname)
-         if globalerrorlogger:
-             globalerrorlogger.printf("ERROR\tSample name %s is too short1\n",shortname)
-         clean = False
-
     if clean:
          return clean
 
-    errmessage = """Sample names before the  suffixes .fasta, .fas, .fna, .faa or .gbk, must  consist only of alphabets, digits and _; and should consist of at least two characters """
+    errmessage = """Sample names (input assembly names before extension) must consist only of alphanumeric characters and and underscores"""
     gutils.eprintf("ERROR\t%s\n",errmessage)
     if globalerrorlogger:
         globalerrorlogger.printf("ERROR\t%s\n",errmessage)
@@ -234,8 +288,6 @@ def create_an_input_output_pair(input_file, output_dir,  globalerrorlogger=None)
     shortname = None
     shortname = re.sub('[.]gbk$','',input_file, re.IGNORECASE)
     shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
-    #    shortname = re.sub('[.]gff$','',input_file, re.IGNORECASE)
-
     shortname = re.sub(r'.*' + PATHDELIM ,'',shortname)
 
     if  check_for_error_in_input_file_name(shortname, globalerrorlogger=globalerrorlogger):
@@ -315,63 +367,56 @@ def report_missing_filenames(input_output_list, sample_subset, logger=None):
              logger.printf("ERROR\tCannot file input for sample %s!\n", sample_in_subset)
 
 
+def create_arg_dict(parser):
+    # Nested dictionary to hold the structure
+    arg_structure = {}
+
+    # Go through each action in the parser
+    for action in parser._actions:
+        # Check if it is an argument group by type
+        if isinstance(action, argparse._ArgumentGroup):
+            group_name = action.title
+            arg_structure[group_name] = {}
+
+            # For each argument in this group
+            for arg in action._group_actions:
+                # Extract the primary argument name (removing '--' prefix for clarity)
+                arg_name = arg.option_strings[0].lstrip('-')
+                arg_structure[group_name][arg_name] = None  # Initial placeholder, you can replace it with actual values later
+
+    return arg_structure
+
+
 def run():
     argv = sys.argv
-    parser = createParser()
-    (opts, args) = parser.parse_args(argv)
-    if opts.version:
-       print("MetaPathways: Version " + __version__)
-       sys.exit(0)
+    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
+    parser = runParser()
+    args = parser.parse_args()
+    params = parsemod.populate_dict(args)
 
-    if not valid_arguments("run", opts, args):
-       print(USAGE)
-       sys.exit(0)
-
-    gutils.eprintf("%-10s:%s\n" %('COMMAND', argv[0] + ' ' +  ' '.join(argv)) )
     # initialize the input directory or file
-    input_fp = opts.input_fp
-    output_dir = path.abspath(opts.output_dir)
-    verbose = opts.verbose
+    input_fp = params['Minimum Required Arguments']['input_file']
+    output_dir = path.abspath(params['Minimum Required Arguments']['output_dir'])
+    verbose = params['Miscellaneous Arguments']['verbose']
 
-    sample_subset = removeSuffix(opts.sample_subset)
+    # Subset inputs if specified
+    sample_subset = removeSuffix(params['Miscellaneous Arguments']['samples'])
     run_type = 'safe'
 
-    # load the parameter file
-    try:
-       if opts.parameter_fp:
-          parameter_fp= opts.parameter_fp
-       else:
-          parameter_fp = cmd_folder + PATHDELIM + metapaths_param
-    except IOError:
-        raise IOError( "Can't open parameters file (%s). Does it exist? Do you have read access?" % opts.parameter_fp )
+    # Create output directory if it doesn't exist
+    if not path.exists(output_dir):
+        makedirs(output_dir)
 
-
-    try:
-       if not path.exists(output_dir):
-             makedirs(output_dir)
-    except OSError:
-        print("")
-        print("ERROR: Cannot create output directory \"" + output_dir + "\"\n"+\
-              "       Perhaps directory \"" + output_dir  + "\" already exists.\n" +\
-              "       Please choose a different directory, or \n" +\
-              "       run again after removing it." )
-        sys.exit(2)
-
+    # Set output type if verbose or not
     if verbose:
         status_update_callback = gutils.print_to_stdout
     else:
         status_update_callback = gutils.no_status_updates
 
-    command_line_params={}
-    command_line_params['verbose']= opts.verbose
-
-    if not path.exists(parameter_fp):
-        gutils.eprintf("%-10s: No parameters file %s found!\n" %('WARNING', parameter_fp))
-        sys.exit(2)
-        #gutils.eprintf("%-10s: Creating a parameters file %s found!\n" %('INFO', parameter_fp))
-        #mputils.create_metapaths_parameters(parameter_fp, cmd_folder)
-
-    params=parsemod.parse_metapaths_parameters(parameter_fp)
+    # Initialize the commandline params dictionary
+    command_line_params = {}
+    command_line_params['verbose'] = verbose
+    command_line_params['ptools-compact-mode'] = 'yes' # this is a legacy setting, to be removed someday
 
     """ load the sample inputs  it expects either a fasta
         file or  a directory containing fasta and yaml file pairs
@@ -403,7 +448,7 @@ def run():
     sorted_input_output_list = sorted(input_output_list.keys())
     filetypes = gutils.check_file_types(sorted_input_output_list)
 
-    #stop on in valid samples
+    #stop on invalid samples
     if not halt_on_invalid_input(input_output_list, filetypes, sample_subset):
        globalerrorlogger.printf("ERROR\tInvalid inputs found. Check for file with bad format or characters!\n")
 
@@ -412,7 +457,8 @@ def run():
     parameter =  paramsmod.Parameters()
 
     config = gutils.someclass()
-    config.refdb_dir = opts.refdb_dir
+    config.refdb_dir = params['Minimum Required Arguments']['refdb_dir']
+    
     if not diagnoze.staticDiagnose(params, config,  logger = globalerrorlogger):
         gutils.eprintf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
         globalerrorlogger.printf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
@@ -435,8 +481,7 @@ def run():
         "SCAN_rRNA"            : "MetaPathways_rRNA_stats_calculator",
         "SCAN_tRNA"            : "MetaPathways_tRNA_scan",
         "RPKM_CALCULATION"     : "MetaPathways_tpm",
-        # executable
-        "RESOURCES_DIR"        : "resources",
+        # executables
         "BLASTP_EXECUTABLE"    : 'blastp',
         "BLASTN_EXECUTABLE"    : 'blastn',
         "BWA_EXECUTABLE"       : 'bwa',
@@ -445,23 +490,27 @@ def run():
         "PRODIGAL_EXECUTABLE"  : 'pprodigal',
         "SCAN_tRNA_EXECUTABLE" : 'tRNAscan-SE',
         "RPKM_EXECUTABLE"      : 'coverm',
-        "NUM_CPUS"             : opts.num_cpus,
-        "REFDBS"               : opts.refdb_dir
+        "NUM_CPUS"             : params['Miscellaneous Arguments']['threads'],
+        "REFDBS"               : params['Minimum Required Arguments']['refdb_dir']
     }
 
     block_mode = True
 
     try:
          # load the sample information
-         print("RUNNING MetaPathways Version " + __version__)
+         print(f"RUNNING MetaPathways: v{__version__}")
          if len(input_output_list):
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]
-                algorithm = mpsteps.get_parameter(params, 'annotation', 'algorithm', default='FAST').upper()
+                algorithm = mpsteps.get_parameter(params,
+                                                  'Functional Annotation Arguments',
+                                                  'annotation_algorithm',
+                                                  default='FAST').upper()
 
                 s = sampledata.SampleData()
-                if opts.readsdir:
-                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=opts.readsdir)  
+                readsdir = params['Read Mapping Arguments']['readsdir']
+                if readsdir:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=readsdir)  
                 else:
                   s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
@@ -500,22 +549,19 @@ def run():
     gutils.eprintf("INFO : FINISHED PROCESSING THE SAMPLES \n")
     gutils.eprintf("             THE END                   \n")
     gutils.eprintf("            ***********                \n")
-    #mputils.halt_process(opts.delay)
-    #mputils.halt_process(3, verbose=opts.verbose)
 
 
 def build_db():
     argv = sys.argv
+    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = dbParser()
-    (opts, args) = parser.parse_args(argv)
-    if not valid_arguments("build_db", opts, args):
-       print(USAGE)
-       sys.exit(0)
+    args = parser.parse_args()
+
     gutils.eprintf("Building Refenence DB:")
     mc_list = ['stage_fast_full', 'stage_fast_lite',
                'stage_blast_full', 'stage_blast_lite'
                ]
-    if opts.db_type in mc_list:
+    if args.db_type in mc_list:
         gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
         # Get the username and password securely
         metacyc_user = input("Enter your MetaCyc username: ")
@@ -524,15 +570,15 @@ def build_db():
         metacyc_user = ''
         metacyc_pswd = ''
 
-    db_dir = opts.output_dir
+    db_dir = args.output_dir
     isExist = path.exists(db_dir)
     if not isExist:
         makedirs(db_dir)
 
     add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
 
-    gutils.eprintf(f' metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus} \n')
-    system(f'metapathways-data-install.sh {opts.output_dir} {opts.db_type} {opts.num_cpus}')
+    gutils.eprintf(f' metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus} \n')
+    system(f'metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus}')
 
 
 def add_netrc_entry(machine, login, password):
@@ -562,20 +608,17 @@ def add_netrc_entry(machine, login, password):
 
 def mag_split():
     argv = sys.argv
+    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = msParser()
-    (opts, args) = parser.parse_args(argv)
-    
-    if not valid_arguments("mag_split", opts, args):
-       print(USAGE)
-       sys.exit(0)
-    gutils.eprintf("Mapping Ptools inputs to MAGs:")
+    args = parser.parse_args()
 
-    pf_file = path.join(opts.output_dir, 'ptools/0.pf')
-    orf_map = path.join(opts.output_dir, 'ptools/orf_map.txt')
-    orf_contig_map = glob.glob(path.join(opts.output_dir, 'results/annotation_table/*.ORF_annotation_table.txt'))[0]
-    contig_map = glob.glob(path.join(opts.output_dir, 'preprocessed/*.mapping.txt'))[0]
-    mag_map = opts.mag_map
-    ms_outdir = path.join(opts.output_dir, 'magsplitter')
+    gutils.eprintf("Mapping Ptools inputs to MAGs:")
+    pf_file = path.join(args.output_dir, 'ptools/0.pf')
+    orf_map = path.join(args.output_dir, 'ptools/orf_map.txt')
+    orf_contig_map = glob.glob(path.join(args.output_dir, 'results/annotation_table/*.ORF_annotation_table.txt'))[0]
+    contig_map = glob.glob(path.join(args.output_dir, 'preprocessed/*.mapping.txt'))[0]
+    mag_map = args.mag_map
+    ms_outdir = path.join(args.output_dir, 'magsplitter')
 
     isExist = path.exists(ms_outdir)
     if not isExist:
@@ -587,24 +630,21 @@ def mag_split():
 
 def ptools():
     argv = sys.argv
+    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = ptParser()
-    (opts, args) = parser.parse_args(argv)
-    
-    if not valid_arguments("ptools", opts, args):
-       print(USAGE)
-       sys.exit(0)
-    if opts.tag:
-        tag = opts.tag
+    args = parser.parse_args()
+    if args.tag:
+        tag = args.tag
     else:
-        tag = path.basename(opts.output_dir.rstrip('/'))
+        tag = path.basename(args.output_dir.rstrip('/'))
     gutils.eprintf("Building ePGDBs:")
-    gutils.eprintf(f' pgdb_build_wf.py --mp_out {opts.output_dir} --tag {tag} \n')
-    system(f'pgdb_build_wf.py --mp_out {opts.output_dir} --tag {tag}')
+    gutils.eprintf(f' pgdb_build_wf.py --mp_out {args.output_dir} --tag {tag} \n')
+    system(f'pgdb_build_wf.py --mp_out {args.output_dir} --tag {tag}')
 
 
 def help():
-    print("""\
-        MetaPathways v3.5.0
+    print(f"""\
+        MetaPathways: v{__version__}
         https://metapathways.readthedocs.io
         https://bitbucket.org/BCB2/metapathways
 
@@ -612,6 +652,7 @@ def help():
 
         Where COMMAND is one of :
             help
+            version
             build_db
             run
             mag_split
@@ -621,6 +662,9 @@ def help():
             MetaPathways COMMAND -h
         """)
 
+def version():
+    print(f"MetaPathways v{__version__}")
+
 
 def main():
     if len(sys.argv) <= 1:
@@ -628,6 +672,7 @@ def main():
         return
     {
         "help": help,
+        "version": version,
         "build_db" : build_db,
         "run": run,
         "mag_split": mag_split,

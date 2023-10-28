@@ -1,1 +1,7 @@
-__version__ = "3.5.0.dev6"
+__author__ = "Ryan J. McLaughlin, [add all others]"
+__version__ = "3.5.0.dev8"
+__maintainer__ = "Ryan J. McLaughlin"
+__contact__ = "mcglock@student.ubc.ca"
+__status__ = "Development"
+__copyright__ = "Copyright 2023, MetaPathways"
+__license__ = "MIT"

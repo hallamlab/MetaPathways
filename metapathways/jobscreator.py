@@ -84,7 +84,8 @@ class ContextCreator:
         contig_lengths_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".contig.lengths.txt"
 
         '''params'''
-        min_length = self.params.get('quality_control','min_length', default = '180')
+        min_length = self.params.get('Quality Controls Arguments',
+                                     'qc_min_length', default = '180')
         type = 'nucleotide'
 
         context = contextmod.Context()
@@ -99,7 +100,8 @@ class ContextCreator:
                           }
 
 
-        context.status = self.params.get('metapaths_steps','PREPROCESS_INPUT')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'PREPROCESS_INPUT')
 
 
         pyScript = self.configs.PREPROCESS_INPUT
@@ -148,7 +150,8 @@ class ContextCreator:
                             'contig_lengths_file' : contig_lengths_file\
                           }
 
-        context.status = self.params.get('metapaths_steps','PREPROCESS_INPUT')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'PREPROCESS_INPUT')
 
         pyScript = self.configs.PREPROCESS_AMINOS
 
@@ -210,7 +213,8 @@ class ContextCreator:
 
 
         context.name = 'PREPROCESS_INPUT'
-        context.status = self.params.get('metapaths_steps','PREPROCESS_INPUT')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'PREPROCESS_INPUT')
         pyScript = self.configs.GBK_TO_FNA_FAA_GFF
 
 
@@ -246,32 +250,25 @@ class ContextCreator:
         context.name = 'ORF_PREDICTION'
         context.inputs = { 'input_file' : input_file }
         context.outputs = { 'output_gff' : output_gff }
-        context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
-        translation_table = self.params.get('orf_prediction', 'translation_table')
-        algorithm = self.params.get('orf_prediction', 'algorithm')
-        strand = self.params.get('orf_prediction', 'strand')
-
-        mode = self.params.get('orf_prediction', 'mode')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'ORF_PREDICTION')
+        translation_table = self.params.get('ORF Prediction Arguments',
+                                            'orf_translation_table')
+        algorithm = self.params.get('ORF Prediction Arguments',
+                                    'orf_algorithm')
+        strand = self.params.get('ORF Prediction Arguments',
+                                 'orf_strand')
+        mode = self.params.get('ORF Prediction Arguments',
+                               'orf_mode')
 
         num_threads = str(self.configs.NUM_CPUS)
 
         pyScript = self.configs.ORF_PREDICTION
+        executable =  self.configs.PRODIGAL_EXECUTABLE
+        cmd = "%s --prod_exec %s --prod_m --prod_p %s --prod_f %s --prod_g %s --prod_input %s --prod_output %s --nthreads %s"\
+            %(pyScript, executable, mode, 'gff', translation_table, context.inputs['input_file'], context.outputs['output_gff'], num_threads)
 
-        if algorithm == "prodigal":
-            executable =  self.configs.PRODIGAL_EXECUTABLE
-            cmd = [
-                  pyScript,
-                  "--prod_exec", executable,
-                  "--prod_m",
-                  "--prod_p", mode,
-                  "--prod_f", "gff",
-                  "--prod_g", translation_table,
-                  "--prod_input", context.inputs['input_file'],
-                  "--prod_output", context.outputs['output_gff'],
-                  "--nthreads", num_threads,
-             ]
-
-        context.commands = [' '.join(cmd)]
+        context.commands = [cmd]
         context.message = self._Message("ORF PREDICTION")
         contexts.append(context)
         
@@ -298,7 +295,8 @@ class ContextCreator:
         context.outputs = {'output_faa': output_faa, 'output_fna': output_fna,
                            'output_gff' : output_gff, #'output_rrna': output_rrna
                            }
-        context.status = self.params.get('metapaths_steps','ORF_PREDICTION')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'ORF_PREDICTION')
 
         pyScript = self.configs.ORF_TO_AMINO
         cmd = "%s -g  %s  -n %s --output_nuc %s --output_amino %s --output_gff %s"\
@@ -327,7 +325,8 @@ class ContextCreator:
         orf_lengths_file = s.output_run_statistics_dir + PATHDELIM + s.sample_name + ".orf.lengths.txt"
 
         '''params'''
-        min_length = self.params.get('orf_prediction', 'min_length', default = 60)
+        min_length = self.params.get('ORF Prediction Arguments',
+                                     'orf_min_length', default = 60)
         type = 'amino'
 
         context = contextmod.Context()
@@ -338,7 +337,8 @@ class ContextCreator:
                             'orf_lengths_file': orf_lengths_file }
 
 
-        context.status = self.params.get('metapaths_steps','FILTER_AMINOS')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'FILTER_AMINOS')
 
         pyScript = self.configs.PREPROCESS_INPUT
 
@@ -369,7 +369,8 @@ class ContextCreator:
         context.inputs = { 'input_filtered_faa' : input_filtered_faa }
         context.outputs = { 'output_refscores': output_refscores}
 
-        context.status = self.params.get('metapaths_steps','PARSE_FUNC_SEARCH')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'PARSE_FUNC_SEARCH')
 
         cmd = None
         if s.algorithm == 'BLAST':
@@ -387,9 +388,10 @@ class ContextCreator:
         contexts.append(context)
         return contexts
 
-    def get_dbstring(self) :
-        dbstring = self.params.get('annotation', 'dbs', default = '')
-        return dbstring
+    def get_dbs(self) :
+        dbs = self.params.get('Functional Annotation Arguments',
+                                   'annotation_dbs', default = [])
+        return dbs
 
     def create_blastp_against_refdb_cmd(self, s):
         """FUNC_SEARCH"""
@@ -397,15 +399,18 @@ class ContextCreator:
 
         '''parameters'''
 
-        max_evalue = self.params.get('annotation', 'max_evalue', default = 0.000001)
-        max_hits = self.params.get('annotation', 'max_hits', default = 5)
-        min_score = self.params.get('annotation', 'min_score', default = 20)
-        run_mode = self.params.get('annotation', 'run_mode', default = 'default')
+        max_evalue = self.params.get('Functional Annotation Arguments',
+                                     'annotation_max_evalue',
+                                     default = 0.000001)
+        max_hits = self.params.get('Functional Annotation Arguments',
+                                   'annotation_max_hits', default = 5)
+        min_score = self.params.get('Functional Annotation Arguments',
+                                    'annotation_min_score', default = 20)
+        run_mode = self.params.get('Functional Annotation Arguments',
+                                   'annotation_run_mode', default = 'default')
         num_threads = self.configs.NUM_CPUS
 
-        dbstring = self.get_dbstring()
-        dbs = [x.strip() for x in dbstring.split(",") if len(x) != 0]
-
+        dbs = self.get_dbs()
         for db in dbs:
             '''inputs'''
             input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
@@ -417,7 +422,7 @@ class ContextCreator:
                             'formatted' + PATHDELIM + db
 
             context = contextmod.Context()
-            context.name = 'FUNC_SEARCH:' +db
+            context.name = 'FUNC_SEARCH:' + db
             context.inputs = { 'input_filtered_faa' : input_filtered_faa }
             context.outputs = { 'blastoutput': blastoutput}
 
@@ -472,7 +477,8 @@ class ContextCreator:
                     run_mode)
                 context.message = self._Message("FASTING AMINO SEQS AGAINST " + db)
 
-            context.status = self.params.get('metapaths_steps','FUNC_SEARCH')
+            context.status = self.params.get('Pipeline Step Arguments',
+                                             'FUNC_SEARCH')
             context.commands = [cmd]
 
             contexts.append(context)
@@ -494,14 +500,18 @@ class ContextCreator:
         contexts = []
 
         '''parameters'''
-        min_bsr = self.params.get('annotation', 'min_bsr', default = 0.4)
-        min_score = self.params.get('annotation', 'min_score', default = 0.0)
-        min_length = self.params.get('annotation', 'min_length', default = 100)
-        max_evalue = self.params.get('annotation', 'max_evalue', default = 1000)
+        min_bsr = self.params.get('Functional Annotation Arguments',
+                                  'annotation_min_bsr', default = 0.4)
+        min_score = self.params.get('Functional Annotation Arguments',
+                                    'annotation_min_score', default = 0.0)
+        min_length = self.params.get('Functional Annotation Arguments',
+                                     'annotation_min_length', default = 100)
+        max_evalue = self.params.get('Functional Annotation Arguments',
+                                     'annotation_max_evalue',
+                                     default = 1000)
 
-        dbstring = self.get_dbstring()
-        dbs = [x.strip() for x in dbstring.split(",")  if len(x) != 0]
-
+        dbs = self.get_dbs()
+        
         pyScript =  self.configs.PARSE_FUNC_SEARCH
         for db in dbs:
             '''inputs'''
@@ -535,7 +545,8 @@ class ContextCreator:
             if s.algorithm == 'BLAST':
                 cmd = cmd + ' --algorithm BLAST'
             context.commands = [cmd]
-            context.status = self.params.get('metapaths_steps','PARSE_FUNC_SEARCH')
+            context.status = self.params.get('Pipeline Step Arguments',
+                                             'PARSE_FUNC_SEARCH')
             context.message = self._Message("PARSING " + s.algorithm + " OUTPUT FOR " + db)
             contexts.append(context)
 
@@ -547,11 +558,14 @@ class ContextCreator:
         contexts = []
 
         '''parameters'''
-        bscore_cutoff = self.params.get('rRNA', 'min_bitscore', default = 27)
-        eval_cutoff = self.params.get( 'rRNA', 'max_evalue', default = 6)
-        identity_cutoff = self.params.get('rRNA', 'min_identity', default = 40)
-        dbstring = self.params.get('rRNA', 'refdbs', default = None)
-        refrRNArefDBs = [x.strip() for x in dbstring.split(',') if len(x.strip())]
+        bscore_cutoff = self.params.get('rRNA Annotation Arguments',
+                                        'rRNA_min_bitscore', default = 27)
+        eval_cutoff = self.params.get('rRNA Annotation Arguments',
+                                      'rRNA_max_evalue', default = 6)
+        identity_cutoff = self.params.get('rRNA Annotation Arguments',
+                                          'rRNA_min_identity', default = 40)
+        refrRNArefDBs = self.params.get('rRNA Annotation Arguments',
+                                   'rRNA_refdbs', default = None)
 
         pyScript = self.configs.PARSE_FUNC_SEARCH  #TODO: why is this here?
         
@@ -579,7 +593,8 @@ class ContextCreator:
                     context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'],
                     context.outputs['rRNA_barout_gff'])
         context.commands = [barnap_cmd]
-        context.status = self.params.get('metapaths_steps','SCAN_rRNA')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'SCAN_rRNA')
         context.message = self._Message("SCANNING FOR rRNA USING BARRNAP")
         contexts.append(context)
 
@@ -618,7 +633,8 @@ class ContextCreator:
 
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
             context.commands = [scan_cmd, blast_cmd]
-            context.status = self.params.get('metapaths_steps','SCAN_rRNA')
+            context.status = self.params.get('Pipeline Step Arguments',
+                                             'SCAN_rRNA')
             context.message = self._Message("ANNOTATING rRNA USING DB " + db)
             contexts.append(context)
 
@@ -657,7 +673,8 @@ class ContextCreator:
                 )
 
         context.commands = [cmd]
-        context.status = self.params.get('metapaths_steps','SCAN_tRNA')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'SCAN_tRNA')
         context.message = self._Message("SCANNING FOR tRNA USING tRNA-Scan SE")
         contexts.append(context)
         return contexts
@@ -679,12 +696,11 @@ class ContextCreator:
         output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
         output_comparative_annotation  =  s.output_results_annotation_table_dir \
                                             + PATHDELIM + s.sample_name
-        dbstring = self.get_dbstring()
-        refdbs = [x.strip() for x in dbstring.split(",")  if len(x) != 0]
-
-        rRNAdbstring = self.params.get('rRNA', 'refdbs', default = None)
-        rRNAdbs = [x.strip() for x in rRNAdbstring.split(",")  if len(x) != 0]
-
+        refdbs = self.get_dbs()
+        
+        rRNAdbs = self.params.get('rRNA Annotation Arguments',
+                                       'rRNA_refdbs', default = None)
+        
         context = contextmod.Context()
         context.name = 'ANNOTATE_ORFS'
 
@@ -701,13 +717,15 @@ class ContextCreator:
             'output_comparative_annotation':output_comparative_annotation
         }
 
-        context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'ANNOTATE_ORFS')
         
         '''use rRNA stats if they are available'''
         options = ''
         
         #if rRNAdbs and os.path.exists(rRNA_gff_output):
-        rRNA_status = self.params.get('metapaths_steps','SCAN_rRNA')
+        rRNA_status = self.params.get('Pipeline Step Arguments',
+                                      'SCAN_rRNA')
         if ((rRNA_status == 'yes') | (rRNA_status == 'redo')):
             context.inputs['rRNA_gff_file']  = rRNA_gff_output
             options += " --rRNA_gff " +  context.inputs['rRNA_gff_file']
@@ -721,7 +739,8 @@ class ContextCreator:
 
         '''use tRNA stats'''
         #if os.path.exists(tRNA_gff_output):
-        tRNA_status = self.params.get('metapaths_steps','SCAN_tRNA')
+        tRNA_status = self.params.get('Pipeline Step Arguments',
+                                      'SCAN_tRNA')
         if ((tRNA_status == 'yes') | (tRNA_status == 'redo')):
             context.inputs['tRNA_gff_file']  = tRNA_gff_output
             options += " --tRNA_gff " +  context.inputs['tRNA_gff_file']
@@ -784,13 +803,16 @@ class ContextCreator:
              context.inputs['input_nucleotide_fasta'], context.inputs['input_amino_acid_fasta'])
 
         """GENBANK_FILE"""
-        genbank_file_status = self.params.get('metapaths_steps','GENBANK_FILE')
+        genbank_file_status = self.params.get('Pipeline Step Arguments',
+                                              'GENBANK_FILE')
         if genbank_file_status in ['redo'] or\
            (genbank_file_status in ['yes'] and not s.hasGenbankFile() ):
             cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
         context.message =  self._Message("GENBANK FILE" )
 
-        context.status =  genbank_file_status = self.params.get('metapaths_steps','GENBANK_FILE')
+        context.status =  genbank_file_status = self.params.get(
+                                               'Pipeline Step Arguments',
+                                               'GENBANK_FILE')
         context.commands = [cmd]
         contexts.append(context)
         return contexts
@@ -867,7 +889,8 @@ class ContextCreator:
         cmd = "%s -g %s " %(pyScript, context.inputs['input_annot_gff'])
 
         #"""PATHOLOGIC_INPUT"""
-        context.status = self.params.get('metapaths_steps','PATHOLOGIC_INPUT')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'PATHOLOGIC_INPUT')
 
            
         if context.status in ['redo'] or (context.status in ['yes'] and not s.hasPToolsInput() ):
@@ -906,12 +929,7 @@ class ContextCreator:
         basencbi = self.configs.REFDBS + PATHDELIM + 'ncbi_tree'
         context.inputs = {
             'input_annot_gff':input_annot_gff,
-            #'KO_classification':basefun + PATHDELIM +  'KO_classification.txt',
-            #'COG_categories':basefun + PATHDELIM +  'COG_categories.txt',
-            #'SEED_subsystems':basefun + PATHDELIM + 'SEED_subsystems.txt',
-            #'CAZY_hierarchy':basefun + PATHDELIM + 'CAZY_hierarchy.txt',
             'ncbi_taxonomy_tree': basencbi + PATHDELIM + 'ncbi_taxonomy_tree.txt',
-            #'ncbi_megan_map': basencbi + PATHDELIM + 'ncbi.map'
         }
 
         context.outputs = {
@@ -919,37 +937,14 @@ class ContextCreator:
             'output_annot_table':output_annot_table,
         }
 
-        dbstring = self.get_dbstring()
-        refdbs = [x.strip() for x in dbstring.split(",")  if len(x) != 0]
-
-        #db_argument_string = ''
+        refdbs = self.get_dbs()
+        
         for dbname in refdbs:
             parsed_file =  s.blast_results_dir + PATHDELIM + s.sample_name\
                             + "." + dbname+ "." + s.algorithm + "out.parsed.txt"
             context.inputs[parsed_file] = parsed_file
 
-            #db_argument_string += ' -d ' + dbname
-            #db_argument_string += ' -b ' + parsed_file
-
-
         pyScript = self.configs.CREATE_ANNOT_REPORTS
-        #  --ncbi-taxonomy-map %s --ncbi-megan-map %s  --lca-gi-to-taxon-map %s"\
-        #  --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
-
-        """cmd = "%s  --input-annotated-gff %s  --input-kegg-maps %s \
-                                       --input-cog-maps %s --input-seed-maps %s --input-cazy-maps %s --output-dir %s \
-                                       --ncbi-taxonomy-map %s --ncbi-megan-map %s"\
-                                     %(\
-                                        pyScript, \
-                                        context.inputs['input_annot_gff'], \
-                                        context.inputs['KO_classification'], \
-                                        context.inputs['COG_categories'],  \
-                                        context.inputs['SEED_subsystems'], \
-                                        context.inputs['CAZY_hierarchy'], \
-                                        context.outputs['output_results_annotation_table_dir'], \
-                                        context.inputs['ncbi_taxonomy_tree'], \
-                                        context.inputs['ncbi_megan_map']
-                                     )"""
         cmd = "%s  --input-annotated-gff %s  --output-dir %s \
                                        --ncbi-taxonomy-map %s"\
                                      %(\
@@ -962,12 +957,9 @@ class ContextCreator:
 
         #add the command now, remove to disable in a hackish way
         context.commands = [cmd]
-
-        #context.status = self.params.get('metapaths_steps', 'CREATE_ANNOT_REPORTS')
-
-        context.status = self.params.get('metapaths_steps','ANNOTATE_ORFS')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'ANNOTATE_ORFS')
         context.message = self._Message("CREATING REPORT FILE FOR ORF ANNOTATION")
-
         contexts.append(context)
         return contexts
 
@@ -1026,7 +1018,8 @@ class ContextCreator:
                  context.inputs['bwaFolder'], context1.inputs['bwaExec'], num_threads
                  )
 
-        context.status = self.params.get('metapaths_steps', 'COMPUTE_TPM')
+        context.status = self.params.get('Pipeline Step Arguments',
+                                         'COMPUTE_TPM')
 
         context.commands = [cmd]
         contexts.append(context)
@@ -1144,7 +1137,7 @@ class JobCreator():
                 contextBlock = []
 
             for stage in stageList:
-                if stage in self.params['metapaths_steps'] or\
+                if stage in self.params['Pipeline Step Arguments'] or\
                     stage in ['ORF_TO_AMINO', 'GBK_TO_FNA_FAA_GFF', 'GBK_TO_FNA_FAA_GFF_ANNOT',\
                            'COMPUTE_REFSCORES', 'PREPROCESS_AMINOS', 'PATHOLOGIC_INPUT',\
                            'CREATE_ANNOT_REPORTS']:

@@ -93,21 +93,18 @@ def checkForRequiredDatabases(params, config,  dbType, logger=None):
     """
 
     if dbType == "functional":
-        dbtype = get_parameter(params, "annotation", "dbtype", default="high")
-        dbstring = ""
-        _algorithm = get_parameter(params, "annotation", "algorithm", default=None)
+        dbs = get_parameter(params, "Functional Annotation Arguments", "annotation_dbs", default=None)
+        _algorithm = get_parameter(params, "Functional Annotation Arguments", "annotation_algorithm", default=None)
 
     if dbType == "taxonomic":
-        dbstring = get_parameter(params, "rRNA", "refdbs", default=None)
-        _algorithm = get_parameter(params, "annotation", "algorithm", default=None)
+        dbs = get_parameter(params, "rRNA Annotation Arguments", "rRNA_refdbs", default=None)
+        _algorithm = 'BLAST' #get_parameter(params, "annotation", "algorithm", default=None)
 
-    if dbstring == None:
+    if dbs == None:
         gutils.eprintf(
             "WARNING\tReference databases to annotate with is unspecified, please add it in the params file\n"
         )
         return False
-
-    dbs = [x.strip() for x in dbstring.split(",") if len(x) != 0]
 
     if not dbs:
         return True
