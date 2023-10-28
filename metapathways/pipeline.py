@@ -164,6 +164,8 @@ def runParser():
                            help='Step: PATHOLOGIC_INPUT [yes]')
     pipe_args.add_argument('--COMPUTE_TPM', type=str, default='yes', choices=['yes', 'skip', 'redo'],
                            help='Step: COMPUTE_TPM [yes]')
+    pipe_args.add_argument('--force_redo', action="store_true", default=False,
+                           help="Redo all steps [False]")
 
     # Other arguments
     misc_args = run_parser.add_argument_group('Miscellaneous Arguments')
@@ -412,6 +414,13 @@ def run():
         status_update_callback = gutils.print_to_stdout
     else:
         status_update_callback = gutils.no_status_updates
+
+    if args.force_redo:
+        steps_list = ['PREPROCESS_INPUT', 'ORF_PREDICTION', 'FILTER_AMINOS', 'SCAN_rRNA',
+                      'SCAN_tRNA', 'FUNC_SEARCH', 'PARSE_FUNC_SEARCH', 'ANNOTATE_ORFS',
+                      'GENBANK_FILE', 'CREATE_ANNOT_REPORTS', 'PATHOLOGIC_INPUT', 'COMPUTE_TPM']
+        for step in steps_list:
+            setattr(args, step, 'redo')
 
     # Initialize the commandline params dictionary
     command_line_params = {}
