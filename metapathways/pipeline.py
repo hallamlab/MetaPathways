@@ -132,12 +132,6 @@ def check_for_error_in_input_file_name(shortname, globalerrorlogger=None):
 
     """  creates a list of  input output pairs if input is  an input dir """
     clean = True
-    if not re.search(r'^[a-zA-Z]',shortname):
-         gutils.eprintf("ERROR\tSample name %s must begin with an alphabet!\n",shortname)
-         if globalerrorlogger:
-            globalerrorlogger.printf("ERROR\tSample name %s must begin with an alphabet!\tConsider prefixing an alphabet to the front\n",shortname)
-         clean = False
-
     if re.search(r'[.]',shortname):
          gutils.eprintf("ERROR\tSample name %s contains a '.' in its name!\n",shortname)
          if globalerrorlogger:
