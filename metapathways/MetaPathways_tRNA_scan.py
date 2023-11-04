@@ -98,6 +98,13 @@ def createParser():
     )
 
     parser.add_option(
+        "-d",
+        dest="trna_d",
+        default="/tmp/trna_tmp",
+        help="tmp dir for saving intermediates",
+    )
+
+    parser.add_option(
         "--executable",
         dest="trna_executable",
         default=None,
@@ -134,18 +141,18 @@ def _execute_tRNA_Scan(options):
     if options.trna_a:
         args += ["-a", options.trna_a]
 
-    if options.trna_p:
-        args += ["-p", options.trna_p]
-
     if options.trna_q:
         args += ["--quiet"]
 
     if options.trna_t:
-        args += ["--thread", options.trna_t]
+        args += ["--num_threads", options.trna_t]
        
     if options.trna_i:
-        args += [options.trna_i]
-    
+        args += ["--input_file", options.trna_i]
+
+    if options.trna_d:
+        args += ["--tmp_dir", options.trna_d]
+
     result = sysutils.getstatusoutput(" ".join(args))
 
     if result[0] != 0:

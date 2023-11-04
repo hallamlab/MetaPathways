@@ -652,6 +652,7 @@ class ContextCreator:
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
         tRNA_stats_output = s.output_results_tRNA_dir + PATHDELIM + s.sample_name +  ".tRNA.stats.txt"
         tRNA_fasta_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.fasta"
+        tRNA_tmpdir = s.orf_prediction_dir + PATHDELIM + s.sample_name +  "_tmp"
 
         context = contextmod.Context()
         context.name = 'SCAN_tRNA'
@@ -660,16 +661,17 @@ class ContextCreator:
                            'tRNA_gff_output':tRNA_gff_output,
                            'tRNA_stats_output':tRNA_stats_output,
                            'tRNA_fasta_output':tRNA_fasta_output,
+                           'tmp_dir': tRNA_tmpdir
                            }
 
         num_threads = self.configs.NUM_CPUS
         pyScript = self.configs.SCAN_tRNA
         executable = self.configs.SCAN_tRNA_EXECUTABLE
-        cmd = "%s --executable %s -o %s -j %s -m %s -a %s -p %s -t %s -i %s"\
+        cmd = "%s --executable %s -o %s -j %s -m %s -a %s -t %s -i %s -d %s"\
              %(pyScript, executable, context.outputs['tRNA_results_output'],
                 context.outputs['tRNA_gff_output'], context.outputs['tRNA_stats_output'],
-                context.outputs['tRNA_fasta_output'], s.sample_name, num_threads,
-                context.inputs['input_fasta']
+                context.outputs['tRNA_fasta_output'], num_threads,
+                context.inputs['input_fasta'], context.outputs['tmp_dir']
                 )
 
         context.commands = [cmd]

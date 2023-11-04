@@ -36,7 +36,7 @@ import time
 def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 
 	rename_pgdb(pt_inputs, tag)
-
+	tag_id = tag.lower()
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
 	if container:
@@ -46,9 +46,9 @@ def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune_local.sh'
 		sh_notax = 'run-pathway-tools-and-copy-pgdb_local.sh'
 	if tprune == True:
-		pt_cmd = [sh_tax, pt_inputs, pt_outputs]
+		pt_cmd = [sh_tax, pt_inputs, pt_outputs, tag_id]
 	elif tprune == False:
-		pt_cmd = [sh_notax, pt_inputs, pt_outputs]
+		pt_cmd = [sh_notax, pt_inputs, pt_outputs, tag_id]
 	os.system(' '.join(pt_cmd))
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]

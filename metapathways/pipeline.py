@@ -496,7 +496,7 @@ def run():
         "FASTDB_EXECUTABLE"    : 'fastdb',
         "FAST_EXECUTABLE"      : 'fastal',
         "PRODIGAL_EXECUTABLE"  : 'pprodigal',
-        "SCAN_tRNA_EXECUTABLE" : 'tRNAscan-SE',
+        "SCAN_tRNA_EXECUTABLE" : 'ptRNAscan.py',
         "RPKM_EXECUTABLE"      : 'coverm',
         "NUM_CPUS"             : params['Miscellaneous Arguments']['threads'],
         "REFDBS"               : params['Minimum Required Arguments']['refdb_dir']
