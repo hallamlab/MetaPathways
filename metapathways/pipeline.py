@@ -692,4 +692,4 @@ def main():
 
 # the main function of metapaths
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
