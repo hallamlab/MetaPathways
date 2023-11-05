@@ -645,9 +645,15 @@ def ptools():
         tag = args.tag
     else:
         tag = path.basename(args.output_dir.rstrip('/'))
+    cmd = ['pgdb_build_wf.py', '--mp_out', args.output_dir, '--tag', tag]    
+    if args.container:
+        container = args.container
+        cmd.append('--container')
+    cmd.append('\n')
+    cmd_str = ' '.join(cmd)
     gutils.eprintf("Building ePGDBs:")
-    gutils.eprintf(f' pgdb_build_wf.py --mp_out {args.output_dir} --tag {tag} \n')
-    system(f'pgdb_build_wf.py --mp_out {args.output_dir} --tag {tag}')
+    gutils.eprintf(cmd_str)
+    system(cmd_str)
 
 
 def help():

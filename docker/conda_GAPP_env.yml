@@ -2,7 +2,9 @@ name: metapathways
 channels:
   - conda-forge
   - bioconda
+  - hallamlab
 dependencies:
+  - metapathways
   - python=3.10
   - snakemake
   - curl
@@ -25,5 +27,4 @@ dependencies:
   - fasttree
   - git
   - requests
-  - mafft 
-  - checkm-genome
+  - mafft
