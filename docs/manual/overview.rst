@@ -1,11 +1,5 @@
 Overview 
 ********
-.. figure:: http://i.imgur.com/knn8bBb.png
-    :width: 250px
-    :align: center
-    :height: 200px
-    :alt: alternate text
-    :figclass: align-center
 
 MetaPathways [CIT2002]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
@@ -16,6 +10,12 @@ Pipeline Overview
 
 MetaPathways is composed of five general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
 
+.. figure:: images/glyph.png
+    :width: 250px
+    :align: center
+    :height: 200px
+    :alt: alternate text
+    :figclass: align-center
 
 #. **QC and ORF Prediction**: Here MetaPathways performs basic quality control (QC) including removing duplicate 
    sequences and sequence trimming. Open Reading Frame (ORF) prediction is then performed on the QC'ed sequences 
