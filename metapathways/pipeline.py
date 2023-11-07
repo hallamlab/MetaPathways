@@ -100,7 +100,7 @@ def runParser():
     func_args = run_parser.add_argument_group('Functional Annotation Arguments')
     func_args.add_argument('--annotation_algorithm', type=str, default='FAST', choices=['FAST', 'BLAST'],
                            help='Algorithm for ORF annotation [FAST]')
-    func_args.add_argument('--annotation_dbs', nargs='+', default=['swissprot'],
+    func_args.add_argument('--annotation_dbs', nargs='+', type=str, default='swissprot',
                            help='Database(s) for annotation, space-separated list [swissprot]')
     func_args.add_argument('--annotation_min_bsr', type=float, default=0.4,
                            help='Minimum BSR for annotation [0.4]')
