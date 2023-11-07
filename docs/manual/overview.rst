@@ -8,8 +8,8 @@ MetaPathways include metagenomic or metatranscriptomic sequence data in one of s
 Pipeline Overview
 ~~~~~~~~~~~~~~~~~
 
-MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:\\
-
+MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
+\\
 .. figure:: images/glyph.png
     :width: 250px
     :align: center
@@ -21,7 +21,7 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    Basic quality control (QC) is performed with includes filtering out sequences below a set
    length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
     
-   **Feature Prediction**:
+#. **Feature Prediction**:
    Several sequence features are predicted on the QC'ed contigs include: open-reading frames
    (ORFs), ribosomal subunits (rRNAs), and transfer RNAs (tRNAs). To improve the runtime and
    efficency, both Prodigal [PRODIGAL]_ [PPRODIGAL]_ and tRNAscan-SE [TRNASCAN]_ are leveraged
@@ -31,14 +31,14 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    decisions about features when they overlap eachother. Addtionally, users can define the
    minimum length of ORFs to keep for downstream analysis.
    
-   **Functional Annotation**:
+#. **Functional Annotation**:
    Using a seed-and-extend homology search algorithm, either BLAST [BLAST]_ or FAST [FAST]_,
    users can conduct searches against both functional and taxonomic (optional) databases. 
    Currently supported databases include: Uniprot SwissProt [SWISSPROT]_, Uniprot UniRef90
    [UNIREF90]_, MetaCyc [METACYC]_, and CAZymes [CAZy]_. However, users can create custom
    databases for any preferred databases.
       
-   **Pathway Inference**:
+#. **Pathway Inference**:
    
    
    
