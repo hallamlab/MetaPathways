@@ -8,7 +8,10 @@ MetaPathways include metagenomic or metatranscriptomic sequence data in one of s
 Pipeline Overview
 ~~~~~~~~~~~~~~~~~
 
-MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**: \\
+MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
+
+
+
 
 .. figure:: images/glyph.png
     :width: 250px
