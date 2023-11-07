@@ -9,10 +9,7 @@ Pipeline Overview
 ~~~~~~~~~~~~~~~~~
 
 MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
-
-
-
-
+|nbsp|
 .. figure:: images/glyph.png
     :width: 250px
     :align: center
