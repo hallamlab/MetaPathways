@@ -40,6 +40,7 @@ def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
 	if container:
+		print("NOTE: Using containerized version of Pathway Tools...")
 		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune.sh'
 		sh_notax = 'run-pathway-tools-and-copy-pgdb.sh'
 	else:
