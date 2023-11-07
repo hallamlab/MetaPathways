@@ -297,8 +297,8 @@ parser.add_argument("--taxprune", action='store_true',
 					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
 					required=False
 					)
-parser.add_argument("--container", action='store_true', help="Use when using containerized env",
-					required=False
+parser.add_argument("--container", action='store_true', dest="container", default=False, required=False,
+					help="Use when using containerized env",
 					)
 args = parser.parse_args()
 
