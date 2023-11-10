@@ -1,11 +1,5 @@
 Overview 
 ********
-.. figure:: http://i.imgur.com/knn8bBb.png
-    :width: 250px
-    :align: center
-    :height: 200px
-    :alt: alternate text
-    :figclass: align-center
 
 MetaPathways [CIT2002]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
@@ -14,16 +8,52 @@ MetaPathways include metagenomic or metatranscriptomic sequence data in one of s
 Pipeline Overview
 ~~~~~~~~~~~~~~~~~
 
-MetaPathways is composed of five general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
+MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
 
+.. |nbsp| unicode:: 0xA0 
+   :trim:
 
-#. **QC and ORF Prediction**: Here MetaPathways performs basic quality control (QC) including removing duplicate 
+|nbsp|
+
+.. figure:: images/glyph.png
+    :width: 250px
+    :align: center
+    :height: 200px
+    :alt: alternate text
+    :figclass: align-center
+
+#. **Quality Control**: 
+   Basic quality control (QC) is performed with includes filtering out sequences below a set
+   length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
+    
+#. **Feature Prediction**:
+   Several sequence features are predicted on the QC'ed contigs include: open-reading frames
+   (ORFs), ribosomal subunits (rRNAs), and transfer RNAs (tRNAs). To improve the runtime and
+   efficency, both Prodigal [PRODIGAL]_ [PPRODIGAL]_ and tRNAscan-SE [TRNASCAN]_ are leveraged
+   using wrapper scripts that allow for multi-threading for ORF and tRNA prediction respectively.
+   BARRNAP is used for the prediction of rRNAs including: 16S, 23S, and 5S [BARRNAP]_.
+   MetaPathways provides an overlap-aware identification so that users can make informed
+   decisions about features when they overlap eachother. Addtionally, users can define the
+   minimum length of ORFs to keep for downstream analysis.
+   
+#. **Functional Annotation**:
+   Using a seed-and-extend homology search algorithm, either BLAST [BLAST]_ or FAST [FAST]_,
+   users can conduct searches against both functional and taxonomic (optional) databases. 
+   Currently supported databases include: Uniprot SwissProt [SWISSPROT]_, Uniprot UniRef90
+   [UNIREF90]_, MetaCyc [METACYC]_, and CAZymes [CAZy]_. However, users can create custom
+   databases for any preferred databases.
+      
+#. **Pathway Inference**:
+   
+   
+   
+   Here MetaPathways performs basic quality control (QC) including removing duplicate 
    sequences and sequence trimming. Open Reading Frame (ORF) prediction is then performed on the QC'ed sequences 
    using Prodigal [PRODIGAL2010]_ or GeneMark [GeneMark12]_. The final translated ORFs are 
    now also trimmed according to a user-defined setting. 
 
    * MetaPathways steps: `PREPROCESS INPUT`, `ORF PREDICTION`,  and `FILTER AMINOS`
-
+   
 
 #. **Functional and Taxonomic Annotation**: Using seed-and-extend homology search algorithms (B)LAST 
    [BLAST90]_, [LAST11]_, MetaPathways can be used to conduct searches against functional and taxonomic databases. 
