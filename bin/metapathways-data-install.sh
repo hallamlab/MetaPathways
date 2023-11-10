@@ -1,18 +1,53 @@
 #!/bin/bash
 
+print_help() {
+  echo "Usage: $0 <data_dir> <db_type> [nthreads] [metacyc_user] [metacyc_pswd]"
+  echo "Options:"
+  echo "	data_dir - location to save database."
+  echo "	db_type - version of database to build."
+  echo "		  acceptable values are:"
+  echo "			stage_fast_full"
+  echo "			stage_fast_lite"
+  echo "			stage_fast_noMeta"
+  echo "			stage_blast_full"
+  echo "			stage_blast_lite"
+  echo "	nthreads - number of threads to use. [all]"
+  echo "  -h, --help       Display this help message."
+}
+
+while getopts ":h" opt; do
+  case $opt in
+    h)
+      print_help
+      exit 0
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      print_help
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 5 ]; then
+  echo "Error: Invalid number of arguments."
+  print_help
+  exit 1
+fi
+
 data_dir="$1"
-command="$2"
+db_type="$2"
+nthreads="${3:-all}"
 
-metapathways_pkg_dir=$(python -c "import site; print(site.getsitepackages()[0])")/metapathways
+metapathways_pkg_dir=$(python -c "import site; print(site.getsitepackages()[0])")/metapathways/build_DBs
 
-# eval "$(conda shell.bash hook)"
-# conda activate metapathways
+snakemake \
+  -p \
+  -s "$metapathways_pkg_dir/Snakefile" \
+  --cores "$nthreads" \
+  --until "$db_type" \
+  --config ref_db_dir="$data_dir" \
+  script_path="$metapathways_pkg_dir"
 
-snakemake --cores 1 \
-	  --config ref_db_dir="$data_dir" \
-	           pkg_dir="$metapathways_pkg_dir" \
-	  --snakefile "$metapathways_pkg_dir/Snakefile" \
-	  -- \
-	  "$command"
-
-# conda deactivate

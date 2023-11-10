@@ -33,25 +33,23 @@ import html2text
 import time
 
 
-def create_pgdb(pt_inputs, pt_outputs, tprune, tag
-				):
+def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 
 	rename_pgdb(pt_inputs, tag)
-
+	tag_id = tag.lower()
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
-
+	if container:
+		print("NOTE: Using containerized version of Pathway Tools...")
+		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune.sh'
+		sh_notax = 'run-pathway-tools-and-copy-pgdb.sh'
+	else:
+		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune_local.sh'
+		sh_notax = 'run-pathway-tools-and-copy-pgdb_local.sh'
 	if tprune == True:
-		pt_cmd = ['run-pathway-tools-and-copy-pgdb-singularity_taxprune.sh',
-					pt_inputs, pt_outputs
-					]
+		pt_cmd = [sh_tax, pt_inputs, pt_outputs, tag_id]
 	elif tprune == False:
-		pt_cmd = ['run-pathway-tools-and-copy-pgdb-singularity.sh',
-					pt_inputs, pt_outputs
-					]
-	#pt_out = subprocess.run(' '.join(pt_cmd),
-	#						shell=True
-	#						)
+		pt_cmd = [sh_notax, pt_inputs, pt_outputs, tag_id]
 	os.system(' '.join(pt_cmd))
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
@@ -300,18 +298,22 @@ parser.add_argument("--taxprune", action='store_true',
 					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
 					required=False
 					)
+parser.add_argument("--container", action='store_true', dest="container", default=False, required=False,
+					help="Use when using containerized env",
+					)
 args = parser.parse_args()
 
 mp_dir = args.mp_out
 tag = args.tag
 taxprune = args.taxprune
+container = args.container
 
 
 # Build Community-level PGDB
 pt_in = os.path.join(mp_dir, 'ptools')
 pt_out = os.path.join(mp_dir, 'results/pgdb/community')
 print("Building Community-level PGDB.")
-create_pgdb(pt_in, pt_out, taxprune, tag)
+create_pgdb(pt_in, pt_out, taxprune, tag, container)
 print("Completed Community-level PGDB.")
 # Parse PGDB flatfiles to create PWYs TSV table
 print("Extracting Community-level PGDB.")
@@ -332,7 +334,7 @@ if os.path.exists(ms_dir):
 			mag_tag = mag_id
 			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
 			print(f"Building PGDB for {mag_id}.")
-			create_pgdb(pt_mag, pt_out, taxprune, mag_tag)
+			create_pgdb(pt_mag, pt_out, taxprune, mag_tag, container)
 			print("Completed PGDB.")
 			# Parse PGDB flatfiles to create PWYs TSV table
 			print(f"Extracting PGDB for {mag_id}.")

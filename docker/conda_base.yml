@@ -1,17 +1,19 @@
 name: metapathways
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
 dependencies:
   - python=3.10
   - snakemake
   - curl
   - ncurses
   - pysam
+  - cython
+  - prodigal
+  - pprodigal
   - pybedtools
   - coverm
   - blast
-  - prodigal
   - bwa
   - samtools
   - barrnap
@@ -19,3 +21,7 @@ dependencies:
   - subread
   - tqdm
   - pyfastx
+  - pandas
+  - sexpdata
+  - html2text
+  - scipy

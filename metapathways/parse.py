@@ -231,6 +231,74 @@ def parse_metapaths_parameters(filename):
     return result
 
 
+def populate_dict(args):
+    nested_dict = {
+        'Minimum Required Arguments': {
+            'input_file': None,
+            'output_dir': None,
+            'refdb_dir': None
+        },
+        'Quality Controls Arguments': {
+            'input_format': None,
+            'qc_min_length': None,
+            'qc_delete_replicates': None
+        },
+        'ORF Prediction Arguments': {
+            'orf_strand': None,
+            'orf_algorithm': None,
+            'orf_min_length': None,
+            'orf_translation_table': None,
+            'orf_mode': None
+        },
+        'Functional Annotation Arguments': {
+            'annotation_algorithm': None,
+            'annotation_dbs': None,
+            'annotation_min_bsr': None,
+            'annotation_max_evalue': None,
+            'annotation_min_score': None,
+            'annotation_min_length': None,
+            'annotation_max_hits': None,
+            'annotation_run_mode': None
+        },
+        'rRNA Annotation Arguments': {
+            'rRNA_refdbs': None,
+            'rRNA_max_evalue': None,
+            'rRNA_min_identity': None,
+            'rRNA_min_bitscore': None
+        },
+        'Pathway Tools Preprocessing Arguments': {
+            'ptools_taxonomic_pruning': None
+        },
+        'Read Mapping Arguments': {
+            'readsdir': None
+        },
+        'Pipeline Step Arguments': {
+            'PREPROCESS_INPUT': None,
+            'ORF_PREDICTION': None,
+            'FILTER_AMINOS': None,
+            'SCAN_rRNA': None,
+            'SCAN_tRNA': None,
+            'FUNC_SEARCH': None,
+            'PARSE_FUNC_SEARCH': None,
+            'ANNOTATE_ORFS': None,
+            'GENBANK_FILE': None,
+            'CREATE_ANNOT_REPORTS': None,
+            'PATHOLOGIC_INPUT': None,
+            'COMPUTE_TPM': None
+        },
+        'Miscellaneous Arguments': {
+            'samples': None,
+            'threads': None,
+            'verbose': None
+        }
+    }
+    for group, arguments in nested_dict.items():
+        for arg in arguments:
+            if hasattr(args, arg):
+                nested_dict[group][arg] = getattr(args, arg)
+    return nested_dict
+
+
 def parse_parameter_file(filename):
     """Return 2D dict of params (and values, if applicable) which should be on"""
     # The qiime_config object is a default dict: if keys are not
