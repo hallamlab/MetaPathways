@@ -193,38 +193,12 @@ class SampleData:
         )
 
     def writeParamsToRunLogs(self, params):
-        param_values = [
-            ["quality_control", "min_length", "180"],
-            ["quality_control", "delete_replicates", "yes"],
-            ["orf_prediction", "strand", "both"],
-            ["orf_prediction", "algorithm", "prodigal"],
-            ["orf_prediction", "min_length", "60"],
-            ["orf_prediction", "translation_table", "11"],
-            ["orf_prediction", "mode", "meta"],
-            ["annotation", "algorithm", "BLAST"],
-            ["annotation", "dbs_high", ""],
-            ["annotation", "dbs_custom", ""],
-            ["annotation", "dbs", ""],
-            ["annotation", "dbtype", "high"],
-            ["annotation", "min_bsr", "0.4"],
-            ["annotation", "max_evalue", "0.000001"],
-            ["annotation", "min_score", "20"],
-            ["annotation", "min_length", "45"],
-            ["annotation", "max_hits", "5"],
-            [
-                "rRNA",
-                "refdbs",
-                "SILVA_128_SSURef_tax_silva,SILVA_128_LSURef_tax_silva, GREENGENES_gg16S_13_5",
-            ],
-            ["rRNA", "max_evalue", "0.000001"],
-            ["rRNA", "min_identity", "20"],
-            ["rRNA", "min_bitscore", "50"],
-            ["ptools_settings", "taxonomic_pruning", "no"],
-            ["ptools_input", "compact_mode", "yes"],
-        ]
-        for parameter in param_values:
-            value = params.get(parameter[0], parameter[1], default=parameter[2])
-            self.runlogger.printf("%s:%s\t%s\n", parameter[0], parameter[1], value)
+        p = params.params
+        for k1 in p:
+            v1 = p[k1]
+            for k2 in v1:
+                v2 = v1[k2]
+                self.runlogger.printf("%s:%s\t%s\n", k1, k2, str(v2))
 
     def _createFolders(self):
         gutils.checkOrCreateFolder(self.preprocessed_dir)

@@ -19,11 +19,11 @@ RUN apt-get update && \
 # Install MetaPathways and dependencies
 RUN pip3 install git+https://github.com/hallamlab/TreeSAPP.git@py3.10
 
-ENV PATH /opt/conda/envs/metapathways/bin:$PATH
-
 # Create the environment:
 COPY metapathways/docker/conda_GAPP_env.yml /opt/
 RUN mamba env create --no-default-packages -f /opt/conda_GAPP_env.yml
+
+ENV PATH /opt/conda/envs/metapathways/bin:$PATH
 
 RUN echo "Make sure MetaPathways is installed:"
 RUN MetaPathways -h
