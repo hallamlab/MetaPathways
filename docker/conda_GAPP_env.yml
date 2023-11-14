@@ -4,9 +4,9 @@ channels:
   - bioconda
   - hallamlab
 dependencies:
-  - metapathways
   - python=3.10
   - snakemake
+  - metapathways
   - curl
   - ncurses
   - pysam
