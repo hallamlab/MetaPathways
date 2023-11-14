@@ -27,10 +27,11 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
     
 #. **Feature Prediction**:
-   Several sequence features are predicted on the QC'ed contigs include: open-reading frames
-   (ORFs), ribosomal subunits (rRNAs), and transfer RNAs (tRNAs). To improve the runtime and
-   efficency, both Prodigal [PRODIGAL]_ [PPRODIGAL]_ and tRNAscan-SE [TRNASCAN]_ are leveraged
-   using wrapper scripts that allow for multi-threading for ORF and tRNA prediction respectively.
+   Several sequence features can be predicted on the QC'ed contigs. Open-reading frames
+   (ORFs) are predicted by default and (optionally) ribosomal subunits (rRNAs) and
+   transfer RNAs (tRNAs) can be predicted. To improve the runtime and efficency, Prodigal
+   [PRODIGAL]_ is run through a parallel version (pProdigal) [PPRODIGAL]_ and tRNAscan-SE
+   [TRNASCAN]_ is run using a wrapper script that allow for more efficient multi-threading.
    BARRNAP is used for the prediction of rRNAs including: 16S, 23S, and 5S [BARRNAP]_.
    MetaPathways provides an overlap-aware identification so that users can make informed
    decisions about features when they overlap eachother. Addtionally, users can define the
@@ -41,18 +42,18 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    users can conduct searches against both functional and taxonomic (optional) databases. 
    Currently supported databases include: Uniprot SwissProt [SWISSPROT]_, Uniprot UniRef90
    [UNIREF90]_, MetaCyc [METACYC]_, and CAZymes [CAZy]_. However, users can create custom
-   databases for any preferred databases.
+   databases for any preferred databases. Optionally, reads can be used to calculate abundance
+   information at both the contig and ORF-level.
       
 #. **Pathway Inference**:
-   MetaPathways then predicts `MetaCyc pathways
-   <http://www.metacyc.com>`_ using 
-   the `Pathway Tools software
-   <http://brg.ai.sri.com/ptools/>`_ 
-   and its pathway prediction algorithm 
-   PathoLogic [KARP11]_, resulting in the creation of an environmental Pathway/Genome 
-   Database (ePGDB), an integrative data structure of sequences, genes, pathways, and literature 
-   annotations for integrative interpretation. MetaCyc pathways are exported in a tabular format for downstream 
-   analysis.
+   MetaPathways then predicts `MetaCyc pathways <http://www.metacyc.com>`_ using the
+   `Pathway Tools software <http://brg.ai.sri.com/ptools/>`_ and its pathway prediction
+   algorithm PathoLogic [KARP11]_, resulting in the creation of a community-level environmental
+   Pathway/Genome Database (ePGDB), an integrative data structure of sequences, genes, pathways,
+   and literature annotations for integrative interpretation. Optionally, if metagenome-assembled
+   genomes (MAGs) are available for the metagenome, these MAGs can be used to create
+   population-level ePGDBs. MetaCyc pathways are exported in a tabular format for
+   downstream analysis.
 
 
 
