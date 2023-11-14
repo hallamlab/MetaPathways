@@ -44,50 +44,18 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    databases for any preferred databases.
       
 #. **Pathway Inference**:
-   
-   
-   
-   Here MetaPathways performs basic quality control (QC) including removing duplicate 
-   sequences and sequence trimming. Open Reading Frame (ORF) prediction is then performed on the QC'ed sequences 
-   using Prodigal [PRODIGAL2010]_ or GeneMark [GeneMark12]_. The final translated ORFs are 
-   now also trimmed according to a user-defined setting. 
-
-   * MetaPathways steps: `PREPROCESS INPUT`, `ORF PREDICTION`,  and `FILTER AMINOS`
-   
-
-#. **Functional and Taxonomic Annotation**: Using seed-and-extend homology search algorithms (B)LAST 
-   [BLAST90]_, [LAST11]_, MetaPathways can be used to conduct searches against functional and taxonomic databases. 
-
-   * MetaPathways steps: `FUNC SEARCH`, `PARSE FUNC SEARCH`, `SCAN rRNA`, and `ANNOTATE ORFS`
-
-#. **Analyses**: After sequence annotation, MetaPathways performs further taxonomic analyses including 
-   the `Lowest Common Ancestor (LCA) 
-   <http://ab.inf.uni-tuebingen.de/software/megan/>`_ algorithm 
-   [MEGAN07]_ and `tRNA Scan <http://lowelab.ucsc.edu/tRNAscan-SE/>`_ [TRNASCAN97]_, and 
-   prepares detected annotations for environmental Pathway/Genome database (ePGDB) creation via Pathway Tools.
-
-   * MetaPathways Steps: `PATHOLOGIC INPUT`, `CREATE ANNOT REPORTS`, and `COMPUTE RPKM`.
-
-#. **ePGDB Creation**: MetaPathways then predicts `MetaCyc pathways
+   MetaPathways then predicts `MetaCyc pathways
    <http://www.metacyc.com>`_ using 
    the `Pathway Tools software
    <http://brg.ai.sri.com/ptools/>`_ 
    and its pathway prediction algorithm 
    PathoLogic [KARP11]_, resulting in the creation of an environmental Pathway/Genome 
    Database (ePGDB), an integrative data structure of sequences, genes, pathways, and literature 
-   annotations for integrative interpretation.
+   annotations for integrative interpretation. MetaCyc pathways are exported in a tabular format for downstream 
+   analysis.
 
-   * MetaPathways Steps: `BUILD ePGDB`
 
-#. **Pathway Export**: Here MetaCyc pathways or reactions are exported in a tabular format for downstream 
-   analysis. *As of the v2.5 release, MetaPathways will perform this step automatically.*
 
-   * MetaPathways Steps: `BUILD ePGDB`
-
-.. figure:: http://i.imgur.com/HOacG2l.png
-    :align: center
-    :figclass: align-center
-   
 Output Format
 ~~~~~~~~~~~~~
 
