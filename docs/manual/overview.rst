@@ -1,7 +1,7 @@
 Overview 
 ********
 
-MetaPathways [CIT2002]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
+MetaPathways [MP2013]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
 (.fasta, .gff, or .gbk). The pipeline consists of five operational stages including 
 
@@ -30,12 +30,12 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    Several sequence features can be predicted on the QC'ed contigs. Open-reading frames
    (ORFs) are predicted by default and (optionally) ribosomal subunits (rRNAs) and
    transfer RNAs (tRNAs) can be predicted. To improve the runtime and efficency, Prodigal
-   [PRODIGAL]_ is run through a parallel version (pProdigal) [PPRODIGAL]_ and tRNAscan-SE
-   [TRNASCAN]_ is run using a wrapper script that allow for more efficient multi-threading.
-   BARRNAP is used for the prediction of rRNAs including: 16S, 23S, and 5S [BARRNAP]_.
-   MetaPathways provides an overlap-aware identification so that users can make informed
-   decisions about features when they overlap eachother. Addtionally, users can define the
-   minimum length of ORFs to keep for downstream analysis.
+   [PRODIGAL2010]_ is run through a parallel version (pProdigal) [PPRODIGAL2022]_ and
+   tRNAscan-SE [TRNASCANSE2021]_ is run using a wrapper script that allow for more
+   efficient multi-threading. BARRNAP [BARRNAP2019]_ is used for the prediction of rRNAs
+   including: 16S, 23S, and 5S. MetaPathways provides an overlap-aware identification so
+   that users can make informed decisions about features when they overlap eachother.
+   Addtionally, users can define the minimum length of ORFs to keep for downstream analysis.
    
 #. **Functional Annotation**:
    Using a seed-and-extend homology search algorithm, either BLAST [BLAST]_ or FAST [FAST]_,
@@ -63,12 +63,32 @@ Output Format
 
 Visualizing Output
 ~~~~~~~~~~~~~~~~~~
-.. [CIT2002] K. M. Konwar, N. W. Hanson, A. P. Pagé, S. J. Hallam, MetaPathways: a modular 
+.. [MP2013] K. M. Konwar, N. W. Hanson, A. P. Pagé, S. J. Hallam, MetaPathways: a modular 
    pipeline for constructing pathway/genome databases from environmental sequence information. 
    BMC Bioinformatics 14, 202 (2013)  http://www.biomedcentral.com/1471-2105/14/202
 
 .. [PRODIGAL2010] D. Hyatt et al., Prodigal: prokaryotic gene recognition and translation 
    initiation site identification. BMC Bioinformatics 11, 119 (2010).
+
+.. [PPRODIGAL2022] Jaenicke, S. (2022). pprodigal (Version 1.0.1) [Software].
+   Available from https://pypi.org/project/pprodigal/
+
+.. [TRNASCANSE2021] Chan, P. P., Lin, B. Y., Mak, A. J., & Lowe, T. M. (2021).
+   tRNAscan-SE 2.0: improved detection and functional classification of transfer RNA genes.
+   Nucleic Acids Research, 49(16), 9077-9096. https://doi.org/10.1093/nar/gkab688
+
+.. [BARRNAP2019] Seemann, T. (2019). barrnap (Version 0.9) [Software]. Available from https://github.com/tseemann/barrnap
+
+
+
+barrnap
+blast
+fast
+swissprot
+uniref90
+metacyc
+cazymes
+
 
 .. [GeneMark12] D. Hyatt, P. F. LoCascio, L. J. Hauser, E. C. Uberbacher, Gene and translation initiation site prediction in metagenomic sequences. Bioinformatics 28, 2223–2230 (2012).
 
