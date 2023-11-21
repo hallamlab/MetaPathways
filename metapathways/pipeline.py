@@ -9,7 +9,12 @@ try:
     import glob
     import getpass
 
-    from os import makedirs, sys, listdir, environ, path, _exit, system
+    import subprocess
+    import threading
+    import os
+    import signal
+
+    from os import makedirs, sys, listdir, environ, path, _exit
     import argparse
 
     from metapathways import errorcodes as errormod
@@ -584,9 +589,9 @@ def build_db():
         makedirs(db_dir)
 
     add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
-
-    gutils.eprintf(f' metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus} \n')
-    system(f'metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus}')
+    cmd_str = f' metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus} \n'
+    gutils.eprintf(cmd_str)
+    subprocess.run(['metapathways-data-install.sh', args.output_dir, args.db_type, args.num_cpus])
 
 
 def add_netrc_entry(machine, login, password):
@@ -631,10 +636,15 @@ def mag_split():
     isExist = path.exists(ms_outdir)
     if not isExist:
        makedirs(ms_outdir)
+    cmd = ['magsplitter', '-p', pf_file, '-r', orf_map, '-c', orf_contig_map, '-m', mag_map, '-i', contig_map, '-o', ms_outdir]
+    cmd_str = f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}'
+    gutils.eprintf(cmd_str + '\n')
 
-    gutils.eprintf(f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir} \n')
-    system(f'magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}')
-
+    stdout, stderr = run_command_with_realtime_output(cmd, 7200)
+    if stdout is None and stderr is None:
+        print("The command timed out and was terminated.")
+    else:
+        print(stdout)
 
 def ptools():
     argv = sys.argv
@@ -649,11 +659,46 @@ def ptools():
     if args.container:
         container = args.container
         cmd.append('--container')
-    cmd.append('\n')
     cmd_str = ' '.join(cmd)
     gutils.eprintf("Building ePGDBs:")
-    gutils.eprintf(cmd_str)
-    system(cmd_str)
+    gutils.eprintf(cmd_str + '\n')
+    
+    stdout, stderr = run_command_with_realtime_output(cmd, 7200)
+    if stdout is None and stderr is None:
+        print("The command timed out and was terminated.")
+    else:
+        print(stdout)
+
+
+def print_output(process):
+    """Prints the output of the subprocess in real-time."""
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+
+def run_command_with_realtime_output(command, timeout):
+    """Runs a command with real-time output and a timeout."""
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
+
+    # Start the thread to print output
+    print_thread = threading.Thread(target=print_output, args=(process,))
+    print_thread.start()
+
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.terminate()
+        print("\nThe command timed out and was terminated.")
+        return
+
+    # Wait for the print thread to finish
+    print_thread.join()
+
+    if process.returncode != 0:
+        print("\nThe command ended with an error.")
 
 
 def help():

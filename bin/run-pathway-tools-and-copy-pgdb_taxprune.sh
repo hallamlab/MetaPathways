@@ -27,4 +27,5 @@ subpath=/data/ptools-local/pgdbs/user/${sub_id}cyc
 tar -cjf ${pgdbpath}/${org_id}cyc.tar.bz2 -C ${subpath} .
 
 rm -rf /data/ptools-local # clear present run
+ps -ef | grep Xvfb | grep -v grep | awk '{print $2}' | xargs kill
 

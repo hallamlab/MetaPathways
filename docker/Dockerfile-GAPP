@@ -16,14 +16,16 @@ MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
 RUN apt-get update && \
     apt-get install -y gcc g++
 
-# Install MetaPathways and dependencies
-RUN pip3 install git+https://github.com/hallamlab/TreeSAPP.git@py3.10
 
 # Create the environment:
 COPY metapathways/docker/conda_GAPP_env.yml /opt/
 RUN mamba env create --no-default-packages -f /opt/conda_GAPP_env.yml
 
 ENV PATH /opt/conda/envs/metapathways/bin:$PATH
+
+# Install MetaPathways and dependencies
+RUN pip3 install git+https://github.com/hallamlab/TreeSAPP.git@py3.10
+
 
 RUN echo "Make sure MetaPathways is installed:"
 RUN MetaPathways -h
