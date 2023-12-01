@@ -140,8 +140,12 @@ def runParser():
 
     # Read mapping
     reads_args = run_parser.add_argument_group('Read Mapping Arguments')
-    reads_args.add_argument("-r", "--readsdir",
-                        help="location of the raw fastq data for RPKM and TPM [optional]")
+    reads_args.add_argument("-1", "--fwd_fastq", dest="fwd_fastq", 
+                        help="location of the raw forward fastq file for RPKM and TPM [optional]")
+    reads_args.add_argument("-2", "--rev_fastq", dest="rev_fastq",
+                        help="location of the raw reverse fastq file for RPKM and TPM [optional]")
+    reads_args.add_argument("--interleaved", action="store_true", default=False,
+                        help="if paired-end is interleaved [False]")
 
     # Pipeline execution flags
     pipe_args = run_parser.add_argument_group('Pipeline Step Arguments')
@@ -521,9 +525,13 @@ def run():
                                                   default='FAST').upper()
 
                 s = sampledata.SampleData()
-                readsdir = params['Read Mapping Arguments']['readsdir']
-                if readsdir:
-                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=readsdir)  
+                
+                fwd_fq = params['Read Mapping Arguments']['fwd_fastq']
+                rev_fq = params['Read Mapping Arguments']['rev_fastq']
+                interleaved = params['Read Mapping Arguments']['interleaved']
+                fq_files = [[fwd_fq, rev_fq], interleaved]
+                if fwd_fq:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, fq_files = fq_files)  
                 else:
                   s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
@@ -640,11 +648,8 @@ def mag_split():
     cmd_str = f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}'
     gutils.eprintf(cmd_str + '\n')
 
-    stdout, stderr = run_command_with_realtime_output(cmd, 7200)
-    if stdout is None and stderr is None:
-        print("The command timed out and was terminated.")
-    else:
-        print(stdout)
+    run_command_with_realtime_output(cmd)
+    
 
 def ptools():
     argv = sys.argv
@@ -663,39 +668,23 @@ def ptools():
     gutils.eprintf("Building ePGDBs:")
     gutils.eprintf(cmd_str + '\n')
     
-    stdout, stderr = run_command_with_realtime_output(cmd, 7200)
-    if stdout is None and stderr is None:
-        print("The command timed out and was terminated.")
-    else:
-        print(stdout)
+    run_command_with_realtime_output(cmd)
+    
 
+def run_command_with_realtime_output(command):
+    """Runs a command and prints its output in real-time."""
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-def print_output(process):
-    """Prints the output of the subprocess in real-time."""
+    # Read and print the output as it is produced
     while True:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
-        if output:
-            print(output.strip())
+        output_bytes = process.stdout.readline()
+        if output_bytes:
+            print(output_bytes.decode('utf-8', 'replace').strip())
+        else:
+            break  # Exit the loop if no more output
 
-def run_command_with_realtime_output(command, timeout):
-    """Runs a command with real-time output and a timeout."""
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
-
-    # Start the thread to print output
-    print_thread = threading.Thread(target=print_output, args=(process,))
-    print_thread.start()
-
-    try:
-        process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        process.terminate()
-        print("\nThe command timed out and was terminated.")
-        return
-
-    # Wait for the print thread to finish
-    print_thread.join()
+    # Wait for the subprocess to complete
+    process.wait()
 
     if process.returncode != 0:
         print("\nThe command ended with an error.")

@@ -1,0 +1,111 @@
+FROM condaforge/mambaforge as build-env
+# https://mamba.readthedocs.io/en/latest/user_guide/mamba.html
+MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
+
+### EXAMPLES ###
+
+### Build dev branch
+# sudo docker build --network=host -t metapathways:dev .
+
+### Build test branch
+# sudo docker build --build-arg git_branch=test --network=host -t metapathways:test .
+
+################
+
+## Ubuntu installs:
+RUN apt-get update && \
+    apt-get install -y gcc g++
+
+
+# Create the environment:
+COPY metapathways/docker/conda_GAPP_env.yml /opt/
+RUN mamba env create --no-default-packages -f /opt/conda_GAPP_env.yml
+
+ENV PATH /opt/conda/envs/metapathways/bin:$PATH
+
+# Install MetaPathways and dependencies
+RUN pip3 install git+https://github.com/hallamlab/TreeSAPP.git@py3.10
+
+
+RUN echo "Make sure MetaPathways is installed:"
+RUN MetaPathways -h
+RUN echo "Make sure MAGsplitter is installed:"
+RUN magsplitter -h
+RUN echo "Make sure TreeSAPP is installed:"
+RUN treesapp info
+
+# Singularity uses tini, but raises warnings
+# we set it up here correctly for singularity
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+## We do some umask munging to avoid having to use chmod later on,
+## as it is painfully slow on large directores in Docker.
+#RUN old_umask=`umask` && \
+#    umask 0000 && \
+#    umask $old_umask
+
+# move to clean execution environment
+# which includes dependencies like wget & libtinfo6
+FROM ubuntu
+
+# Install Ptools and all dependencies
+ENV DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:99 \
+    INSTALLER_DIR=/opt/bin \
+    INSTALL_EXE=metapathways/docker/ptools-container/pathway-tools-27.0-linux-64-tier1-install
+
+## Ubuntu installs:
+RUN apt-get update && \
+    apt-get install -y xterm openssl inetutils-ping libxml2 xvfb libxm4 && \
+    apt-get install -y emacs-nox less wget procps libssl-dev pigz gcc g++
+
+## PTools installs:
+COPY metapathways/docker/ptools-container/ptools-init.dat /opt/sandbox/ptools-init.dat
+COPY metapathways/docker/ptools-container/install-pathway-tools.sh /tmp/bin/install-pathway-tools.sh
+COPY metapathways/docker/ptools-container/run-pathway-tools.sh /tmp/bin/run-pathway-tools.sh
+COPY $INSTALL_EXE $INSTALLER_DIR/$INSTALL_EXE
+
+RUN /tmp/bin/install-pathway-tools.sh
+## Clean up the installer, which is no longer needed:
+RUN rm $INSTALLER_DIR/$INSTALL_EXE
+
+ENV PATH=$PATH:/opt/pathway-tools:/opt/bin:/opt/conda/bin/
+RUN pathway-tools -lisp -eval "(exit)"
+
+COPY --from=build-env /opt/conda/envs/metapathways /opt/conda/envs/metapathways
+COPY --from=build-env /tini /tini
+
+# install KBL and WPL libraries
+WORKDIR /gapp_pipeline/libraries
+COPY kbl/kbl/*.py ./kbl/
+COPY kbl/kbl/external/*.py ./kbl/external/
+
+# add KBL and WPL libraries to Python path
+ENV PYTHONPATH $PYTHONPATH:/gapp_pipeline/libraries
+
+# add root to Python path
+# is just below the root directory
+ENV PYTHONPATH $PYTHONPATH:/
+
+# add Annotation Pipeline scripts
+WORKDIR /gapp_pipeline
+COPY AnnotationPipeline/apps/annotation/metapathways/*.py ./
+COPY AnnotationPipeline/apps/annotation/magsplitter/*.py ./
+COPY AnnotationPipeline/apps/annotation/pathwaytools/*.py ./
+COPY AnnotationPipeline/apps/annotation/treesapp/*.py ./
+COPY AnnotationPipeline/apps/gapp_json_creation ./gapp_json_creation
+
+## We do some umask munging to avoid having to use chmod later on,
+## as it is painfully slow on large directores in Docker.
+RUN old_umask=`umask` && \
+    umask 0000 && \
+    umask $old_umask
+
+ENV PATH /opt/conda/envs/metapathways/bin:$PATH
+ENV PATH $PATH:/gapp_pipeline
+
+# singularity doesn't use the -s flag, and that causes warnings
+ENTRYPOINT ["/tini", "-s", "--"]
+

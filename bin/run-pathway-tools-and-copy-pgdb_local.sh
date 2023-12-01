@@ -8,7 +8,7 @@ tag_id=$3 # organism/tag id
 pathway-tools -patho ${ptoolpath} -no-taxonomic-pruning -no-web-cel-overview -no-patch-download -tip -no-cel-overview -disable-metadata-saving -nologfile
 
 ## Get the Org ID of the just-built PGDB:
-org_id=$(awk -F"\t" '$1 == "ID" { print $2 }' $(ls ${HOME}/ptools-local/pgdbs/user/${tag_id}cyc/1.0/input/organism.dat))
+org_id=$tag_id
 
 ## This gets PTools to dump out the flat-files of the PGDB:
 pathway-tools \

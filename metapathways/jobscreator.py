@@ -660,9 +660,9 @@ class ContextCreator:
         context.outputs = {'tRNA_results_output':tRNA_results_output,
                            'tRNA_gff_output':tRNA_gff_output,
                            'tRNA_stats_output':tRNA_stats_output,
-                           'tRNA_fasta_output':tRNA_fasta_output,
-                           'tmp_dir': tRNA_tmpdir
+                           'tRNA_fasta_output':tRNA_fasta_output
                            }
+        context.temps = {'tmp_dir': tRNA_tmpdir}
 
         num_threads = self.configs.NUM_CPUS
         pyScript = self.configs.SCAN_tRNA
@@ -671,7 +671,7 @@ class ContextCreator:
              %(pyScript, executable, context.outputs['tRNA_results_output'],
                 context.outputs['tRNA_gff_output'], context.outputs['tRNA_stats_output'],
                 context.outputs['tRNA_fasta_output'], num_threads,
-                context.inputs['input_fasta'], context.outputs['tmp_dir']
+                context.inputs['input_fasta'], context.temps['tmp_dir']
                 )
 
         context.commands = [cmd]
@@ -972,7 +972,10 @@ class ContextCreator:
         contexts = []
 
         '''input'''
-        rpkm_input = s.rpkm_input_dir
+        rpkm_input = s.fq_files
+        fwd_fq = rpkm_input[0][0]
+        rev_fq = rpkm_input[0][1]
+        inter = rpkm_input[1]
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
@@ -991,7 +994,9 @@ class ContextCreator:
         context1 = contextmod.Context()
         context.name = 'COMPUTE_TPM'
         context.inputs = {
-                           'rpkm_input':rpkm_input,
+                           'fwd_fq': fwd_fq,
+                           'rev_fq': rev_fq,
+                           'inter': inter,
                            'output_gff': output_gff,
                            'output_fas':  output_fas,
                            'bwaFolder': bwaFolder,
@@ -1011,12 +1016,11 @@ class ContextCreator:
 
         pyScript = self.configs.RPKM_CALCULATION
 
-        cmd = "%s -c %s --rpkmExec %s --readsdir %s -g %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
-              % (pyScript, context.inputs['output_fas'], 
-                 context1.inputs['rpkmExec'],\
-                 context.inputs['rpkm_input'], context.inputs['output_gff'],\
-                 context1.outputs['rpkm_output'], 
-                 s.sample_name, context.outputs['stats_file'],\
+        cmd = "%s -c %s --rpkmExec %s -1 %s -2 %s --interleaved %s -g %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
+              % (pyScript, context.inputs['output_fas'], context1.inputs['rpkmExec'],
+                 context.inputs['fwd_fq'], context.inputs['rev_fq'], context.inputs['inter'],
+                 context.inputs['output_gff'], context1.outputs['rpkm_output'], 
+                 s.sample_name, context.outputs['stats_file'],
                  context.inputs['bwaFolder'], context1.inputs['bwaExec'], num_threads
                  )
 

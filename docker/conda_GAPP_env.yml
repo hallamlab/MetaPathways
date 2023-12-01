@@ -6,7 +6,6 @@ channels:
 dependencies:
   - python=3.10
   - snakemake
-  - metapathways
   - curl
   - ncurses
   - pysam
@@ -14,6 +13,7 @@ dependencies:
   - coverm
   - blast
   - prodigal
+  - metapathways
   - bwa
   - samtools
   - barrnap

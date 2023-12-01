@@ -48,6 +48,7 @@ if __name__ == "__main__":
                 "bin/fastal",
                 "bin/fastdb",
                 "bin/pgdb_build_wf.py",
+                "bin/pgdb_build_single.py",
                 "bin/run-pathway-tools-and-copy-pgdb.sh",
                 "bin/run-pathway-tools-and-copy-pgdb_taxprune.sh",
                 "bin/run-pathway-tools-and-copy-pgdb_local.sh",

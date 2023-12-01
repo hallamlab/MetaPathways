@@ -270,7 +270,9 @@ def populate_dict(args):
             'ptools_taxonomic_pruning': None
         },
         'Read Mapping Arguments': {
-            'readsdir': None
+            'fwd_fastq': None,
+            'rev_fastq': None,
+            'interleaved': None
         },
         'Pipeline Step Arguments': {
             'PREPROCESS_INPUT': None,
