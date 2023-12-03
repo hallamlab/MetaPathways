@@ -13,8 +13,8 @@ dependencies:
   - coverm
   - blast
   - prodigal
-  - metapathways
   - bwa
+  - metapathways
   - samtools
   - barrnap
   - trnascan-se

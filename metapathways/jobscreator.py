@@ -976,6 +976,7 @@ class ContextCreator:
         fwd_fq = rpkm_input[0][0]
         rev_fq = rpkm_input[0][1]
         inter = rpkm_input[1]
+        
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
@@ -1016,13 +1017,17 @@ class ContextCreator:
 
         pyScript = self.configs.RPKM_CALCULATION
 
-        cmd = "%s -c %s --rpkmExec %s -1 %s -2 %s --interleaved %s -g %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
+        cmd = "%s -c %s --rpkmExec %s -1 %s -g %s -o %s --sample_name  %s --stats %s --bwaFolder %s --bwaExec %s --num_threads %s"\
               % (pyScript, context.inputs['output_fas'], context1.inputs['rpkmExec'],
-                 context.inputs['fwd_fq'], context.inputs['rev_fq'], context.inputs['inter'],
-                 context.inputs['output_gff'], context1.outputs['rpkm_output'], 
-                 s.sample_name, context.outputs['stats_file'],
-                 context.inputs['bwaFolder'], context1.inputs['bwaExec'], num_threads
+                 context.inputs['fwd_fq'], context.inputs['output_gff'],
+                 context1.outputs['rpkm_output'], s.sample_name, 
+                 context.outputs['stats_file'], context.inputs['bwaFolder'],
+                 context1.inputs['bwaExec'], num_threads
                  )
+        if rev_fq:
+            cmd = cmd + ' -2 ' + context.inputs['rev_fq']
+        if inter:
+            cmd = cmd + ' --interleaved'
 
         context.status = self.params.get('Pipeline Step Arguments',
                                          'COMPUTE_TPM')
