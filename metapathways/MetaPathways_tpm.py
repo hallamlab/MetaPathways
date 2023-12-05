@@ -269,12 +269,12 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
 
-    if ((options.fwd_fastq != None) and (not path.exists(options.fwd_fastq))):
+    if (options.fwd_fastq != None and not path.exists(options.fwd_fastq)):
         parser.error("ERROR\tThe expected FASTQ \'{}\' is missing.".format(options.fwd_fastq))
         errormod.insert_error(10)
         return 1
 
-    if ((options.rev_fastq != None) and (not path.exists(options.rev_fastq))):
+    if (options.rev_fastq != None and not path.exists(options.rev_fastq)):
         parser.error("ERROR\tThe expected FASTQ \'{}\' is missing.".format(options.rev_fastq))
         errormod.insert_error(10)
         return 1

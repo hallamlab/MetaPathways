@@ -16,8 +16,8 @@ dependencies:
   - bwa
   - samtools
   - barrnap
-  - metapathways
   - trnascan-se
+  - metapathways
   - subread
   - mmseqs2
   - bmge
