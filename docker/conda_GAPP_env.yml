@@ -14,9 +14,9 @@ dependencies:
   - blast
   - prodigal
   - bwa
-  - metapathways
   - samtools
   - barrnap
+  - metapathways
   - trnascan-se
   - subread
   - mmseqs2

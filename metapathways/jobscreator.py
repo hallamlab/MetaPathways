@@ -996,12 +996,13 @@ class ContextCreator:
         context.name = 'COMPUTE_TPM'
         context.inputs = {
                            'fwd_fq': fwd_fq,
-                           'rev_fq': rev_fq,
-                           'inter': inter,
                            'output_gff': output_gff,
                            'output_fas':  output_fas,
                            'bwaFolder': bwaFolder,
                          }
+        context.temps = {'rev_fq': rev_fq,
+                           'inter': inter
+                           }
 
         context1.inputs = {
                            'rpkmExec': rpkmExec,
@@ -1025,7 +1026,7 @@ class ContextCreator:
                  context1.inputs['bwaExec'], num_threads
                  )
         if rev_fq:
-            cmd = cmd + ' -2 ' + context.inputs['rev_fq']
+            cmd = cmd + ' -2 ' + context.temps['rev_fq']
         if inter:
             cmd = cmd + ' --interleaved'
 
