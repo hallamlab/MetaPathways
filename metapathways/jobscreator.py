@@ -979,7 +979,8 @@ class ContextCreator:
             inter = rpkm_input[1]
         else:
             fwd_fq = None
-            
+            rev_fq = None
+            inter = None
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
