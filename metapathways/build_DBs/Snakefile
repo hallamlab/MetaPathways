@@ -13,23 +13,10 @@
 ### Local Definitions:
 ## Database versions:
 arb_release = "138.1"
-
-functional_db_names_full = ["metacyc",
-                       "swissprot",
-                       "uniref90",
-                       "cazy"
-                       
-                       ]
-
-functional_db_names_lite = ["metacyc",
-                       "swissprot"
-                       ]
-
-functional_db_names_noMeta = ["swissprot"]
-
-taxonomic_db_names = ["SILVA_" + arb_release + "_LSURef_NR99_tax_silva_trunc",
-                      "SILVA_" + arb_release + "_SSURef_NR99_tax_silva_trunc"
-                      ]
+taxonomic_db_names = [
+    "SILVA_" + arb_release + "_LSURef_NR99_tax_silva_trunc",
+    "SILVA_" + arb_release + "_SSURef_NR99_tax_silva_trunc",
+]
 
 script_path = config["script_path"]
 
@@ -37,81 +24,33 @@ script_path = config["script_path"]
 os.system('mkdir -p ' + config["ref_db_dir"])
 os.system('touch ' + config["ref_db_dir"] + '/starting_build')
 
-### DB Staging Rules:
-rule stage_blast_full:
-    input:
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.pdb',
-               func_db = functional_db_names_full),
-        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
-               func_db = functional_db_names_full),
-        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
-        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
-        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
-        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+target_ext = "pdb" if config['aligner'] == "blast" else "prj"
+functional_db_names = config['functional_db_names'].split(",")
+additional_targets = []
+if "metacyc" in functional_db_names:
+    additional_targets += [
+        'functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
+        'functional_categories/MetaCyc_PWY_Ontology.tsv',
+    ]
+if "swissprot" in functional_db_names:
+    additional_targets += [
+        'functional_categories/EC_map.swissprot.tsv',
+    ]
+for n in functional_db_names:
+    if "uniref" not in n: continue
+    additional_targets += [
+        f'functional_categories/EC_map.{n}.tsv',
+    ]
 
-rule stage_blast_lite:
+rule all:
     input:
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.pdb',
-               func_db = functional_db_names_lite),
-        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
-               func_db = functional_db_names_lite),
-        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
-        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
-        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
-        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.' + target_ext, func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt', func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/{additional_target}', additional_target = additional_targets),
 
-# silva is still blast...
-rule stage_fast_full:
-    input:
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt', tax_db = taxonomic_db_names),
         expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
         expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.prj',
-               func_db = functional_db_names_full),
-        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
-               func_db = functional_db_names_full),
-        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
-        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
-        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv',
-        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
-
-rule stage_fast_lite:
-    input:
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.prj',
-               func_db = functional_db_names_lite),
-        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
-               func_db = functional_db_names_lite),
-        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
-        config['ref_db_dir'] + '/functional_categories/MetaCyc-monomer-rxn-pairs.tsv',
-        config['ref_db_dir'] + '/functional_categories/MetaCyc_PWY_Ontology.tsv',
-        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
-        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
-
-rule stage_fast_noMeta:
-    input:
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_LSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc.ndb', arb_release=arb_release),
-        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.prj',
-               func_db = functional_db_names_noMeta),
-        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt',
-               func_db = functional_db_names_noMeta),
-        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt',
-               tax_db = taxonomic_db_names),
-        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot.tsv',
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
 
 rule create_dirs_local_files:
@@ -124,10 +63,10 @@ rule create_dirs_local_files:
     shell:
         """
         mkdir -p {params.target_dir}/functional/formatted
-	mkdir -p {params.target_dir}/functional_categories
-	mkdir -p {params.target_dir}/ncbi_tree
-	mkdir -p {params.target_dir}/taxonomic/formatted
-	touch {params.target_dir}/taxonomic/formatted/done
+        mkdir -p {params.target_dir}/functional_categories
+        mkdir -p {params.target_dir}/ncbi_tree
+        mkdir -p {params.target_dir}/taxonomic/formatted
+        touch {params.target_dir}/taxonomic/formatted/done
         """
         
 rule fetch_silva_db:
@@ -167,45 +106,45 @@ rule make_silva_blast_db:
         	-dbtype nucl -parse_seqids -out {params.target_dir}/taxonomic/formatted/SILVA_{arb_release}_SSURef_NR99_tax_silva_trunc
         """
 
-rule fetch_uniref90_db:
+rule fetch_unirefNN_db:
     input:
         config["ref_db_dir"] + '/starting_build'
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/uniref90'
+        config["ref_db_dir"] + '/functional/uniref{NN}'
     shell:
         """
-        wget -O {params.target_dir}/functional/uniref90.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
-        gunzip {params.target_dir}/functional//uniref90.gz
-        wget -O {params.target_dir}/functional_categories/uniref90.release_note https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.release_note
-        date > {params.target_dir}/functional_categories/UniRef90_reldate.txt
-        cat {params.target_dir}/functional_categories/uniref90.release_note >> {params.target_dir}/functional_categories/UniRef90_reldate.txt
-        rm {params.target_dir}/functional_categories/uniref90.release_note
+        wget -O {params.target_dir}/functional/uniref{wildcards.NN}.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.fasta.gz
+        gunzip {params.target_dir}/functional//uniref{wildcards.NN}.gz
+        wget -O {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.release_note
+        date > {params.target_dir}/functional_categories/uniref{wildcards.NN}_reldate.txt
+        cat {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note >> {params.target_dir}/functional_categories/uniref{wildcards.NN}_reldate.txt
+        rm {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note
         """
 
-rule make_uniref90_blast_db:
+rule make_unirefNN_blast_db:
     input:
-        config["ref_db_dir"] + '/functional/uniref90'
+        config["ref_db_dir"] + '/functional/uniref{NN}'
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/formatted/uniref90.pdb'
+        config["ref_db_dir"] + '/functional/formatted/uniref{NN}.pdb'
     shell:
         """
-        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/uniref90
+        makeblastdb -in {input} -dbtype prot -parse_seqids -out {params.target_dir}/functional/formatted/uniref{wildcards.NN}
         """
 
-rule make_uniref90_fast_db:
+rule make_unirefNN_fast_db:
     input:
-        config["ref_db_dir"] + '/functional/uniref90'
+        config["ref_db_dir"] + '/functional/uniref{NN}'
     params:
         target_dir = config['ref_db_dir']
     output:
-        config["ref_db_dir"] + '/functional/formatted/uniref90.prj'
+        config["ref_db_dir"] + '/functional/formatted/uniref{NN}.prj'
     shell:
         """
-        fastdb -p {params.target_dir}/functional/formatted/uniref90 {input}
+        fastdb -p {params.target_dir}/functional/formatted/uniref{wildcards.NN} {input}
         """
 
 rule fetch_swissprot_db:
@@ -401,20 +340,20 @@ rule swiss_2_ec:
         python {script_path}/swissprot_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
         """
 
-### Rule for mapping Uniref90 to EC numbers:
-rule uniref90_2_ec:
+### Rule for mapping uniref{wildcards.NN} to EC numbers:
+rule unirefNN_2_ec:
     input:
-        config["ref_db_dir"] + '/functional/uniref90',
+        config["ref_db_dir"] + '/functional/uniref{NN}',
         config['ref_db_dir'] + '/functional_categories/enzyme.dat'
     params:
         target_dir = config['ref_db_dir']
     output:
-        config['ref_db_dir'] + '/functional_categories/EC_map.uniref90.tsv'
+        config['ref_db_dir'] + '/functional_categories/EC_map.uniref{NN}.tsv'
     shell:
         """
         wget -O {params.target_dir}/functional_categories/idmapping.dat.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
-        zgrep 'UniRef90_' {params.target_dir}/functional_categories/idmapping.dat.gz > {params.target_dir}/functional_categories/UniRef90_idmapping.dat
-        python {script_path}/uniref90_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        zgrep 'uniref{wildcards.NN}_' {params.target_dir}/functional_categories/idmapping.dat.gz > {params.target_dir}/functional_categories/uniref{wildcards.NN}_idmapping.dat
+        python {script_path}/uniref{wildcards.NN}_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
         """
 
 ### Rule for building taxmapping for LCA:
