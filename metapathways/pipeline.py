@@ -8,12 +8,12 @@ try:
     import shutil
     import glob
     import getpass
+    import pathlib
 
     import subprocess
     import threading
     import os
     import signal
-
     from os import makedirs, sys, listdir, environ, path, _exit
     import argparse
 
@@ -184,27 +184,6 @@ def runParser():
                         help="max number of cores to use in multithreaded steps [4]")
     misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="print more information on the stdout")
-
-    return parser
-
-
-def dbParser():
-    parser = argparse.ArgumentParser(description='MetaPathways command-line tool for building databases.')
-    subparsers = parser.add_subparsers(dest="command")
-    build_parser = subparsers.add_parser(
-        'build_db',
-        description='Minimum REQUIRED Command:\n'
-                    'Metapathways build_db -o output_dir -b db_type\n\n',
-        usage='Metapathways build_db [options]', formatter_class=argparse.RawTextHelpFormatter)
-
-    build_parser.add_argument("-o", "--output_dir", dest="output_dir", required=True,
-                        help='path to save reference database [REQUIRED]')
-    build_parser.add_argument('-b', '--db_type', dest="db_type", required=True,
-                        help="Build version of database [REQUIRED].\nacceptable values are:" \
-                            "\n\tstage_fast_full,\n\tstage_fast_lite,\n\tstage_fast_noMeta," \
-                            "\n\tstage_blast_full,\n\tstage_blast_lite")
-    build_parser.add_argument("-t", "--threads", dest="num_cpus", default='all',
-                        help="max number of cores to use in multithreaded steps [DEFAULT all]")
 
     return parser
 
@@ -573,34 +552,113 @@ def run():
 
 
 def build_db():
+    # ---------------------------------------------------------------------------
+    # get args
+
     argv = sys.argv
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
-    parser = dbParser()
-    args = parser.parse_args()
 
-    gutils.eprintf("Building Refenence DB:")
-    mc_list = ['stage_fast_full', 'stage_fast_lite',
-               'stage_blast_full', 'stage_blast_lite'
-               ]
-    if args.db_type in mc_list:
+    DBS_FUNC =          "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
+    DBS_FUNC_DEFAULT =  "metacyc swissprot".split(" ")
+    ALIGNERS =          "fast blast".split(" ")
+
+    parser = argparse.ArgumentParser(description='automated database install')
+    db = parser.add_argument_group(title="database arguments")
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
+        help="path to save the reference DB")
+    db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
+        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
+    db.add_argument("-a", "--aligner", required=True, default="fast",
+        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    
+    # "options" group
+    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=4,
+        help="max number of cores to use in multithreaded steps [4]")
+    parser.add_argument("--dryrun", action="store_true", default=False, required=False,
+        help="dry run snakemake")
+    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
+        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+    args = parser.parse_args(argv[2:])
+
+    # ---------------------------------------------------------------------------
+    # check and parse params
+
+    input_error = False
+    help_printed = False
+    def _error(message: str):
+        nonlocal input_error, help_printed
+        if not help_printed:
+            parser.print_help()
+            print()
+            help_printed = True
+        gutils.eprintf(f"Invalid input: {message}")
+        input_error = True
+
+    selected_dbs_functional = args.func
+    if len(selected_dbs_functional) == 0: _error("no functional references selected")
+    for db in selected_dbs_functional:
+        if db not in DBS_FUNC: _error(f"unknown functional reference: {db}")
+
+    alinger = args.aligner
+    if alinger not in ALIGNERS: _error(f"unknown aligner: {alinger}")
+
+    if input_error: sys.exit(1)
+
+    # ---------------------------------------------------------------------------
+    # setup folders, params, and wget passwords for snakemake
+
+    ref_db_dir = pathlib.Path(args.refdb_dir).absolute()
+    if not ref_db_dir.exists(): makedirs(ref_db_dir)
+    smk_temp_dir = ref_db_dir.joinpath("temp_cache")
+
+    smk_args = [
+        "--latency-wait 0",
+        "--keep-going",
+        "--rerun-incomplete",
+    ]
+    if args.dryrun: smk_args.append("--dryrun")
+    for smk_arg in args.snakemake:
+        if "=" in smk_arg:
+            smk_arg_tokens = smk_arg.split("=")
+            parsed_smk_arg = f"--{smk_arg_tokens[0]} {'='.join(smk_arg_tokens[1:])}"
+        else:
+            parsed_smk_arg = f"--{smk_arg}"
+        smk_args.append(parsed_smk_arg)
+
+    build_dbs_src = pathlib.Path(path.abspath(__file__)).parent.joinpath("build_DBs")
+    smk_config = dict(
+        ref_db_dir=ref_db_dir,
+        script_path=build_dbs_src,
+        aligner=alinger,
+        functional_db_names=','.join(selected_dbs_functional)
+    )
+
+    if "metacyc" in selected_dbs_functional:
         gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
         # Get the username and password securely
         metacyc_user = input("Enter your MetaCyc username: ")
         metacyc_pswd = getpass.getpass("Enter your MetaCyc password: ")
-    else:
-        metacyc_user = ''
-        metacyc_pswd = ''
+        add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
 
-    db_dir = args.output_dir
-    isExist = path.exists(db_dir)
-    if not isExist:
-        makedirs(db_dir)
+    # ---------------------------------------------------------------------------
+    # run snakemake
 
-    add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
-    cmd_str = f' metapathways-data-install.sh {args.output_dir} {args.db_type} {args.num_cpus} \n'
-    gutils.eprintf(cmd_str)
-    subprocess.run(['metapathways-data-install.sh', args.output_dir, args.db_type, args.num_cpus])
-
+    # set $XDG_CACHE_HOME so that snakemake doesn't polute $HOME
+    cmd = f"""\
+    mkdir -p {smk_temp_dir}
+    export XDG_CACHE_HOME={smk_temp_dir}
+    snakemake -p -s "{build_dbs_src}/Snakefile" \
+        -d {ref_db_dir} \
+        --cores {args.threads} \
+        --config {' '.join([f'{k}="{v}"' for k, v in smk_config.items()])} \
+        {' '.join(smk_args)} \
+    && rm -r {smk_temp_dir}
+    """
+    cmd = " ".join(l for l in cmd.split("    ") if l != "").strip() # remove indetation
+    gutils.eprintf("-"*30+"\n")
+    gutils.eprintf(cmd)
+    gutils.eprintf("\n"+"-"*30+"\n")
+    system(cmd)
 
 def add_netrc_entry(machine, login, password):
     # Get the user's home directory
@@ -609,6 +667,7 @@ def add_netrc_entry(machine, login, password):
     # Define the path to the .netrc file
     netrc_path = path.join(home_directory, ".netrc")
 
+    # todo: overwrite previous, otherwise may be stuck with wrong password
     # Check if the .netrc file already exists
     if path.exists(netrc_path):
         # Read the existing .netrc file

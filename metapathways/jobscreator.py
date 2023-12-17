@@ -973,10 +973,13 @@ class ContextCreator:
 
         '''input'''
         rpkm_input = s.fq_files
-        fwd_fq = rpkm_input[0][0]
-        rev_fq = rpkm_input[0][1]
-        inter = rpkm_input[1]
-        
+        if rpkm_input:
+            fwd_fq = rpkm_input[0][0]
+            rev_fq = rpkm_input[0][1]
+            inter = rpkm_input[1]
+        else:
+            fwd_fq = None
+            
         bwaFolder = s.bwa_folder
         output_gff = s.genbank_dir + s.sample_name + ".annot.gff"
         output_fas = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"

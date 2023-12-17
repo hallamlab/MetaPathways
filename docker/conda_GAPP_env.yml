@@ -5,6 +5,7 @@ channels:
   - hallamlab
 dependencies:
   - python=3.10
+  - metapathways
   - snakemake
   - curl
   - ncurses
@@ -18,7 +19,6 @@ dependencies:
   - barrnap
   - trnascan-se
   - subread
-  - metapathways
   - mmseqs2
   - bmge
   - hmmer

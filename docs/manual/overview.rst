@@ -1,7 +1,7 @@
 Overview 
 ********
 
-MetaPathways [CIT2002]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
+MetaPathways [MP2013]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
 (.fasta, .gff, or .gbk). The pipeline consists of five operational stages including 
 
@@ -27,79 +27,68 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
     
 #. **Feature Prediction**:
-   Several sequence features are predicted on the QC'ed contigs include: open-reading frames
-   (ORFs), ribosomal subunits (rRNAs), and transfer RNAs (tRNAs). To improve the runtime and
-   efficency, both Prodigal [PRODIGAL]_ [PPRODIGAL]_ and tRNAscan-SE [TRNASCAN]_ are leveraged
-   using wrapper scripts that allow for multi-threading for ORF and tRNA prediction respectively.
-   BARRNAP is used for the prediction of rRNAs including: 16S, 23S, and 5S [BARRNAP]_.
-   MetaPathways provides an overlap-aware identification so that users can make informed
-   decisions about features when they overlap eachother. Addtionally, users can define the
-   minimum length of ORFs to keep for downstream analysis.
+   Several sequence features can be predicted on the QC'ed contigs. Open-reading frames
+   (ORFs) are predicted by default and (optionally) ribosomal subunits (rRNAs) and
+   transfer RNAs (tRNAs) can be predicted. To improve the runtime and efficency, Prodigal
+   [PRODIGAL2010]_ is run through a parallel version (pProdigal) [PPRODIGAL2022]_ and
+   tRNAscan-SE [TRNASCANSE2021]_ is run using a wrapper script that allow for more
+   efficient multi-threading. BARRNAP [BARRNAP2019]_ is used for the prediction of rRNAs
+   including: 16S, 23S, and 5S. MetaPathways provides an overlap-aware identification so
+   that users can make informed decisions about features when they overlap eachother.
+   Addtionally, users can define the minimum length of ORFs to keep for downstream analysis.
    
 #. **Functional Annotation**:
    Using a seed-and-extend homology search algorithm, either BLAST [BLAST]_ or FAST [FAST]_,
    users can conduct searches against both functional and taxonomic (optional) databases. 
    Currently supported databases include: Uniprot SwissProt [SWISSPROT]_, Uniprot UniRef90
    [UNIREF90]_, MetaCyc [METACYC]_, and CAZymes [CAZy]_. However, users can create custom
-   databases for any preferred databases.
+   databases for any preferred databases. Optionally, reads can be used to calculate abundance
+   information at both the contig and ORF-level.
       
 #. **Pathway Inference**:
-   
-   
-   
-   Here MetaPathways performs basic quality control (QC) including removing duplicate 
-   sequences and sequence trimming. Open Reading Frame (ORF) prediction is then performed on the QC'ed sequences 
-   using Prodigal [PRODIGAL2010]_ or GeneMark [GeneMark12]_. The final translated ORFs are 
-   now also trimmed according to a user-defined setting. 
+   MetaPathways then predicts `MetaCyc pathways <http://www.metacyc.com>`_ using the
+   `Pathway Tools software <http://brg.ai.sri.com/ptools/>`_ and its pathway prediction
+   algorithm PathoLogic [KARP11]_, resulting in the creation of a community-level environmental
+   Pathway/Genome Database (ePGDB), an integrative data structure of sequences, genes, pathways,
+   and literature annotations for integrative interpretation. Optionally, if metagenome-assembled
+   genomes (MAGs) are available for the metagenome, these MAGs can be used to create
+   population-level ePGDBs. MetaCyc pathways are exported in a tabular format for
+   downstream analysis.
 
-   * MetaPathways steps: `PREPROCESS INPUT`, `ORF PREDICTION`,  and `FILTER AMINOS`
-   
 
-#. **Functional and Taxonomic Annotation**: Using seed-and-extend homology search algorithms (B)LAST 
-   [BLAST90]_, [LAST11]_, MetaPathways can be used to conduct searches against functional and taxonomic databases. 
 
-   * MetaPathways steps: `FUNC SEARCH`, `PARSE FUNC SEARCH`, `SCAN rRNA`, and `ANNOTATE ORFS`
-
-#. **Analyses**: After sequence annotation, MetaPathways performs further taxonomic analyses including 
-   the `Lowest Common Ancestor (LCA) 
-   <http://ab.inf.uni-tuebingen.de/software/megan/>`_ algorithm 
-   [MEGAN07]_ and `tRNA Scan <http://lowelab.ucsc.edu/tRNAscan-SE/>`_ [TRNASCAN97]_, and 
-   prepares detected annotations for environmental Pathway/Genome database (ePGDB) creation via Pathway Tools.
-
-   * MetaPathways Steps: `PATHOLOGIC INPUT`, `CREATE ANNOT REPORTS`, and `COMPUTE RPKM`.
-
-#. **ePGDB Creation**: MetaPathways then predicts `MetaCyc pathways
-   <http://www.metacyc.com>`_ using 
-   the `Pathway Tools software
-   <http://brg.ai.sri.com/ptools/>`_ 
-   and its pathway prediction algorithm 
-   PathoLogic [KARP11]_, resulting in the creation of an environmental Pathway/Genome 
-   Database (ePGDB), an integrative data structure of sequences, genes, pathways, and literature 
-   annotations for integrative interpretation.
-
-   * MetaPathways Steps: `BUILD ePGDB`
-
-#. **Pathway Export**: Here MetaCyc pathways or reactions are exported in a tabular format for downstream 
-   analysis. *As of the v2.5 release, MetaPathways will perform this step automatically.*
-
-   * MetaPathways Steps: `BUILD ePGDB`
-
-.. figure:: http://i.imgur.com/HOacG2l.png
-    :align: center
-    :figclass: align-center
-   
 Output Format
 ~~~~~~~~~~~~~
 
 
 Visualizing Output
 ~~~~~~~~~~~~~~~~~~
-.. [CIT2002] K. M. Konwar, N. W. Hanson, A. P. Pagé, S. J. Hallam, MetaPathways: a modular 
+.. [MP2013] K. M. Konwar, N. W. Hanson, A. P. Pagé, S. J. Hallam, MetaPathways: a modular 
    pipeline for constructing pathway/genome databases from environmental sequence information. 
    BMC Bioinformatics 14, 202 (2013)  http://www.biomedcentral.com/1471-2105/14/202
 
 .. [PRODIGAL2010] D. Hyatt et al., Prodigal: prokaryotic gene recognition and translation 
    initiation site identification. BMC Bioinformatics 11, 119 (2010).
+
+.. [PPRODIGAL2022] Jaenicke, S. (2022). pprodigal (Version 1.0.1) [Software].
+   Available from https://pypi.org/project/pprodigal/
+
+.. [TRNASCANSE2021] Chan, P. P., Lin, B. Y., Mak, A. J., & Lowe, T. M. (2021).
+   tRNAscan-SE 2.0: improved detection and functional classification of transfer RNA genes.
+   Nucleic Acids Research, 49(16), 9077-9096. https://doi.org/10.1093/nar/gkab688
+
+.. [BARRNAP2019] Seemann, T. (2019). barrnap (Version 0.9) [Software]. Available from https://github.com/tseemann/barrnap
+
+
+
+barrnap
+blast
+fast
+swissprot
+uniref90
+metacyc
+cazymes
+
 
 .. [GeneMark12] D. Hyatt, P. F. LoCascio, L. J. Hauser, E. C. Uberbacher, Gene and translation initiation site prediction in metagenomic sequences. Bioinformatics 28, 2223–2230 (2012).
 
