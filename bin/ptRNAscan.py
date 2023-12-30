@@ -137,10 +137,21 @@ def signal_handler(signum, frame):
     cleanup_processes()
     exit(1)
 
+def count_contigs(input_file, min_length):
+    fasta = pyfastx.Fasta(input_file, build_index=False)
+    return sum(1 for rec in fasta if len(rec[1]) >= min_length)
+
 def main(input_file, num_threads, tmp_dir, min_length, args):
     
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    # Count the number of contigs
+    num_contigs = count_contigs(input_file, min_length)
+
+    # Adjust the number of threads if necessary
+    if num_contigs < num_threads:
+        num_threads = num_contigs
 
     #print("Filtering and splitting input file...")
     file_parts = filter_and_split_file(input_file, num_threads, tmp_dir, min_length)
@@ -202,8 +213,6 @@ if __name__ == "__main__":
     parser.add_argument('--nopseudo', action='store_true', help='Disable pseudogene checking')
     parser.add_argument('--quiet', action='store_true', help='Disable stdout')
     
-    # ... [Add other flags as needed]
-
     args = parser.parse_args()
     
     # Create temporary and output directories if they don't exist

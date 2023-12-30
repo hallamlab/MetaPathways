@@ -6,8 +6,8 @@ import os
 
 expasy_dat = sys.argv[1] #"enzyme.dat"
 fc_dir = sys.argv[2]
-uniref_file = os.path.join(fc_dir, "uniref90_idmapping.dat")
-xref2ec_file = os.path.join(fc_dir, "EC_map.uniref90.tsv")
+uniref_file = os.path.join(fc_dir, "uniref50_idmapping.dat")
+xref2ec_file = os.path.join(fc_dir, "EC_map.uniref50.tsv")
 
 with open(expasy_dat, 'r') as ex_handle:
     ex_dat = ex_handle.read().split('//')
@@ -28,15 +28,15 @@ for rec in ex_dat:
                         else:
                             xref2ec_dict[acc] = [ec_id]
 
-ur90_dat = pd.read_csv(uniref_file, sep='\t', names=['UniProtKB', 'dattype', 'UniRefID'])
-ur90_dict = pd.Series(ur90_dat['UniRefID'].values, index=ur90_dat['UniProtKB']).to_dict()
-ur902ec_list = []
-for k in ur90_dict:
-    v = ur90_dict[k]
+ur50_dat = pd.read_csv(uniref_file, sep='\t', names=['UniProtKB', 'dattype', 'UniRefID'])
+ur50_dict = pd.Series(ur50_dat['UniRefID'].values, index=ur50_dat['UniProtKB']).to_dict()
+ur502ec_list = []
+for k in ur50_dict:
+    v = ur50_dict[k]
     if k in xref2ec_dict:
         ecs = xref2ec_dict[k]
         for ec in ecs:
-            ur902ec_list.append([v, ec])
+            ur502ec_list.append([v, ec])
 
-ur902ec_df = pd.DataFrame(ur902ec_list, columns=['AccID', 'EC'])
-ur902ec_df.to_csv(xref2ec_file, sep='\t', index=False)
+ur502ec_df = pd.DataFrame(ur502ec_list, columns=['AccID', 'EC'])
+ur502ec_df.to_csv(xref2ec_file, sep='\t', index=False)

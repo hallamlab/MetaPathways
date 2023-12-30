@@ -14,7 +14,7 @@ try:
     import threading
     import os
     import signal
-    from os import makedirs, sys, listdir, environ, path, _exit
+    from os import makedirs, sys, listdir, environ, path, _exit, system
     import argparse
 
     from metapathways import errorcodes as errormod
@@ -180,8 +180,8 @@ def runParser():
     misc_args = run_parser.add_argument_group('Miscellaneous Arguments')
     misc_args.add_argument("-s", "--samples", nargs='+', action="append", default=[],
                         help="process only specific samples, space-separated list")
-    misc_args.add_argument("-t", "--threads", default=4, type=int,
-                        help="max number of cores to use in multithreaded steps [4]")
+    misc_args.add_argument("-t", "--threads", default=1, type=int,
+                        help="max number of cores to use in multithreaded steps [1]")
     misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="print more information on the stdout")
 
@@ -572,8 +572,8 @@ def build_db():
         help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
     
     # "options" group
-    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=4,
-        help="max number of cores to use in multithreaded steps [4]")
+    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
+        help="max number of cores to use in multithreaded steps [1]")
     parser.add_argument("--dryrun", action="store_true", default=False, required=False,
         help="dry run snakemake")
     parser.add_argument("--snakemake", nargs='*', required=False, default=[],

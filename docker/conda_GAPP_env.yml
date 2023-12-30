@@ -5,7 +5,6 @@ channels:
   - hallamlab
 dependencies:
   - python=3.10
-  - metapathways
   - snakemake
   - curl
   - ncurses
@@ -25,7 +24,10 @@ dependencies:
   - epa-ng
   - raxml-ng
   - fasttree
+  - metapathways
   - git
   - requests
   - mafft
   - checkm-genome
+
+
