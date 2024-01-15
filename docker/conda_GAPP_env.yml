@@ -22,9 +22,9 @@ dependencies:
   - bmge
   - hmmer
   - epa-ng
+  - metapathways
   - raxml-ng
   - fasttree
-  - metapathways
   - git
   - requests
   - mafft
