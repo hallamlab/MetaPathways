@@ -133,11 +133,6 @@ def runParser():
     rrna_args.add_argument('--rRNA_min_bitscore', type=int, default=50,
                            help='Minimum bitscore for rRNA annotation [50]')
 
-    # Pathway tools
-    ptools_args = run_parser.add_argument_group('Pathway Tools Preprocessing Arguments')
-    ptools_args.add_argument('--ptools_taxonomic_pruning', type=str, default='no', choices=['yes', 'no'],
-                             help='Taxonomic pruning in pathway tools [no]')
-
     # Read mapping
     reads_args = run_parser.add_argument_group('Read Mapping Arguments')
     reads_args.add_argument("-1", "--fwd_fastq", dest="fwd_fastq", 
@@ -219,7 +214,8 @@ def ptParser():
                         help="Custom name for ePGDB [optional]")
     ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
                         help="Flag only used in containerized env [special flag]")
-
+    ptools_parser.add_argument('--taxprune', action="store_true", dest="taxprune", default=False,
+                             help='Set taxonomic pruning in pathway tools to True')
     return parser
 
 
@@ -723,6 +719,10 @@ def ptools():
     if args.container:
         container = args.container
         cmd.append('--container')
+    if args.taxprune:
+        taxprune = args.taxprune
+        cmd.append('--taxprune')
+        
     cmd_str = ' '.join(cmd)
     gutils.eprintf("Building ePGDBs:")
     gutils.eprintf(cmd_str + '\n')
