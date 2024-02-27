@@ -219,6 +219,31 @@ def ptParser():
     return parser
 
 
+def blParser():
+    DBS_FUNC =          "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
+    DBS_FUNC_DEFAULT =  "metacyc swissprot".split(" ")
+    ALIGNERS =          "fast blast".split(" ")
+
+    parser = argparse.ArgumentParser(description='automated database install')
+    db = parser.add_argument_group(title="database arguments")
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
+        help="path to save the reference DB")
+    db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
+        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
+    db.add_argument("-a", "--aligner", required=True, default="fast",
+        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    
+    # "options" group
+    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
+        help="max number of cores to use in multithreaded steps [1]")
+    parser.add_argument("--dryrun", action="store_true", default=False, required=False,
+        help="dry run snakemake")
+    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
+        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+
+    return parser
+
+
 def derive_sample_name(filename):
     basename = path.basename(filename)
 
@@ -548,36 +573,10 @@ def run():
 
 
 def build_db():
-    # ---------------------------------------------------------------------------
-    # get args
-
     argv = sys.argv
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
-
-    DBS_FUNC =          "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
-    DBS_FUNC_DEFAULT =  "metacyc swissprot".split(" ")
-    ALIGNERS =          "fast blast".split(" ")
-
-    parser = argparse.ArgumentParser(description='automated database install')
-    db = parser.add_argument_group(title="database arguments")
-    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
-        help="path to save the reference DB")
-    db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
-        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
-    db.add_argument("-a", "--aligner", required=True, default="fast",
-        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
-    
-    # "options" group
-    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
-        help="max number of cores to use in multithreaded steps [1]")
-    parser.add_argument("--dryrun", action="store_true", default=False, required=False,
-        help="dry run snakemake")
-    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
-        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+    parser = blParser()
     args = parser.parse_args(argv[2:])
-
-    # ---------------------------------------------------------------------------
-    # check and parse params
 
     input_error = False
     help_printed = False
