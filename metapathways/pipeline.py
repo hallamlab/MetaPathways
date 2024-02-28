@@ -219,7 +219,7 @@ def ptParser():
     return parser
 
 
-def blParser():
+def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
 
     parser = argparse.ArgumentParser(description='automated database install')
     db = parser.add_argument_group(title="database arguments")
