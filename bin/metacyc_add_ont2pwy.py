@@ -36,7 +36,7 @@ def main(metacyc_pwy_hier, mp_pwy_file, mp_hier_file):
 	trim_df.to_csv(mp_hier_file, sep='\t',
 						index=False
 						)
-    print(f"Output saved to {mp_hier_file}")
+	print(f"Output saved to {mp_hier_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process ORF and PWY tables to calculate pathway metrics.")
