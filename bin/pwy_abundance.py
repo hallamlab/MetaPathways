@@ -6,7 +6,7 @@ import argparse
 
 def calculate_metrics(orfs_df, pwys_df):
     # Convert ORFS column to list of ORFs for each pathway
-    pwys_df['ORFS'] = pwys_df['ORFS'].apply(lambda x: x.split(','))
+    pwys_df['ORFS'] = pwys_df['ORFS'].apply(lambda x: x.split(',') if pd.notnull(x) and x != '' else [])
 
     # Initialize new columns
     pwys_df['Average RPKM'] = np.nan
