@@ -29,10 +29,11 @@ def main(metacyc_pwy_hier, mp_pwy_file, mp_hier_file):
 								  right_on='BioCyc_ID', how='left'
 								  )
 	trim_df = merge_df[['SAMPLE', 'PWY_NAME', 'PWY_COMMON_NAME',
-						'PWY_SCORE', 'PWY_CONFIDENCE', 'NUM_REACTIONS',
+						'PWY_SCORE', 'NUM_REACTIONS',
 						'NUM_COVERED_REACTIONS', 'ORF_COUNT',
-						'ORFS', 'MetaCyc_hierarchy'
+						'ORFS', 'MetaCyc_Ontology_IDs', 'MetaCyc_Ontology_Names'
 						]]
+
 	trim_df.to_csv(mp_hier_file, sep='\t',
 						index=False
 						)
