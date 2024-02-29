@@ -15,6 +15,7 @@ processes = []
 # Queue for file parts
 file_parts_queue = queue.Queue()
 
+
 def run_tRNAscan(thread_id, args):
     while not file_parts_queue.empty():
         try:
@@ -61,11 +62,13 @@ def run_tRNAscan(thread_id, args):
         print(f"Thread {thread_id}: Completed processing {input_file}")
         file_parts_queue.task_done()
 
+
 def cat_files(file_parts, stats_output_file):
     with open(stats_output_file, 'w') as outfile:
         for infile_path in file_parts:
             with open(infile_path) as infile:
                 outfile.writelines(infile)
+
 
 def filter_and_split_file(input_file, tmp_dir, min_length, num_threads, max_contigs_per_file=None):
     fasta = pyfastx.Fasta(input_file, build_index=False)
@@ -121,7 +124,11 @@ def combine_output_files(file_parts, output_file):
     total_lines_written = 0
     header_written = False
     with open(output_file, 'w') as outfile:
-        for i, infile_path in enumerate(file_parts):
+        for infile_path in file_parts:
+            if not os.path.exists(infile_path):
+                print(f"Skipping missing file: {infile_path}")
+                continue  # Skip this file as it doesn't exist
+
             lines_from_file = 0
             header_section = True
             header = []
@@ -129,12 +136,12 @@ def combine_output_files(file_parts, output_file):
                 for line in infile:
                     if header_section:
                         header.append(line)
-                        if '--------' in line:  # Dashed line marks the end of the header
+                        if '--------' in line:
                             header_section = False
                             if not header_written:
                                 outfile.write(''.join(header))
                                 header_written = True
-                    elif not header_section:
+                    else:
                         outfile.write(line)
                         lines_from_file += 1
 
@@ -143,19 +150,23 @@ def combine_output_files(file_parts, output_file):
 
     print(f"Total lines written to final output: {total_lines_written}")
 
+
 def cleanup_processes():
     for process in processes:
         if process.poll() is None:
             os.killpg(os.getpgid(process.pid), signal.SIGTERM)  # Send SIGTERM to the process group
+
 
 # Improved signal handler
 def signal_handler(signum, frame):
     cleanup_processes()
     sys.exit(1)
 
+
 def count_contigs(input_file, min_length):
     fasta = pyfastx.Fasta(input_file, build_index=False)
     return sum(1 for rec in fasta if len(rec[1]) >= min_length)
+
 
 def main(input_file, num_threads, tmp_dir, min_length, args):
     
@@ -196,11 +207,16 @@ def main(input_file, num_threads, tmp_dir, min_length, args):
     for thread in threads:
         thread.join()
 
-    # Combining files for each output type
     for otype, ofile in output_files.items():
         part_files = [os.path.join(tmp_dir, f"{os.path.basename(input_file)}_{otype.strip('-')}_{i}.txt") for i in range(num_threads)]
-        combine_function = cat_files if otype != "--output" else combine_output_files
-        combine_function(part_files, ofile)
+        # Filter out non-existent files
+        existing_part_files = [f for f in part_files if os.path.exists(f)]
+        # Only call combine_function if there are existing files to process
+        if existing_part_files:
+            combine_function = cat_files if otype != "--output" else combine_output_files
+            combine_function(existing_part_files, ofile)
+        else:
+            print(f"No files to combine for {otype}, skipping.")
 
     print(f"Processing complete. Outputs saved.")
     
