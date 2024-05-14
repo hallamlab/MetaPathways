@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-2.5-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Python Version->2.7-<COLOR>.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) 
+[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/)[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) 
 
 # MetaPathways
 
