@@ -1,0 +1,27 @@
+name: metapathways
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.10
+  - snakemake
+  - curl
+  - ncurses
+  - pysam
+  - cython
+  - prodigal
+  - pprodigal
+  - pybedtools
+  - coverm
+  - blast
+  - bwa
+  - samtools
+  - barrnap
+  - trnascan-se
+  - subread
+  - tqdm
+  - pyfastx
+  - pandas
+  - sexpdata
+  - html2text
+  - scipy

@@ -1,24 +1,68 @@
 import os
-from setuptools import setup
+from pathlib import Path
+from setuptools import setup, find_packages
 
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# README file and 2) it's easier to type in the README file than to put a raw
-# string in below ...
+PACKAGE_ROOT = Path(os.path.realpath(__file__)).parent
+NAME = "metapathways".lower()
+ENTRY_POINTS =  [
+    'MetaPathways=metapathways.pipeline:main',
+    'metapathways=metapathways.pipeline:main',
+]
+with open(os.path.join(PACKAGE_ROOT, "metapathways", "_version.py")) as fp:
+    dat = fp.readlines()
+    ver_dict = {x.strip().split(' = ')[0].strip('__'):x.strip().split(' = ')[1]
+                for x in dat
+                }
+VERSION = ver_dict['version'].strip('"')
+CLASSIFIERS = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    f"License :: {ver_dict['license']}",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setup(
-    name = "MetaPathways",
-    version = "2.0.0",
-    author = "Kishori Mohan Konwar, Niels Hanson",
-    author_email = "kishori82@gmail.com",
-    description = ("MetaPathways is a modular pipeline to build PGDBs"\
-                   " from Metagenomic sequences."),
-    license = "BSD",
-    keywords = "metagenomics pipeline",
-    url = "http://packages.python.org/",
-    packages=['MetaPathways_Python'],
-    long_description=read('README'),
-    classifier = []
-)
+if __name__ == "__main__":
+    setup(
+        name=NAME,
+        version=VERSION,
+        author=ver_dict['author'],
+        author_email=ver_dict['contact'],
+        description=(
+            "MetaPathways is a modular pipeline to build PGDBs"
+            " from Metagenomic sequences."
+        ),
+        license=ver_dict['license'],
+        keywords="metagenomics pipeline",
+        url="https://bitbucket.org/BCB2/metapathways/",
+        packages=find_packages(),
+        scripts=["bin/metapathways-install-deps.sh",
+                "bin/metapathways-data-install.sh",
+                "bin/metacount",
+                "bin/fastal",
+                "bin/fastdb",
+                "bin/pgdb_build_wf.py",
+                "bin/run-pathway-tools-and-copy-pgdb.sh",
+                "bin/run-pathway-tools-and-copy-pgdb_taxprune.sh",
+                "bin/run-pathway-tools-and-copy-pgdb_local.sh",
+                "bin/run-pathway-tools-and-copy-pgdb_taxprune_local.sh",
+                "dev/abund_calc.py",
+                "dev/gff2gtf.py",
+                "bin/ptRNAscan.py"],
+        entry_points={"console_scripts": ENTRY_POINTS},
+        long_description=read("README.md"),
+        include_package_data=True,
+        data_files=[('data_file_test', ['README.md', 'Makefile'])],
+        classifiers=CLASSIFIERS,
+        extras_require={
+            "test": ["pytest", "pytest-cov", "tox"],
+        },
+        python_requires=">=3.10",
+        install_requires=[],
+    )
