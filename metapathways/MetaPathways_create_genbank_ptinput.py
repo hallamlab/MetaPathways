@@ -353,7 +353,10 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                             protein_seq = ""
                         try:
                             if ((attrib['product']=='hypothetical protein') |
-                                (attrib['product']=='<unannotated protein>')):
+                                (attrib['product']=='<unannotated protein>') |
+                                (attrib['product']=='NA') | 
+                                (attrib['product']=='N/A')
+                                ):
                                 continue
                         except:
                             print(attrib)

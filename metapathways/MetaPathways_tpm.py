@@ -76,9 +76,22 @@ def createParser():
         help="output stats for ORFs into file"
         )
     parser.add_option(
-        "-r", "--readsdir", dest="readsdir",
-        default=None, help="the directory that should have the read files"
+        "-1", "--fwd_fastq", dest="fwd_fastq",
+        default=None, help=""
         )
+    parser.add_option(
+        "-2", "--rev_fastq", dest="rev_fastq",
+        default=None, help=""
+        )
+    parser.add_option(
+        "--interleaved", dest="interleaved",
+        action="store_true", default=False,
+        help=""
+        )
+    #parser.add_option(
+    #    "-r", "--readsdir", dest="readsdir",
+    #    default=None, help="the directory that should have the read files"
+    #    )
     parser.add_option(
         "-g", "--orfgff", dest="orfgff",
         default=None, help="annotated GFF file"
@@ -256,10 +269,20 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
 
-    if not (options.readsdir != None and path.exists(options.readsdir)):
-        parser.error("ERROR\tThe expected RPKM directory \'{}\' is missing.".format(options.readsdir))
+    if ((options.fwd_fastq != None and options.fwd_fastq != 'None') and not path.exists(options.fwd_fastq)):
+        parser.error("ERROR\tThe expected FASTQ \'{}\' is missing.".format(options.fwd_fastq))
         errormod.insert_error(10)
         return 1
+
+    if ((options.rev_fastq != None and options.rev_fastq != 'None') and not path.exists(options.rev_fastq)):
+        parser.error("ERROR\tThe expected FASTQ \'{}\' is missing.".format(options.rev_fastq))
+        errormod.insert_error(10)
+        return 1
+
+    #if not (options.readsdir != None and path.exists(options.readsdir)):
+    #    parser.error("ERROR\tThe expected RPKM directory \'{}\' is missing.".format(options.readsdir))
+    #    errormod.insert_error(10)
+    #    return 1
 
     if not (options.bwaFolder != None and path.exists(options.bwaFolder)):
         parser.error("ERROR\tThe BWA directory is missing.")
@@ -271,7 +294,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
 
-    readFiles = getReadFiles(options.readsdir, options.sample_name)
+    #readFiles = getReadFiles(options.readsdir, options.sample_name)
     command = [options.rpkmExec]
     command.append('contig')
     command.append('-m length')
@@ -281,11 +304,22 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append('-m trimmed_mean')
     command.append('-m rpkm')
     command.append('-m tpm')
-    command.append('-c')
-    for readgroup in readFiles:
-        fastqs = readFiles[readgroup]
-        for f in fastqs:
-            command.append(f)
+    # set up fastqs
+    if options.fwd_fastq and options.rev_fastq:
+        command.append('-1')
+        command.append(options.fwd_fastq)
+        command.append('-2')
+        command.append(options.fwd_fastq)
+    elif options.fwd_fastq and options.interleaved:
+        command.append('--interleaved')
+        command.append(options.fwd_fastq)
+    elif options.fwd_fastq and not options.interleaved:
+        command.append('--single')
+        command.append(options.fwd_fastq)
+    else:
+        parser.error("ERROR\tFASTQs not specified correctly.")
+        errormod.insert_error(10)
+        return 1
     command.append('-r')
     command.append(options.contigs)
     command.append('--output-file')

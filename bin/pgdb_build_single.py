@@ -31,7 +31,6 @@ from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
 from camelot_frs.pgdb_api import genes_of_pathway
 import html2text
 import time
-import traceback
 
 
 def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
@@ -295,7 +294,9 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 ###############################################################
 # Collect inputs
 parser = argparse.ArgumentParser(description="Run Ptools on MP output and collect outputs.")
-parser.add_argument("--mp_out", type=str, help="MP3 output directory.", required=True)
+parser.add_argument("--mpout_dir", type=str, help="MetaPathways output directory.", required=True)
+parser.add_argument("--input_dir", type=str, help="input directory.", required=True)
+parser.add_argument("--ptout_dir", type=str, help="output directory.", required=True)
 parser.add_argument("--tag", type=str, help="Tag for metagenome PGDB.", required=True)
 parser.add_argument("--taxprune", action='store_true',
 					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
@@ -306,48 +307,22 @@ parser.add_argument("--container", action='store_true', dest="container", defaul
 					)
 args = parser.parse_args()
 
-mp_dir = args.mp_out
 tag = args.tag
 taxprune = args.taxprune
 container = args.container
 
 
 # Build Community-level PGDB
-pt_in = os.path.join(mp_dir, 'ptools')
-pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-print("Building Community-level PGDB.")
+pt_in = args.input_dir
+pt_out = args.ptout_dir
+print("Building PGDB.")
 create_pgdb(pt_in, pt_out, taxprune, tag, container)
-print("Completed Community-level PGDB.")
+print("Completed PGDB.")
 # Parse PGDB flatfiles to create PWYs TSV table
-print("Extracting Community-level PGDB.")
+print("Extracting PGDB.")
 extract_pwy(pt_out)
 print("Extracting Complete.")
 # Map inferred pwys to ORFs and ECs/RXNs used
 print("Mapping ORFs to Inferred Pathways.")
-map_orfs2pwys(mp_dir, pt_out)
+map_orfs2pwys(args.mpout_dir, pt_out)
 print("Mapping Complete.")
-
-# Build MAG-level PGDBs if they exist
-ms_dir = os.path.join(mp_dir, 'magsplitter/results')
-if os.path.exists(ms_dir):
-    mag_list = glob.glob(ms_dir + '/*')
-    for pt_mag in mag_list:
-        if "non_binned" not in pt_mag:
-            try:
-                mag_id = os.path.basename(pt_mag)
-                mag_tag = mag_id
-                pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-                print(f"Building PGDB for {mag_id}.")
-                create_pgdb(pt_mag, pt_out, taxprune, mag_tag, container)
-                print("Completed PGDB.")
-                # Parse PGDB flatfiles to create PWYs TSV table
-                print(f"Extracting PGDB for {mag_id}.")
-                extract_pwy(pt_out)
-                print("Extracting Complete.")
-                # Map inferred pwys to ORFs and ECs/RXNs used
-                print(f"Mapping {mag_id} ORFs to Inferred Pathways.")
-                map_orfs2pwys(mp_dir, pt_out)
-                print("Mapping Complete.")
-            except Exception as e:
-                print(f"PGDB build for {mag_id} failed due to: {e}")
-                traceback.print_exc()
