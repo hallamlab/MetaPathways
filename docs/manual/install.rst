@@ -1,15 +1,15 @@
 Installation
 ************
 
-MetaPathways supports installing the software using Conda and Pip in a 
-64-bit Linux environment, or from a
-container image that can be used with Docker or Singularity. If you do
-not have administrator (i.e., "root") access to your computer, we
-recommend that users install MiniConda if they do not already have it
-set up. For users wanting to use MetaPathways in an academic grid
-computing environment, we recommend using the container image *via*
-Singularity. Below please find a description of how to install MetaPathways 
-using the two supported options:
+MetaPathways supports installing the software using Conda and Pip in a
+64-bit Linux environment, or from a container image that can be used
+with Docker or Singularity. If you do not have administrator (i.e.,
+"root") access to your computer, we recommend that users install
+MiniConda if they do not already have it set up. For users wanting to
+use MetaPathways in an academic grid computing environment, we
+recommend using the container image *via* Singularity. Below please
+find a description of how to install MetaPathways using the two
+supported options:
 
 
 Container Install
