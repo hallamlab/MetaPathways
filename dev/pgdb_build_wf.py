@@ -31,12 +31,13 @@ from camelot_frs.pgdb_loader import load_pgdb, make_camelot_file
 from camelot_frs.pgdb_api import genes_of_pathway
 import html2text
 import time
+import traceback
 
 
 def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 
 	rename_pgdb(pt_inputs, tag)
-	tag_id = tag.lower()
+	tag_id = tag
 	# Create output dir if doesn't exist
 	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
 	if container:
@@ -50,11 +51,12 @@ def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
 		pt_cmd = [sh_tax, pt_inputs, pt_outputs, tag_id]
 	elif tprune == False:
 		pt_cmd = [sh_notax, pt_inputs, pt_outputs, tag_id]
-	os.system(' '.join(pt_cmd))
+	subprocess.run(pt_cmd)
 	# Uncompress PGDB to create PWYs table
 	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
 	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
 	tar_out = subprocess.run(tar_cmd)
+
 
 def rename_pgdb(pt_inputs, tag):
 	o_params = os.path.join(pt_inputs, 'organism-params.dat')
@@ -156,9 +158,10 @@ def get_pwy_inf(reports_dir):
 	'pwy-inference-report_YYYY-MM-DD.txt' file.
 	"""
 	pwy_inf_rec_list = []
-	pwy_inf_file = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))[0]
+	pwy_inf_files = glob.glob(os.path.join(reports_dir, 'pwy-inference-report_*.txt'))
+	most_recent_file = max(pwy_inf_files, key=os.path.getmtime)
 
-	with open(pwy_inf_file, 'r') as pwy_inf_in:
+	with open(most_recent_file, 'r') as pwy_inf_in:
 			data = pwy_inf_in.read()
 	trim_dat = data.split('::: Pathway Inference Report')
 	keep_dat = []
@@ -327,20 +330,24 @@ print("Mapping Complete.")
 # Build MAG-level PGDBs if they exist
 ms_dir = os.path.join(mp_dir, 'magsplitter/results')
 if os.path.exists(ms_dir):
-	mag_list = glob.glob(ms_dir + '/*')
-	for pt_mag in mag_list:
-		if "non_binned" not in pt_mag:
-			mag_id = os.path.basename(pt_mag)
-			mag_tag = mag_id
-			pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-			print(f"Building PGDB for {mag_id}.")
-			create_pgdb(pt_mag, pt_out, taxprune, mag_tag, container)
-			print("Completed PGDB.")
-			# Parse PGDB flatfiles to create PWYs TSV table
-			print(f"Extracting PGDB for {mag_id}.")
-			extract_pwy(pt_out)
-			print("Extracting Complete.")
-			# Map inferred pwys to ORFs and ECs/RXNs used
-			print(f"Mapping {mag_id} ORFs to Inferred Pathways.")
-			map_orfs2pwys(mp_dir, pt_out)
-			print("Mapping Complete.")
+    mag_list = glob.glob(ms_dir + '/*')
+    for pt_mag in mag_list:
+        if "non_binned" not in pt_mag:
+            try:
+                mag_id = os.path.basename(pt_mag)
+                mag_tag = mag_id
+                pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
+                print(f"Building PGDB for {mag_id}.")
+                create_pgdb(pt_mag, pt_out, taxprune, mag_tag, container)
+                print("Completed PGDB.")
+                # Parse PGDB flatfiles to create PWYs TSV table
+                print(f"Extracting PGDB for {mag_id}.")
+                extract_pwy(pt_out)
+                print("Extracting Complete.")
+                # Map inferred pwys to ORFs and ECs/RXNs used
+                print(f"Mapping {mag_id} ORFs to Inferred Pathways.")
+                map_orfs2pwys(mp_dir, pt_out)
+                print("Mapping Complete.")
+            except Exception as e:
+                print(f"PGDB build for {mag_id} failed due to: {e}")
+                traceback.print_exc()

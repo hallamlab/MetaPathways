@@ -10,7 +10,11 @@ try:
     import getpass
     import pathlib
 
-    from os import makedirs, listdir, environ, path, _exit, system
+    import subprocess
+    import threading
+    import os
+    import signal
+    from os import makedirs, sys, listdir, environ, path, _exit, system
     import argparse
 
     from metapathways import errorcodes as errormod
@@ -129,15 +133,14 @@ def runParser():
     rrna_args.add_argument('--rRNA_min_bitscore', type=int, default=50,
                            help='Minimum bitscore for rRNA annotation [50]')
 
-    # Pathway tools
-    ptools_args = run_parser.add_argument_group('Pathway Tools Preprocessing Arguments')
-    ptools_args.add_argument('--ptools_taxonomic_pruning', type=str, default='no', choices=['yes', 'no'],
-                             help='Taxonomic pruning in pathway tools [no]')
-
     # Read mapping
     reads_args = run_parser.add_argument_group('Read Mapping Arguments')
-    reads_args.add_argument("-r", "--readsdir",
-                        help="location of the raw fastq data for RPKM and TPM [optional]")
+    reads_args.add_argument("-1", "--fwd_fastq", dest="fwd_fastq", 
+                        help="location of the raw forward fastq file for RPKM and TPM [optional]")
+    reads_args.add_argument("-2", "--rev_fastq", dest="rev_fastq",
+                        help="location of the raw reverse fastq file for RPKM and TPM [optional]")
+    reads_args.add_argument("--interleaved", action="store_true", default=False,
+                        help="if paired-end is interleaved [False]")
 
     # Pipeline execution flags
     pipe_args = run_parser.add_argument_group('Pipeline Step Arguments')
@@ -172,8 +175,8 @@ def runParser():
     misc_args = run_parser.add_argument_group('Miscellaneous Arguments')
     misc_args.add_argument("-s", "--samples", nargs='+', action="append", default=[],
                         help="process only specific samples, space-separated list")
-    misc_args.add_argument("-t", "--threads", default=4, type=int,
-                        help="max number of cores to use in multithreaded steps [4]")
+    misc_args.add_argument("-t", "--threads", default=1, type=int,
+                        help="max number of cores to use in multithreaded steps [1]")
     misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="print more information on the stdout")
 
@@ -211,6 +214,29 @@ def ptParser():
                         help="Custom name for ePGDB [optional]")
     ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
                         help="Flag only used in containerized env [special flag]")
+    ptools_parser.add_argument('--taxprune', action="store_true", dest="taxprune", default=False,
+                             help='Set taxonomic pruning in pathway tools to True')
+    return parser
+
+
+def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
+
+    parser = argparse.ArgumentParser(description='automated database install')
+    db = parser.add_argument_group(title="database arguments")
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
+        help="path to save the reference DB")
+    db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
+        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
+    db.add_argument("-a", "--aligner", required=True, default="fast",
+        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    
+    # "options" group
+    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
+        help="max number of cores to use in multithreaded steps [1]")
+    parser.add_argument("--dryrun", action="store_true", default=False, required=False,
+        help="dry run snakemake")
+    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
+        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
 
     return parser
 
@@ -496,9 +522,13 @@ def run():
                                                   default='FAST').upper()
 
                 s = sampledata.SampleData()
-                readsdir = params['Read Mapping Arguments']['readsdir']
-                if readsdir:
-                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, readsDir=readsdir)  
+                
+                fwd_fq = params['Read Mapping Arguments']['fwd_fastq']
+                rev_fq = params['Read Mapping Arguments']['rev_fastq']
+                interleaved = params['Read Mapping Arguments']['interleaved']
+                fq_files = [[fwd_fq, rev_fq], interleaved]
+                if fwd_fq:
+                  s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir, fq_files = fq_files)  
                 else:
                   s.setInputOutput(inputFile = input_file, sample_output_dir = sample_output_dir)
                 s.setParameter('algorithm', algorithm)
@@ -540,36 +570,13 @@ def run():
 
 
 def build_db():
-    # ---------------------------------------------------------------------------
-    # get args
-
     argv = sys.argv
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
-
-    DBS_FUNC =          "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
-    DBS_FUNC_DEFAULT =  "metacyc swissprot".split(" ")
-    ALIGNERS =          "fast blast".split(" ")
-
-    parser = argparse.ArgumentParser(description='automated database install')
-    db = parser.add_argument_group(title="database arguments")
-    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
-        help="path to save the reference DB")
-    db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
-        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
-    db.add_argument("-a", "--aligner", required=True, default="fast",
-        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
-    
-    # "options" group
-    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=4,
-        help="max number of cores to use in multithreaded steps [4]")
-    parser.add_argument("--dryrun", action="store_true", default=False, required=False,
-        help="dry run snakemake")
-    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
-        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+    DBS_FUNC = "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
+    DBS_FUNC_DEFAULT = "metacyc swissprot".split(" ")
+    ALIGNERS = "fast blast".split(" ")
+    parser = blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS)
     args = parser.parse_args(argv[2:])
-
-    # ---------------------------------------------------------------------------
-    # check and parse params
 
     input_error = False
     help_printed = False
@@ -691,10 +698,12 @@ def mag_split():
     isExist = path.exists(ms_outdir)
     if not isExist:
        makedirs(ms_outdir)
+    cmd = ['magsplitter', '-p', pf_file, '-r', orf_map, '-c', orf_contig_map, '-m', mag_map, '-i', contig_map, '-o', ms_outdir]
+    cmd_str = f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}'
+    gutils.eprintf(cmd_str + '\n')
 
-    gutils.eprintf(f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir} \n')
-    system(f'magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}')
-
+    run_command_with_realtime_output(cmd)
+    
 
 def ptools():
     argv = sys.argv
@@ -709,11 +718,34 @@ def ptools():
     if args.container:
         container = args.container
         cmd.append('--container')
-    cmd.append('\n')
+    if args.taxprune:
+        taxprune = args.taxprune
+        cmd.append('--taxprune')
+        
     cmd_str = ' '.join(cmd)
     gutils.eprintf("Building ePGDBs:")
-    gutils.eprintf(cmd_str)
-    system(cmd_str)
+    gutils.eprintf(cmd_str + '\n')
+    
+    run_command_with_realtime_output(cmd)
+    
+
+def run_command_with_realtime_output(command):
+    """Runs a command and prints its output in real-time."""
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    # Read and print the output as it is produced
+    while True:
+        output_bytes = process.stdout.readline()
+        if output_bytes:
+            print(output_bytes.decode('utf-8', 'replace').strip())
+        else:
+            break  # Exit the loop if no more output
+
+    # Wait for the subprocess to complete
+    process.wait()
+
+    if process.returncode != 0:
+        print("\nThe command ended with an error.")
 
 
 def help():

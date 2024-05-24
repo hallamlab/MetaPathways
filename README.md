@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-2.5-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Python Version->2.7-<COLOR>.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) 
+[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Python Version-==3.10-<COLOR>.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) 
 
 # MetaPathways
 
@@ -10,29 +10,38 @@ A master-worker model for environmental Pathway/Genome Database construction on 
 
 ## Abstract
 
-The development of high-throughput sequencing technologies over the past decade has generated a tidal wave of environmental sequence information from a variety of natural and human engineered ecosystems. The resulting flood of infor- mation into public databases and archived sequencing projects has exponentially expanded computational resource requirements rendering most local homology-based search methods inefficient. We recently introduced MetaPathways v1.0, a modular annotation and analysis pipeline for constructing environmental Pathway/Genome Databases (ePGDBs) from environmental sequence information capable of using the Sun Grid engine for external resource partitioning. However, a command-line interface and facile task management introduced user activation barriers with concomitant decrease in fault tolerance.
+The development of high-throughput sequencing technologies over the past decade has generated a tidal wave of environmental sequence information from a variety of natural and human engineered ecosystems. The resulting flood of information into public databases and archived sequencing projects has exponentially expanded computational resource requirements rendering most local homology-based search methods inefficient. MetaPathways v1.0 is a modular annotation and analysis pipeline for constructing environmental Pathway/Genome Databases (ePGDBs) from environmental sequence information capable of using the Sun Grid engine for external resource partitioning. However, a command-line interface and facile task management introduced user activation barriers with concomitant decrease in fault tolerance.
 
-Here we present MetaPathways v3.0, incorporating a graphical user interface (GUI) and refined task management methods. The MetaPathways GUI provides an intuitive display for setup and process monitoring and supports interactive data visualization and sub-setting via a custom Knowledge Engine data structure. A master-worker model is adopted for task management allowing users to scavenge computational results from a number of worker grids in an ad hoc, asynchronous, distributed network that dramatically increases fault tolerance. This model facilitates the use of EC2 instances extending ePGDB construction to the Amazon Elastic Cloud.
+MetaPathways has since advanced as a modular tool, deepening our understanding of microbial metabolism at various biological levels. With this release, we have addressed previous challenges in modularity and database management. v3.5 enhances user accessibility through streamlined installation via package indexes or containers, refined modules, and interface upgrades. It boasts updated algorithm support for sequence feature prediction, annotation, metabolic inference, and coverage metrics. Tested on mock community data, Metapathways v3.5 demonstrates improved performance and usability. With automated installation and database management, this open-source tool makes advanced metagenomic analysis more accessible. Metapathways v3.5 represents a significant step forward in automated, comprehensive metagenomic analysis, facilitating a deeper exploration of microbial interactions and metabolic functions in environmental genomics.
 
-## Installation
+## Quickstart
 
-MetaPathways v3.0 requires Python 3.0 or greater. For full functionality, you should also install [Pathway Tools](http://bioinformatics.ai.sri.com/ptools/), developed by SRI International.
+### Installation with Anacodna
+```
+conda install -c hallamlab -c bioconda -c conda-forge metapathways
+```
 
-Please see the [MetaPathways v3.0 documentation](https://metapathways.readthedocs.io/en/dev/) for installation details.
+### Installation with containers
+```
+singularity pull docker://quay.io/hallamlab/metapathways
+
+docker pull quay.io/hallamlab/metapathways
+```
+
+### Execution
+```{bash}
+metapathways run --help
+```
+
+## [Documentation](https://metapathways.readthedocs.io/en/dev/)
 
 ## Support
 
-Have technical questions about MetaPathways? Please post a new question to 
-[BioStars](https://www.biostars.org/), [Bioinformatics StackExchange](https://bioinformatics.stackexchange.com/), 
-or [SeqAnswers Bioinformatics](https://www.seqanswers.com/forum/bioinformatics/bioinformatics-aa), 
-and tag it with "MetaPathways". We will monitor those sites, and will respond there. 
-
-Have a specific bug report or enhancement request? Please use our 
-[BitBucket Issue Tracker](https://bitbucket.org/BCB2/metapathways/issues?status=new&status=open).
+[Technical questions, bug reports, and general inquires can be made here.](https://bitbucket.org/BCB2/metapathways/issues?status=new&status=open)
 
 ## Citation
 
 If you use MetaPathways in your research, please cite the following article:
 
-> Niels W. Hanson, Kishori M. Konwar, Shang-Ju Wu, Steven J. Hallam. *MetaPathways v2.0: A master-worker model for environmental Pathway/Genome Database construction on grids and clouds.* Proceedings of the 2014 IEEE Conference on Computational Intelligence in Bioinformatics and Computational Biology (CIBCB 2014), Honolulu, HI, USA, May 21-24, 2014. [doi:10.1109/CIBCB.2014.6845516](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6845516)
+> Kishori M. Konwar, Niels W. Hanson, Antoine P Pagé, and Steven J. Hallam. *MetaPathways: a modular pipeline for constructing pathway/genome databases from environmental sequence information.* BMC Bioinformatics, 2013;14(1):202. [doi:10.1186/1471-2105-14-202](https://doi.org/10.1186/1471-2105-14-202)
 
