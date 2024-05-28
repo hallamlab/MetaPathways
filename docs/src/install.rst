@@ -1,3 +1,31 @@
+QuickStart
+**********
+
+Metapathways can be installed with conda or obtained as a container. In either case, reference
+databases must also be downloaded as indicated below. 
+
+Conda
+-----
+::
+
+   conda install -c hallamlab -c bioconda -c conda-forge metapathways
+   metapathways build-db \
+      -t ${threads} \
+      -d ${path_to_save_reference_databases_to} \
+      --func metacyc swissprot cazy eggnog uniref50 uniref90 \
+      -a fast # or Blast
+
+Apptainer
+---------
+::
+   apptainer build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
+   apptainer run --bind ${path_to_save_reference_databases_to}/:/ref \
+      metapathways build-db \
+         -t ${threads} \
+         -d /ref \
+         --func metacyc swissprot cazy eggnog uniref50 uniref90 \
+         -a fast # or Blast
+
 Installation
 ************
 
@@ -19,12 +47,13 @@ Our container images are hosted at `Quay.io <https://quay.io/repository/hallamla
 The following commands assume that you are already familiar with installing and running Docker containers 
 via the ``docker`` or ``singularity`` executables:
 
-Using `Docker <https://sylabs.io/>`_:
-::
-     sudo docker pull quay.io/hallamlab/metapathways
+Using `Docker <https://sylabs.io/>`_::
+
+   sudo docker pull quay.io/hallamlab/metapathways
 
 Using `Singularity <https://sylabs.io/>`_:
-::
+.. code-block:: bash
+   
    singularity build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
 
 More advanced container-related commands are available as Make targets in the ``Makefile``.
@@ -72,7 +101,7 @@ following to get all of the dependencies except Conda:
                   wget
 
 Installing Python Package as Root
-................................
+.................................
 
 If you have root/administrator access, install the MetaPathways Python package using the following command:
 ::

@@ -8,17 +8,18 @@ Welcome to MetaPathways's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Documentation
+   :caption: Usage
 
-   manual/overview
-   manual/install
-   manual/processing
+   overview
+   install
+   processing
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Data Exploration
+..
+   .. toctree::
+      :maxdepth: 2
+      :caption: Data Exploration
 
-   manual/phandi_overview
+      phandi_overview
 
 .. toctree::
    :maxdepth: 2
