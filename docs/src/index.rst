@@ -9,19 +9,35 @@ MetaPathways
 
 .. toctree::
    :maxdepth: 2
-   :caption: Documentation
+   :caption: Usage
 
-   manual/overview
-   manual/install
-   manual/processing
+   overview
+   install
+   processing
+
+..
+   .. toctree::
+      :maxdepth: 2
+      :caption: Data Exploration
+
+      phandi_overview
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API References
 
 
-Indices and Tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
+
+.. Contact
+.. =======
+
+.. :ref:`contact`
 
 
 .. MetaPathways -i tests/data/lagoon-sample/input/  -o mp_output/ -s lagoon-sample -p template_param.txt  -d ~/MetaPathways_DBs/ -v
