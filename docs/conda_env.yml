@@ -2,4 +2,4 @@ channels:
   - conda-forge
 dependencies:
   - sphinx
-  - sphinx_rtd_theme
+  - sphinx_rtd_theme==2.0.0

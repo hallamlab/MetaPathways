@@ -26,17 +26,17 @@ Welcome to MetaPathways's documentation!
    :caption: API References
 
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 
-Contact
-=======
+.. Contact
+.. =======
 
-:ref:`contact`
+.. :ref:`contact`
 
 
 .. MetaPathways -i tests/data/lagoon-sample/input/  -o mp_output/ -s lagoon-sample -p template_param.txt  -d ~/MetaPathways_DBs/ -v
