@@ -18,7 +18,7 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
 .. figure:: images/glyph.png
     :width: 250px
     :align: center
-    :height: 200px
+    :height: 500px
     :alt: alternate text
     :figclass: align-center
 
