@@ -37,6 +37,7 @@ class Context:
         self.outputs1 = {}
         self.inputs = {}
         self.inputs1 = {}
+        self.temps = {}
         self.name = None
         self.status = None
         self.commands = []
