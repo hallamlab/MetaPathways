@@ -5,6 +5,11 @@ MetaPathways [MP2013]_ is a meta'omic analysis pipeline for the annotation and a
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
 (.fasta, .gff, or .gbk). The pipeline consists of five operational stages including 
 
+.. figure:: static/glyph.png
+   :align: center
+   :alt: alternate text
+   :figclass: align-center
+
 Pipeline
 ~~~~~~~~
 
@@ -14,12 +19,7 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
    :trim:
 
 |nbsp|
-
-.. figure:: static/glyph.png
-   :align: center
-   :alt: alternate text
-   :figclass: align-center
-
+	
 #. **Quality Control**: 
    Basic quality control (QC) is performed with includes filtering out sequences below a set
    length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
