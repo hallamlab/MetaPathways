@@ -16,11 +16,9 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
 |nbsp|
 
 .. figure:: static/glyph.png
-    :width: 250px
-    :align: center
-    :height: 500px
-    :alt: alternate text
-    :figclass: align-center
+   :align: center
+   :alt: alternate text
+   :figclass: align-center
 
 #. **Quality Control**: 
    Basic quality control (QC) is performed with includes filtering out sequences below a set
