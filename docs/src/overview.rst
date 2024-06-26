@@ -8,20 +8,17 @@ MetaPathways include metagenomic or metatranscriptomic sequence data in one of s
 Pipeline
 ~~~~~~~~
 
+.. figure:: static/glyph.png
+   :align: center
+   :alt: alternate text
+   :figclass: align-center
 MetaPathways is composed of four general stages, encompassing a number of analytical or data handling steps **(Figure 1)**:
 
 .. |nbsp| unicode:: 0xA0 
    :trim:
 
 |nbsp|
-
-.. figure:: static/glyph.png
-    :width: 250px
-    :align: center
-    :height: 200px
-    :alt: alternate text
-    :figclass: align-center
-
+	
 #. **Quality Control**: 
    Basic quality control (QC) is performed with includes filtering out sequences below a set
    length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
