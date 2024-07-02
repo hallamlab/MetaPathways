@@ -4,7 +4,7 @@
 
 A master-worker model for environmental Pathway/Genome Database construction on grids and clouds
 
-**Current Team:** Tomer Altman, Julia Anstett, Aria Hahn, Kishori M. Konwar, Tony Liu, Ryan McLaughlin, Aditi Nagaraj, and Steven J. Hallam
+**Current Team:** Ryan McLaughlin, Tomer Altman, Tony Liu, Julia Anstett, Aria Hahn, Kishori M. Konwar, Aditi Nagaraj, and Steven J. Hallam
 
 **Previous Team Members:** Niels W. Hanson and Shang-Ju Wu
 
@@ -18,12 +18,12 @@ MetaPathways has since advanced as a modular tool, deepening our understanding o
 
 ### Installation with Anacodna
 ```
-conda install -c hallamlab -c bioconda -c conda-forge metapathways
+mamba create -n metapathways_env -c hallamlab -c bioconda -c conda-forge metapathways
 ```
 
 ### Installation with containers
 ```
-singularity pull docker://quay.io/hallamlab/metapathways
+apptainer pull docker://quay.io/hallamlab/metapathways
 
 docker pull quay.io/hallamlab/metapathways
 ```
@@ -42,6 +42,8 @@ metapathways run --help
 ## Citation
 
 If you use MetaPathways in your research, please cite the following article:
+
+> Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar, Steven J. Hallam. *MetaPathways v3.5: Modularity and Scalability Improvements for Pathway Inference from Environmental Genomes* bioRxiv (2024): 2024-06. [doi: https://doi.org/10.1101/2024.06.04.597460](https://doi.org/10.1101/2024.06.04.597460)
 
 > Kishori M. Konwar, Niels W. Hanson, Antoine P Pagé, and Steven J. Hallam. *MetaPathways: a modular pipeline for constructing pathway/genome databases from environmental sequence information.* BMC Bioinformatics, 2013;14(1):202. [doi:10.1186/1471-2105-14-202](https://doi.org/10.1186/1471-2105-14-202)
 

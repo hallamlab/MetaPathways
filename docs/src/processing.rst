@@ -1,8 +1,13 @@
 Running MetaPathways
 ********************
 
+MetaPathways has many parameters and flags to allow for explicit control of many aspects of proccessing.
+However, the minimal (default) analysis requires very few user inputs.
+
+
 Input
 =====
+
 MetaPathways inputs are fasta files provided in an input folder. The file names must end with 
 a `.fasta` or `.fas`. These fasta files contains the contigs or DNA sequences from assembling.
 

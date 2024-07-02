@@ -1,4 +1,0 @@
-pyfastx >=0.8.2
-pytest >=6.0.0
-tox >=3.21.2
-samsum >=0.1.4

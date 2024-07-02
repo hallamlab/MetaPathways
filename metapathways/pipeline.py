@@ -69,11 +69,11 @@ def runParser():
     
     # Minimum required args
     req_args = run_parser.add_argument_group('Minimum Required Arguments')
-    req_args.add_argument("-i", "--input_file", required=True,
+    req_args.add_argument("-i", "--input_file", required=False, default=None,
                         help='path to the input fasta file/input dir [REQUIRED]')
-    req_args.add_argument("-o", "--output_dir", required=True,
+    req_args.add_argument("-o", "--output_dir", required=False, default=None,
                         help='path to the output directory [REQUIRED]')
-    req_args.add_argument("-d", "--refdb_dir", required=True,
+    req_args.add_argument("-d", "--refdb_dir", required=False, default=None,
                         help="path to the reference DB [REQUIRED]")
     
     
@@ -134,11 +134,11 @@ def runParser():
                            help='Minimum bitscore for rRNA annotation [50]')
 
     # Read mapping
-    reads_args = run_parser.add_argument_group('Read Mapping Arguments')
-    reads_args.add_argument("-1", "--fwd_fastq", dest="fwd_fastq", 
-                        help="location of the raw forward fastq file for RPKM and TPM [optional]")
+    reads_args = run_parser.add_argument_group('Read Mapping Arguments (single sample support only)')
+    reads_args.add_argument("-1", "--fastq", dest="fwd_fastq", 
+                        help="location of the raw fastq file, either forward or interleaved")
     reads_args.add_argument("-2", "--rev_fastq", dest="rev_fastq",
-                        help="location of the raw reverse fastq file for RPKM and TPM [optional]")
+                        help="location of the raw reverse fastq file, if separate paired-end")
     reads_args.add_argument("--interleaved", action="store_true", default=False,
                         help="if paired-end is interleaved [False]")
 
@@ -179,6 +179,8 @@ def runParser():
                         help="max number of cores to use in multithreaded steps [1]")
     misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="print more information on the stdout")
+    misc_args.add_argument("--test", action="store_true", help="use test values for all arguments")
+
 
     return parser
 
@@ -220,23 +222,24 @@ def ptParser():
 
 
 def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
-
     parser = argparse.ArgumentParser(description='automated database install')
     db = parser.add_argument_group(title="database arguments")
-    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=True,
-        help="path to save the reference DB")
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=False, default='./',
+                    help="path to save the reference DB, [DEFAULT \"./\"]")
     db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
-        help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
-    db.add_argument("-a", "--aligner", required=True, default="fast",
-        help=f"local alinger to index for, select one of {ALIGNERS}, [DEFAULT fast]")
-    
+                    help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
+    db.add_argument("-a", "--aligner", required=False, default="fast",
+                    help=f"local aligner to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+
     # "options" group
     parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
-        help="max number of cores to use in multithreaded steps [1]")
+                        help="max number of cores to use in multithreaded steps [1]")
     parser.add_argument("--dryrun", action="store_true", default=False, required=False,
-        help="dry run snakemake")
+                        help="dry run snakemake")
     parser.add_argument("--snakemake", nargs='*', required=False, default=[],
-        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+                        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+
+    parser.add_argument("--test", action="store_true", help="use test values for all arguments")
 
     return parser
 
@@ -247,6 +250,7 @@ def derive_sample_name(filename):
     shortname = re.sub('[.]gbk$','',basename, re.IGNORECASE)
     shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',shortname, re.IGNORECASE)
     return shortname
+
 
 def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlogger = None):
    """ keep only the samples that are specified  before processing  """
@@ -261,7 +265,6 @@ def remove_unspecified_samples(input_output_list, sample_subset,  globalerrorlog
              globalerrorlogger.printf("ERROR\tSample name %s must not be longer than 35 characters!\n",short_sample_name)
       if sample_subset and  not derive_sample_name(sample_name) in sample_subset:
          del input_output_list[sample_name]
-
 
 
 def check_for_error_in_input_file_name(shortname, globalerrorlogger=None):
@@ -281,7 +284,7 @@ def check_for_error_in_input_file_name(shortname, globalerrorlogger=None):
     gutils.eprintf("ERROR\t%s\n",errmessage)
     if globalerrorlogger:
         globalerrorlogger.printf("ERROR\t%s\n",errmessage)
-    #    mputils.exit_process(errmessage + "Exiting!" + "\n", logger=globalerrorlogger)
+        mputils.exit_process()
     return False
 
 
@@ -290,12 +293,11 @@ def create_an_input_output_pair(input_file, output_dir,  globalerrorlogger=None)
 
     input_output = {}
 
-    if not re.search(r'.(fasta|fas|fna|faa|gbk|gff|fa|fna.gz)$',input_file, re.IGNORECASE):
+    if not re.search(r'.(fasta|fas|fna|faa|fa|gbk|gff|fasta.gz|fas.gz|fna.gz|faa.gz|fa.gz)$',input_file, re.IGNORECASE):
        return input_output
 
     shortname = None
-    shortname = re.sub('[.]gbk$','',input_file, re.IGNORECASE)
-    shortname = re.sub('[.](fasta|fas|fna|faa|fa|fna.gz)$','',input_file, re.IGNORECASE)
+    shortname = re.sub('[.](fasta|fas|fna|faa|fa|gbk|gff|fasta.gz|fas.gz|fna.gz|faa.gz|fa.gz)$','',input_file, re.IGNORECASE)
     shortname = re.sub(r'.*' + PATHDELIM ,'',shortname)
 
     if  check_for_error_in_input_file_name(shortname, globalerrorlogger=globalerrorlogger):
@@ -400,6 +402,31 @@ def run():
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = runParser()
     args = parser.parse_args()
+    # Check for the --test flag and set test values if present
+    if args.test:
+        args.refdb_dir = str(pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db"))
+        args.rRNA_refdbs = ["SILVA_SSU_test", "SILVA_LSU_test"]
+        args.annotation_dbs = ["swissprot_test"]
+        args.input_file = str(pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/input/k12_test.fasta.gz"))
+        args.fwd_fastq = str(pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/input/k12_small_R1.fastq.gz"))
+        args.rev_fastq = str(pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/input/k12_small_R2.fastq.gz"))
+        args.output_dir = "./test"
+        args.threads = 1
+
+        # Set required arguments to False when --test is used
+        for action in parser._actions:
+            if action.required:
+                action.required = False
+
+    # Validate required arguments if --test is not used
+    else:
+        if args.input_file == None:
+            parser.error(f"Input is a required argument: \"-i\", \"--input_file\"")
+        elif args.output_dir == None:
+            parser.error(f"Output path is a required argument: \"-o\", \"--output_dir\"")
+        elif args.refdb_dir == None:
+            parser.error(f"Reference DB is a required argument: \"-d\", \"--refdb_dir\"")
+
     if args.force_redo:
         steps_list = ['PREPROCESS_INPUT', 'ORF_PREDICTION', 'FILTER_AMINOS', 'SCAN_rRNA',
                       'SCAN_tRNA', 'FUNC_SEARCH', 'PARSE_FUNC_SEARCH', 'ANNOTATE_ORFS',
@@ -412,7 +439,6 @@ def run():
     input_fp = params['Minimum Required Arguments']['input_file']
     output_dir = path.abspath(params['Minimum Required Arguments']['output_dir'])
     verbose = params['Miscellaneous Arguments']['verbose']
-
     # Subset inputs if specified
     sample_subset = removeSuffix(params['Miscellaneous Arguments']['samples'])
     run_type = 'safe'
@@ -437,7 +463,6 @@ def run():
     """
     print("output dir", output_dir)
     globalerrorlogger = mputils.WorkflowLogger(mputils.generate_log_fp(output_dir, basefile_name = 'global_errors_warnings'), open_mode='w')
-
     input_output_list = {}
     if path.isfile(input_fp):
        """ check if it is a file """
@@ -555,8 +580,8 @@ def run():
                    block_mode = block_mode
               )
          else:
-              gutils.eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",sQuote(input_fp) )
-              globalerrorlogger.printf("ERROR\tNo valid input files to process in folder %s!\n",sQuote(input_fp) )
+              gutils.eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",gutils.sQuote(input_fp) )
+              globalerrorlogger.printf("ERROR\tNo valid input files to process in folder %s!\n",gutils.sQuote(input_fp) )
 
     except:
        mputils.exit_process(str(traceback.format_exc(10)), logger= globalerrorlogger )
@@ -577,9 +602,35 @@ def build_db():
     ALIGNERS = "fast blast".split(" ")
     parser = blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS)
     args = parser.parse_args(argv[2:])
+    build_dbs_src = pathlib.Path(path.abspath(__file__)).parent.joinpath("build_DBs")
+
+    # Check for the --test flag and set test values if present
+    if args.test:
+        args.refdb_dir = pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db")
+        args.func = ["swissprot_test"]
+        args.aligner = "fast"
+        args.threads = 1
+        snakefile = f"""{build_dbs_src}/Snakefile_test"""
+
+        # Set required arguments to False when --test is used
+        for action in parser._actions:
+            if action.required:
+                action.required = False
+
+    # Validate required arguments if --test is not used
+    else:
+        snakefile = f"""{build_dbs_src}/Snakefile"""
+        missing_required = []
+        for action in parser._actions:
+            if action.required and getattr(args, action.dest, None) is None:
+                missing_required.append(action.dest)
+
+        if missing_required:
+            parser.error(f"The following arguments are required: {', '.join(missing_required)}")
 
     input_error = False
     help_printed = False
+
     def _error(message: str):
         nonlocal input_error, help_printed
         if not help_printed:
@@ -592,8 +643,10 @@ def build_db():
     selected_dbs_functional = args.func
     if len(selected_dbs_functional) == 0: _error("no functional references selected")
     for db in selected_dbs_functional:
-        if db not in DBS_FUNC: _error(f"unknown functional reference: {db}")
-
+        if ((db not in DBS_FUNC) & (db != 'swissprot_test')):
+            _error(f"unknown functional reference: {db}")
+        elif db == 'swissprot_test':
+            print("Running test reference DB")
     alinger = args.aligner
     if alinger not in ALIGNERS: _error(f"unknown aligner: {alinger}")
 
@@ -620,7 +673,6 @@ def build_db():
             parsed_smk_arg = f"--{smk_arg}"
         smk_args.append(parsed_smk_arg)
 
-    build_dbs_src = pathlib.Path(path.abspath(__file__)).parent.joinpath("build_DBs")
     smk_config = dict(
         ref_db_dir=ref_db_dir,
         script_path=build_dbs_src,
@@ -642,7 +694,7 @@ def build_db():
     cmd = f"""\
     mkdir -p {smk_temp_dir}
     export XDG_CACHE_HOME={smk_temp_dir}
-    snakemake -p -s "{build_dbs_src}/Snakefile" \
+    snakemake -p -s "{snakefile}" \
         -d {ref_db_dir} \
         --cores {args.threads} \
         --config {' '.join([f'{k}="{v}"' for k, v in smk_config.items()])} \

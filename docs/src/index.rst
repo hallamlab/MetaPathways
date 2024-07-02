@@ -9,23 +9,13 @@ MetaPathways
 
 .. toctree::
    :maxdepth: 2
-   :caption: Usage
+   :caption: Documentation
 
    overview
+   quick_start
    install
+   build_db
    processing
-
-..
-   .. toctree::
-      :maxdepth: 2
-      :caption: Data Exploration
-
-      phandi_overview
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API References
-
 
 .. Indices and tables
 .. ==================
@@ -39,6 +29,3 @@ MetaPathways
 
 .. :ref:`contact`
 
-
-.. MetaPathways -i tests/data/lagoon-sample/input/  -o mp_output/ -s lagoon-sample -p template_param.txt  -d ~/MetaPathways_DBs/ -v
-   pytest --import-mode importlib -v
