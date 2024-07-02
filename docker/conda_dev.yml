@@ -5,6 +5,7 @@ dependencies:
   - conda-build
   - boa
   - anaconda-client
+  - conda-verify
   - pip
   - pip:
     - twine
