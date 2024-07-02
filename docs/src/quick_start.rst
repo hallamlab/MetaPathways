@@ -29,23 +29,24 @@ Try it with Mamba (recommended)
    # run minimal DB on your personal data
    metapathways run -i ${your_metagenome.fa} -o ${path/to/output_dir} -d ${path/to/MPDB}
 
-Try it with Apptainer
+Try it with Docker
 =====================
 
 .. code-block:: bash
 
-   # pull down and build with apptainer
-   apptainer build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
+   # pull down with docker
+   docker pull quay.io/hallamlab/metapathways
+   docker run -it quay.io/hallamlab/metapathways /bin/bash
    
-   # test the install
-   apptainer run metapathways.sif metapathways build_db --test
-   apptainer run metapathways.sif metapathways run --test # results in `${CWD}/test`
+   # test the install (within docker)
+   metapathways build_db --test
+   metapathways run --test # results in `${CWD}/test`
    
    ### Try your own data! ###
    
    # build the minimal reference DB
-   apptainer run metapathways.sif metapathways build-db -d ${path/to/MPDB} --func swissprot -a fast
+   metapathways build-db -d ${path/to/MPDB} --func swissprot -a fast
    
    # run minimal DB on your personal data
-   apptainer run metapathways.sif metapathways run -i ${your_metagenome.fa} -o ${path/to/output_dir} -d ${path/to/MPDB}
+   metapathways run -i ${your_metagenome.fa} -o ${path/to/output_dir} -d ${path/to/MPDB}
 

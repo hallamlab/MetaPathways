@@ -1,6 +1,6 @@
-FROM condaforge/mambaforge as build-env
+FROM condaforge/mambaforge AS build-env
 # https://mamba.readthedocs.io/en/latest/user_guide/mamba.html
-MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
+LABEL maintainer="Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC"
 
 ### EXAMPLES ###
 
@@ -14,18 +14,18 @@ MAINTAINER Ryan J. McLaughlin, Tony Liu, & Tomer Altman, Altman Analytics LLC
 
 # Create the environment:
 # packages from `metapathways-install-deps.sh` are included in the yml
-COPY ./docker/conda_env.yml /opt/
+COPY ./docker/conda_base.yml /opt/
 RUN mamba env create --no-default-packages -f /opt/conda_base.yml
 
 # move to clean execution environment
 # which includes dependencies like wget & libtinfo6
 FROM ubuntu
 COPY --from=build-env /opt/conda/envs/metapathways /opt/conda/envs/metapathways
-ENV PATH /opt/conda/envs/metapathways/bin:$PATH
+ENV PATH=/opt/conda/envs/metapathways/bin:$PATH
 
 # Singularity uses tini, but raises warnings
 # we set it up here correctly for singularity
-ENV TINI_VERSION v0.19.0
+ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 

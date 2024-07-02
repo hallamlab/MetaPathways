@@ -2,7 +2,7 @@ Installation
 ************
 
 Metapathways can be installed with conda or obtained as a container.
-The fastest install is via Mamba or by pulling down the container.
+The fastest install is via Mamba (recommended) or by pulling down the container.
 
 .. note::
    
@@ -25,10 +25,10 @@ Conda
 
    conda create -n metapathways_env -c hallamlab -c bioconda -c conda-forge metapathways
 
-Apptainer
+Docker
 ---------
 
 .. code-block:: bash
    
-   apptainer build metapathways.sif docker://quay.io/hallamlab/metapathways:latest
-
+   docker pull quay.io/hallamlab/metapathways
+   
