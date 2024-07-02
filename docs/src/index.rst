@@ -14,8 +14,7 @@ MetaPathways
    overview
    quick_start
    install
-   build_db
-   processing
+   usage
 
 .. Indices and tables
 .. ==================
