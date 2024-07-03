@@ -170,6 +170,11 @@ create-conda:
 deploy-conda:
 	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload --user hallamlab %
 
+### Docs:
+
+docs-local:
+	sphinx-build ./docs/src ./docs/build
+
 ### Build & Install Extensions
 ##
 ##
