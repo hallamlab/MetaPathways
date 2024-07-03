@@ -22,7 +22,7 @@ MetaPathways is composed of four general stages, encompassing a number of analyt
     
 #. **Quality Control**: 
    Basic quality control (QC) is performed with includes filtering out sequences below a set
-   length threshold (default 180bp). At this stage any duplicate sequences are removed (optional).
+   length threshold (default 180bp).
     
 #. **Feature Prediction**:
    Several sequence features can be predicted on the QC'ed contigs. Open-reading frames
