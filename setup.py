@@ -42,6 +42,7 @@ if __name__ == "__main__":
         keywords="metagenomics pipeline",
         url="https://bitbucket.org/BCB2/metapathways/",
         packages=find_packages(),
+        package_data={'': ['metapathways/regtests/**/*'],},        
         scripts=["bin/metapathways-install-deps.sh",
                 "bin/metapathways-data-install.sh",
                 "dev/metacount",

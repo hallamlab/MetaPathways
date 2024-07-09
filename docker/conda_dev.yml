@@ -5,6 +5,9 @@ dependencies:
   - conda-build
   - boa
   - anaconda-client
+  - conda-verify
+  - sphinx
+  - sphinx_rtd_theme
   - pip
   - pip:
     - twine

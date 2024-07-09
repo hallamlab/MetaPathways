@@ -291,8 +291,8 @@ rule mono_2_rxn:
     shell:
         """
         base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
-	python {script_path}/metacyc_mapping_build.py $base
-	cp $base/MetaCyc-*.tsv {params.target_dir}/functional_categories/
+	    python {script_path}/metacyc_mapping_build.py $base
+	    cp $base/MetaCyc-*.tsv {params.target_dir}/functional_categories/
         """
 
 ### Rule for building the MetaCyc Ontology:
@@ -307,7 +307,7 @@ rule pwy_2_ont:
     shell:
         """
         base=$(dirname $(ls {params.target_dir}/functional/*/data/protseq.fsa))
-	python {script_path}/metacyc_build_ont.py $base {params.output_dir}
+	    python {script_path}/metacyc_build_ont.py $base {params.output_dir}
         """
 
 rule fetch_ec_db:

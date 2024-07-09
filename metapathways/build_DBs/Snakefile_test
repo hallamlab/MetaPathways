@@ -1,0 +1,135 @@
+## -*- python -*-
+
+#### Snakemake file for MetaPathways test
+
+### Local Definitions:
+## Database versions:
+taxonomic_db_names = [
+    "SILVA_LSU_test",
+    "SILVA_SSU_test",
+]
+
+script_path = config["script_path"]
+
+# Start off the build
+os.system('mkdir -p ' + config["ref_db_dir"])
+os.system('touch ' + config["ref_db_dir"] + '/starting_build')
+
+target_ext = "pdb" if config['aligner'] == "blast" else "prj"
+functional_db_names = config['functional_db_names'].split(",")
+additional_targets = []
+
+if "swissprot_test" in functional_db_names:
+    additional_targets += [
+        'functional_categories/EC_map.swissprot_test.tsv',
+    ]
+
+rule all:
+    input:
+        expand(config["ref_db_dir"] + '/functional/formatted/{func_db}.' + target_ext, func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/functional/formatted/{func_db}-names.txt', func_db = functional_db_names),
+        expand(config['ref_db_dir'] + '/{additional_target}', additional_target = additional_targets),
+
+        expand(config['ref_db_dir'] + '/taxonomic/formatted/{tax_db}-names.txt', tax_db = taxonomic_db_names),
+        expand(config["ref_db_dir"] + '/taxonomic/formatted/{tax_db}.ndb', tax_db = taxonomic_db_names),
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+
+rule create_dirs_local_files:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config["ref_db_dir"]
+    output:
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
+    shell:
+        """
+        mkdir -p {params.target_dir}/functional/formatted
+        mkdir -p {params.target_dir}/functional_categories
+        mkdir -p {params.target_dir}/ncbi_tree
+        mkdir -p {params.target_dir}/taxonomic/formatted
+        touch {params.target_dir}/taxonomic/formatted/done
+        """
+
+rule make_silva_blast_db:
+    input:
+        silva_file = config["ref_db_dir"] + '/taxonomic/{tax_db}'
+    params:
+        target_dir = config["ref_db_dir"],
+        outdb = config["ref_db_dir"] + '/taxonomic/formatted/{tax_db}'
+    output:
+        ndb = config["ref_db_dir"] + '/taxonomic/formatted/{tax_db}.ndb'
+    shell:
+        """
+        makeblastdb -in {input.silva_file} \
+        	-dbtype nucl -parse_seqids -out {params.outdb}
+        """
+
+rule make_swissprot_fast_db:
+    input:
+        config["ref_db_dir"] + '/functional/swissprot_test'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config["ref_db_dir"] + '/functional/formatted/swissprot_test.prj'
+    shell:
+        """
+        fastdb -p {params.target_dir}/functional/formatted/swissprot_test {input}
+        """
+
+### Rule for making the *-names.txt files:
+rule make_seq_names_file:
+    input:
+        config['ref_db_dir'] + '{annot_dir}/{db_name}'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '{annot_dir}/formatted/{db_name}-names.txt'
+    shell:
+        """
+        grep "^>" {input} > {output}
+        """
+
+rule fetch_ec_db:
+    input:
+        config["ref_db_dir"] + '/starting_build'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/enzyme.dat'
+    shell:
+        """
+        wget -O {params.target_dir}/functional_categories/enzyme.dat https://ftp.expasy.org/databases/enzyme/enzyme.dat
+        wget -O {params.target_dir}/functional_categories/enzclass.txt https://ftp.expasy.org/databases/enzyme/enzclass.txt
+        date > {params.target_dir}/functional_categories/Expasy_reldate.txt
+        grep '^Release: ' {params.target_dir}/functional_categories/enzclass.txt >> {params.target_dir}/functional_categories/Expasy_reldate.txt
+        rm {params.target_dir}/functional_categories/enzclass.txt
+        """
+
+### Rule for mapping SwissProt to EC numbers:
+rule swiss_2_ec:
+    input:
+        config["ref_db_dir"] + '/functional/swissprot_test',
+        config['ref_db_dir'] + '/functional_categories/enzyme.dat'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/functional_categories/EC_map.swissprot_test.tsv'
+    shell:
+        """
+        python {script_path}/swissprot_test_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
+        """
+
+### Rule for building taxmapping for LCA:
+rule build_taxmap:
+    input:
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
+    params:
+        target_dir = config['ref_db_dir']
+    output:
+        config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
+    shell:
+        """
+        wget -O {params.target_dir}/ncbi_tree/new_taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+        tar xvzf {params.target_dir}/ncbi_tree/new_taxdump.tar.gz -C {params.target_dir}/ncbi_tree/
+        python {script_path}/taxmap_build.py {params.target_dir}/ncbi_tree/
+        """
