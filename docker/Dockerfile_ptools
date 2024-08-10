@@ -1,0 +1,86 @@
+FROM condaforge/mambaforge AS build-env
+# https://mamba.readthedocs.io/en/latest/user_guide/mamba.html
+LABEL maintainer="Ryan J. McLaughlin"
+
+### EXAMPLES ###
+
+# sudo docker build --build-arg SRI_USERNAME=$SRI_USERNAME --build-arg SRI_PASSWORD=$SRI_PASSWORD --build-arg SRI_INSTALLEXE=$SRI_INSTALLEXE --tag metapathways/$(git rev-parse --abbrev-ref HEAD):$(git rev-parse HEAD) -f ./docker/Dockerfile_ptools .
+
+################
+
+## Ubuntu installs:
+RUN apt-get update && \
+    apt-get install -y gcc g++
+
+# Create the environment:
+COPY docker/ptools_env.yml /opt/
+RUN mamba env create --no-default-packages -f /opt/ptools_env.yml
+
+ENV PATH=/opt/conda/envs/metapathways/bin:$PATH
+
+# Install MetaPathways and dependencies
+RUN pip3 install git+https://github.com/hallamlab/TreeSAPP.git@py3.10
+
+RUN echo "Make sure MetaPathways is installed:"
+RUN MetaPathways -h
+RUN echo "Make sure MAGsplitter is installed:"
+RUN magsplitter -h
+RUN echo "Make sure TreeSAPP is installed:"
+RUN treesapp info
+
+# Singularity uses tini, but raises warnings
+# we set it up here correctly for singularity
+ENV TINI_VERSION=v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+# move to clean execution environment
+# which includes dependencies like wget & libtinfo6
+FROM ubuntu
+
+# Install Ptools and all dependencies
+ENV DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:99 \
+    INSTALLER_DIR=/opt/bin \
+    INSTALL_EXE=pathway-tools-*-install
+
+## Ubuntu installs:
+RUN apt-get update && \
+    apt-get install -y xterm openssl inetutils-ping libxml2 xvfb libxm4 && \
+    apt-get install -y emacs-nox less wget procps libssl-dev pigz gcc g++
+
+## PTools installs:
+## ARGS
+ARG SRI_USERNAME # SRI login username
+ARG SRI_PASSWORD # SRI password
+ARG SRI_INSTALLEXE # URL for downloading Ptools install script
+# Ensure the destination directories exist before copying
+# You might need to create them if they don't already exist
+RUN mkdir -p /opt/sandbox /tmp/bin
+COPY --from=build-env /opt/conda/envs/metapathways/bin/ptools-init.dat /opt/sandbox/ptools-init.dat
+COPY --from=build-env /opt/conda/envs/metapathways/bin/install-pathway-tools.sh /tmp/bin/install-pathway-tools.sh
+COPY --from=build-env /opt/conda/envs/metapathways/bin/run-pathway-tools.sh /tmp/bin/run-pathway-tools.sh
+RUN wget -P $INSTALLER_DIR/ --user=$SRI_USERNAME --password=$SRI_PASSWORD $SRI_INSTALLEXE && \
+    chmod +x $INSTALLER_DIR/$(basename $SRI_INSTALLEXE)
+RUN /tmp/bin/install-pathway-tools.sh
+
+## Clean up the installer, which is no longer needed:
+RUN rm $INSTALLER_DIR/$INSTALL_EXE
+
+ENV PATH=$PATH:/opt/pathway-tools:/opt/bin:/opt/conda/bin/
+RUN pathway-tools -lisp -eval "(exit)"
+
+COPY --from=build-env /opt/conda/envs/metapathways /opt/conda/envs/metapathways
+COPY --from=build-env /tini /tini
+
+## We do some umask munging to avoid having to use chmod later on,
+## as it is painfully slow on large directores in Docker.
+RUN old_umask=`umask` && \
+    umask 0000 && \
+    umask $old_umask
+
+ENV PATH=/opt/conda/envs/metapathways/bin:$PATH
+
+# singularity doesn't use the -s flag, and that causes warnings
+ENTRYPOINT ["/tini", "-s", "--"]
+
