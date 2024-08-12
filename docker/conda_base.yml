@@ -25,3 +25,5 @@ dependencies:
   - sexpdata
   - html2text
   - scipy
+  - peppy
+  - pip
