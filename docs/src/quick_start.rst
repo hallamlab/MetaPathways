@@ -24,11 +24,17 @@ Try it with Mamba (recommended)
    ### Try your own data! ###
    
    # build the minimal reference DB
-   metapathways build-db -d ${path/to/MPDB} --func swissprot -a fast
+   metapathways build_db -d ${path/to/MPDB} --func swissprot -a fast
    
    # run minimal DB on your personal data
    metapathways run -i ${your_metagenome.fa} -o ${path/to/output_dir} -d ${path/to/MPDB}
 
+.. note::
+
+   The build_db test does not create a DB that is to be used for downstream DB builds.
+   For the full reference build the use is to provide a location with acceptable storage
+   capacity and accessibility.
+   
 Try it with Docker
 =====================
 
@@ -45,7 +51,7 @@ Try it with Docker
    ### Try your own data! ###
    
    # build the minimal reference DB
-   metapathways build-db -d ${path/to/MPDB} --func swissprot -a fast
+   metapathways build_db -d ${path/to/MPDB} --func swissprot -a fast
    
    # run minimal DB on your personal data
    metapathways run -i ${your_metagenome.fa} -o ${path/to/output_dir} -d ${path/to/MPDB}
