@@ -3,7 +3,6 @@
 *.swp
 .idea*
 *.DS_Store
-regtests*
 redhat
 rpkm_c
 *.o
@@ -33,16 +32,10 @@ extensions/FAST/gumbel_params/*
 extensions/metacount/parser/libbamparser.a
 .snakemake
 
-regtests/output/*
-regtests/input/beaver.fasta
-regtests/input/reads/beaver*
 Metapathways_DBs_2016-04.tar.xz
 MetaPathways_DBs
-regtests/output/B1*
 config/template_config.txt
 config/template_param.txt
-regtests/template_config.txt
-regtests/template_param.txt
 
 dist
 docker/dist
