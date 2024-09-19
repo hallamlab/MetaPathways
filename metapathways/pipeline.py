@@ -598,7 +598,7 @@ def build_db():
     argv = sys.argv
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     DBS_FUNC = "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
-    DBS_FUNC_DEFAULT = "metacyc swissprot".split(" ")
+    DBS_FUNC_DEFAULT = "swissprot".split(" ")
     ALIGNERS = "fast blast".split(" ")
     parser = blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS)
     args = parser.parse_args(argv[2:])
