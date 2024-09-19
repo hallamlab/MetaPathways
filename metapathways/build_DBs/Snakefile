@@ -234,8 +234,8 @@ rule fetch_metacyc_db:
     output:
         config["ref_db_dir"] + '/functional/metacyc'
     shell:
-        """
-        wget --netrc=on -O {params.target_dir}/functional/meta.tar.gz https://brg-files.ai.sri.com/public/dist/meta.tar.gz
+        """                                  
+        wget --netrc=on -O {params.target_dir}/functional/meta.tar.gz https://brg-files.ai.sri.com/subscription/dist/flatfiles-52983746/meta.tar.gz
         tar -xvzf {params.target_dir}/functional/meta.tar.gz -C {params.target_dir}/functional/
         cp {params.target_dir}/functional/*/data/protseq.fsa {params.target_dir}/functional/metacyc
         version=$(echo {params.target_dir}/functional/*/data/protseq.fsa | rev | cut -d'/' -f3 | rev)
