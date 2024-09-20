@@ -597,7 +597,7 @@ def run():
 def build_db():
     argv = sys.argv
     gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
-    DBS_FUNC = "metacyc swissprot cazy eggnog uniref50 uniref90".split(" ")
+    DBS_FUNC = "swissprot cazy eggnog uniref50 uniref90".split(" ")
     DBS_FUNC_DEFAULT = "swissprot".split(" ")
     ALIGNERS = "fast blast".split(" ")
     parser = blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS)
@@ -680,12 +680,12 @@ def build_db():
         functional_db_names=','.join(selected_dbs_functional)
     )
 
-    if "metacyc" in selected_dbs_functional:
-        gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
-        # Get the username and password securely
-        metacyc_user = input("Enter your MetaCyc username: ")
-        metacyc_pswd = getpass.getpass("Enter your MetaCyc password: ")
-        add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
+    #if "metacyc" in selected_dbs_functional:
+    #    gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
+    #    # Get the username and password securely
+    #    metacyc_user = input("Enter your MetaCyc username: ")
+    #    metacyc_pswd = getpass.getpass("Enter your MetaCyc password: ")
+    #    add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
 
     # ---------------------------------------------------------------------------
     # run snakemake

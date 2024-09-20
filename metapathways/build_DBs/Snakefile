@@ -115,9 +115,9 @@ rule fetch_unirefNN_db:
         config["ref_db_dir"] + '/functional/uniref{NN}'
     shell:
         """
-        wget -O {params.target_dir}/functional/uniref{wildcards.NN}.gz https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.fasta.gz
+        wget -O {params.target_dir}/functional/uniref{wildcards.NN}.gz https://ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.fasta.gz
         gunzip {params.target_dir}/functional//uniref{wildcards.NN}.gz
-        wget -O {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note https://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.release_note
+        wget -O {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note https://ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref{wildcards.NN}/uniref{wildcards.NN}.release_note
         date > {params.target_dir}/functional_categories/uniref{wildcards.NN}_reldate.txt
         cat {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note >> {params.target_dir}/functional_categories/uniref{wildcards.NN}_reldate.txt
         rm {params.target_dir}/functional_categories/uniref{wildcards.NN}.release_note
@@ -156,9 +156,9 @@ rule fetch_swissprot_db:
         config["ref_db_dir"] + '/functional/swissprot'
     shell:
         """
-        wget -O {params.target_dir}/functional/swissprot.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
+        wget -O {params.target_dir}/functional/swissprot.gz https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
         gunzip {params.target_dir}/functional/swissprot.gz
-        wget -O {params.target_dir}/functional_categories/swissprot_reldate.txt https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/reldate.txt
+        wget -O {params.target_dir}/functional_categories/swissprot_reldate.txt https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/reldate.txt
         date > {params.target_dir}/functional_categories/SwissProt_reldate.txt
         cat {params.target_dir}/functional_categories/swissprot_reldate.txt >> {params.target_dir}/functional_categories/SwissProt_reldate.txt
         rm {params.target_dir}/functional_categories/swissprot_reldate.txt
