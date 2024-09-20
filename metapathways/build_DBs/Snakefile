@@ -351,7 +351,7 @@ rule unirefNN_2_ec:
         config['ref_db_dir'] + '/functional_categories/EC_map.uniref{NN}.tsv'
     shell:
         """
-        wget -O {params.target_dir}/functional_categories/idmapping.dat.gz https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
+        wget -O {params.target_dir}/functional_categories/idmapping.dat.gz https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz
         zgrep 'UniRef{wildcards.NN}_' {params.target_dir}/functional_categories/idmapping.dat.gz > {params.target_dir}/functional_categories/uniref{wildcards.NN}_idmapping.dat
         python {script_path}/uniref{wildcards.NN}_mapper.py {params.target_dir}/functional_categories/enzyme.dat {params.target_dir}/functional_categories
         """
