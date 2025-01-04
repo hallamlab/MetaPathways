@@ -735,6 +735,15 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
            outputStr+=( wrap("",21,74,locus_tag) +'\n')
 
            if attrib['feature'] == 'CDS':
+               if 'ec' in attrib:
+                    ec_atr = attrib['ec']
+               if ',' in ec_atr:
+                    ec_list = ec_atr.split(',')
+               else:
+                    ec_list = [ec_atr]
+               for ec in ec_list:
+                    ec_str="/EC_number=" + ec
+                    outputStr+=( wrap("",21,74,ec_str) +'\n')
                codon_start="/codon_start=1"
                inference="/inference=ab initio prediction:" + attrib['source']
                translation_table="/transl_table=11"
