@@ -658,16 +658,17 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
         count+=1
 
         for attrib in contig_dict[key]:
-           id  = attrib['id']
+           id = attrib['id']
            try:
-              protein_seq = protein_seq_dict[id]
+               aa_id = sample_name + '-' + id
+               protein_seq = protein_seq_dict[aa_id]
            except:
-              protein_seq = ""
-              None
+               protein_seq = ""
+               None
 
            definition = sample_name
            accession = '.'
-           version = '.' +spaces(10) + "GI:."
+           version = '.' +spaces(10) + "."
            dblink = sample_name
            keywords = '.'
            source = sample_name
@@ -685,27 +686,27 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
                 dna_length = 0
                 sourceStr ="0..0"
 
-              outputStr+=("LOCUS       %-18s  %4d bp   DNA           BCT      %-11s\n" % (key, dna_length,  date))
+              outputStr += ("LOCUS       %-18s  %4d bp   DNA   linear        %-11s\n" % (key, dna_length, date))
               outputStr+=(wrap("DEFINITION  ",12,74, definition)+'\n')
               outputStr+=(wrap("ACCESSION   ", 12, 74, accession)+'\n')
               outputStr+=(wrap("VERSION     ", 12, 74, version)+'\n')
-              outputStr+=(wrap("DBLINK      ", 12, 74, dblink)+'\n')
+              #outputStr+=(wrap("DBLINK      ", 12, 74, dblink)+'\n')
               outputStr+=(wrap("KEYWORDS    ", 12, 74,keywords)+'\n')
               outputStr+=(wrap("SOURCE    ", 12, 74, keywords)+'\n')
-              outputStr+=(wrap("  ORGANISM  ",12, 74, organism)+'\n')
-              outputStr+=(wrap("", 12, 74, "Metagenome")+'\n')
-              outputStr+=( wrap("REFERENCE   ",12,74, "1  (bases 1 to XXXXX)")+'\n')
-              outputStr+=( wrap("  AUTHORS   ",12,74, "YYYYYY,X.")+'\n')
-              outputStr+=( wrap("  CONSRTM   ",12,74, "XXXXX")+'\n')
-              outputStr+=( wrap("  TITLE     ",12,74, "XXXXX")+'\n')
-              outputStr+=( wrap("  JOURNAL   ",12,74,"XXXXX")+'\n')
-              outputStr+=( wrap("   PUBMED   ",12,74,"XXXXX")+'\n')
-              outputStr+=( wrap("  REMARK   ",12,74, "XXXXX")+'\n')
-              outputStr+=( wrap("COMMENT     ", 12, 74,"PROVISIONAL REFSEQ: This record has not yet been subject to final NCBI review   COMPLETENESS: XXXXX")+'\n')
+              outputStr+=(wrap("  ORGANISM  ",12, 74, organism+" Metagenome")+'\n')
+              #outputStr+=(wrap("", 12, 74, "Metagenome")+'\n')
+              outputStr+=( wrap("REFERENCE   ",12,74, "1  (bases 1 to "+str(dna_length)+")")+'\n')
+              #outputStr+=( wrap("  AUTHORS   ",12,74, "YYYYYY,X.")+'\n')
+              #outputStr+=( wrap("  CONSRTM   ",12,74, "XXXXX")+'\n')
+              #outputStr+=( wrap("  TITLE     ",12,74, "XXXXX")+'\n')
+              #outputStr+=( wrap("  JOURNAL   ",12,74,"XXXXX")+'\n')
+              #outputStr+=( wrap("   PUBMED   ",12,74,"XXXXX")+'\n')
+              #outputStr+=( wrap("  REMARK   ",12,74, "XXXXX")+'\n')
+              outputStr+=( wrap("COMMENT     ", 12, 74,"PROVISIONAL REFSEQ: This record has not yet been subject to final NCBI review ")+'\n')
 
               outputStr+=( wrap("FEATURES ",21,74,"Location/Qualifiers") +'\n')
               outputStr+=( wrap("     source",21,74,sourceStr) +'\n')
-              outputStr+=( wrap("",21,74,"/organism=\"" + sourceStr +"\"") +'\n')
+              outputStr+=( wrap("",21,74,"/organism=\"" + organism +"\"") +'\n')
               outputStr+=( wrap("",21,74,"/strain=\"1\"")+'\n')
               outputStr+=( wrap("",21,74,"/chromosome=\"1\"") +'\n')
 
@@ -720,12 +721,12 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
                  geneLoc='complement' + '(' + geneLoc +')'
 
            outputStr+=( wrap("     gene",21,74,geneLoc) +'\n')
-           if 'locus_tag' in attrib:
-               locus_tag = "/locus_tag=" + "\"" + attrib['locus_tag'] + "\""
+           if 'id' in attrib:
+               locus_tag = "/locus_tag=" + "\"" + attrib['id'] + "\""
            else:
                locus_tag = "/locus_tag" + "\"\""
            outputStr+=( wrap("",21,74,locus_tag) +'\n')
-           outputStr+=( wrap("     CDS",21,74, geneLoc) +'\n')
+           outputStr+=( wrap("     "+attrib['feature'],21,74, geneLoc) +'\n')
            if 'product' in attrib:
               product="/product=" + "\""+ attrib['product'] + "\""
            else:
@@ -733,13 +734,27 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
            outputStr+=( wrap("",21,74,product) +'\n')
            outputStr+=( wrap("",21,74,locus_tag) +'\n')
 
-           codon_start="/codon_start=1"
-           translation_table="/transl_table=11"
-           outputStr+=( wrap("",21,74,codon_start) +'\n')
-           outputStr+=( wrap("",21,74,translation_table) +'\n')
+           if attrib['feature'] == 'CDS':
+               codon_start="/codon_start=1"
+               inference="/inference=ab initio prediction:" + attrib['source']
+               translation_table="/transl_table=11"
+               outputStr+=( wrap("",21,74,codon_start) +'\n')
+               outputStr+=( wrap("",21,74,inference) +'\n')
+               outputStr+=( wrap("",21,74,translation_table) +'\n')
+               translation= "/translation="+ protein_seq
+               outputStr+=( wrap("",21,74,translation) +'\n')
 
-           translation= "/translation="+ protein_seq
-           outputStr+=( wrap("",21,74,translation) +'\n')
+           if attrib['feature'] == 'rRNA':
+               inference="/inference=profile-based prediction:" + attrib['source']
+               outputStr+=( wrap("",21,74,inference) +'\n')
+
+           if attrib['feature'] == 'tRNA':
+               isotype="isotype=" + attrib['isotype']
+               anticodon="anticodon=" + attrib['anticodon']
+               inference="/inference=profile-based prediction:" + attrib['source']
+               outputStr+=( wrap("",21,74,isotype) +'\n')
+               outputStr+=( wrap("",21,74,anticodon) +'\n')
+               outputStr+=( wrap("",21,74,inference) +'\n')
 
         outputStr+=(wrap("ORIGIN", 21, 74, "")+'\n')
         outputStr+=(dna_seq_formatted +'\n')

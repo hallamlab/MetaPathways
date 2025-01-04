@@ -689,6 +689,7 @@ class ContextCreator:
         '''inputs'''
         input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
         input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
+        input_fna = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
         rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
@@ -710,7 +711,8 @@ class ContextCreator:
             'input_unannotated_gff':input_unannotated_gff
         }
         context.inputs1 = {
-            'mapping_txt':mapping_txt, 'qced_faa': input_filtered_faa
+            'mapping_txt':mapping_txt, 'qced_faa': input_filtered_faa,
+            'fna': input_fna
         }
         context.outputs = {
            'output_annotated_gff':output_annotated_gff,
@@ -768,6 +770,7 @@ class ContextCreator:
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name
         cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
         cmd = cmd + " --qced_faa " + context.inputs1['qced_faa']
+        cmd = cmd + " --fna " + context.inputs1['fna']
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]
