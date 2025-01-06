@@ -499,6 +499,8 @@ class ContextCreator:
         """PARSE_FUNC_SEARCH"""
         contexts = []
 
+        basefunct = self.configs.REFDBS + PATHDELIM + 'functional_categories'
+
         '''parameters'''
         min_bsr = self.params.get('Functional Annotation Arguments',
                                   'annotation_min_bsr', default = 0.4)
@@ -509,6 +511,8 @@ class ContextCreator:
         max_evalue = self.params.get('Functional Annotation Arguments',
                                      'annotation_max_evalue',
                                      default = 1000)
+        ec_mapping = basefunct + PATHDELIM + 'EC_map.*.tsv'
+
 
         dbs = self.get_dbs()
         
@@ -534,10 +538,11 @@ class ContextCreator:
 
             context.outputs = { 'output_db_blast_parse':output_db_blast_parse}
 
-            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s --parsedoutput %s" \
+            cmd = "%s -d %s  -b %s -m %s  -r  %s  --min_bsr %s  --min_score %s --min_length %s --max_evalue %s --parsedoutput %s --ec_maps %s" \
                   %( pyScript, db, context.inputs['input_db_blastout'],\
                   context.inputs['dbmapFile'],  context.inputs['refscorefile'],\
-                  min_bsr, min_score, min_length, max_evalue, output_db_blast_parse)
+                  min_bsr, min_score, min_length, max_evalue, output_db_blast_parse,
+                  ec_mapping)
 
             if s.algorithm == 'FAST':
                 cmd = cmd + ' --algorithm FAST'
@@ -689,6 +694,7 @@ class ContextCreator:
         '''inputs'''
         input_unannotated_gff = s.orf_prediction_dir + PATHDELIM + s.sample_name+".unannot.gff"
         input_filtered_faa = s.orf_prediction_dir + PATHDELIM +  s.sample_name + ".qced.faa"
+        input_fna = s.preprocessed_dir + PATHDELIM + s.sample_name + ".fasta"
         mapping_txt =  s.preprocessed_dir + PATHDELIM + s.sample_name + ".mapping.txt"
         rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
@@ -710,7 +716,8 @@ class ContextCreator:
             'input_unannotated_gff':input_unannotated_gff
         }
         context.inputs1 = {
-            'mapping_txt':mapping_txt, 'qced_faa': input_filtered_faa
+            'mapping_txt':mapping_txt, 'qced_faa': input_filtered_faa,
+            'fna': input_fna
         }
         context.outputs = {
            'output_annotated_gff':output_annotated_gff,
@@ -768,6 +775,7 @@ class ContextCreator:
         cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name
         cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
         cmd = cmd + " --qced_faa " + context.inputs1['qced_faa']
+        cmd = cmd + " --fna " + context.inputs1['fna']
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]

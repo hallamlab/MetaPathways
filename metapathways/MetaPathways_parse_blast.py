@@ -9,6 +9,8 @@ try:
     import traceback
     import re
     import math
+    import glob
+    import pandas as pd
 
     from os import makedirs, sys, remove, rename
     from sys import path
@@ -64,6 +66,12 @@ def createParser():
         dest="parsed_output",
         default=None,
         help="the parsed  output file [OPTIONAL]",
+    )
+    parser.add_option(
+        "--ec_maps",
+        dest="ec_maps",
+        default=None,
+        help="EC mapping files if available [OPTIONAL]",
     )
 
     parser.add_option(
@@ -365,11 +373,13 @@ class BlastOutputParser(object):
         blastoutput,
         database_mapfile,
         refscore_file,
+        ec_map_dict,
         opts,
         errorlogger=None,
     ):
         self.Size = 10000
         self.dbname = dbname
+        self.ec_map_dict = ec_map_dict
         self.ln2 = 0.69314718055994530941
         self.lnk = math.log(opts.k)
         self.Lambda = opts.Lambda
@@ -612,11 +622,8 @@ class BlastOutputParser(object):
                 data["product"] = "<unannotated protein>"
 
         try:
-            m = re.search(r"(\d+[.]\d+[.]\d+[.]\d+)", annot_map[words[1]][1].split(' ', 1)[1])
-            if m != None:
-                data["ec"] = m.group(0)
-            else:
-                data["ec"] = ""
+            ec_list = self.ec_map_dict[clean_targets(self.dbname, data['target'])]
+            data["ec"] = ','.join(ec_list)
         except:
             data["ec"] = ""
 
@@ -671,17 +678,43 @@ class BlastOutputParser(object):
         if data["bsr"] < cutoffs.min_bsr:
             return False
 
-        # min_length'
-        #'min_score'
-        #'max_evalue'
-        # 'min_identity'
-        #'limit'
-        #'max_length'
-        #'min_query_coverage'
-        #'max_gaps'
-        # min_bsr'
-
         return True
+
+
+def load_ec_maps(ec_files):
+    # Load all mapping files, subset to only annotated targets, create dicts
+    ec_dfs = []
+    if ec_files:
+        for ec_map_file in glob.glob(ec_files):
+            ec_map_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
+            ec_dfs.append(ec_map_df)
+        ec_df = pd.concat(ec_dfs)
+        ec_df.dropna(subset = ['EC'], inplace=True)
+        ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
+        ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
+        ec_dict = ec_df.groupby('AccID', group_keys=True)['EC'].apply(list).to_dict()
+    else:
+        ec_dict = {}
+
+    return ec_dict
+
+
+def clean_targets(refdb, target):
+    if target:
+        if 'metacyc' in refdb:
+            clean_target = target.split('|', 2)[2]
+        elif 'swissprot' in refdb:
+            clean_target = target.split('|', 2)[1]
+        elif 'uniref' in refdb:
+            clean_target = target.split('_', 1)[1]
+        elif 'eggnog' in refdb:
+            clean_target = target
+        else:
+            clean_target = target
+    else:
+        clean_target = target
+    
+    return clean_target    
 
 
 # compute the refscores
@@ -689,8 +722,11 @@ def process_blastoutput(
     dbname, blastoutput, mapfile, refscore_file, opts, errorlogger=None
 ):
 
+    # Load Accession to EC mappings
+    ec_map_dict = load_ec_maps(opts.ec_maps)
+
     blastparser = BlastOutputParser(
-        dbname, blastoutput, mapfile, refscore_file, opts, errorlogger=errorlogger
+        dbname, blastoutput, mapfile, refscore_file, ec_map_dict, opts, errorlogger=errorlogger
     )
 
     blastparser.setMaxErrorsLimit(100)

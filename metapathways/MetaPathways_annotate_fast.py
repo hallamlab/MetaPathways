@@ -150,6 +150,12 @@ def createParser():
         default=None,
         help="the QCed Amino Acid FASTA",
     )
+    parser.add_option(
+        "--fna",
+        dest="fna_file",
+        default=None,
+        help="the Nucleotide FASTA",
+    )
 
     cutoffs_group = OptionGroup(parser, "Cuttoff Related Options")
 
@@ -560,13 +566,9 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1].rsplit('_')[0]
         attributes += ";" + "locus_tag=" + str(f_rec["name"])
-        attributes += ";" + "orf_length=" + str(length)
-        #attributes += ";" + "contig_length=" + str(orf_rec["contig_length"])
         attributes += ";" + "product=" + f_rec["product"]
-        #attributes += ";" + "target=" + r_dictionary[orf_id]["taxonomy"]
-        #attributes += ";" + "ec="
         output_line += "\t" + attributes
 
     elif ((tag == "_tRNA") & 
@@ -580,13 +582,11 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1]
+        attributes = "ID=" + str(f_rec["name"]).split('-', 1)[1]
         attributes += ";" + "locus_tag=" + str(f_rec["name"])
-        attributes += ";" + "orf_length="  + str(length)
-        #attributes += ";" + "contig_length=" + str(r_dictionary[orf_id]["contig_length"])
-        #attributes += ";" + "product=" + f_rec["product"]
-        #attributes += ";" + "target=" + f_rec["product"]
-        #attributes += ";" + "ec="
+        attributes += ";" + "orf_length=" + str(length)
+        attributes += ";" + "isotype=" + str(f_rec['isotype'])
+        attributes += ";" + "anticodon=" + str(f_rec['anticodon'])
         output_line += "\t" + attributes
     gutils.fprintf(outputgff_file, "%s\n", output_line)
 
@@ -773,6 +773,65 @@ def add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths):
         rRNA_dictionary[rRNA] = dict.copy()
 
 
+def sort_gff(infile):
+    header_lines = []
+    features = []
+    fasta_lines = []
+    in_fasta = False
+
+    # Read the GFF
+    with open(infile, "r") as fh:
+        for line in fh:
+            # Check if we've reached the FASTA section
+            if line.startswith("##FASTA"):
+                in_fasta = True
+                fasta_lines.append(line)
+                continue
+
+            if in_fasta:
+                # All lines after "##FASTA" go into fasta_lines
+                fasta_lines.append(line)
+                continue
+
+            # Header/directive lines begin with '#'
+            if line.startswith("#"):
+                header_lines.append(line)
+                continue
+
+            # Skip completely blank lines
+            if not line.strip():
+                continue
+
+            # Feature lines: must have at least 9 columns
+            parts = line.split("\t")
+            if len(parts) < 9:
+                # If something’s malformed, skip or handle it
+                continue
+
+            seqid = parts[0]
+            try:
+                start = int(parts[3])
+                end = int(parts[4])
+            except ValueError:
+                # If start/end not integers, skip or handle it
+                continue
+
+            # Store the original line, plus sort info
+            features.append((seqid, start, end, line))
+
+    # Sort by (seqid, start, end)
+    features.sort(key=lambda x: (x[0], x[1], x[2]))
+
+    # Write everything back to the same file
+    with open(infile, "w") as out:
+        for hl in header_lines:
+            out.write(hl)
+        for (seqid, st, e, original_line) in features:
+            out.write(original_line)
+        for fl in fasta_lines:
+            out.write(fl)
+
+
 def create_annotation(
     dbname_weight,
     results_dictionary,
@@ -785,6 +844,7 @@ def create_annotation(
     output_comparative_annotation,
     contig_lengths,
     qced_orfs,
+    fna_recs,
     sample_name,
     compact_output=False,
 ):
@@ -795,6 +855,7 @@ def create_annotation(
 
     output_gff_tmp = output_gff + ".tmp"
     outputgff_file = open(output_gff_tmp, "w")
+    gutils.fprintf(outputgff_file, "%s\n", "##gff-version 3")
 
     output_comp_annot_file1 = open(output_comparative_annotation + ".1.txt", "w")
     output_comp_annot_file2 = open(output_comparative_annotation + ".2.txt", "w")
@@ -811,40 +872,32 @@ def create_annotation(
         )
     gutils.fprintf(output_comp_annot_file2, "%s\n", output_comp_annot_file2_Str)
 
-    
     # Deal with the rRNA sequences if there is rRNA stats file
     rRNA_yes = False
     tRNA_yes = False
+    rRNA_dictionary = {}
+    tRNA_dictionary = {}
     if len(rRNA_16S_stats_files) > 0 and contig_lengths:
         rRNA_yes = True
         rRNA_reader = GffFileParser(rRNA_gff)
-        '''
-        rRNA_16S_dictionary = {}
-        for rRNA_16S_stats_file in rRNA_16S_stats_files:
-            process_rRNA_16S_stats(rRNA_16S_stats_file, rRNA_16S_dictionary)
-        '''
-        rRNA_dictionary = {}
-        for contig in rRNA_reader:
-            rec = rRNA_reader.orf_dictionary[contig]
-            rRNA_dictionary[contig] = rec
-        #add_16S_genes(rRNA_16S_dictionary, rRNA_dictionary, contig_lengths)
-        
+        for rec_id in rRNA_reader:
+            contig = rec_id.split('.', 1)[0]
+            rec = rRNA_reader.orf_dictionary[rec_id][0]
+            if contig in rRNA_dictionary:
+                rRNA_dictionary[contig].append(rec)
+            else:
+                rRNA_dictionary[contig] = [rec]        
     # now deal with the tRNA sequences  if there is tRNA stats file
     if len(tRNA_stats_files) > 0 and contig_lengths:
         tRNA_yes = True
         tRNA_reader = GffFileParser(tRNA_gff)
-        '''
-        tRNA_dictionary = {}
-        for tRNA_stats_file in tRNA_stats_files:
-            process_tRNA_stats(tRNA_stats_file, tRNA_dictionary)
-
-        tRNA_gff_dictionary = {}
-        add_tRNA_genes(tRNA_dictionary, tRNA_gff_dictionary, contig_lengths)
-        '''
-        tRNA_dictionary = {}
-        for contig in tRNA_reader:
-            rec = tRNA_reader.orf_dictionary[contig]
-            tRNA_dictionary[contig] = rec
+        for rec_id in tRNA_reader:
+            contig = rec_id.split('.', 1)[0]
+            rec = tRNA_reader.orf_dictionary[rec_id][0]
+            if contig in tRNA_dictionary:
+                tRNA_dictionary[contig].append(rec)
+            else:
+                tRNA_dictionary[contig] = [rec]
 
     values = {}
     i = 0
@@ -959,22 +1012,25 @@ def create_annotation(
                         sample_name,
                         compact_output=compact_output,
                     )
-
             count += 1  # move to the next orf
+        # Add rRNA and tRNA records to output gff
+        if rRNA_yes == True:
+            if contig in rRNA_dictionary:
+                for rec in rRNA_dictionary[contig]:
+                    write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_rRNA")
+        if tRNA_yes == True:
+            if contig in tRNA_dictionary:
+                for rec in tRNA_dictionary[contig]:
+                    write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_tRNA")
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
 
-    # Add rRNA and tRNA records to output gff
-    if rRNA_yes == True:
-        for contig in rRNA_dictionary:
-            rrna_rec = rRNA_dictionary[contig][0]
-            write_16S_tRNA_gene_info(contig, rrna_rec, outputgff_file, "_rRNA")
-    if tRNA_yes == True:
-        for contig in tRNA_dictionary:
-            trna_rec = tRNA_dictionary[contig][0]
-            write_16S_tRNA_gene_info(contig, trna_rec, outputgff_file, "_tRNA")
+    gutils.fprintf(outputgff_file, "%s\n", "##FASTA")
+    gutils.fprintf(outputgff_file, "%s\n", fna_recs)
 
     outputgff_file.close()
+    sort_gff(output_gff_tmp) # sort the GFF after adding all the different features :|
+
     rename(output_gff_tmp, output_gff)
 
 
@@ -1379,6 +1435,9 @@ def main(argv, errorlogger=None, runstatslogger=None):
                 l = line[1:].strip('\n')
                 qced_orfs.append(l)
 
+    with open(opts.fna_file, 'r') as fna_input:
+        fna_data = fna_input.read()
+
     # create the annotations from the results
     create_annotation(
         dbname_weight,
@@ -1392,6 +1451,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         opts.output_comparative_annotation,
         contig_lengths,
         qced_orfs,
+        fna_data,
         sample_name=opts.sample_name,
         compact_output=opts.compact_output,
     )
