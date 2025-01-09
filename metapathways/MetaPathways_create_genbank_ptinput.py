@@ -692,7 +692,7 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
               outputStr+=(wrap("VERSION     ", 12, 74, version)+'\n')
               #outputStr+=(wrap("DBLINK      ", 12, 74, dblink)+'\n')
               outputStr+=(wrap("KEYWORDS    ", 12, 74,keywords)+'\n')
-              outputStr+=(wrap("SOURCE    ", 12, 74, keywords)+'\n')
+              outputStr+=(wrap("SOURCE    ", 12, 74, organism)+'\n')
               outputStr+=(wrap("  ORGANISM  ",12, 74, organism+" Metagenome")+'\n')
               #outputStr+=(wrap("", 12, 74, "Metagenome")+'\n')
               outputStr+=( wrap("REFERENCE   ",12,74, "1  (bases 1 to "+str(dna_length)+")")+'\n')
@@ -709,6 +709,7 @@ def  write_gbk_file(output_file_name, contig_dict, sample_name, nucleotide_seq_d
               outputStr+=( wrap("",21,74,"/organism=\"" + organism +"\"") +'\n')
               outputStr+=( wrap("",21,74,"/strain=\"1\"")+'\n')
               outputStr+=( wrap("",21,74,"/chromosome=\"1\"") +'\n')
+              outputStr+=( wrap("",21,74,"/db_xref=\"taxon:12908\"") +'\n')
 
 
            if 'start' in attrib and 'end' in attrib:
