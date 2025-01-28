@@ -1025,6 +1025,7 @@ def create_annotation(
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
 
+    print("Saving GFF file...")
     gutils.fprintf(outputgff_file, "%s\n", "##FASTA")
     gutils.fprintf(outputgff_file, "%s\n", fna_recs)
 
@@ -1385,7 +1386,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
     results_dictionary = {}
     dbname_weight = {}
-
+    print("Getting contig lengths...")
     contig_lengths = {}
     read_contig_lengths(opts.contig_map_file, contig_lengths)
 
@@ -1402,8 +1403,9 @@ def main(argv, errorlogger=None, runstatslogger=None):
 
     priority = 6000
     count_annotations = {}
-
+    print("Processing parsed FAST/BLAST outputs...")
     for dbname, blastoutput, weight in zip(database_names, input_blastouts, weight_dbs):
+        print(dbname)
         results_dictionary[dbname] = {}
         dbname_weight[dbname] = weight
         count = process_parsed_blastoutput(
@@ -1439,6 +1441,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         fna_data = fna_input.read()
 
     # create the annotations from the results
+    print("Creating annotation tables...")
     create_annotation(
         dbname_weight,
         results_dictionary,
