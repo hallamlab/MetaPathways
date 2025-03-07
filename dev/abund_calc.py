@@ -55,7 +55,11 @@ def main():
     counts_df = pd.read_csv(args.counts_file, sep="\t", index_col=0, comment="#")
     gene_lengths_df = pd.read_csv(args.gene_lengths_file, sep="\t", index_col=0, header=None)
     gene_lengths_df.columns = ['counts']
+    gene_lengths_df = gene_lengths_df[~gene_lengths_df.index.duplicated(keep="first")]
     # Make sure the input DataFrames have the same index (gene IDs)
+    # Find which rows have duplicated index labels
+    dup_index_mask = gene_lengths_df.index.duplicated(keep=False)
+
     if not counts_df.index.equals(gene_lengths_df.index):
         raise ValueError("Gene IDs in the input files do not match.")
 
