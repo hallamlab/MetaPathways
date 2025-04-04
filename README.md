@@ -2,7 +2,9 @@ MetaPathways: A modular pipeline for constructing Pathway/Genome Databases from 
 ============
 
 * Update: MetaPathways v2.0 is [available from its GitHub repository](https://github.com/hallamlab/metapathways2).
-* Installation instructions and tutorials can be found [on the wiki](https://github.com/hallamlab/MetaPathways/wiki)
+  * Installation instructions and tutorials can be found [on the wiki](https://github.com/hallamlab/MetaPathways/wiki)
+* Update: MetaPathways v3.5 is [available from its Bitbucket repository](https://bitbucket.org/BCB2/metapathways).
+  * [Documentation](https://metapathways.readthedocs.io/en/latest/quick_start.html), [install via conda](https://anaconda.org/hallamlab/metapathways), [run with docker](https://quay.io/repository/hallamlab/metapathways)
 
 ### Abstract
 
