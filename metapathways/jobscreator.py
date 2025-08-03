@@ -699,6 +699,7 @@ class ContextCreator:
         rRNA_gff_output = s.orf_prediction_dir +  PATHDELIM + s.sample_name + ".rRNA.gff"
         tRNA_gff_output = s.orf_prediction_dir + PATHDELIM + s.sample_name +  ".tRNA.gff"
         diag_sv_path = s.diagnostics_dir
+        num_threads = self.configs.NUM_CPUS
 
         '''outputs'''
         output_annotated_gff  = s.genbank_dir + PATHDELIM + s.sample_name + ".annot.gff"
@@ -776,6 +777,7 @@ class ContextCreator:
         cmd = cmd + " --diag " + diag_sv_path # path for diagnostics
         cmd = cmd + " --qced_faa " + context.inputs1['qced_faa']
         cmd = cmd + " --fna " + context.inputs1['fna']
+        cmd = cmd + " --threads " + str(num_threads)
 
         context.message = self._Message("ANNOTATE ORFS")
         context.commands = [cmd]

@@ -61,7 +61,7 @@ def createParser():
         "--algorithm",
         dest="algorithm",
         default="BLAST",
-        help="algorithm BLAST or LAST",
+        help="algorithm BLAST or FAST",
     )
 
     parser.add_option(
@@ -155,6 +155,13 @@ def createParser():
         dest="fna_file",
         default=None,
         help="the Nucleotide FASTA",
+    )
+
+    parser.add_option(
+        "--threads",
+        dest="threads",
+        default="1",
+        help="number of threads",
     )
 
     cutoffs_group = OptionGroup(parser, "Cuttoff Related Options")
@@ -832,6 +839,124 @@ def sort_gff(infile):
             out.write(fl)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from concurrent.futures import ThreadPoolExecutor
+
+def create_annotation(
+    dbname_weight,
+    results_dictionary,
+    input_gff,
+    rRNA_16S_stats_files,
+    rRNA_gff,
+    tRNA_stats_files,
+    tRNA_gff,
+    output_gff,
+    output_comparative_annotation,
+    contig_lengths,
+    qced_orfs,
+    fna_recs,
+    sample_name,
+    threads,
+    compact_output=False
+    ):
+
+    orf_dictionary = {}
+    gffreader = GffFileParser(input_gff)
+
+    output_gff_tmp = output_gff + ".tmp"
+    with open(output_gff_tmp, "w") as outputgff_file:
+        gutils.fprintf(outputgff_file, "%s\n", "##gff-version 3")
+
+    # Prepare Comparative Annotation Output Files
+    with open(output_comparative_annotation + ".1.txt", "w") as file1, open(output_comparative_annotation + ".2.txt", "w") as file2:
+
+        header1 = "orf_id\tref dbname\ttarget\tproduct\tvalue"
+        gutils.fprintf(file1, "%s\n", header1)
+
+        header2 = "orf_id"
+        for dbname in dbname_weight.keys():
+            header2 += f"\t{dbname}(target)\t{dbname}(product)\t{dbname}(value)"
+        gutils.fprintf(file2, "%s\n", header2)
+
+    # Process ORFs concurrently
+    def process_contig(contig):
+        annotations = []
+        for orf in gffreader.orf_dictionary[contig]:
+            orf_id = orf["orf_id"]
+            if orf_id not in qced_orfs:
+                continue
+
+            best_anno = (None, 0)
+            for dbname, db_results in results_dictionary.items():
+                if orf_id in db_results:
+                    value = db_results[orf_id]["value"] * dbname_weight[dbname]
+                    if value > best_anno[1]:
+                        best_anno = (dbname, value)
+
+            if best_anno[0]:
+                annotations.append((contig, orf, best_anno))
+        return annotations
+
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        futures = {executor.submit(process_contig, contig): contig for contig in gffreader}
+        for future in futures:
+            annotations = future.result()
+            for contig, orf, best_anno in annotations:
+                write_annotation_for_orf(
+                    outputgff_file,
+                    best_anno[0],
+                    dbname_weight[best_anno[0]],
+                    results_dictionary,
+                    gffreader.orf_dictionary,
+                    contig,
+                    gffreader.orf_dictionary[contig].index(orf),
+                    orf["orf_id"],
+                    sample_name,
+                    compact_output=compact_output,
+                )
+
+    # Save GFF file
+    with open(output_gff_tmp, "a") as outputgff_file:
+        gutils.fprintf(outputgff_file, "%s\n", "##FASTA")
+        gutils.fprintf(outputgff_file, "%s\n", fna_recs)
+
+    sort_gff(output_gff_tmp)
+    rename(output_gff_tmp, output_gff)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 def create_annotation(
     dbname_weight,
     results_dictionary,
@@ -1034,7 +1159,7 @@ def create_annotation(
     sort_gff(output_gff_tmp) # sort the GFF after adding all the different features :|
 
     rename(output_gff_tmp, output_gff)
-
+"""
 
 def process_product(product, database, similarity_threshold=0.9):
     """Returns the best set of products from the list of (*database*,
@@ -1122,35 +1247,16 @@ def remove_repeats(filtered_words):
     newlist = []
     for word in filtered_words:
         if not word in word_dict:
-            if not word in [
-                "",
-                "is",
-                "have",
-                "has",
-                "will",
-                "can",
-                "should",
-                "in",
-                "at",
-                "upon",
-                "the",
-                "a",
-                "an",
-                "on",
-                "for",
-                "of",
-                "by",
-                "with",
-                "and",
-                ">",
-            ]:
+            if not word in ["", "is", "have", "has", "will", "can", "should",
+                            "in", "at", "upon", "the", "a", "an", "on", "for",
+                            "of", "by", "with", "and", ">"]:
                 if not word == "#":  # for metacyc this is important
                     word_dict[word] = 1
 
                 newlist.append(word)
     return " ".join(newlist)
 
-
+"""
 class BlastOutputTsvParser(object):
     def __init__(self, dbname, blastoutput, shortenorfid=False):
         self.dbname = dbname
@@ -1213,7 +1319,7 @@ class BlastOutputTsvParser(object):
                 return None
         else:
             raise StopIteration()
-
+"""
 
 def isWithinCutoffs(data, cutoffs):
     if data["q_length"] < cutoffs.min_length:
@@ -1241,41 +1347,15 @@ def word_information(string_of_words):
     wordlist = {}
     underscore_pattern = re.compile("_")
     for word in words:
-        if not word.lower() in [
-            "",
-            "is",
-            "have",
-            "has",
-            "will",
-            "can",
-            "should",
-            "in",
-            "at",
-            "upon",
-            "the",
-            "a",
-            "an",
-            "on",
-            "for",
-            "of",
-            "by",
-            "with",
-            "and",
-            ">",
-            "predicted",
-            "protein",
-            "conserved",
-            "unannotated",
-            "protein>",
-            "<unannotated",
-            
-        ]:
+        if not word.lower() in ["", "is", "have", "has", "will", "can", "should",
+                                "in", "at", "upon", "the", "a", "an", "on", "for",
+                                "of", "by", "with", "and", ">", "predicted",
+                                "protein", "conserved", "unannotated", "protein>",
+                                "<unannotated"
+                                ]:
             if not underscore_pattern.search(word):
                 wordlist[word] = 1
 
-    # print string_of_words
-    # print wordlist
-    # print len(wordlist)
     return len(wordlist)
 
 
@@ -1291,7 +1371,7 @@ def compute_annotation_value(data):
 
     return score
 
-
+"""
 # compute the refscores
 def process_parsed_blastoutput(
     dbname, weight, blastoutput, cutoffs, annotation_results
@@ -1321,6 +1401,118 @@ def process_parsed_blastoutput(
                     annotation_results[data["query"]] = annotation.copy()
     count = len(annotation_results.keys())
     return count
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import re
+import os
+import multiprocessing
+from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
+
+class BlastOutputTsvParser:
+    def __init__(self, dbname, blastoutput, shortenorfid=False):
+        self.dbname = dbname
+        self.blastoutput = blastoutput
+        self.shortenorfid = shortenorfid
+        self.seq_beg_pattern = re.compile("#")
+
+    def __iter__(self):
+        with open(self.blastoutput, "r") as file:
+            header = next(file)
+            if not self.seq_beg_pattern.search(header):
+                raise ValueError('Header line must start with "#"')
+
+            header = header.replace("#", "").strip()
+            self.fieldmap = {col: idx for idx, col in enumerate(header.split("\t"))}
+
+            for line in file:
+                fields = line.strip().split("\t")
+                pprod, comm = process_product(fields[self.fieldmap["product"]], dbname)
+                data = {
+                    "query": fields[self.fieldmap["query"]],
+                    "target": fields[self.fieldmap["target"]],
+                    "q_length": int(fields[self.fieldmap["q_length"]]),
+                    "bitscore": float(fields[self.fieldmap["bitscore"]]),
+                    "bsr": float(fields[self.fieldmap["bsr"]]),
+                    "expect": float(fields[self.fieldmap["expect"]]),
+                    "identity": float(fields[self.fieldmap["identity"]]),
+                    "ec": fields[self.fieldmap["ec"]],
+                    "product": pprod,
+                    "comment": comm
+                }
+                yield data
+
+def process_parsed_blastoutput(dbname, weight, blastoutput, cutoffs, annotation_results):
+    blastparser = BlastOutputTsvParser(dbname, blastoutput)
+
+    for data in blastparser:
+        if isWithinCutoffs(data, cutoffs):
+            query = data["query"]
+            annotation = {
+                "target": data["target"],
+                "bsr": data["bsr"],
+                "ec": data["ec"],
+                "product": data["product"],
+                "bitscore": data["bitscore"],
+                "value": compute_annotation_value(data) * weight,
+            }
+
+            if query not in annotation_results:
+                annotation_results[query] = annotation
+            elif annotation["bitscore"] > annotation_results[query]["bitscore"]:
+                annotation_results[query] = annotation
+
+    return len(annotation_results)
+
+def process_file(args):
+    dbname, weight, blastoutput, cutoffs = args
+    annotation_results = defaultdict(dict)
+    process_parsed_blastoutput(dbname, weight, blastoutput, cutoffs, annotation_results)
+    return dbname, annotation_results
+
+def process_all_files(database_names, input_blastouts, weight_dbs, cutoffs, threads):
+    with ProcessPoolExecutor(max_workers=threads) as executor:
+        tasks = [(dbname, weight, blastoutput, cutoffs)
+                 for dbname, blastoutput, weight in zip(database_names, input_blastouts, weight_dbs)]
+        results = dict(executor.map(process_file, tasks))
+
+    return results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def read_contig_lengths(contig_map_file, contig_lengths):
@@ -1401,7 +1593,66 @@ def main(argv, errorlogger=None, runstatslogger=None):
         database_names = opts.database_name
         input_blastouts = opts.input_blastout
         weight_dbs = opts.weight_db
+    threads = int(opts.threads)
 
+
+
+
+
+
+
+
+
+
+
+
+
+    print("Processing parsed FAST/BLAST outputs...\n")
+
+    results_dictionary = process_all_files(
+        database_names=database_names,
+        input_blastouts=input_blastouts,
+        weight_dbs=weight_dbs,
+        cutoffs=opts,
+        threads=threads
+    )
+
+    # Update dbname_weight
+    for dbname, weight in zip(database_names, weight_dbs):
+        dbname_weight[dbname] = weight
+
+    # Optionally log the run statistics
+    if runstatslogger is not None:
+        priority = 6000
+        for dbname, annotations in results_dictionary.items():
+            count = len(annotations)
+            runstatslogger.write(
+                f"{priority}\tProtein Annotations from {dbname}\t{count}\n"
+            )
+            priority += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    """
     priority = 6000
     count_annotations = {}
     print("Processing parsed FAST/BLAST outputs...\n")
@@ -1428,7 +1679,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
         runstatslogger.write(
             "%s\tTotal Protein Annotations\t%s\n" % (str(priority), str(count))
         )
-        
+    """
     # Need to remove any ORFs that aren't in the QCed faa
     qced_orfs = []
     with open(opts.qced_faa, 'r') as faa_file:
@@ -1456,9 +1707,9 @@ def main(argv, errorlogger=None, runstatslogger=None):
         contig_lengths,
         qced_orfs,
         fna_data,
-        sample_name=opts.sample_name,
-        compact_output=opts.compact_output,
-    )
+        opts.sample_name,
+        threads,
+        compact_output=opts.compact_output)
 
     # Lastly, find overlaps of annotated ORFs against rRNAs and tRNAs
     feature_dict = {}
