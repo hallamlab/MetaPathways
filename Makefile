@@ -154,10 +154,53 @@ deploy-package-to-pypi:
 
 CONDA ?= mamba
 ENV_NAME ?= mpw_dev
+CONDA_RUN = $(CONDA) run -n $(ENV_NAME)
+
+conda-deploy:
+	@echo ">>> Uploading conda packages (if 'anaconda' CLI is available in env '$(ENV_NAME)')"
+	@if $(CONDA_RUN) which anaconda >/dev/null 2>&1; then \
+		echo ">>> Found 'anaconda' CLI – uploading"; \
+		find ./conda_build -name "*.tar.bz2" -print0 | xargs -0 -I % $(CONDA_RUN) anaconda upload --user hallamlab %; \
+	else \
+		echo ">>> WARNING: 'anaconda' CLI not found in env '$(ENV_NAME)'. Skipping upload."; \
+		echo ">>> Install it with:  $(CONDA) install -n $(ENV_NAME) -c conda-forge anaconda-client"; \
+	fi
+
+clean-dev-env:
+	@echo ">>> Removing conda env '$(ENV_NAME)' (if it exists)"
+	CONDA_NO_PLUGINS=true $(CONDA) env remove -n $(ENV_NAME) -y || true
 
 create-dev-env:
-	$(CONDA) env create --no-default-packages -n $(ENV_NAME) -f ./docker/conda_base.yml
-	$(CONDA) env update -n $(ENV_NAME) -f ./docker/conda_dev.yml
+	@echo ">>> Ensuring conda env '$(ENV_NAME)' exists (using $(CONDA))"
+	# Increase open-file limit to avoid 'Too many open files' (Errno 24)
+	@ulimit -n 65535 || true
+	@if $(CONDA) env list | awk '{print $$1}' | grep -qx "$(ENV_NAME)"; then \
+		echo ">>> Environment '$(ENV_NAME)' already exists – updating from YAMLs"; \
+		CONDA_NO_PLUGINS=true $(CONDA) env update -n $(ENV_NAME) --file ./docker/conda_base.yml; \
+		CONDA_NO_PLUGINS=true $(CONDA) env update -n $(ENV_NAME) --file ./docker/conda_dev.yml; \
+	else \
+		echo ">>> Environment '$(ENV_NAME)' does not exist – creating"; \
+		CONDA_NO_PLUGINS=true $(CONDA) env create --no-default-packages -n $(ENV_NAME) --file ./docker/conda_base.yml; \
+		CONDA_NO_PLUGINS=true $(CONDA) env update -n $(ENV_NAME) --file ./docker/conda_dev.yml; \
+	fi
+
+# Build PyPI package using the env
+conda-pip-package:
+	$(CONDA_RUN) python -m pip install --upgrade setuptools wheel twine
+	$(CONDA_RUN) python setup.py sdist bdist_wheel --universal
+	cp -r dist docker/dist
+
+# Build conda package using the env
+conda-build-package:
+	[ -d ./conda_build ] && rm -r ./conda_build || true
+	$(CONDA_RUN) python ./conda_recipe/compile_recipe.py
+	./conda_recipe/call_build.sh   # this already uses conda-build internally
+
+# One-command full build+deploy pipeline
+full-build: create-dev-env conda-pip-package conda-build-package conda-deploy
+	@echo "===================="
+	@echo " Full build complete"
+	@echo "===================="
 
 # requires
 # - pypi package from create-package

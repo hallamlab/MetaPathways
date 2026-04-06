@@ -19,11 +19,6 @@ taxonomic_db_names = [
 ]
 
 script_path = config["script_path"]
-
-# Start off the build
-os.system('mkdir -p ' + config["ref_db_dir"])
-os.system('touch ' + config["ref_db_dir"] + '/starting_build')
-
 target_ext = "pdb" if config['aligner'] == "blast" else "prj"
 functional_db_names = config['functional_db_names'].split(",")
 additional_targets = []
@@ -54,19 +49,21 @@ rule all:
         config['ref_db_dir'] + '/ncbi_tree/ncbi_taxonomy_tree.txt'
 
 rule create_dirs_local_files:
-    input:
-        config["ref_db_dir"] + '/starting_build'
-    params:
-        target_dir = config["ref_db_dir"]
+    """
+    Create all needed subdirectories and a sentinel 'done' file.
+    This rule becomes the first dependency for all DB fetch rules.
+    """
     output:
         config["ref_db_dir"] + '/taxonomic/formatted/done'
+    params:
+        target_dir = config["ref_db_dir"]
     shell:
         """
         mkdir -p {params.target_dir}/functional/formatted
         mkdir -p {params.target_dir}/functional_categories
         mkdir -p {params.target_dir}/ncbi_tree
         mkdir -p {params.target_dir}/taxonomic/formatted
-        touch {params.target_dir}/taxonomic/formatted/done
+        touch {output}
         """
         
 rule fetch_silva_db:
@@ -108,7 +105,7 @@ rule make_silva_blast_db:
 
 rule fetch_unirefNN_db:
     input:
-        config["ref_db_dir"] + '/starting_build'
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -149,7 +146,7 @@ rule make_unirefNN_fast_db:
 
 rule fetch_swissprot_db:
     input:
-        config["ref_db_dir"] + '/starting_build'
+       config["ref_db_dir"] + '/taxonomic/formatted/done'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -190,7 +187,7 @@ rule make_swissprot_fast_db:
 
 rule fetch_cazy_db:
     input:
-        config["ref_db_dir"] + '/starting_build'
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
     params:
         target_dir = config['ref_db_dir']
     output:
@@ -228,7 +225,7 @@ rule make_cazy_fast_db:
        
 rule fetch_metacyc_db:
     input:
-        config["ref_db_dir"] + '/starting_build'
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
     params:
         target_dir = config['ref_db_dir'],
     output:
@@ -312,7 +309,7 @@ rule pwy_2_ont:
 
 rule fetch_ec_db:
     input:
-        config["ref_db_dir"] + '/starting_build'
+        config["ref_db_dir"] + '/taxonomic/formatted/done'
     params:
         target_dir = config['ref_db_dir']
     output:
