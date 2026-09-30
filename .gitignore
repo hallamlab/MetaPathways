@@ -63,3 +63,22 @@ workflows/SRA_gz
 global_errors_warnings.txt
 
 .vscode
+
+# Local environments and generated validation/build products
+/venv/
+/.venv/
+/regtests/output/
+/tests/data/output/
+/metapathways/tests/data/output/
+/tests/data/lagoon-sample/output/
+/metapathways/regtests/test_db/functional/formatted/
+/metapathways/regtests/test_db/taxonomic/formatted/
+/metapathways/regtests/test_db/functional_categories/
+/metapathways/regtests/test_db/ncbi_tree/
+/metapathways/regtests/test_db/starting_build
+/metapathways/regtests/test_db/temp_cache/
+/docs/build/
+*.a
+*.so
+# SAM/BAM and sequence/archive formats are intentionally not ignored globally:
+# the native parser tests and regression fixtures contain legitimate examples.

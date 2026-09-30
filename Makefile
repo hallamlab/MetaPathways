@@ -64,10 +64,9 @@ docker-start:
 docker-build:
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
 		|| git_branch=$$(git describe --tags)
-	cd docker
 	sudo docker build --network=host \
 			--build-arg git_branch=$$git_branch \
-			-t quay.io/hallamlab/metapathways:$$git_branch .
+			-t quay.io/hallamlab/metapathways:$$git_branch -f docker/Dockerfile .
 
 docker-run:
 	git_branch=$$(git symbolic-ref --short -q HEAD)

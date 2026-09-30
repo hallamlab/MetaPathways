@@ -1,4 +1,4 @@
-include docs/*
+recursive-include docs *.rst *.py *.txt *.yml *.png
 include README.md
 include Makefile
 include metapathways/build_DBs/*

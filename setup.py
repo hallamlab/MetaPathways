@@ -40,7 +40,7 @@ if __name__ == "__main__":
         ),
         license=ver_dict['license'],
         keywords="metagenomics pipeline",
-        url="https://bitbucket.org/BCB2/metapathways/",
+        url="https://github.com/hallamlab/MetaPathways/",
         packages=find_packages(),
         package_data={'': ['metapathways/regtests/**/*'],},        
         scripts=["bin/metapathways-install-deps.sh",

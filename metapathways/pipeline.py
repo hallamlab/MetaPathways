@@ -804,7 +804,7 @@ def help():
     print(f"""\
         MetaPathways: v{__version__}
         https://metapathways.readthedocs.io
-        https://bitbucket.org/BCB2/metapathways
+        https://github.com/hallamlab/MetaPathways
 
         Syntax: MetaPathways COMMAND [OPTIONS]
 

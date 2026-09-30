@@ -15,6 +15,7 @@ MetaPathways
    quick_start
    install
    usage
+   reproducibility
 
 .. Indices and tables
 .. ==================

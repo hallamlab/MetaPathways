@@ -20,7 +20,7 @@ Minimal Usage:
 
 .. code-block:: bash
 
-   metapathways build-db \
+   metapathways build_db \
       -t ${threads} \
       -d ${path/to/save/reference_databases} \
       --func swissprot \

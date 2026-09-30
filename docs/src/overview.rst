@@ -3,7 +3,7 @@ Overview
 
 MetaPathways [1]_ is a meta'omic analysis pipeline for the annotation and analysis for environmental sequence information.
 MetaPathways include metagenomic or metatranscriptomic sequence data in one of several file formats 
-(.fasta, .gff, or .gbk). The pipeline consists of five operational stages including 
+(nucleotide FASTA or amino-acid FASTA). The pipeline consists of five operational stages including
 
 Pipeline
 ~~~~~~~~

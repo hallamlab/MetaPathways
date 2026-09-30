@@ -33,7 +33,7 @@ requirements:
 <REQUIREMENTS>
 
 about:
-  home: https://bitbucket.org/BCB2/metapathways/
+  home: https://github.com/hallamlab/MetaPathways/
   summary: metagenomics pipeline
   license: 'MIT'
-  license_file: ../LICENSE
+  license_file: LICENSE
