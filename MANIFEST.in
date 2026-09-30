@@ -4,11 +4,6 @@ include Makefile
 include metapathways/build_DBs/*
 recursive-include metapathways/regtests *
 include metapathways/resources/*
-include metapathways/tests/*
-include metapathways/tests/data/*
-include metapathways/tests/data/ref_data/*
-include metapathways/tests/data/ref_data/functional_categories/*
-include metapathways/tests/data/ref_data/ncbi_tree/*
 include metapathways/bin/fastal
 include metapathways/bin/fastdb
 include metapathways/bin/metacount
