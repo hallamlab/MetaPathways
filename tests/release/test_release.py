@@ -195,22 +195,22 @@ class ReleaseTests(unittest.TestCase):
             (root / "global_errors_warnings.txt").write_bytes(b"")
             package = root / "package.tar.gz"
             package.write_bytes(b"package")
-            record = {"draft": True, "assets": [
+            record = {"id": 123, "tag_name": "v3.5.0", "draft": True, "assets": [
                 {"name": package.name, "digest": "sha256:" + release.digest(package)}
             ]}
             uploaded = []
 
             def fake_run(*args, **kwargs):
-                if args[:3] == ("gh", "release", "upload"):
-                    path = Path(args[4])
+                if args[:4] == ("gh", "api", "--method", "POST"):
+                    path = Path(args[args.index("--input") + 1])
                     self.assertGreater(path.stat().st_size, 0)
                     self.assertNotIn("--clobber", args)
                     uploaded.append(path.name)
                     record["assets"].append({"name": path.name,
                                              "digest": "sha256:" + release.digest(path)})
-                elif args[:3] == ("gh", "release", "edit"):
+                elif args[:4] == ("gh", "api", "--method", "PATCH"):
                     record["draft"] = False
-                return ""
+                return json.dumps(record)
 
             with patch.object(release, "verify_artifacts", return_value=(root, {"version": "3.5.0"})), patch.object(
                 release, "github_release_record", return_value=record
@@ -224,6 +224,29 @@ class ReleaseTests(unittest.TestCase):
                 record["assets"][0]["digest"] = "sha256:wrong"
                 with self.assertRaisesRegex(ValueError, "refusing to overwrite"):
                     release.github_release(SimpleNamespace(tag="v3.5.0", output=root))
+
+    def test_new_draft_uses_creation_id_without_relisting(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "package.tar.gz").write_bytes(b"package")
+            record = {"id": 456, "tag_name": "v3.5.1", "draft": True, "assets": []}
+            def fake_run(*args, **kwargs):
+                if "--input" in args:
+                    self.assertIn("/releases/456/assets?", args[4])
+                    path = Path(args[args.index("--input") + 1])
+                    record["assets"].append({"name": path.name,
+                        "digest": "sha256:" + release.digest(path)})
+                elif "PATCH" in args:
+                    self.assertEqual(args[4], "repos/hallamlab/MetaPathways/releases/456")
+                    record["draft"] = False
+                return json.dumps(record)
+            with patch.object(release, "verify_artifacts", return_value=(root, {"version": "3.5.1"})), \
+                 patch.object(release, "github_release_record", return_value=None) as lookup, \
+                 patch.object(release, "run", side_effect=fake_run):
+                release.github_release(SimpleNamespace(tag="v3.5.1", output=root))
+                lookup.assert_called_once()
+                self.assertFalse(record["draft"])
+                self.assertEqual(len(record["assets"]), 2)
 
     def test_recovery_checks_original_tag_commit_not_workflow_commit(self):
         with tempfile.TemporaryDirectory() as temp:

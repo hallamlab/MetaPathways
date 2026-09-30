@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "hallamlab/MetaPathways"
@@ -300,14 +301,18 @@ def github_release(args):
     tag = args.tag
     record = github_release_record(repo, tag)
     if record is None:
-        flags = ["--prerelease"] if "rc" in manifest["version"] else []
-        run("gh", "release", "create", tag, "--repo", repo, "--verify-tag",
-            "--draft", "--title", f"MetaPathways {tag}", "--generate-notes",
-            "--notes", "The complete release ZIP includes all artifacts, validation logs "
-            "(including empty success logs), and SHA256SUMS.", *flags)
-        record = github_release_record(repo, tag)
-    if record is None:
-        raise ValueError("GitHub did not return the newly created draft release.")
+        # Retain the create response: a newly created draft need not appear in
+        # the collection listing immediately. All subsequent operations use ID.
+        record = json.loads(run("gh", "api", "--method", "POST", f"repos/{repo}/releases",
+            "-f", f"tag_name={tag}", "-f", f"name=MetaPathways {tag}",
+            "-F", "draft=true", "-F", "generate_release_notes=true",
+            "-F", f"prerelease={'true' if 'rc' in manifest['version'] else 'false'}",
+            "-f", "body=The complete release ZIP includes all artifacts, validation logs "
+            "(including empty success logs), and SHA256SUMS.", capture=True))
+    release_id = record["id"]
+    endpoint = f"repos/{repo}/releases/{release_id}"
+    if record["tag_name"] != tag:
+        raise ValueError("GitHub returned a release for a different tag.")
     with tempfile.TemporaryDirectory(prefix="metapathways-upload-") as temp:
         assets = github_assets(output, manifest["version"], temp)
         existing = {item["name"]: item for item in record["assets"]}
@@ -317,16 +322,16 @@ def github_release(args):
                     raise ValueError(f"Existing GitHub asset differs: {path.name}; refusing to overwrite.")
                 print(f"Already uploaded and verified: {path.name}")
             else:
-                run("gh", "release", "upload", tag, path, "--repo", repo)
-        record = github_release_record(repo, tag)
-        if record is None:
-            raise ValueError("Release disappeared during upload.")
+                upload = f"https://uploads.github.com/repos/{repo}/releases/{release_id}/assets"
+                run("gh", "api", "--method", "POST", f"{upload}?{urlencode({'name': path.name})}",
+                    "-H", "Content-Type: application/octet-stream", "--input", path, capture=True)
+        record = json.loads(run("gh", "api", endpoint, capture=True))
         uploaded = {item["name"]: item for item in record["assets"]}
         for path in assets:
             if path.name not in uploaded or github_asset_digest(repo, uploaded[path.name]) != digest(path):
                 raise ValueError(f"Uploaded GitHub asset failed checksum verification: {path.name}")
         if record["draft"]:
-            run("gh", "release", "edit", tag, "--repo", repo, "--draft=false")
+            run("gh", "api", "--method", "PATCH", endpoint, "-F", "draft=false", capture=True)
     print(f"Published and verified {tag}: https://github.com/{repo}/releases/tag/{tag}")
 
 
