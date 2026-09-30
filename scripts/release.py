@@ -203,7 +203,8 @@ def build(args):
             run("conda", "create", "--yes", "--prefix", environment,
                 "--override-channels", "--strict-channel-priority",
                 "-c", channel.as_uri(), "-c", "conda-forge", "-c", "bioconda",
-                f"metapathways={value}", log=output / "environment-create.log")
+                f"metapathways={value}", log=output / "environment-create.log",
+                env={**os.environ, "CONDA_ADD_PIP_AS_PYTHON_DEPENDENCY": "false"})
             runner = ["conda", "run", "--no-capture-output", "--prefix", environment]
             testdir = work / "integration"
             testdir.mkdir()
@@ -213,6 +214,7 @@ def build(args):
                 cwd=testdir, log=output / "version-check.log")
             run(*runner, "python", "-c",
                 "import sys; from importlib.metadata import version; from packaging.version import Version; "
+                "import importlib.util; assert importlib.util.find_spec('pip') is None; "
                 "assert sys.version_info >= (3, 11); "
                 "assert Version(version('urllib3')) >= Version('2.8.0'); "
                 "assert Version(version('setuptools')) >= Version('83.0.0'); "
@@ -231,7 +233,10 @@ def build(args):
             (output / "conda-explicit.txt").write_text(
                 run("conda", "list", "--prefix", environment, "--explicit", "--sha256", capture=True) + "\n")
             (output / "pip-freeze.txt").write_text(
-                run(*runner, "python", "-m", "pip", "freeze", capture=True) + "\n")
+                run(*runner, "python", "-c",
+                    "from importlib.metadata import distributions; "
+                    "print('\\n'.join(sorted(f'{d.metadata[\"Name\"]}=={d.version}' for d in distributions())))",
+                    capture=True) + "\n")
     (output / "validation.json").write_text(json.dumps(validation, indent=2) + "\n")
     hashes = {p.name: digest(p) for p in sorted(output.iterdir()) if p.is_file()}
     manifest = {"version": value, "build_number": number, "release_tag": tag, "commit": commit, "files": hashes}

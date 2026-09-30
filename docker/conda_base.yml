@@ -29,4 +29,3 @@ dependencies:
   - html2text
   - scipy
   - peppy
-  - pip

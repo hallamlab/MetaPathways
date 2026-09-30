@@ -226,3 +226,8 @@ Quay receives `3.5.1-build1` and `v3.5.1-build1` tags as well as updated `3.5.1`
 `v3.5.1`, and stable `latest` aliases. The new GitHub release carries its own SIF,
 archives, checksums, and dependency exports. Conda gets a new build rather than
 an overwritten package. For reproducible use, choose a build tag or image digest.
+
+Pip is a build-time tool, not a dependency of the packaged runtime. The validated
+runtime is created with Conda's automatic pip insertion disabled; dependency
+exports use Python package metadata. This avoids shipping vulnerable libraries
+vendored inside pip while leaving normal package-building tools available to CI.
