@@ -9,7 +9,7 @@ source:
 build:
   # The bundled FAST/metacount executables target Linux x86-64.
   skip: true  # [not (linux and x86_64)]
-  number: 1
+  number: 0
   script: "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv"
   entry_points:
 <ENTRY>
