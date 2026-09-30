@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: release-tools
+          python-version: '3.10'
+          channels: conda-forge
+          channel-priority: strict
+          auto-activate-base: false
+      - name: Install packaging tools
+        run: |
+          conda install --yes --override-channels -c conda-forge conda-build conda-index pyyaml 'setuptools<81' wheel
+          python -m pip install build
+      - name: Test release controls
+        run: python -m unittest discover -s tests/release -v
+      - name: Build and test release
+        env:
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "$RELEASE_REF_TYPE" == tag ]]; then
+            python scripts/release.py build --tag "$RELEASE_TAG"
+          else
+            python scripts/release.py build
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: dist/release/
+          if-no-files-found: error
+      - name: Retain diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-diagnostics
+          path: dist/release/
+          if-no-files-found: ignore
+
+  github-release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: dist/release
+      - name: Verify assets
+        run: python scripts/release.py verify-artifacts
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          flags=()
+          if [[ "$RELEASE_TAG" == *rc* ]]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "$RELEASE_TAG" dist/release/* \
+            --verify-tag --title "MetaPathways $RELEASE_TAG" \
+            --generate-notes "${flags[@]}"
+
+  anaconda:
+    needs: [build, github-release]
+    if: github.ref_type == 'tag' && vars.PUBLISH_CONDA == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: upload-tools
+          python-version: '3.10'
+          channels: conda-forge
+          auto-activate-base: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: dist/release
+      - name: Install uploader
+        shell: bash -el {0}
+        run: conda install --yes --override-channels -c conda-forge anaconda-client
+      - name: Upload validated package
+        shell: bash -el {0}
+        env:
+          BINSTAR_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        run: |
+          if [[ -z "$BINSTAR_API_TOKEN" ]]; then
+            echo "::error::Set the ANACONDA_API_TOKEN secret before enabling PUBLISH_CONDA."
+            exit 1
+          fi
+          python scripts/release.py upload-conda

@@ -1,10 +1,12 @@
 name: metapathways
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - python=3.10
-  - snakemake
+  - snakemake=7.32.4
+  - pulp=2.7.0
+  - setuptools<81
   - curl
   - ncurses
   - pysam

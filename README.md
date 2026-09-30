@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5-<COLOR>.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Python Version-==3.10-<COLOR>.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/) 
+[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5.0-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 # MetaPathways
 
@@ -87,3 +87,9 @@ If you use MetaPathways in your research, please cite the following article:
 
 > Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar, Steven J. Hallam. *MetaPathways v3.5: Modularity and Scalability Improvements for Pathway Inference from Environmental Genomes* bioRxiv (2024): 2024-06. [doi: https://doi.org/10.1101/2024.06.04.597460](https://doi.org/10.1101/2024.06.04.597460)
 
+
+## Maintainer releases
+
+Use [the release controller and CI workflow](docs/releasing.md) to set a version,
+build and test packages, and publish downloadable GitHub releases and optional
+Anaconda.org packages. The source version is declared in `metapathways/_version.py`.

@@ -1,0 +1,307 @@
+#!/usr/bin/env python3
+"""Prepare, build, validate, and publish MetaPathways releases.
+
+Run with --help. Only 'publish' and 'upload-conda' write to remote services.
+"""
+import argparse
+import ast
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+
+ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY = "hallamlab/MetaPathways"
+VERSION_RE = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(rc[1-9][0-9]*)?")
+STAGES = {
+    "PREPROCESS_INPUT", "ORF_PREDICTION", "ORF_TO_AMINO", "FILTER_AMINOS",
+    "FUNC_SEARCH:swissprot_test", "COMPUTE_REFSCORES",
+    "PARSE_FUNC_SEARCH:swissprot_test", "SCAN_rRNA:barrnap",
+    "SCAN_rRNA:SILVA_SSU_test", "SCAN_rRNA:SILVA_LSU_test", "SCAN_tRNA",
+    "ANNOTATE_ORFS", "CREATE_ANNOT_REPORTS", "GENBANK_FILE",
+    "PATHOLOGIC_INPUT", "COMPUTE_TPM",
+}
+OUTPUTS = [
+    "genbank/k12_test.annot.gff", "genbank/k12_test.gbk",
+    "results/annotation_table/k12_test.ORF_annotation_table.txt",
+    "results/annotation_table/k12_test.functional_and_taxonomic_table.txt",
+    "results/rpkm/k12_test.contig_counts.tsv", "ptools/0.pf",
+]
+
+
+def run(*args, cwd=ROOT, capture=False, log=None, env=None):
+    args = [str(a) for a in args]
+    # Secrets must be supplied through environment variables, never arguments.
+    print("+ " + " ".join(args), flush=True)
+    if log:
+        print(f"  log: {log}", flush=True)
+        with Path(log).open("w") as stream:
+            subprocess.run(args, cwd=cwd, check=True, stdout=stream,
+                           stderr=subprocess.STDOUT, env=env)
+        return ""
+    result = subprocess.run(args, cwd=cwd, check=True, text=True,
+                            stdout=subprocess.PIPE if capture else None, env=env)
+    return result.stdout.strip() if capture else ""
+
+
+def version(root=ROOT):
+    tree = ast.parse((root / "metapathways/_version.py").read_text())
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == "__version__" for t in node.targets
+        ):
+            return valid_version(ast.literal_eval(node.value))
+    raise ValueError("No __version__ found")
+
+
+def valid_version(value):
+    value = value.removeprefix("v")
+    if not VERSION_RE.fullmatch(value):
+        raise ValueError("Use X.Y.Z or X.Y.ZrcN, e.g. 3.5.0 or 3.5.1rc1; no .dev suffix.")
+    return value
+
+
+def clean():
+    if run("git", "status", "--porcelain", "--untracked-files=normal", capture=True):
+        raise ValueError("Commit or stash your changes first; releases use committed source only.")
+
+
+def digest(path):
+    with Path(path).open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest() if hasattr(hashlib, "file_digest") else hashlib.sha256(stream.read()).hexdigest()
+
+
+def prepare(args):
+    value = valid_version(args.version)
+    recipe = ROOT / "conda_recipe/meta_template.yaml"
+    match = re.search(r"^  number: ([0-9]+)$", recipe.read_text(), re.M)
+    if not match:
+        raise ValueError("Recipe must declare an integer build number.")
+    build_number = args.build_number
+    if build_number is None:
+        build_number = int(match.group(1)) if value == version(ROOT) else 0
+    if build_number < 0:
+        raise ValueError("Build number must be nonnegative.")
+    target = ROOT / "metapathways/_version.py"
+    text = re.sub(r'^__version__ = .+$', f'__version__ = "{value}"',
+                  target.read_text(), flags=re.M)
+    text = re.sub(r'^__status__ = .+$',
+                  '__status__ = "' + ("Release Candidate" if "rc" in value else "Release") + '"',
+                  text, flags=re.M)
+    target.write_text(text)
+    recipe.write_text(re.sub(r"^  number: [0-9]+$", f"  number: {build_number}",
+                             recipe.read_text(), flags=re.M))
+    readme = ROOT / "README.md"
+    readme.write_text(re.sub(r"https://img.shields.io/badge/Version-[^)]*",
+                            f"https://img.shields.io/badge/Version-{value}-blue.svg",
+                            readme.read_text()))
+    print(f"Prepared {value}, Conda build {build_number}. Review and commit before publishing.")
+
+
+def validate_run(directory):
+    sample = Path(directory) / "test/k12_test"
+    text = (sample / "metapathways_steps_log.txt").read_text()
+    successes = re.findall(r"^([^\t\n]+)\tSUCCESS\b", text, re.M)
+    if set(successes) != STAGES or len(successes) != len(STAGES):
+        raise ValueError(f"Integration test incomplete: expected {len(STAGES)} distinct successful stages; "
+                         f"missing {sorted(STAGES - set(successes))}")
+    for name in OUTPUTS:
+        path = sample / name
+        if not path.is_file() or path.stat().st_size == 0:
+            raise ValueError(f"Missing or empty output: {path}")
+    for path in [sample / "errors_warnings_log.txt",
+                 Path(directory) / "test/global_errors_warnings.txt"]:
+        text = path.read_text()
+        if re.search(r"(?im)^\s*(?:ERROR\b|FAILED\b|Traceback\b)", text):
+            raise ValueError(f"Review errors in {path}")
+    return {"successful_stages": sorted(STAGES), "nonempty_outputs": OUTPUTS}
+
+
+def build(args):
+    clean()
+    value = version()
+    if args.tag and args.tag != f"v{value}":
+        raise ValueError(f"Tag {args.tag!r} does not match source version v{value}")
+    commit = run("git", "rev-parse", "HEAD", capture=True)
+    if args.tag and run("git", "rev-parse", f"{args.tag}^{{commit}}", capture=True) != commit:
+        raise ValueError("Release tag must point to the checked-out commit.")
+    if not args.source_only and (platform.system(), platform.machine()) != ("Linux", "x86_64"):
+        raise ValueError("Bundled binaries require Linux x86-64.")
+    output = Path(args.output).resolve()
+    if output.exists() and any(output.iterdir()):
+        raise ValueError(f"{output} is not empty. Choose a fresh --output directory.")
+    output.mkdir(parents=True, exist_ok=True)
+    archive = output / f"metapathways-{value}-source.zip"
+    run("git", "archive", "--format=zip", f"--prefix=metapathways-{value}/",
+        "-o", archive, "HEAD")
+    validation = {"scope": "source-only", "version": value, "commit": commit}
+    with tempfile.TemporaryDirectory(prefix="metapathways-release-") as temp:
+        work = Path(temp)
+        with zipfile.ZipFile(archive) as source:
+            source.extractall(work)
+        snapshot = work / f"metapathways-{value}"
+        # Restore executable bits: ZipFile.extractall does not preserve Git modes.
+        with zipfile.ZipFile(archive) as source:
+            for member in source.infolist():
+                mode = member.external_attr >> 16
+                if mode and not member.is_dir():
+                    (work / member.filename).chmod(mode & 0o777)
+        run(sys.executable, "-m", "build", "--sdist", "--no-isolation",
+            "--outdir", output, cwd=snapshot, log=output / "source-build.log")
+        sdist = output / f"metapathways-{value}.tar.gz"
+        if not sdist.is_file():
+            raise ValueError(f"Expected source distribution {sdist}")
+        if not args.source_only:
+            recipe = work / "recipe"
+            run(sys.executable, snapshot / "conda_recipe/compile_recipe.py",
+                "--sdist", sdist, "--output-dir", recipe, cwd=snapshot)
+            channel = work / "channel"
+            channel.mkdir()
+            run("conda", "build", recipe, "--override-channels",
+                "-c", "conda-forge", "-c", "bioconda", "--no-anaconda-upload",
+                "--output-folder", channel, log=output / "conda-build.log",
+                env={**os.environ, "CONDA_CHANNEL_PRIORITY": "strict"})
+            packages = list(channel.glob("linux-64/metapathways-*.conda"))
+            packages += list(channel.glob("linux-64/metapathways-*.tar.bz2"))
+            if len(packages) != 1:
+                raise ValueError(f"Expected one Linux package, found {packages}")
+            shutil.copy2(packages[0], output / packages[0].name)
+            run("conda", "index", channel, log=output / "conda-index.log")
+            environment = work / "validation-env"
+            run("conda", "create", "--yes", "--prefix", environment,
+                "--override-channels", "--strict-channel-priority",
+                "-c", channel.as_uri(), "-c", "conda-forge", "-c", "bioconda",
+                f"metapathways={value}", log=output / "environment-create.log")
+            runner = ["conda", "run", "--no-capture-output", "--prefix", environment]
+            testdir = work / "integration"
+            testdir.mkdir()
+            run(*runner, "python", "-c",
+                "from metapathways._version import __version__; "
+                f"assert __version__ == {value!r}, __version__",
+                cwd=testdir, log=output / "version-check.log")
+            run(*runner, "metapathways", "version", cwd=testdir,
+                log=output / "cli-version.log")
+            run(*runner, "metapathways", "build_db", "--test", cwd=testdir,
+                log=output / "build-db.log")
+            run(*runner, "metapathways", "run", "--test", cwd=testdir,
+                log=output / "pipeline.log")
+            validation.update(validate_run(testdir), scope="core-integration")
+            for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:
+                shutil.copy2(testdir / "test/k12_test" / name, output / name)
+            shutil.copy2(testdir / "test/global_errors_warnings.txt", output)
+            (output / "conda-explicit.txt").write_text(
+                run("conda", "list", "--prefix", environment, "--explicit", capture=True) + "\n")
+            (output / "pip-freeze.txt").write_text(
+                run(*runner, "python", "-m", "pip", "freeze", capture=True) + "\n")
+    (output / "validation.json").write_text(json.dumps(validation, indent=2) + "\n")
+    hashes = {p.name: digest(p) for p in sorted(output.iterdir()) if p.is_file()}
+    manifest = {"version": value, "commit": commit, "files": hashes}
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    hashes["manifest.json"] = digest(output / "manifest.json")
+    (output / "SHA256SUMS").write_text("".join(f"{sha}  {name}\n" for name, sha in sorted(hashes.items())))
+    print(f"Built {value}: {output}")
+
+
+def verify_artifacts(args):
+    output = Path(args.output).resolve()
+    manifest = json.loads((output / "manifest.json").read_text())
+    if manifest["version"] != version():
+        raise ValueError("Artifact version differs from checkout.")
+    if manifest["commit"] != run("git", "rev-parse", "HEAD", capture=True):
+        raise ValueError("Artifacts were built from a different commit.")
+    expected = set(manifest["files"]) | {"manifest.json", "SHA256SUMS"}
+    if {p.name for p in output.iterdir()} != expected:
+        raise ValueError("Artifact directory contains missing or unverified files.")
+    if "validation.json" not in manifest["files"]:
+        raise ValueError("Validation receipt is missing from manifest.")
+    if any(p.is_symlink() or not p.is_file() for p in output.iterdir()):
+        raise ValueError("Artifacts must be regular files, not links or directories.")
+    for name, sha in manifest["files"].items():
+        if Path(name).name != name or digest(output / name) != sha:
+            raise ValueError(f"Artifact checksum mismatch: {name}")
+    sums = "".join(f"{sha}  {name}\n" for name, sha in sorted(
+        dict(manifest["files"], **{"manifest.json": digest(output / "manifest.json")}).items()))
+    if (output / "SHA256SUMS").read_text() != sums:
+        raise ValueError("SHA256SUMS differs from manifest.")
+    validation = json.loads((output / "validation.json").read_text())
+    if validation.get("scope") != "core-integration" or set(validation.get("successful_stages", [])) != STAGES:
+        raise ValueError("Publishing requires a successful full Conda integration build.")
+    if validation.get("commit") != manifest["commit"] or validation.get("version") != manifest["version"]:
+        raise ValueError("Validation provenance differs from manifest.")
+    print("Artifact checksums, revision, and integration receipt verified.")
+    return output, manifest
+
+
+def publish(args):
+    clean()
+    value = version()
+    branch = run("git", "branch", "--show-current", capture=True)
+    if branch != "dev":
+        raise ValueError("Publish from the dev branch.")
+    url = run("git", "remote", "get-url", "--push", args.remote, capture=True)
+    if url.removesuffix(".git").rstrip("/") not in (
+        f"git@github.com:{REPOSITORY}", f"https://github.com/{REPOSITORY}",
+        f"ssh://git@github.com/{REPOSITORY}",
+    ):
+        raise ValueError(f"Remote must target {REPOSITORY}; got {url}")
+    tag = f"v{value}"
+    if run("git", "ls-remote", args.remote, f"refs/tags/{tag}", capture=True):
+        raise ValueError(f"{tag} already exists remotely. Rerun its CI job or prepare a new version.")
+    existing = subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{tag}"], cwd=ROOT)
+    if existing.returncode == 0:
+        if run("git", "rev-parse", f"{tag}^{{commit}}", capture=True) != run("git", "rev-parse", "HEAD", capture=True):
+            raise ValueError(f"Local {tag} points to another commit; it will not be moved.")
+        if run("git", "cat-file", "-t", tag, capture=True) != "tag":
+            raise ValueError(f"Local {tag} must be an annotated tag.")
+    else:
+        run("git", "tag", "-a", tag, "-m", f"MetaPathways {value}")
+    run("git", "push", "--atomic", args.remote, "HEAD:refs/heads/dev", f"refs/tags/{tag}")
+    print(f"CI will build, test, and publish {tag}: https://github.com/{REPOSITORY}/actions")
+
+
+def upload_conda(args):
+    output, manifest = verify_artifacts(args)
+    packages = [output / n for n in manifest["files"] if n.endswith((".conda", ".tar.bz2"))]
+    if len(packages) != 1:
+        raise ValueError("Expected exactly one validated Conda package.")
+    label = "rc" if "rc" in manifest["version"] else "main"
+    # anaconda-client reads BINSTAR_API_TOKEN; never put credentials on the command line.
+    run("anaconda", "upload", "--user", "hallamlab", "--label", label, packages[0])
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    p = commands.add_parser("prepare", help="Set an explicit stable or release-candidate version.")
+    p.add_argument("version")
+    p.add_argument("--build-number", type=int,
+                   help="Default: preserve the current build for the same version; 0 for a new version.")
+    p.set_defaults(func=prepare)
+    p = commands.add_parser("build", help="Build archives and a Conda package; test the installed package.")
+    p.add_argument("--output", default=str(ROOT / "dist/release"))
+    p.add_argument("--source-only", action="store_true", help="Build source archives only; not publishable.")
+    p.add_argument("--tag", help="CI: require this tag to match the version and checked-out commit.")
+    p.set_defaults(func=build)
+    for name, func in [("verify-artifacts", verify_artifacts), ("upload-conda", upload_conda)]:
+        p = commands.add_parser(name)
+        p.add_argument("--output", default=str(ROOT / "dist/release"))
+        p.set_defaults(func=func)
+    p = commands.add_parser("publish", help="Push dev and its release tag using existing Git credentials.")
+    p.add_argument("--remote", default="origin")
+    p.set_defaults(func=publish)
+    args = parser.parse_args()
+    try:
+        args.func(args)
+    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+        parser.exit(1, f"Release stopped: {error}\n")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,75 +1,48 @@
-import os, sys
-import stat
-from pathlib import Path
-import yaml
+"""Render the Conda recipe from the exact source archive and runtime environment."""
+import argparse
 import hashlib
+from pathlib import Path
+import shlex
+import sys
 
-HERE = Path(os.path.realpath(__file__)).parent
-sys.path = list(set([
-    str(HERE.joinpath("../").absolute())
-]+sys.path))
+import yaml
 
-# import constants from setup.py
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from setup import NAME, VERSION, ENTRY_POINTS
 
 
-# ======================================================
-# get tar archive of source code
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--sdist", type=Path, default=ROOT / "dist" / f"{NAME}-{VERSION}.tar.gz")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "conda_recipe")
+    args = parser.parse_args()
+    archive = args.sdist.resolve()
+    if archive.name != f"{NAME}-{VERSION}.tar.gz" or not archive.is_file():
+        parser.error(f"Expected source archive {NAME}-{VERSION}.tar.gz; got {archive}")
+    deps = yaml.safe_load((ROOT / "docker/conda_base.yml").read_text())
+    if not all(isinstance(d, str) for d in deps["dependencies"]):
+        parser.error("Conda runtime dependencies must be explicit package strings, not pip/VCS entries.")
+    replacements = {
+        "<NAME>": NAME,
+        "<VERSION>": VERSION,
+        "<ENTRY>": "\n".join(f"    - {e}" for e in ENTRY_POINTS),
+        "<REQUIREMENTS>": "\n".join(f"    - {d}" for d in deps["dependencies"]),
+        "<TAR>": archive.as_uri(),
+        "<SHA256>": hashlib.sha256(archive.read_bytes()).hexdigest(),
+    }
+    text = (ROOT / "conda_recipe/meta_template.yaml").read_text()
+    for key, value in replacements.items():
+        text = text.replace(key, value)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    (args.output_dir / "meta.yaml").write_text(text)
+    command = ["conda", "build", "--override-channels", "-c", "conda-forge", "-c", "bioconda",
+               "--no-anaconda-upload", "--output-folder", str(ROOT / "conda_build"),
+               str(args.output_dir.resolve())]
+    wrapper = args.output_dir / "call_build.sh"
+    wrapper.write_text("#!/usr/bin/env bash\nset -euo pipefail\n" + shlex.join(command) + "\n")
+    wrapper.chmod(0o755)
 
-dist_path = Path(os.path.abspath(HERE.joinpath("../dist")))
-tar_path = [dist_path.joinpath(f) for f in os.listdir(dist_path) if VERSION in f and ".tar.gz" in f][0]
 
-# ======================================================
-# get dependencies install
-
-with open(HERE.joinpath(f"../docker/conda_base.yml")) as y:
-    raw_deps = yaml.safe_load(y)
-def _parse_deps(level: list, compiled: str, depth: int):
-    tabs_space = "  "*depth
-    for item in level:
-        if isinstance(item, str):
-            compiled += f"{tabs_space}- {item}\n"
-        else:
-            k, v = list(item.items())[0]
-            compiled += f"{tabs_space}- {k}:\n"
-            compiled = _parse_deps(v, compiled, depth+1)
-    return compiled
-reqs = _parse_deps(raw_deps["dependencies"], "", 2)[:-1] # remove trailing \n
-
-# ======================================================
-# entry points
-
-entry_points = ""
-for e in ENTRY_POINTS:
-    tabs_space = "  "*2
-    entry_points += f"{tabs_space}- {e}\n"
-entry_points = entry_points[:-1] # remove trailing \n
-
-
-# ======================================================
-# generate recipe files
-
-with open(HERE.joinpath("meta_template.yaml")) as fname:
-    template = "".join(fname.readlines())
-meta_values = {
-    "NAME": NAME,
-    "VERSION": VERSION,
-    "ENTRY": entry_points,
-    "REQUIREMENTS": reqs,
-    "TAR": f"file://{tar_path}"
-}
-for k, v in meta_values.items():
-    template = template.replace(f"<{k}>", v)
-with open(HERE.joinpath("meta.yaml"), "w") as fname:
-    fname.write(template)
-
-build_file = HERE.joinpath("call_build.sh")
-with open(build_file, "w") as fname:
-    channels = " ".join(f"-c {ch}" for ch in raw_deps["channels"])
-    _here = 'HERE=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )'
-    fname.write(f"""\
-        {_here}
-        conda mambabuild {channels} --output-folder $HERE/../conda_build $HERE/
-    """.replace("    ", ""))
-st = os.stat(build_file)
-os.chmod(build_file, st.st_mode | stat.S_IEXEC)
+if __name__ == "__main__":
+    main()

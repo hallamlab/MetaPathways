@@ -137,14 +137,7 @@ ENV_NAME ?= mpw_dev
 CONDA_RUN = $(CONDA) run -n $(ENV_NAME)
 
 conda-deploy:
-	@echo ">>> Uploading conda packages (if 'anaconda' CLI is available in env '$(ENV_NAME)')"
-	@if $(CONDA_RUN) which anaconda >/dev/null 2>&1; then \
-		echo ">>> Found 'anaconda' CLI – uploading"; \
-		find ./conda_build -name "*.tar.bz2" -print0 | xargs -0 -I % $(CONDA_RUN) anaconda upload --user hallamlab %; \
-	else \
-		echo ">>> WARNING: 'anaconda' CLI not found in env '$(ENV_NAME)'. Skipping upload."; \
-		echo ">>> Install it with:  $(CONDA) install -n $(ENV_NAME) -c conda-forge anaconda-client"; \
-	fi
+	$(PYTHON) scripts/release.py upload-conda
 
 clean-dev-env:
 	@echo ">>> Removing conda env '$(ENV_NAME)' (if it exists)"
@@ -170,28 +163,33 @@ conda-pip-package:
 	$(CONDA_RUN) python setup.py sdist bdist_wheel --universal
 	cp -r dist docker/dist
 
-# Build conda package using the env
+# Build and integration-test the exact release package.
 conda-build-package:
-	[ -d ./conda_build ] && rm -r ./conda_build || true
-	$(CONDA_RUN) python ./conda_recipe/compile_recipe.py
-	./conda_recipe/call_build.sh   # this already uses conda-build internally
+	$(PYTHON) scripts/release.py build
 
-# One-command full build+deploy pipeline
-full-build: create-dev-env conda-pip-package conda-build-package conda-deploy
-	@echo "===================="
-	@echo " Full build complete"
-	@echo "===================="
+# Release controller: validates the exact package before upload.
+.PHONY: release-prepare release-build release-publish release-upload-conda full-build
+release-prepare:
+	@test -n "$(VERSION)" || { echo "Use make release-prepare VERSION=3.5.0"; exit 1; }
+	$(PYTHON) scripts/release.py prepare "$(VERSION)"
 
-# requires
-# - pypi package from create-package
-# - conda env from create-dev-env
-create-conda:
-	[ -d ./conda_build ] && rm -r ./conda_build
-	$(PYTHON) ./conda_recipe/compile_recipe.py
-	./conda_recipe/call_build.sh
+release-build:
+	$(PYTHON) scripts/release.py build
 
-deploy-conda:
-	find ./conda_build -name *.tar.bz2 | xargs -I % anaconda upload --user hallamlab %
+release-publish:
+	$(PYTHON) scripts/release.py publish
+
+release-upload-conda:
+	$(PYTHON) scripts/release.py upload-conda
+
+# Kept as an alias; sequencing prevents uploads racing builds under make -j.
+full-build: release-build
+	$(PYTHON) scripts/release.py upload-conda
+
+# Legacy aliases use the same validation gates as the release controller.
+create-conda: release-build
+
+deploy-conda: release-upload-conda
 
 ### Docs:
 
