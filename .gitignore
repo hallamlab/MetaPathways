@@ -82,3 +82,6 @@ global_errors_warnings.txt
 *.so
 # SAM/BAM and sequence/archive formats are intentionally not ignored globally:
 # the native parser tests and regression fixtures contain legitimate examples.
+
+# Local manuscript figures and their export tools
+/docs/figures/
