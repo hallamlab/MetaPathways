@@ -24,6 +24,10 @@ mamba create -n metapathways_env -c hallamlab -c bioconda -c conda-forge metapat
 ```
 
 ### Installation with containers
+
+See [container usage](docker/README.quay.md) for versioned Docker images and
+Apptainer SIF downloads from GitHub releases.
+
 ```
 apptainer pull docker://quay.io/hallamlab/metapathways
 
@@ -32,7 +36,8 @@ docker pull quay.io/hallamlab/metapathways
 
 ### Install this source revision
 
-The Conda package and container above are distributed separately from GitHub releases.
+Tagged releases validate the Conda package and containers through the
+[release workflow](docs/releasing.md).
 To run this checkout on Linux with Python 3.10:
 
 ```bash

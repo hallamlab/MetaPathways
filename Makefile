@@ -221,3 +221,11 @@ extensions-install:
 	chmod 755 $(DESTDIR)/bin/fastal
 	chmod 755 $(DESTDIR)/bin/fastdb
 	chmod 755 $(DESTDIR)/bin/metacount
+
+# Validated release containers (Docker plus Apptainer).
+.PHONY: release-containers release-quay
+release-containers:
+	$(PYTHON) scripts/release.py container-build
+
+release-quay:
+	$(PYTHON) scripts/release.py container-push

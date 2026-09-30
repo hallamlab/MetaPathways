@@ -170,6 +170,72 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "successful full Conda"):
                     release.verify_artifacts(SimpleNamespace(output=root))
 
+    def test_github_bundle_preserves_empty_logs_and_is_repeatable(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            output = root / "artifacts"
+            output.mkdir()
+            (output / "global_errors_warnings.txt").write_bytes(b"")
+            (output / "package.tar.gz").write_bytes(b"package")
+            first = release.github_assets(output, "3.5.0", root)
+            first_digest = release.digest(first[-1])
+            self.assertTrue(all(p.stat().st_size > 0 for p in first))
+            self.assertNotIn("global_errors_warnings.txt", [p.name for p in first])
+            with zipfile.ZipFile(first[-1]) as archive:
+                self.assertEqual(archive.read("global_errors_warnings.txt"), b"")
+                self.assertEqual(archive.read("package.tar.gz"), b"package")
+            (output / "package.tar.gz").touch()
+            second = release.github_assets(output, "3.5.0", root)
+            self.assertEqual(first_digest, release.digest(second[-1]))
+
+    def test_github_recovery_resumes_partial_draft_without_overwrites(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "global_errors_warnings.txt").write_bytes(b"")
+            package = root / "package.tar.gz"
+            package.write_bytes(b"package")
+            record = {"draft": True, "assets": [
+                {"name": package.name, "digest": "sha256:" + release.digest(package)}
+            ]}
+            uploaded = []
+
+            def fake_run(*args, **kwargs):
+                if args[:3] == ("gh", "release", "upload"):
+                    path = Path(args[4])
+                    self.assertGreater(path.stat().st_size, 0)
+                    self.assertNotIn("--clobber", args)
+                    uploaded.append(path.name)
+                    record["assets"].append({"name": path.name,
+                                             "digest": "sha256:" + release.digest(path)})
+                elif args[:3] == ("gh", "release", "edit"):
+                    record["draft"] = False
+                return ""
+
+            with patch.object(release, "verify_artifacts", return_value=(root, {"version": "3.5.0"})), patch.object(
+                release, "github_release_record", return_value=record
+            ), patch.object(release, "run", side_effect=fake_run):
+                release.github_release(SimpleNamespace(tag="v3.5.0", output=root))
+                self.assertEqual(uploaded, ["metapathways-3.5.0-release.zip"])
+                self.assertFalse(record["draft"])
+                # A completed release can be rerun without uploading anything again.
+                release.github_release(SimpleNamespace(tag="v3.5.0", output=root))
+                self.assertEqual(len(uploaded), 1)
+                record["assets"][0]["digest"] = "sha256:wrong"
+                with self.assertRaisesRegex(ValueError, "refusing to overwrite"):
+                    release.github_release(SimpleNamespace(tag="v3.5.0", output=root))
+
+    def test_recovery_checks_original_tag_commit_not_workflow_commit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest = {"version": "3.5.0", "commit": "original", "files": {}}
+            (root / "manifest.json").write_text(json.dumps(manifest))
+            with patch.object(release, "run", side_effect=[
+                '__version__ = "3.5.0"', "other-commit"
+            ]):
+                with self.assertRaisesRegex(ValueError, "different commit"):
+                    release.verify_artifacts(SimpleNamespace(output=root, ref="v3.5.0"))
+
 
 if __name__ == "__main__":
     unittest.main()

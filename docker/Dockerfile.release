@@ -1,0 +1,17 @@
+FROM mambaorg/micromamba:2.9.0
+ARG VERSION
+ARG REVISION
+LABEL org.opencontainers.image.title="MetaPathways" \
+      org.opencontainers.image.description="Core metagenomic annotation pipeline" \
+      org.opencontainers.image.source="https://github.com/hallamlab/MetaPathways" \
+      org.opencontainers.image.url="https://github.com/hallamlab/MetaPathways" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${REVISION}"
+COPY --chown=$MAMBA_USER:$MAMBA_USER package/ /tmp/release-package/
+RUN micromamba install --yes --name base --file /tmp/release-package/explicit.txt && \
+    micromamba clean --all --yes && rm -rf /tmp/release-package
+# Apptainer exec bypasses Docker's entrypoint; expose the environment there too.
+ENV PATH="/opt/conda/bin:${PATH}" PYTHONNOUSERSITE=1
+WORKDIR /work
+CMD ["metapathways", "--help"]

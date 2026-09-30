@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prepare, build, validate, and publish MetaPathways releases.
 
-Run with --help. Only 'publish' and 'upload-conda' write to remote services.
+Run with --help. 'publish', 'github-release', and 'upload-conda' write to remote services.
 """
 import argparse
 import ast
@@ -52,7 +52,11 @@ def run(*args, cwd=ROOT, capture=False, log=None, env=None):
 
 
 def version(root=ROOT):
-    tree = ast.parse((root / "metapathways/_version.py").read_text())
+    return version_from_text((root / "metapathways/_version.py").read_text())
+
+
+def version_from_text(text):
+    tree = ast.parse(text)
     for node in tree.body:
         if isinstance(node, ast.Assign) and any(
             isinstance(t, ast.Name) and t.id == "__version__" for t in node.targets
@@ -212,9 +216,22 @@ def build(args):
 def verify_artifacts(args):
     output = Path(args.output).resolve()
     manifest = json.loads((output / "manifest.json").read_text())
-    if manifest["version"] != version():
-        raise ValueError("Artifact version differs from checkout.")
-    if manifest["commit"] != run("git", "rev-parse", "HEAD", capture=True):
+    ref = getattr(args, "ref", None)
+    if ref:
+        expected_version = valid_version(ref)
+        if ref != f"v{expected_version}":
+            raise ValueError("Recovery requires a release tag such as v3.5.0.")
+        revision = f"refs/tags/{ref}"
+        source = run("git", "show", f"{revision}:metapathways/_version.py", capture=True)
+        if version_from_text(source) != expected_version:
+            raise ValueError("Release tag differs from its source version.")
+        expected_commit = run("git", "rev-parse", f"{revision}^{{commit}}", capture=True)
+    else:
+        expected_version = version()
+        expected_commit = run("git", "rev-parse", "HEAD", capture=True)
+    if manifest["version"] != expected_version:
+        raise ValueError("Artifact version differs from the requested source.")
+    if manifest["commit"] != expected_commit:
         raise ValueError("Artifacts were built from a different commit.")
     expected = set(manifest["files"]) | {"manifest.json", "SHA256SUMS"}
     if {p.name for p in output.iterdir()} != expected:
@@ -237,6 +254,80 @@ def verify_artifacts(args):
         raise ValueError("Validation provenance differs from manifest.")
     print("Artifact checksums, revision, and integration receipt verified.")
     return output, manifest
+
+
+def github_release_record(repo, tag):
+    # Listing includes drafts, so interrupted first uploads can be resumed.
+    raw = run("gh", "api", "--paginate", "--slurp",
+              f"repos/{repo}/releases?per_page=100", capture=True)
+    for page in json.loads(raw):
+        for item in page:
+            if item["tag_name"] == tag:
+                return item
+    return None
+
+
+def github_asset_digest(repo, asset):
+    recorded = asset.get("digest") or ""
+    if recorded.startswith("sha256:"):
+        return recorded.removeprefix("sha256:")
+    # Older assets may not have an API digest. Download privately to hash them.
+    result = subprocess.run(
+        ["gh", "api", "-H", "Accept: application/octet-stream",
+         f"repos/{repo}/releases/assets/{asset['id']}"],
+        check=True, stdout=subprocess.PIPE)
+    return hashlib.sha256(result.stdout).hexdigest()
+
+
+def github_assets(output, value, directory):
+    """Keep zero-byte logs inside a reproducible, complete release ZIP."""
+    files = sorted(output.iterdir())
+    bundle = Path(directory) / f"metapathways-{value}-release.zip"
+    with zipfile.ZipFile(bundle, "w", compression=zipfile.ZIP_STORED) as archive:
+        for path in files:
+            info = zipfile.ZipInfo(path.name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.create_system = 3
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, path.read_bytes())
+    # GitHub rejects zero-byte standalone release assets with Bad Content-Length.
+    return [path for path in files if path.stat().st_size > 0] + [bundle]
+
+
+def github_release(args):
+    args.ref = args.tag
+    output, manifest = verify_artifacts(args)
+    repo = os.environ.get("GH_REPO", REPOSITORY)
+    tag = args.tag
+    record = github_release_record(repo, tag)
+    if record is None:
+        flags = ["--prerelease"] if "rc" in manifest["version"] else []
+        run("gh", "release", "create", tag, "--repo", repo, "--verify-tag",
+            "--draft", "--title", f"MetaPathways {tag}", "--generate-notes",
+            "--notes", "The complete release ZIP includes all artifacts, validation logs "
+            "(including empty success logs), and SHA256SUMS.", *flags)
+        record = github_release_record(repo, tag)
+    if record is None:
+        raise ValueError("GitHub did not return the newly created draft release.")
+    with tempfile.TemporaryDirectory(prefix="metapathways-upload-") as temp:
+        assets = github_assets(output, manifest["version"], temp)
+        existing = {item["name"]: item for item in record["assets"]}
+        for path in assets:
+            if path.name in existing:
+                if github_asset_digest(repo, existing[path.name]) != digest(path):
+                    raise ValueError(f"Existing GitHub asset differs: {path.name}; refusing to overwrite.")
+                print(f"Already uploaded and verified: {path.name}")
+            else:
+                run("gh", "release", "upload", tag, path, "--repo", repo)
+        record = github_release_record(repo, tag)
+        if record is None:
+            raise ValueError("Release disappeared during upload.")
+        uploaded = {item["name"]: item for item in record["assets"]}
+        for path in assets:
+            if path.name not in uploaded or github_asset_digest(repo, uploaded[path.name]) != digest(path):
+                raise ValueError(f"Uploaded GitHub asset failed checksum verification: {path.name}")
+        if record["draft"]:
+            run("gh", "release", "edit", tag, "--repo", repo, "--draft=false")
+    print(f"Published and verified {tag}: https://github.com/{repo}/releases/tag/{tag}")
 
 
 def publish(args):
@@ -276,6 +367,11 @@ def upload_conda(args):
     run("anaconda", "upload", "--user", "hallamlab", "--label", label, packages[0])
 
 
+def container_command(args):
+    import containers
+    getattr(containers, args.container_action)(args)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -292,10 +388,22 @@ def main():
     for name, func in [("verify-artifacts", verify_artifacts), ("upload-conda", upload_conda)]:
         p = commands.add_parser(name)
         p.add_argument("--output", default=str(ROOT / "dist/release"))
+        p.add_argument("--ref", help="Verify against this existing release tag instead of HEAD.")
         p.set_defaults(func=func)
+    p = commands.add_parser("github-release", help="Publish or resume a release; preserve empty logs in a ZIP.")
+    p.add_argument("tag")
+    p.add_argument("--output", default=str(ROOT / "dist/release"))
+    p.set_defaults(func=github_release)
     p = commands.add_parser("publish", help="Push dev and its release tag using existing Git credentials.")
     p.add_argument("--remote", default="origin")
     p.set_defaults(func=publish)
+    for command, action in [("container-build", "build"), ("container-push", "push"),
+                            ("container-attach", "attach"), ("quay-description", "description")]:
+        p = commands.add_parser(command)
+        p.add_argument("--output", default=str(ROOT / "dist/release"))
+        p.add_argument("--container-output", default=str(ROOT / "dist/containers"))
+        p.add_argument("--ref", help="Verify against an existing release tag.")
+        p.set_defaults(func=container_command, container_action=action)
     args = parser.parse_args()
     try:
         args.func(args)
