@@ -191,6 +191,31 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: python scripts/release.py container-build --ref "$RELEASE_TAG"
+      - name: Scan container for fixable high and critical vulnerabilities
+        run: |
+          mkdir -p dist/security
+          scanner_dir="$RUNNER_TEMP/metapathways-trivy"
+          mkdir -p "$scanner_dir"
+          curl --fail --silent --show-error --location \
+            https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz \
+            --output "$scanner_dir/trivy.tar.gz"
+          printf '%s  %s\n' \
+            2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a \
+            "$scanner_dir/trivy.tar.gz" | sha256sum --check
+          tar -xzf "$scanner_dir/trivy.tar.gz" -C "$scanner_dir" trivy
+          image=$(python -c 'import json; print(json.load(open("dist/containers/container-validation.json"))["image_id"])')
+          "$scanner_dir/trivy" image --scanners vuln \
+            --format json --output dist/security/trivy.json "$image"
+          "$scanner_dir/trivy" image --scanners vuln \
+            --ignore-unfixed --severity HIGH,CRITICAL --exit-code 1 \
+            --format json --output dist/security/fixable-high-critical.json "$image"
+      - name: Retain vulnerability scan report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: container-security-report
+          path: dist/security/
+          if-no-files-found: ignore
       - name: Retain container assets and diagnostics
         if: always()
         uses: actions/upload-artifact@v7.0.1

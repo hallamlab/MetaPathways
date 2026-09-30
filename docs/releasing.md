@@ -231,3 +231,9 @@ Pip is a build-time tool, not a dependency of the packaged runtime. The validate
 runtime is created with Conda's automatic pip insertion disabled; dependency
 exports use Python package metadata. This avoids shipping vulnerable libraries
 vendored inside pip while leaving normal package-building tools available to CI.
+
+Before publishing containers, CI runs checksum-pinned Trivy 0.74.0 directly on
+the runner and blocks publication when it finds a high/critical vulnerability
+for which a fix is available. Both the full scan and filtered gate reports are retained as
+`container-security-report`. Unfixed distribution advisories need separate
+review; passing this gate does not mean the image has no vulnerabilities.
