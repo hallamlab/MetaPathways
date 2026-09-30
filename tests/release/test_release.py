@@ -22,6 +22,14 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 release.valid_version(value)
 
+    def test_build_revision_keeps_application_version(self):
+        self.assertEqual(release.release_tag("3.5.1", 1), "v3.5.1-build1")
+        self.assertEqual(release.tag_version("v3.5.1-build1"), ("3.5.1", 1))
+        self.assertEqual(release.tag_version("v3.5.1"), ("3.5.1", 0))
+        for bad in ["3.5.1", "v3.5.1-build0", "v3.5.1-build01", "v3.5.1-build-1"]:
+            with self.assertRaises(ValueError):
+                release.tag_version(bad)
+
     def test_preparation_preserves_unrelated_changes(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -88,7 +96,7 @@ class ReleaseTests(unittest.TestCase):
     def test_existing_remote_tag_never_overwritten(self):
         responses = ["", "dev", "git@github.com:hallamlab/MetaPathways.git",
                      "abc refs/tags/v3.5.0"]
-        with patch.object(release, "version", return_value="3.5.0"), patch.object(
+        with patch.object(release, "recipe_build", return_value=0), patch.object(release, "version", return_value="3.5.0"), patch.object(
             release, "run", side_effect=responses
         ) as run:
             with self.assertRaisesRegex(ValueError, "already exists remotely"):
@@ -104,6 +112,8 @@ class ReleaseTests(unittest.TestCase):
             subprocess.run(["git", "init", "-b", "dev", str(checkout)], check=True,
                            stdout=subprocess.DEVNULL)
             (checkout / "README.md").write_text("Release fixture\n")
+            (checkout / "conda_recipe").mkdir()
+            (checkout / "conda_recipe/meta_template.yaml").write_text("build:\n  number: 0\n")
             for command in [
                 ["git", "add", "."],
                 ["git", "-c", "user.name=Release Test", "-c", "user.email=test@example.invalid",
@@ -148,7 +158,7 @@ class ReleaseTests(unittest.TestCase):
             sums = dict(manifest["files"], **{"manifest.json": release.digest(root / "manifest.json")})
             (root / "SHA256SUMS").write_text(
                 "".join(f"{sha}  {name}\n" for name, sha in sorted(sums.items())))
-            with patch.object(release, "version", return_value="3.5.0"), patch.object(
+            with patch.object(release, "recipe_build", return_value=0), patch.object(release, "version", return_value="3.5.0"), patch.object(
                 release, "run", return_value="abc"
             ):
                 release.verify_artifacts(SimpleNamespace(output=root))

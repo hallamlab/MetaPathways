@@ -9,7 +9,7 @@ source:
 build:
   # The bundled FAST/metacount executables target Linux x86-64.
   skip: true  # [not (linux and x86_64)]
-  number: 0
+  number: 1
   script: "{{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv"
   entry_points:
 <ENTRY>
@@ -24,9 +24,9 @@ test:
 
 requirements:
   host:
-    - python=3.10
+    - python=3.11
     - pip
-    - setuptools <81
+    - setuptools >=83,<85
     - wheel
   run:
     - libgcc

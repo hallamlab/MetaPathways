@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5.1-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![Generic badge](https://img.shields.io/badge/Codebase-MetaPathways-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Generic badge](https://img.shields.io/badge/Version-3.5.1-blue.svg)](https://hallam.microbiology.ubc.ca/MetaPathways/) [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 # MetaPathways
 
@@ -38,7 +38,7 @@ docker pull quay.io/hallamlab/metapathways
 
 Tagged releases validate the Conda package and containers through the
 [release workflow](docs/releasing.md).
-To run this checkout on Linux with Python 3.10:
+To run this checkout on Linux with Python 3.11:
 
 ```bash
 git clone https://github.com/hallamlab/MetaPathways.git

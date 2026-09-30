@@ -6,7 +6,7 @@ MetaPathways is a pipeline for processing and annotating assembled metagenomic s
 - **Releases and Apptainer downloads:** https://github.com/hallamlab/MetaPathways/releases
 - **Issues:** https://github.com/hallamlab/MetaPathways/issues
 - **License:** MIT
-- **Platform:** Linux x86-64 (amd64), Python 3.10
+- **Platform:** Linux x86-64 (amd64), Python 3.11
 
 Release containers contain the validated MetaPathways Conda package and its pinned dependency versions. They include the core annotation pipeline; optional MAGSplitter, camelot-frs, and licensed Pathway Tools require separate installation.
 

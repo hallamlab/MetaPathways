@@ -56,7 +56,7 @@ def build(args):
         shutil.copy2(source / package, context / "package" / package)
         (context / "package/explicit.txt").write_text(
             explicit_lock((source / "conda-explicit.txt").read_text(), package))
-        release.run("docker", "build", "--platform", "linux/amd64", "--build-arg", f"VERSION={value}",
+        release.run("docker", "build", "--pull", "--no-cache", "--platform", "linux/amd64", "--build-arg", f"VERSION={value}",
                     "--build-arg", f"REVISION={manifest['commit']}", "--tag", image, context,
                     log=output / "docker-build.log")
         integration = work / "integration"
@@ -81,7 +81,8 @@ def build(args):
                     log=output / "apptainer-version.log")
         release.run("apptainer", "exec", "--cleanenv", sif, "metapathways", "run", "--help",
                     log=output / "apptainer-cli.log")
-        receipt.update(version=value, commit=manifest["commit"], package=package,
+        receipt.update(version=value, release_tag=manifest.get("release_tag", f"v{value}"),
+                       commit=manifest["commit"], package=package,
                        package_sha256=release.digest(source / package), image=image,
                        image_id=release.run("docker", "image", "inspect", "--format", "{{.Id}}", image, capture=True),
                        sif=sif.name, sif_sha256=release.digest(sif),
@@ -110,6 +111,8 @@ def verify(args):
     receipt = json.loads((output / "container-validation.json").read_text())
     if (receipt["commit"], receipt["version"]) != (manifest["commit"], manifest["version"]):
         raise ValueError("Container source differs from release")
+    if receipt.get("release_tag", f"v{receipt['version']}") != manifest.get("release_tag", f"v{manifest['version']}"):
+        raise ValueError("Container release tag differs from package release")
     if manifest["files"].get(receipt["package"]) != receipt["package_sha256"]:
         raise ValueError("Container package differs from release")
     if set(receipt["successful_stages"]) != release.STAGES or set(receipt["nonempty_outputs"]) != set(release.OUTPUTS):
@@ -125,7 +128,9 @@ def push(args):
     if release.run("docker", "image", "inspect", "--format", "{{.Id}}", image, capture=True) != receipt["image_id"]:
         raise ValueError("Local image changed since validation")
     value = receipt["version"]
-    tags = [value, f"v{value}"] + ([] if "rc" in value else ["latest"])
+    tag = receipt.get("release_tag", f"v{value}")
+    tags = list(dict.fromkeys([tag.removeprefix("v"), tag, value, f"v{value}"]))
+    tags += [] if "rc" in value else ["latest"]
     for tag in tags:
         target = f"{IMAGE}:{tag}"
         release.run("docker", "tag", image, target)
@@ -135,7 +140,7 @@ def push(args):
 def attach(args):
     output, receipt = verify(args)
     repo = os.environ.get("GH_REPO", release.REPOSITORY)
-    tag = f"v{receipt['version']}"
+    tag = receipt.get("release_tag", f"v{receipt['version']}")
     record = release.github_release_record(repo, tag)
     if record is None or record["draft"]:
         raise ValueError("Publish the GitHub release first")

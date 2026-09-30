@@ -6,7 +6,7 @@ that environment. The first stable release from this checkout is **3.5.0**.
 Use **3.5.1**, **3.5.2**, etc. for subsequent patch releases, or **3.5.1rc1**
 for a preview. Tags have a leading `v`; package versions do not.
 
-The supported release package targets **Linux x86-64 / Python 3.10**.
+The supported release package targets **Linux x86-64 / Python 3.11**.
 It includes the core annotation pipeline and bundled FAST/metacount executables.
 MAGSplitter, camelot-frs, and licensed Pathway Tools remain separately installed
 optional dependencies. The release build does not download moving Git branches
@@ -203,3 +203,26 @@ Docker usage and Apptainer pull/exec examples are in `docker/README.quay.md`.
 The older Makefile Docker targets and `docker/Dockerfile_ptools` are legacy
 manual paths; release CI uses `scripts/containers.py` and `Dockerfile.release`.
 Licensed Pathway Tools is not included in public release containers.
+
+## Security rebuilds without changing the application version
+
+The security rebuild of MetaPathways 3.5.1 uses Python 3.11, Snakemake minimal
+9.27.0, urllib3 >=2.8.0, and setuptools >=83. The minimal Snakemake distribution
+provides the local CLI used for database preparation without the legacy stopit
+runtime dependency. Container builds refresh the base image and apply Debian
+package updates before installing the validated Conda environment.
+
+A nonzero Conda build number produces a separate Git tag and release, for example
+`v3.5.1-build1`; the application version remains `3.5.1`. This preserves the
+original tag and published files. Prepare it with:
+
+```bash
+python scripts/release.py prepare 3.5.1 --build-number 1
+# Commit the reviewed changes, then:
+python scripts/release.py publish
+```
+
+Quay receives `3.5.1-build1` and `v3.5.1-build1` tags as well as updated `3.5.1`,
+`v3.5.1`, and stable `latest` aliases. The new GitHub release carries its own SIF,
+archives, checksums, and dependency exports. Conda gets a new build rather than
+an overwritten package. For reproducible use, choose a build tag or image digest.

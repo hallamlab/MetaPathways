@@ -73,6 +73,24 @@ def valid_version(value):
     return value
 
 
+def recipe_build(text):
+    match = re.search(r"^  number: ([0-9]+)$", text, re.M)
+    if not match:
+        raise ValueError("Recipe must declare an integer build number.")
+    return int(match.group(1))
+
+
+def release_tag(value, number):
+    return f"v{value}" + (f"-build{number}" if number else "")
+
+
+def tag_version(tag):
+    match = re.fullmatch(r"v(.+?)(?:-build([1-9][0-9]*))?", tag)
+    if not match:
+        raise ValueError("Expected a release tag such as v3.5.1 or v3.5.1-build1.")
+    return valid_version(match.group(1)), int(match.group(2) or 0)
+
+
 def clean():
     if run("git", "status", "--porcelain", "--untracked-files=normal", capture=True):
         raise ValueError("Commit or stash your changes first; releases use committed source only.")
@@ -132,7 +150,9 @@ def validate_run(directory):
 def build(args):
     clean()
     value = version()
-    if args.tag and args.tag != f"v{value}":
+    number = recipe_build((ROOT / "conda_recipe/meta_template.yaml").read_text())
+    tag = release_tag(value, number)
+    if args.tag and args.tag != tag:
         raise ValueError(f"Tag {args.tag!r} does not match source version v{value}")
     commit = run("git", "rev-parse", "HEAD", capture=True)
     if args.tag and run("git", "rev-parse", f"{args.tag}^{{commit}}", capture=True) != commit:
@@ -191,6 +211,13 @@ def build(args):
                 "from metapathways._version import __version__; "
                 f"assert __version__ == {value!r}, __version__",
                 cwd=testdir, log=output / "version-check.log")
+            run(*runner, "python", "-c",
+                "import sys; from importlib.metadata import version; from packaging.version import Version; "
+                "assert sys.version_info >= (3, 11); "
+                "assert Version(version('urllib3')) >= Version('2.8.0'); "
+                "assert Version(version('setuptools')) >= Version('83.0.0'); "
+                "print({n: version(n) for n in ['urllib3', 'setuptools']})",
+                cwd=testdir, log=output / "security-dependencies.log")
             run(*runner, "metapathways", "version", cwd=testdir,
                 log=output / "cli-version.log")
             run(*runner, "metapathways", "build_db", "--test", cwd=testdir,
@@ -202,12 +229,12 @@ def build(args):
                 shutil.copy2(testdir / "test/k12_test" / name, output / name)
             shutil.copy2(testdir / "test/global_errors_warnings.txt", output)
             (output / "conda-explicit.txt").write_text(
-                run("conda", "list", "--prefix", environment, "--explicit", capture=True) + "\n")
+                run("conda", "list", "--prefix", environment, "--explicit", "--sha256", capture=True) + "\n")
             (output / "pip-freeze.txt").write_text(
                 run(*runner, "python", "-m", "pip", "freeze", capture=True) + "\n")
     (output / "validation.json").write_text(json.dumps(validation, indent=2) + "\n")
     hashes = {p.name: digest(p) for p in sorted(output.iterdir()) if p.is_file()}
-    manifest = {"version": value, "commit": commit, "files": hashes}
+    manifest = {"version": value, "build_number": number, "release_tag": tag, "commit": commit, "files": hashes}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     hashes["manifest.json"] = digest(output / "manifest.json")
     (output / "SHA256SUMS").write_text("".join(f"{sha}  {name}\n" for name, sha in sorted(hashes.items())))
@@ -219,11 +246,13 @@ def verify_artifacts(args):
     manifest = json.loads((output / "manifest.json").read_text())
     ref = getattr(args, "ref", None)
     if ref:
-        expected_version = valid_version(ref)
-        if ref != f"v{expected_version}":
-            raise ValueError("Recovery requires a release tag such as v3.5.0.")
+        expected_version, expected_build = tag_version(ref)
         revision = f"refs/tags/{ref}"
         source = run("git", "show", f"{revision}:metapathways/_version.py", capture=True)
+        if expected_build:
+            recipe = run("git", "show", f"{revision}:conda_recipe/meta_template.yaml", capture=True)
+            if recipe_build(recipe) != expected_build or manifest.get("build_number") != expected_build:
+                raise ValueError("Build revision differs from release tag.")
         if version_from_text(source) != expected_version:
             raise ValueError("Release tag differs from its source version.")
         expected_commit = run("git", "rev-parse", f"{revision}^{{commit}}", capture=True)
@@ -234,6 +263,8 @@ def verify_artifacts(args):
         raise ValueError("Artifact version differs from the requested source.")
     if manifest["commit"] != expected_commit:
         raise ValueError("Artifacts were built from a different commit.")
+    if ref and manifest.get("release_tag", ref) != ref:
+        raise ValueError("Artifact release tag differs from requested tag.")
     expected = set(manifest["files"]) | {"manifest.json", "SHA256SUMS"}
     if {p.name for p in output.iterdir()} != expected:
         raise ValueError("Artifact directory contains missing or unverified files.")
@@ -347,7 +378,7 @@ def publish(args):
         f"ssh://git@github.com/{REPOSITORY}",
     ):
         raise ValueError(f"Remote must target {REPOSITORY}; got {url}")
-    tag = f"v{value}"
+    tag = release_tag(value, recipe_build((ROOT / "conda_recipe/meta_template.yaml").read_text()))
     if run("git", "ls-remote", args.remote, f"refs/tags/{tag}", capture=True):
         raise ValueError(f"{tag} already exists remotely. Rerun its CI job or prepare a new version.")
     existing = subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{tag}"], cwd=ROOT)
