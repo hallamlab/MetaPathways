@@ -74,7 +74,6 @@ if __name__ == "__main__":
         entry_points={"console_scripts": ENTRY_POINTS},
         long_description=read("README.md"),
         include_package_data=True,
-        data_files=[('data_file_test', ['README.md', 'Makefile'])],
         classifiers=CLASSIFIERS,
         extras_require={
             "test": ["pytest", "pytest-cov", "tox"],

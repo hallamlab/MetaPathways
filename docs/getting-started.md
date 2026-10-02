@@ -95,3 +95,20 @@ Continue with the [reviewer walkthrough](reviewer-test.md), [command cookbook](c
 | Manifest | A TSV listing sample IDs and exact input paths |
 | Receipt | MP's record used to decide whether a completed task can be reused |
 | TSV / CSV | Table with tab-separated / comma-separated fields |
+
+## Wheel-build cleanup errors on shared filesystems
+
+If pip fails with `Directory not empty` while removing `build/bdist.../wheel`, the installation did not complete. This is a build-directory cleanup failure, not an analysis or Slurm error. Update the checkout, then build from a clean snapshot in node-local `/tmp` using your activated MP environment:
+
+```bash
+git pull --ff-only
+mp_build_dir=$(mktemp -d /tmp/metapathways-build.XXXXXX)
+git archive HEAD | tar -x -C "$mp_build_dir"
+python -m pip install --no-cache-dir --no-deps --no-build-isolation "$mp_build_dir"
+```
+
+Only continue to the workflow after pip reports successful installation. The snapshot uses committed files from the checkout; it excludes stale build products and uncommitted edits. Your existing MPDB, SIF, inputs and outputs stay in place. The temporary build directory can be removed after a successful installation:
+
+```bash
+rm -rf -- "$mp_build_dir"
+```
