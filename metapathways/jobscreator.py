@@ -942,6 +942,7 @@ class ContextCreator:
         context.outputs = {
             'output_results_annotation_table_dir':s.output_results_annotation_table_dir,
             'output_annot_table':output_annot_table,
+            'annotation_taxonomy': s.output_results_annotation_table_dir + PATHDELIM + s.sample_name + '.annotation_taxonomy.tsv',
         }
 
         refdbs = self.get_dbs()
@@ -960,7 +961,10 @@ class ContextCreator:
                                         context.outputs['output_results_annotation_table_dir'], \
                                         context.inputs['ncbi_taxonomy_tree'], \
                                      )                             
-        cmd = cmd + " -D " + s.blast_results_dir + " -s " + s.sample_name + " -a "  + s.algorithm
+        cmd = cmd + " -s " + s.sample_name + " -a " + s.algorithm
+        for dbname in refdbs:
+            parsed_file = s.blast_results_dir + PATHDELIM + s.sample_name + "." + dbname + "." + s.algorithm + "out.parsed.txt"
+            cmd += " -d " + dbname + " -b " + parsed_file
 
         #add the command now, remove to disable in a hackish way
         context.commands = [cmd]

@@ -1,0 +1,18 @@
+name: Feature request
+description: Suggest an improvement to MetaPathways or its explorer.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like to do?
+      description: Describe the task and what currently makes it difficult.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested improvement
+      description: Describe the behavior or output you would find useful.
+    validations:
+      required: true

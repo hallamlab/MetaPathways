@@ -14,6 +14,8 @@ The input bundle is about **2.4 MiB**, separate from software and reference-data
 
 These are real subsets of simulated CAMI reads and gold-standard assemblies, not duplicated samples. Bins contain small genome fragments, not complete genomes or recovered MAGs. We selected abundant contigs and matching reads to exercise the interfaces. Do not use these coverage-biased subsets to assess biological accuracy, abundance, genome completeness, pathway recovery or publication performance.
 
+Protein taxonomy supports SwissProt (including the small reviewer database), UniRef and eggNOG. Each annotation row reports the taxon of its own reference hit in `taxonomy`; `lca_taxonomy` is computed from score-qualified hits in that same database, with support counted independently for each database. The primary ORF row follows its selected annotation's `reference_db` and target. No database priority or cross-database fallback is used. These describe reference-hit evidence, not a definitive organism assignment for the query. Unsupported databases report `Not computed`; missing or unknown taxon IDs in supported databases report `Unclassified`. An actual LCA of `root` remains `root`. SILVA rRNA taxonomy is separate. Existing outputs need annotation-table regeneration to gain these fields.
+
 ## 1. Install MP and prepare the small reference database
 
 Follow [getting started](getting-started.md), including environment activation. The examples assume your checkout is `~/src/MetaPathways`; substitute your actual path if different.
@@ -101,3 +103,7 @@ Tiny genome fragments and sparse annotation references may yield few or no pathw
 The bundle's [README](../metapathways/regtests/cami_reviewer/README.md), `provenance.json`, and `validation.json` describe selection, original sample paths, retained contig regions, matching read counts, hashes, and checks performed. The preparation script is [scripts/prepare_cami_reviewer.py](../scripts/prepare_cami_reviewer.py). No Pathway Tools software or MetaCyc sequence/database material is included.
 
 Input validation covers all manifests, automatic discovery, intact mate pairing, complete contig-to-genome maps and gene prediction on every retained contig. It does not substitute for the reviewer executing the full workflow above. See [benchmarking](benchmarking.md) before collecting publication statistics from the complete CAMI samples.
+
+## Recorded three-sample validation
+
+The 2026-10-02 local SwissProt reviewer run completed all 51 tasks successfully. The [audit record](validation/reviewer-2026-10-02.json) confirms all 393 CDS records were retained, paired read identifiers matched, all 421 gene/RNA abundance records and 9 contig records matched their source measurements, and taxonomy remained tied to each reference database and target. Each sample produced three CAMI genome bins. The 28 report placeholders were RNA features, not missing CDS annotations. Skin_28 had no rRNA queries, explaining its two BLAST empty-query warnings. This run used `--skip_ptools`; it does not establish successful PGDB construction or validate full-scale/HPC performance.

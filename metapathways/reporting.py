@@ -13,7 +13,7 @@ import tempfile
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 SCHEMA = '''
 PRAGMA foreign_keys=ON;
 CREATE TABLE samples(sample_id TEXT PRIMARY KEY, output_path TEXT NOT NULL);
@@ -21,11 +21,14 @@ CREATE TABLE sources(source_id INTEGER PRIMARY KEY, path TEXT UNIQUE, bytes INTE
 CREATE TABLE contigs(sample_id TEXT, contig_id TEXT, original_id TEXT, length INTEGER,
  PRIMARY KEY(sample_id,contig_id), FOREIGN KEY(sample_id) REFERENCES samples);
 CREATE TABLE orfs(sample_id TEXT, orf_id TEXT, contig_id TEXT, length INTEGER, start INTEGER, end INTEGER,
- strand TEXT, target TEXT, product TEXT, taxonomy TEXT, annotation_present INTEGER NOT NULL DEFAULT 0,
+ strand TEXT, target TEXT, product TEXT, taxonomy TEXT, reference_db TEXT, lca_taxonomy TEXT, annotation_present INTEGER NOT NULL DEFAULT 0,
  PRIMARY KEY(sample_id,orf_id), FOREIGN KEY(sample_id,contig_id) REFERENCES contigs);
 CREATE TABLE annotations(annotation_id INTEGER PRIMARY KEY, sample_id TEXT, orf_id TEXT,
  reference_db TEXT, target TEXT, product TEXT, score REAL, ec TEXT, reaction TEXT, source_id INTEGER,
  FOREIGN KEY(sample_id,orf_id) REFERENCES orfs, FOREIGN KEY(source_id) REFERENCES sources);
+CREATE TABLE annotation_taxonomy(sample_id TEXT, orf_id TEXT, reference_db TEXT, target TEXT,
+ taxid TEXT, taxonomy TEXT, lca_taxonomy TEXT, source_id INTEGER,
+ PRIMARY KEY(sample_id,orf_id,reference_db,target), FOREIGN KEY(source_id) REFERENCES sources);
 CREATE TABLE annotation_terms(annotation_id INTEGER, term_type TEXT, term TEXT,
  PRIMARY KEY(annotation_id,term_type,term), FOREIGN KEY(annotation_id) REFERENCES annotations);
 CREATE TABLE entities(sample_id TEXT, entity_id TEXT, entity_type TEXT, pathway_status TEXT, last_task_status TEXT,
@@ -52,6 +55,11 @@ CREATE TABLE pathway_orfs(sample_id TEXT, entity_id TEXT, pathway_id TEXT, orf_i
 CREATE TABLE abundance(sample_id TEXT, feature_type TEXT, feature_id TEXT, measurement TEXT, value REAL,
  source_id INTEGER, PRIMARY KEY(sample_id,feature_type,feature_id,measurement),
  FOREIGN KEY(sample_id) REFERENCES samples, FOREIGN KEY(source_id) REFERENCES sources);
+CREATE TABLE abundance_explorer(sample_id TEXT, feature_type TEXT, feature_id TEXT,
+ orf_id TEXT, contig_id TEXT, length_bp REAL, count REAL, mean_coverage REAL,
+ coverage_variance REAL, trimmed_mean_coverage REAL, rpkm REAL, tpm REAL, source_id INTEGER,
+ PRIMARY KEY(sample_id,feature_type,feature_id),
+ FOREIGN KEY(sample_id) REFERENCES samples, FOREIGN KEY(source_id) REFERENCES sources);
 CREATE TABLE issues(issue_id INTEGER PRIMARY KEY, sample_id TEXT, source TEXT, message TEXT);
 CREATE TABLE files(path TEXT PRIMARY KEY, bytes INTEGER, modified_utc TEXT);
 CREATE TABLE execution(run_id TEXT, command TEXT, task TEXT, label TEXT, status TEXT,
@@ -66,9 +74,14 @@ CREATE VIEW orf_explorer AS
  SELECT o.*, c.original_id AS original_contig_id, c.length AS contig_length
  FROM orfs o LEFT JOIN contigs c USING(sample_id,contig_id);
 CREATE VIEW annotation_explorer AS
- SELECT a.*, o.contig_id, o.taxonomy, c.original_id AS original_contig_id
+ SELECT a.*, o.contig_id, t.taxid,
+ COALESCE(t.taxonomy, 'Not computed') AS taxonomy,
+ COALESCE(t.lca_taxonomy, 'Not computed') AS lca_taxonomy,
+ t.source_id AS taxonomy_source_id, c.original_id AS original_contig_id
  FROM annotations a JOIN orfs o USING(sample_id,orf_id)
- LEFT JOIN contigs c USING(sample_id,contig_id);
+ LEFT JOIN annotation_taxonomy t ON t.sample_id=a.sample_id AND t.orf_id=a.orf_id
+ AND t.reference_db=a.reference_db AND t.target=a.target
+ LEFT JOIN contigs c ON c.sample_id=o.sample_id AND c.contig_id=o.contig_id;
 CREATE VIEW pathway_explorer AS
  SELECT p.*, e.entity_type,
  (SELECT COUNT(*) FROM pathway_orfs g WHERE g.sample_id=p.sample_id AND g.entity_id=p.entity_id
@@ -90,7 +103,7 @@ VIEWS = {
  'samples': ('Samples', 'One row per sample output directory.'),
  'contigs': ('Contigs', 'One row per sample and contig; original identifiers come from the mapping file.'),
  'orf_explorer': ('ORFs and taxonomy', 'One row per sample and ORF; the primary annotation and reported taxonomy are preserved.'),
- 'annotation_explorer': ('Functional annotations', 'One row per reference annotation record; an ORF can have multiple records.'),
+ 'annotation_explorer': ('Functional annotations', 'One row per reference annotation; taxonomy belongs to this database and target. LCA uses only hits from this database.'),
  'annotation_terms': ('EC and reaction terms', 'One row per annotation and EC/reaction term; join by annotation_id.'),
  'entities': ('Communities and MAGs', 'Pathway output availability and recorded task status; unavailable is not biological absence.'),
  'contig_mags': ('Contig-to-MAG membership', 'Explicit original contig-to-MAG assignments, joined through the contig identifier map.'),
@@ -99,7 +112,8 @@ VIEWS = {
  'orf_groups': ('Collapsed ORF groups', 'Explicit representative/member mappings from ptools/orf_map.txt; no membership is inferred.'),
  'pathway_explorer': ('Pathways', 'One row per sample, community/MAG and pathway. Reported scores are not recalculated.'),
  'pathway_gene_explorer': ('Pathway genes', 'One row per explicit pathway/ORF association, without multiplying by reference hits.'),
- 'abundance': ('Read abundance', 'One row per feature and original measurement column. Values are copied, not recalculated or validated.'),
+ 'abundance_explorer': ('Read abundance', 'One row per sample and feature. Count and normalization follow the source tool; blank measurements are unavailable, not zero.'),
+ 'abundance': ('Read abundance: raw measurements', 'Original measurement names and values, one row per measurement; use Read abundance for the wide table.'),
  'execution': ('Execution history', 'Every retained invocation; repeated or reused tasks are not independent biological results.'),
  'issues': ('Import notes', 'Missing files, unmatched identifiers and other limitations detected while reading outputs.'),
  'sources': ('Indexed sources', 'Relative paths and SHA-256 checksums of the files used to build the database.'),
@@ -204,9 +218,16 @@ class Importer:
                 contig = r['Contig_Name']
                 self.db.execute('INSERT OR IGNORE INTO contigs(sample_id,contig_id,length) VALUES(?,?,?)',
                                 (s, contig, number(r['Contig_length'], True)))
-                self.db.execute('INSERT INTO orfs VALUES(?,?,?,?,?,?,?,?,?,?,1)',
+                self.db.execute('INSERT INTO orfs VALUES(?,?,?,?,?,?,?,?,?,?,?,?,1)',
                     (s, r['ORF_ID'], contig, number(r['ORF_length'], True), number(r['start'], True),
-                     number(r['end'], True), r['strand'], r['target'], r['product'], r['taxonomy']))
+                     number(r['end'], True), r['strand'], r['target'], r['product'], r['taxonomy'], r.get('reference_db'), r.get('lca_taxonomy')))
+        taxonomy = self.one(s, annotation_dir, '*.annotation_taxonomy.tsv', 'per-reference protein taxonomy')
+        if taxonomy:
+            source_id = self.source(taxonomy, 'per-reference protein taxonomy')
+            for r in rows(taxonomy):
+                self.db.execute('INSERT INTO annotation_taxonomy VALUES(?,?,?,?,?,?,?,?)',
+                    (s, r['orf_id'], r['reference_db'], r['target'], r['taxid'],
+                     r['taxonomy'], r['lca_taxonomy'], source_id))
         # EC_RXN_map is the richer form of .1.txt; do not ingest both and duplicate hits.
         hits = self.one(s, annotation_dir, '*.EC_RXN_map.tsv', 'reference annotation and EC/reaction mapping')
         if hits is None:
@@ -305,9 +326,32 @@ class Importer:
                         self.db.execute('UPDATE orfs SET contig_id=COALESCE(contig_id,?) WHERE sample_id=? AND orf_id=?', (r['seqname'],s,identifier))
                 else:
                     self.db.execute('INSERT OR IGNORE INTO contigs(sample_id,contig_id) VALUES(?,?)', (s,identifier))
-                fields = {k:v for k,v in r.items() if k != 'Contig'} if feature == 'contig' else {k:r[k] for k in ('Count','RPKM','TPM')}
+                fields = {k:v for k,v in r.items() if k != 'Contig'} if feature == 'contig' else {k:r[k] for k in ('Length','Count','RPKM','TPM') if k in r}
                 for key, value in fields.items():
                     self.db.execute('INSERT INTO abundance VALUES(?,?,?,?,?,?)', (s, feature, identifier, key, number(value), source_id))
+                cleaned = {}
+                names = {'Length':'length_bp', 'Read Count':'count', 'Count':'count',
+                         'Mean':'mean_coverage', 'Variance':'coverage_variance',
+                         'Trimmed Mean':'trimmed_mean_coverage', 'RPKM':'rpkm', 'TPM':'tpm'}
+                for key, value in fields.items():
+                    # Only strip recognized terminal metric names, never guess from a path.
+                    metric = next((name for name in sorted(names, key=len, reverse=True)
+                                   if key == name or key.endswith(' ' + name)), None)
+                    if metric is None:
+                        continue  # Original fields remain in the raw measurements table.
+                    column = names[metric]
+                    if column in cleaned:
+                        raise ValueError(f'Multiple abundance columns map to {column} in {path}; cannot combine read sets.')
+                    cleaned[column] = number(value)
+                orf_id = identifier if feature == 'orf' else None
+                contig_id = identifier if feature == 'contig' else r.get('seqname')
+                if feature == 'orf' and not contig_id:
+                    row = self.db.execute('SELECT contig_id FROM orfs WHERE sample_id=? AND orf_id=?', (s, identifier)).fetchone()
+                    contig_id = row[0] if row else None
+                self.db.execute('INSERT INTO abundance_explorer VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                    (s, feature, identifier, orf_id, contig_id,
+                     *(cleaned.get(k) for k in ('length_bp','count','mean_coverage','coverage_variance','trimmed_mean_coverage','rpkm','tpm')),
+                     source_id))
             self.issue(s, path.relative_to(self.root), 'Abundance is copied from source output; this report cannot establish that the original read mapping was correct.')
         missing = self.db.execute('SELECT COUNT(*) FROM orfs WHERE sample_id=? AND annotation_present=0', (s,)).fetchone()[0]
         if missing:
@@ -339,6 +383,32 @@ class Importer:
                     (path.parent.name, path.parent.parent.name, task.get('task',''), task.get('label',''),
                      task.get('status',''), task.get('elapsed_seconds'), task.get('error',''), source))
         self.db.commit()
+
+
+def run_details(root):
+    """Describe the latest workflow summary without mistaking report version for run version."""
+    from itertools import islice
+    import re
+    candidates = list(root.glob('logs/*/*/summary.json')) + list(root.glob('*/logs/*/*/summary.json'))
+    if not candidates:
+        return {}
+    path = max(candidates, key=lambda p: p.stat().st_mtime_ns)
+    summary = json.loads(path.read_text())
+    version = summary.get('mp_version')
+    if not version:
+        # Older summaries did not record a version. Match the specific run ID
+        # in CLI log preambles, rather than borrowing a newer installation version.
+        log_root = path.parent.parent.parent
+        for log in sorted((log_root/'cli').glob('*.log'), reverse=True):
+            with log.open(errors='replace') as stream:
+                preamble = ''.join(islice(stream, 80))
+            if path.parent.name in preamble:
+                match = re.search(r'RUNNING MetaPathways: v([^\s]+)', preamble)
+                if match:
+                    version = match.group(1)
+                    break
+    return dict(mp_version=version, command=path.parent.parent.name,
+                executor=summary.get('resources', {}).get('executor'), status=summary.get('status'))
 
 
 def metadata(db):
@@ -419,6 +489,9 @@ def build_report(output):
                 info = metadata(db)
                 info['output_root'] = str(root)
                 info['sample_paths'] = [str(p) for p in samples]
+                from metapathways._version import __version__
+                info['report_mp_version'] = __version__
+                info['run_details'] = run_details(root)
                 db.execute('ANALYZE'); db.commit()
                 write_report(db, root, reports, info)
             with database.open('rb') as stream:

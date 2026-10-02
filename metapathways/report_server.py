@@ -30,7 +30,7 @@ def connect(database):
 
 
 def query(db, spec, export=False):
-    table = spec.get('table', 'orf_explorer')
+    table = spec.get('table', 'samples')
     if table not in VIEWS:
         raise ValueError('Unknown table')
     details = list(db.execute(f'PRAGMA table_info({identifier(table)})'))

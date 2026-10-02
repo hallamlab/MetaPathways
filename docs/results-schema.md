@@ -48,11 +48,16 @@ Always scope contig and ORF identifiers by `sample_id`. Scope a pathway by `(sam
 | `orf_groups` | A representative/member association | `(sample_id, representative_orf_id, member_orf_id)` from `ptools/orf_map.txt`; includes the representative itself |
 | `pathways` | An entity-specific pathway inference | Composite pathway key; common name, reported score/reaction counts/ORF count and source |
 | `pathway_orfs` | An explicitly reported pathway/ORF association | Composite pathway key plus `orf_id`; duplicates in an ORF list are collapsed |
+| `abundance_explorer` | One feature per sample | Wide read-abundance table: `length_bp`, `count`, `mean_coverage`, `coverage_variance`, `trimmed_mean_coverage`, `rpkm`, `tpm`; ORF/contig links and source |
 | `abundance` | One original measurement for one feature | `(sample_id, feature_type, feature_id, measurement)`; numeric value and source |
 | `execution` | A retained task invocation | Run identifier, command, label, outcome, duration, error and summary file; contains reruns/cache hits too |
 | `sources` | A parsed source file | Relative path, size, SHA-256 and role |
 | `files` | An inventoried output file | Relative path, size and modification time; large raw files are not all checksummed |
 | `issues` | An import limitation or discrepancy | Sample, source and explanation |
+
+Protein taxonomy is preserved in `*.annotation_taxonomy.tsv`, keyed by ORF ID, reference database and target accession. `taxid` and `taxonomy` describe that hit; `lca_taxonomy` summarizes score-qualified hits to that ORF **within the same database**, using independent per-database minimum-support counts. SwissProt uses its `OX` NCBI taxon ID, UniRef its `TaxID`, and eggNOG the numeric prefix of the target identifier. Unknown/missing IDs produce `Unclassified`; unsupported databases produce `Not computed`. Hit taxa do not by themselves identify the query organism. The primary ORF table includes `reference_db` and `lca_taxonomy` for its selected annotation. No taxonomy is borrowed from another reference database.
+
+Report schema version 2 adds the `annotation_taxonomy` table and joins functional rows by sample, ORF, database **and target**. Older results without this file show `Not computed` for functional-row taxonomy instead of borrowing the primary ORF taxonomy. Rebuilding the report alone does not compute missing taxonomy; regenerate annotation tables first.
 
 The primary annotations and the EC/reaction mapping have different meanings. The primary table contains MP's selected target/product and reported taxonomy. `annotations` retains individual database records. It uses `*.EC_RXN_map.tsv` when available, otherwise `*.1.txt`; importing both would duplicate hits. Blank repeated ORF cells in the compact `.1.txt` format are forward-filled within that file.
 
@@ -65,7 +70,7 @@ Abundance retains the original measurement names, including read-file labels in 
 | Portal table / SQL view | Grain and joins |
 | --- | --- |
 | ORFs and taxonomy / `orf_explorer` | One ORF with original contig ID and length |
-| Functional annotations / `annotation_explorer` | One reference annotation with contig and taxonomy |
+| Functional annotations / `annotation_explorer` | One reference annotation with contig, hit taxonomy and same-database LCA |
 | Pathways / `pathway_explorer` | One pathway inference with entity type and count of distinct explicit ORF links |
 | Pathway genes / `pathway_gene_explorer` | One pathway/ORF link with primary product, taxonomy and contig |
 | MAG ORFs / `mag_orf_explorer` | All reported ORFs on explicitly mapped contigs; requires the full contig map |
@@ -135,3 +140,7 @@ The inventory omits hidden runtime state, report products, symlinked files/direc
 CSV export streams every matching row with the selected columns, independent of the visible page. Null values are blank. Text that would look like a spreadsheet formula is prefixed with an apostrophe; original values remain unchanged in SQLite. A query-definition JSON records filters, columns, ordering, schema version and report timestamp. The URL hash also records the query and is bookmarkable while the corresponding report snapshot remains available.
 
 The server binds only to `127.0.0.1`, uses a random URL prefix, checks Host/Origin, opens SQLite read-only and accepts only declared views/columns/operators. It does not execute arbitrary submitted SQL. Source-file links are restricted to the report tree and inventoried output paths. Do not expose it as a public web service. For a remote workstation, copy the results or use your site's approved SSH forwarding of a chosen loopback port.
+
+### Wide read-abundance table (schema version 3)
+
+The explorer's **Read abundance** table and its CSV export show measurements side by side, one row per sample and feature (`feature_type` is `orf` or `contig`). Filename prefixes are removed from known CoverM metric names. `count` copies ORF `Count` or contig `Read Count`; the counting conventions and normalization remain those of featureCounts and CoverM respectively, so these are not interchangeable units. `length_bp` copies the abundance file's length, rather than the annotation table's length. Coverage statistics unavailable for ORFs are blank, not zero. No measurements are recalculated. The separate **Read abundance: raw measurements** table retains original column names and values, including unrecognized measurements. Source links identify the original TSVs. Rebuild the report to update an existing explorer; mapping and annotation do not need rerunning.

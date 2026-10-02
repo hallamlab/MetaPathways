@@ -320,7 +320,8 @@ def launch(tasks, output_dir, args, name, dryrun=False):
             target.write_text(content)
         config = run_dir / 'nextflow.config'
         config.write_text(config_text)
-        summary = dict(resources=resources, work_dir=str(work), conda_cache=str(cache), status='PLANNED')
+        from metapathways._version import __version__
+        summary = dict(mp_version=__version__, resources=resources, work_dir=str(work), conda_cache=str(cache), status='PLANNED')
         summary_path = run_dir / 'summary.json'
         summary_path.write_text(json.dumps(summary, indent=2) + '\n')
         if dryrun:

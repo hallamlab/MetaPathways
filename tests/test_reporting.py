@@ -26,6 +26,56 @@ class ReportTests(unittest.TestCase):
         self.db.row_factory=sqlite3.Row
         self.addCleanup(self.db.close)
 
+    def test_taxonomy_is_joined_by_sample_orf_database_and_target(self):
+        self.write('alpha', 'results/annotation_table/test.annotation_taxonomy.tsv',
+            'orf_id\treference_db\ttarget\ttaxid\ttaxonomy\tlca_taxonomy\n'
+            'G1\tswissprot\tACC1\t3\tSpecies A\tBacteria\n'
+            'G1\tmetacyc\tWRONG_TARGET\t5\tArchaea\tArchaea\n')
+        build_report(self.root)
+        with sqlite3.connect(self.reports/'results.sqlite') as db:
+            actual = db.execute("SELECT reference_db,taxonomy,lca_taxonomy FROM annotation_explorer WHERE sample_id='alpha' ORDER BY reference_db").fetchall()
+            self.assertEqual(actual, [('metacyc','Not computed','Not computed'), ('swissprot','Species A','Bacteria')])
+            self.assertEqual(db.execute("SELECT DISTINCT taxonomy FROM annotation_explorer WHERE sample_id='beta'").fetchall(), [('Not computed',)])
+
+    def test_wide_abundance_preserves_values_nulls_and_sample_identity(self):
+        for sample in ('alpha','beta'):
+            prefix = f'{sample}.fasta/{sample}.fastq.gz '
+            headers = ['Length','Read Count','Mean','Variance','Trimmed Mean','RPKM','TPM','Extra']
+            self.write(sample, 'results/rpkm/test.contig_counts.tsv',
+                'Contig\t'+'\t'.join(prefix+h for h in headers)+'\nC1\t200\t0\t1.5\t2.5\t1.2\t3.4\t4.5\t9\n')
+        build_report(self.root)
+        with sqlite3.connect(self.reports/'results.sqlite') as db:
+            db.row_factory = sqlite3.Row
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM abundance_explorer').fetchone()[0],4)
+            row = db.execute("SELECT * FROM abundance_explorer WHERE sample_id='alpha' AND feature_type='contig'").fetchone()
+            self.assertEqual((row['length_bp'],row['count'],row['mean_coverage'],row['coverage_variance'],row['trimmed_mean_coverage'],row['rpkm'],row['tpm']), (200,0,1.5,2.5,1.2,3.4,4.5))
+            orf = db.execute("SELECT * FROM abundance_explorer WHERE sample_id='alpha' AND feature_type='orf'").fetchone()
+            self.assertEqual((orf['orf_id'],orf['contig_id'],orf['count']),('G1','C1',10))
+            self.assertIsNone(orf['mean_coverage'])
+            self.assertIsNone(orf['length_bp'])  # Absent in this legacy fixture; do not invent a length.
+            self.assertEqual(db.execute("SELECT value FROM abundance WHERE sample_id='alpha' AND measurement LIKE '% Extra'").fetchone()[0],9)
+            spec = {'table':'abundance_explorer','filters':[{'column':'count','op':'ge','value':10}], 'columns':['sample_id','feature_id','count']}
+            columns, result = query(db, spec, export=True)
+            self.assertEqual(columns, spec['columns'])
+            self.assertEqual(len(list(result)),2)
+
+    def test_report_footer_run_details_and_sample_default(self):
+        self.write('alpha', 'logs/run/example/summary.json', json.dumps({
+            'mp_version':'3.5.1', 'status':'SUCCESS', 'resources':{'executor':'slurm'}, 'tasks':[]}))
+        build_report(self.root)
+        meta = json.loads((self.reports/'schema.json').read_text())
+        self.assertEqual(meta['run_details'], {'mp_version':'3.5.1','status':'SUCCESS','executor':'slurm','command':'run'})
+        self.assertIn('report_mp_version', meta)
+        page = (self.reports/'EDA_portal.html').read_text()
+        self.assertIn('issues/new/choose', page)
+        self.assertNotIn('Source abundance values are not recomputed', page)
+        self.assertIn('id="runDetails"', page)
+        with sqlite3.connect(self.reports/'results.sqlite') as db:
+            db.row_factory = sqlite3.Row
+            self.assertEqual(query(db, {})['columns'], ['sample_id','output_path'])
+        js = (self.reports/'portal.js').read_text()
+        self.assertIn("params.get('table')||'samples'", js)
+
     def write(self, sample, relative, value):
         path=self.root/sample/relative
         path.parent.mkdir(parents=True,exist_ok=True)

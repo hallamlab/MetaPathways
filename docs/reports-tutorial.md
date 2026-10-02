@@ -82,3 +82,7 @@ Do not sum abundance after joining each gene to all its annotations and all its 
 Filtered CSVs can be shared independently. To retain the explorer and original-file navigation, preserve the complete output root, including its `reports/`, sample results and logs, and serve it with a compatible MP installation. `results.sqlite` and `schema.json` also support direct read-only analysis in Python/R/SQLite.
 
 Not every raw product becomes a relational table: the inventory links additional sequences, alignments, RNA reports and PGDB products. Import notes identify missing or unsupported sources. The portal does not silently infer missing data, recalculate abundance or validate historical mapping provenance.
+
+### Starting at the sample level
+
+A fresh explorer URL opens **Samples**. Use a sample row's related-results buttons to inspect its ORFs, then follow annotations, pathways and abundance. Saved query URLs retain their selected table and filters. The footer shows the recorded run version, sample count, command, executor and status when available, plus the report update time and a GitHub link for bug reports and feature requests. For older outputs without a recorded run version, the footer labels the report-builder version instead. Diagnostic details remain available in the Import notes and Execution history tables.

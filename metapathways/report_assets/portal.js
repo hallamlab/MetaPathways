@@ -17,7 +17,7 @@ function filterRow(column=columns()[0],op='contains',value='') {
   row.append(c,operator,input,button('Remove',()=>row.remove())); $('filters').append(row);
 }
 function configure(table, filters=[]) {
-  if(!metadata.views[table])table='orf_explorer';
+  if(!metadata.views[table])table='samples';
   $('table').value=table; $('description').textContent=metadata.views[table].description;
   $('filters').replaceChildren(); $('columns').replaceChildren(); $('search').value='';
   relatedKeys.forEach(k=>$('related_'+k).value='');
@@ -57,7 +57,7 @@ function actions(row) {
   const cell=element('td'); cell.className='actions';
   const scope={sample_id:row.sample_id};
   if(row.orf_id){
-    cell.append(button('ORF annotations',()=>drill('annotation_explorer',{...scope,orf_id:row.orf_id})),button('Pathway links',()=>drill('pathway_gene_explorer',{...scope,orf_id:row.orf_id})),button('ORF abundance',()=>drill('abundance',{...scope,feature_type:'orf',feature_id:row.orf_id})));
+    cell.append(button('ORF annotations',()=>drill('annotation_explorer',{...scope,orf_id:row.orf_id})),button('Pathway links',()=>drill('pathway_gene_explorer',{...scope,orf_id:row.orf_id})),button('ORF abundance',()=>drill('abundance_explorer',{...scope,feature_type:'orf',feature_id:row.orf_id})));
   }
   if(row.pathway_id)cell.append(button('Pathway genes',()=>drill('pathway_gene_explorer',{...scope,entity_id:row.entity_id,pathway_id:row.pathway_id})));
   if(row.contig_id)cell.append(button('Contig ORFs',()=>drill('orf_explorer',{...scope,contig_id:row.contig_id})));
@@ -88,7 +88,7 @@ function fromHash() {
   const params=new URLSearchParams(location.hash.slice(1));
   try {
     const spec=params.has('spec')?JSON.parse(params.get('spec')):null;
-    configure(spec?.table||params.get('table')||'orf_explorer',spec?.filters||[]);
+    configure(spec?.table||params.get('table')||'samples',spec?.filters||[]);
     if(spec){$('search').value=spec.search||'';relatedKeys.forEach(k=>$('related_'+k).value=spec.related?.[k]||'');sort=spec.sort||'';descending=!!spec.descending; if(spec.columns)$('columns').querySelectorAll('input').forEach(i=>i.checked=spec.columns.includes(i.value));}
     apply();
   } catch(error){$('status').textContent='Cannot read this saved query: '+error.message;}
@@ -98,7 +98,11 @@ async function init() {
   try {
     const response=await fetch(api('meta'));if(!response.ok)throw Error('Open the URL printed by metapathways report --serve.');metadata=await response.json();
     Object.entries(metadata.views).forEach(([key,value])=>$('table').append(option(key,`${value.label} (${value.rows.toLocaleString()})`)));
-    $('generated').textContent='Report snapshot: '+metadata.generated_utc+' · Schema '+metadata.schema_version+'. Rebuild the report to include changed outputs.';
+    const run=metadata.run_details||{};
+    const details=[run.mp_version?'MP '+run.mp_version:'Report built with MP '+metadata.report_mp_version,
+      metadata.sample_paths.length+' samples',run.command,run.executor,run.status].filter(Boolean);
+    $('runDetails').textContent=details.join(' · ');
+    $('generated').textContent='Report updated '+new Date(metadata.generated_utc).toLocaleString();
     $('table').onchange=()=>{configure($('table').value);apply();};$('addFilter').onclick=()=>filterRow();$('apply').onclick=()=>apply();$('reset').onclick=()=>{configure($('table').value);apply();};
     $('search').onkeydown=e=>{if(e.key==='Enter')apply();};$('previous').onclick=()=>{offset=Math.max(0,offset-100);apply(false);};$('next').onclick=()=>{offset+=100;apply(false);};
     $('export').onclick=()=>{const a=element('a');a.href=queryURL('export',active);a.download='metapathways-subset.csv';a.click();};$('saveQuery').onclick=saveJSON;
