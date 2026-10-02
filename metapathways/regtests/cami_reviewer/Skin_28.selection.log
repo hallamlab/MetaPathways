@@ -1,0 +1,11 @@
+[M::mm_idx_gen::0.006*1.23] collected minimizers
+[M::mm_idx_gen::0.010*1.46] sorted minimizers
+[M::main::0.010*1.46] loaded/built the index for 3 target sequence(s)
+[M::mm_mapopt_update::0.010*1.46] mid_occ = 1000
+[M::mm_idx_stat] kmer size: 21; skip: 11; is_hpc: 0; #seq: 3
+[M::mm_idx_stat::0.011*1.43] distinct minimizers: 20161 (75.80% are singletons); average occurrences: 1.243; average spacing: 5.987; total length: 150000
+[M::worker_pipeline::0.985*1.90] mapped 333334 sequences
+[M::worker_pipeline::1.201*1.87] mapped 166666 sequences
+[M::main] Version: 2.31-r1302
+[M::main] CMD: /data/home/ryan/repos/metapathways-setup/environment/bin/minimap2 -ax sr -t 2 /data/tmp/mp-cami-reviewer-0sinn_1_/assembly.fasta /data/tmp/mp-cami-reviewer-0sinn_1_/r1.fq /data/tmp/mp-cami-reviewer-0sinn_1_/r2.fq
+[M::main] Real time: 1.221 sec; CPU: 2.263 sec; Peak RSS: 0.199 GB

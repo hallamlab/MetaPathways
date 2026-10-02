@@ -9,6 +9,10 @@ on:
         description: 'Existing tag to publish/recover (blank = build only)'
         type: string
         default: ''
+      test_containers:
+        description: 'Build/test Docker and SIF without publishing when release_tag is blank'
+        type: boolean
+        default: false
       source_run_id:
         description: 'Optional successful build run to reuse; requires release_tag'
         type: string
@@ -57,10 +61,13 @@ jobs:
         if: inputs.source_run_id == ''
         run: |
           conda install --yes --override-channels -c conda-forge conda-build conda-index pyyaml 'setuptools>=83,<85' wheel
-          python -m pip install build
+          python -m pip install build pandas pybedtools pyfastx tqdm scipy
       - name: Test release controls
         if: inputs.source_run_id == ''
         run: python -m unittest discover -s tests/release -v
+      - name: Test scheduling, containers, and read mapping
+        if: inputs.source_run_id == ''
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Build and test release
         if: inputs.source_run_id == ''
         env:
@@ -165,7 +172,10 @@ jobs:
 
   containers:
     needs: [build, github-release]
-    if: github.ref_type == 'tag' || inputs.release_tag != ''
+    if: >-
+      always() && needs.build.result == 'success' &&
+      ((needs.github-release.result == 'success' && (github.ref_type == 'tag' || inputs.release_tag != '')) ||
+       (github.ref_type != 'tag' && inputs.release_tag == '' && inputs.test_containers))
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
@@ -190,7 +200,14 @@ jobs:
       - name: Build Docker and Apptainer; validate containers
         env:
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
-        run: python scripts/release.py container-build --ref "$RELEASE_TAG"
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
+        run: |
+          if [[ "$RELEASE_REF_TYPE" == tag || -n "$RELEASE_TAG_INPUT" ]]; then
+            python scripts/release.py container-build --ref "$RELEASE_TAG"
+          else
+            python scripts/release.py container-build
+          fi
       - name: Scan container for fixable high and critical vulnerabilities
         run: |
           mkdir -p dist/security
@@ -224,13 +241,14 @@ jobs:
           path: dist/containers/
           if-no-files-found: warn
       - name: Attach validated SIF and checksums to GitHub release
+        if: github.ref_type == 'tag' || inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: python scripts/release.py container-attach --ref "$RELEASE_TAG"
       - name: Publish Docker image to Quay
-        if: vars.PUBLISH_QUAY == 'true'
+        if: (github.ref_type == 'tag' || inputs.release_tag != '') && vars.PUBLISH_QUAY == 'true'
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
@@ -246,7 +264,7 @@ jobs:
           printf '%s' "$QUAY_PASSWORD" | docker login quay.io --username "$QUAY_USERNAME" --password-stdin
           python scripts/release.py container-push --ref "$RELEASE_TAG"
       - name: Synchronize Quay repository overview
-        if: vars.PUBLISH_QUAY == 'true'
+        if: (github.ref_type == 'tag' || inputs.release_tag != '') && vars.PUBLISH_QUAY == 'true'
         env:
           QUAY_API_TOKEN: ${{ secrets.QUAY_API_TOKEN }}
         run: |

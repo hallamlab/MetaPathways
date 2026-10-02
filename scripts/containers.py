@@ -64,7 +64,7 @@ def build(args):
         integration.chmod(0o777)
         release.run("docker", "run", "--rm", "--volume", f"{integration}:/work", image,
                     "bash", "-c", "umask 0000; trap 'find /work -mindepth 1 -exec chmod a+rwX {} +' EXIT; "
-                    "metapathways build_db --test && metapathways run --test",
+                    "metapathways build_db --test --memory '2 GB' --max_memory '4 GB' --max_cpus 2 && metapathways run --test --memory '2 GB' --max_memory '4 GB' --max_cpus 2",
                     log=output / "docker-integration.log")
         receipt = release.validate_run(integration)
         for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:

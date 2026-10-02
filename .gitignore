@@ -85,3 +85,7 @@ global_errors_warnings.txt
 
 # Local manuscript figures and their export tools
 /docs/figures/
+
+# Nextflow local metadata; invocation copies are retained with analysis outputs.
+/.nextflow/
+/.nextflow.log*

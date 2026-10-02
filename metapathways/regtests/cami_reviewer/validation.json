@@ -1,0 +1,51 @@
+{
+  "checks": [
+    "payload SHA256",
+    "single/pair/all manifest validation",
+    "automatic input discovery",
+    "paired FASTQ IDs/lengths",
+    "complete contig-to-genome assignment",
+    "Prodigal meta gene predictions on every contig"
+  ],
+  "workflow_executed": false,
+  "samples": [
+    {
+      "sample_id": "Gastrointestinal_5",
+      "assembly_bases": 150000,
+      "pairs": 2326,
+      "predicted_genes_per_contig": {
+        "S5C2519": 59,
+        "S5C5928": 42,
+        "S5C5950": 41
+      }
+    },
+    {
+      "sample_id": "Skin_28",
+      "assembly_bases": 150000,
+      "pairs": 3000,
+      "predicted_genes_per_contig": {
+        "S28C1233": 42,
+        "S28C1662": 40,
+        "S28C1722": 40
+      }
+    },
+    {
+      "sample_id": "Urogenital_22",
+      "assembly_bases": 150000,
+      "pairs": 3000,
+      "predicted_genes_per_contig": {
+        "S22C5358": 50,
+        "S22C8829": 45,
+        "S22C9504": 47
+      }
+    }
+  ],
+  "small_reference_check": {
+    "method": "Prodigal meta-mode proteins searched with BLASTP against bundled swissprot_test at E <= 1e-6; not full MP annotation/BSR filtering",
+    "ORFs_with_hits": {
+      "Gastrointestinal_5": 3,
+      "Skin_28": 3,
+      "Urogenital_22": 4
+    }
+  }
+}

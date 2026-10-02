@@ -24,7 +24,8 @@ def run_tRNAscan(thread_id, args):
             break
 
         print(f"Thread {thread_id}: Processing {input_file}")
-        cmd = ["tRNAscan-SE", input_file]
+        # Parallelism is provided by the outer workers; avoid nested CPU pools.
+        cmd = ["tRNAscan-SE", "--thread", "1", input_file]
 
         for flag, file_path in output_files.items():
             cmd.extend([flag, file_path])

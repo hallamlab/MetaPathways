@@ -1,8 +1,12 @@
 # Releasing MetaPathways
 
+[User documentation](../README.md) · [Reproducibility](reproducibility.md)
+
+This chapter is for maintainers publishing packages, not users installing or running MP. Its release examples describe the existing 3.5.x release process. The Nextflow feature branch must undergo release validation before its behavior is claimed for a published package.
+
 The source version in `metapathways/_version.py` is authoritative. An installed
 `3.5.0.dev64` package is an older distribution; changing GitHub does not upgrade
-that environment. The first stable release from this checkout is **3.5.0**.
+that environment. The original stable release in this release series was **3.5.0**.
 Use **3.5.1**, **3.5.2**, etc. for subsequent patch releases, or **3.5.1rc1**
 for a preview. Tags have a leading `v`; package versions do not.
 
@@ -14,21 +18,21 @@ and silently include them in the Conda package.
 
 ## Normal release using GitHub CI
 
-From a normal checkout of `dev`, using your existing Git SSH/HTTPS credentials:
+After tester sign-off and merging the PR, from a clean checkout of the reviewed release branch (`dev` by default), using your existing Git SSH/HTTPS credentials:
 
 ```bash
-python scripts/release.py prepare 3.5.0
+python scripts/release.py prepare 3.5.2
 git diff
-git add README.md metapathways/_version.py conda_recipe/meta_template.yaml
-git commit -m "Prepare MetaPathways 3.5.0"
-python scripts/release.py publish
+git add README.md CITATION.cff metapathways/_version.py conda_recipe/meta_template.yaml
+git commit -m "Prepare MetaPathways 3.5.2"
+python scripts/release.py publish --branch dev
 ```
 
 Commit the release script, workflow, tests, and other implementation files as well
 when installing this workflow for the first time. If `prepare` changes nothing,
 there is no version-only commit to make.
 
-`publish` requires a clean checkout on `dev`. It creates an annotated tag and
+`publish` requires a clean checkout on the selected release branch (`dev` by default; `--branch master` selects `master`). It creates an annotated tag and
 pushes the branch and tag atomically to `hallamlab/MetaPathways`. It never force
 pushes, moves a published tag, or automatically commits your work. GitHub CLI
 login is unnecessary on your machine.
@@ -50,7 +54,7 @@ GitHub prereleases and use the `hallamlab/label/rc` Conda channel; stable versio
 use `hallamlab` / label `main`. No wheel is advertised as platform-independent.
 
 To test CI without publishing, select **Actions → Release → Run workflow** on
-the `dev` branch. Assets are retained as an Actions artifact. Dispatching the
+the feature branch (or the reviewed `dev`/`master` branch). Leave `release_tag` and `source_run_id` blank; optionally enable `test_containers` to build and scan Docker/SIF artifacts too. This does not publish packages, registry images, a GitHub release, or a DOI. Assets are retained as an Actions artifact. Dispatching the
 workflow on a release tag also enables publishing.
 
 ## Enable Anaconda.org uploads
@@ -71,8 +75,8 @@ build/test environment:
 
 ```bash
 mamba create -n metapathways-build -c conda-forge \
-  python=3.10 conda-build conda-index anaconda-client pyyaml \
-  pip wheel 'setuptools<81'
+  python=3.11 conda-build conda-index anaconda-client pyyaml \
+  pip wheel 'setuptools>=83,<85'
 conda activate metapathways-build
 python -m pip install build
 
@@ -206,10 +210,10 @@ Licensed Pathway Tools is not included in public release containers.
 
 ## Security rebuilds without changing the application version
 
-The security rebuild of MetaPathways 3.5.1 uses Python 3.11, Snakemake minimal
+The historical security rebuild of MetaPathways 3.5.1 used Python 3.11, Snakemake minimal
 9.27.0, urllib3 >=2.8.0, and setuptools >=83. The minimal Snakemake distribution
 provides the local CLI used for database preparation without the legacy stopit
-runtime dependency. Container builds refresh the base image and apply Debian
+runtime dependency. This records that release configuration; the current development workflow uses Nextflow, as described in the user guide. Container builds refresh the base image and apply Debian
 package updates before installing the validated Conda environment.
 
 A nonzero Conda build number produces a separate Git tag and release, for example
@@ -219,7 +223,7 @@ original tag and published files. Prepare it with:
 ```bash
 python scripts/release.py prepare 3.5.1 --build-number 1
 # Commit the reviewed changes, then:
-python scripts/release.py publish
+python scripts/release.py publish --branch dev
 ```
 
 Quay receives `3.5.1-build1` and `v3.5.1-build1` tags as well as updated `3.5.1`,
@@ -237,3 +241,36 @@ the runner and blocks publication when it finds a high/critical vulnerability
 for which a fix is available. Both the full scan and filtered gate reports are retained as
 `container-security-report`. Unfixed distribution advisories need separate
 review; passing this gate does not mean the image has no vulnerabilities.
+
+## Feature-branch review before publication
+
+The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to dev/master → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged reviewer/report assets.
+
+Use the [PR tester checklist](pr-testing.md) for independent installation, the single- and two-sample CAMI workflows, restart behavior, optional licensed Pathway Tools, and report exports. Record the tested Git commit. The currently installed version number alone is insufficient while development still reports 3.5.1.
+
+The selected next release is **3.5.2**. Preparing this version does not publish it; branch and PR testing still happen before a release tag is pushed. Do not reuse 3.5.1 or its existing tags. Change the version with `prepare` only at the release step; it also updates the citation version and resets the Conda build number for a new version. Avoid editing runtime code/version files while a benchmark is executing from an editable checkout.
+
+Before merging, manually dispatch the Release workflow on the feature branch with blank publication inputs. Select `test_containers` to test the exact Conda artifact inside Docker and its SIF conversion. Download `release-assets`, `container-assets`, and the security reports from Actions for review. Core integration uses explicit 2 GB task reservations, a 4 GB memory budget, and two CPUs so the small fixture fits CI runners. These limits are not production metagenome sizing recommendations.
+
+The public Conda package/container includes the Nextflow controller and reporting assets, but MAGSplitter and Camelot are still separately installed optional dependencies. The public build gate exercises the core K12 workflow; **passing that gate does not certify `analysis_wf` with MAGs, Slurm, nested Apptainer, or licensed Pathway Tools**. Those require the tester checks. A container containing Apptainer does not guarantee the host permits nested container execution. Test licensed inference with the recommended host Conda installation and your own image first.
+
+## Zenodo and software citation
+
+`CITATION.cff` supplies software authors (from MP's existing author metadata), title, repository, and license. Confirm the author list before publication. No DOI or release date has been invented. `prepare` adds/updates the selected software version. We maintain one citation metadata file; Zenodo prioritizes `.zenodo.json` over CFF if both exist, so do not add a conflicting second file. See [Zenodo's supported metadata](https://help.zenodo.org/docs/github/describe-software/).
+
+A repository administrator must link their GitHub account to Zenodo, grant the required organization access, and enable `hallamlab/MetaPathways` in Zenodo's GitHub settings. See [enable a repository](https://help.zenodo.org/docs/github/enable-repository/). This connection is account-side configuration and cannot be inferred from committed files or the existence of an earlier release. Our GitHub Actions workflow does not call the Zenodo API or store a Zenodo token.
+
+Keep pre-merge tests as branches, PRs, and Actions artifacts. Once enabled, the integration ingests new releases; do not publish a release candidate casually if you are not ready for it to become an archive record. After the intended release, verify its Zenodo record, version, source commit/tag, author metadata, license, and DOI before announcing it. Record both the version-specific DOI and concept DOI where applicable, and use the version-specific DOI for an exact release citation.
+
+Treat the software snapshot, built packages/container assets, and manuscript benchmark data as separate deliverables. Do not assume the GitHub integration copies every release attachment or later-added SIF, nor that it deposits your benchmark outputs. Inspect the archive contents and arrange a separate data deposit with its own provenance if required. Never deposit the licensed Pathway Tools installer, SIF, or MetaCyc databases as public MP assets.
+
+## Account-side release checklist
+
+| Service | Repository preparation | Maintainer verification before publishing |
+| --- | --- | --- |
+| GitHub | PR smoke checks, manual package/container validation, tag workflow | Protect the target branch, require smoke checks and tester approval; choose a new version |
+| Anaconda.org | Recipe, installed-package integration, checksums, RC/main labels | `ANACONDA_API_TOKEN` has upload access to `hallamlab`; `PUBLISH_CONDA=true` |
+| Quay | Build from validated package, Docker test, SIF conversion, vulnerability gate | Repository exists; robot has Write permission; `QUAY_USERNAME`, `QUAY_PASSWORD`, `PUBLISH_QUAY=true` |
+| Zenodo | CFF metadata and documented release process | GitHub integration enabled, correct organization authorization, archived release/DOI verified |
+
+Secret values must never be committed or printed. Repository files alone cannot verify the current account permissions or secret configuration. A local source build is not proof of a successful Conda solve, registry upload, or Zenodo deposit.

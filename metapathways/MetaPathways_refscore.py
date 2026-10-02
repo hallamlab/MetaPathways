@@ -9,6 +9,8 @@ try:
     import traceback
     import os
     import re
+    import tempfile
+    import shlex
 
     from os import makedirs, sys, remove, rename
     from sys import path
@@ -169,13 +171,12 @@ def blast_against_itself(blast_executable, seq_subset_file, blast_table_out):
 
 def last_against_itself(last_executable, seq_subset_file, last_table_out):
     dirname = os.path.dirname(seq_subset_file.name)
-    cmd = "%s -o %s -f 0 %s %s" % (
-        last_executable,
-        last_table_out,
-        dirname + PATHDELIM + "subset_db",
-        seq_subset_file.name,
-    )
-    result = sysutils.getstatusoutput(cmd)
+    with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.path.abspath(dirname)) as work:
+        cmd = shlex.join([last_executable, '-o', last_table_out, '-f', '0', '-X', work,
+                          dirname + PATHDELIM + 'subset_db', seq_subset_file.name])
+        result = sysutils.getstatusoutput(cmd)
+        if result[0]:
+            raise RuntimeError('FAST reference-score search failed: ' + result[1])
 
 
 def add_last_refscore_to_file(blast_table_out, refscore_file, allNames):

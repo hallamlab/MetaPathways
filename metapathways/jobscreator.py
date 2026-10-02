@@ -29,7 +29,6 @@ except:
 
 PATHDELIM = sysutils.pathDelim()
 
-@gutils.Singleton
 class Params:
     params  = {}
     def __init__(self, params):
@@ -52,13 +51,11 @@ class Params:
         print(self.params)
 
 
-@gutils.Singleton
 class Configs:
     def __init__(self, configs):
         for key, value in configs.items():
             setattr(self, key, value)
 
-@gutils.Singleton
 class ContextCreator:
     params = None
     configs = None
@@ -261,7 +258,7 @@ class ContextCreator:
         mode = self.params.get('ORF Prediction Arguments',
                                'orf_mode')
 
-        num_threads = str(self.configs.NUM_CPUS)
+        num_threads = self.configs.NUM_CPUS
 
         pyScript = self.configs.ORF_PREDICTION
         executable =  self.configs.PRODIGAL_EXECUTABLE
@@ -594,7 +591,7 @@ class ContextCreator:
         if bar_exe == None:
             eprintf("ERROR\tCannot find barrnap\n")
         barnap_cmd = "%s --quiet --threads %s --outseq %s %s > %s"\
-                 %(bar_exe, str(num_threads),
+                 %(bar_exe, num_threads,
                     context.outputs['rRNA_barout_seq'], context.inputs['input_fasta'],
                     context.outputs['rRNA_barout_gff'])
         context.commands = [barnap_cmd]
@@ -816,7 +813,7 @@ class ContextCreator:
         genbank_file_status = self.params.get('Pipeline Step Arguments',
                                               'GENBANK_FILE')
         if genbank_file_status in ['redo'] or\
-           (genbank_file_status in ['yes'] and not s.hasGenbankFile() ):
+           genbank_file_status in ['yes']:
             cmd += ' --out-gbk ' + context.outputs['output_annot_gbk']
         context.message =  self._Message("GENBANK FILE" )
 
@@ -903,7 +900,7 @@ class ContextCreator:
                                          'PATHOLOGIC_INPUT')
 
            
-        if context.status in ['redo'] or (context.status in ['yes'] and not s.hasPToolsInput() ):
+        if context.status in ['redo'] or context.status in ['yes']:
             cmd += ' --out-ptinput ' + s.output_fasta_pf_dir
             cmd += ' -n ' + context.inputs_optional['input_nucleotide_fasta']
             cmd += ' --ncbi-tree ' + context.inputs1['ncbi_tree']
@@ -968,7 +965,7 @@ class ContextCreator:
         #add the command now, remove to disable in a hackish way
         context.commands = [cmd]
         context.status = self.params.get('Pipeline Step Arguments',
-                                         'ANNOTATE_ORFS')
+                                         'CREATE_ANNOT_REPORTS')
         context.message = self._Message("CREATING REPORT FILE FOR ORF ANNOTATION")
         contexts.append(context)
         return contexts
@@ -984,6 +981,10 @@ class ContextCreator:
         if rpkm_input:
             fwd_fq = rpkm_input[0][0]
             rev_fq = rpkm_input[0][1]
+            if fwd_fq in ('', 'None'):
+                fwd_fq = None
+            if rev_fq in ('', 'None'):
+                rev_fq = None
             inter = rpkm_input[1]
         else:
             fwd_fq = None
@@ -1052,8 +1053,10 @@ class ContextCreator:
 
     def __init__(self, params, configs):
 
-        self.params = gutils.Singleton(Params)(params)
-        self.configs = gutils.Singleton(Configs)(configs)
+        self.factory = {}
+        self.stageList = {}
+        self.params = Params(params)
+        self.configs = Configs(configs)
         self.initFactoryList()
 
     def getContexts(self, s, stage):
@@ -1177,6 +1180,5 @@ class JobCreator():
         # block stages
         if block_mode == False:
             s.addContexts(contextBlock)
-
 
 

@@ -40,9 +40,11 @@ class ReleaseTests(unittest.TestCase):
             (root / "conda_recipe/meta_template.yaml").write_text("build:\n  number: 0\n")
             (root / "README.md").write_text(
                 "User edit\nhttps://img.shields.io/badge/Version-3.5-blue.svg)\n")
+            (root / "CITATION.cff").write_text('title: MetaPathways\nversion: "3.5.0"\n')
             with patch.object(release, "ROOT", root):
                 release.prepare(SimpleNamespace(version="3.5.1rc1", build_number=2))
             self.assertEqual(release.version(root), "3.5.1rc1")
+            self.assertIn('version: "3.5.1rc1"', (root / "CITATION.cff").read_text())
             self.assertIn("User edit", (root / "README.md").read_text())
             self.assertIn("number: 2", (root / "conda_recipe/meta_template.yaml").read_text())
             with patch.object(release, "ROOT", root):
@@ -51,6 +53,7 @@ class ReleaseTests(unittest.TestCase):
             with patch.object(release, "ROOT", root):
                 release.prepare(SimpleNamespace(version="3.5.1", build_number=None))
             self.assertIn("number: 0", (root / "conda_recipe/meta_template.yaml").read_text())
+            self.assertEqual((root / "CITATION.cff").read_text(), 'title: MetaPathways\nversion: "3.5.1"\n')
 
     def fixture(self, root):
         sample = root / "test/k12_test"
@@ -100,6 +103,14 @@ class ReleaseTests(unittest.TestCase):
             release, "run", side_effect=responses
         ) as run:
             with self.assertRaisesRegex(ValueError, "already exists remotely"):
+                release.publish(SimpleNamespace(remote="origin"))
+            self.assertFalse(any("push" in c.args or "tag" in c.args for c in run.call_args_list))
+
+    def test_feature_branch_cannot_publish(self):
+        with patch.object(release, "version", return_value="3.5.2"), patch.object(
+            release, "run", side_effect=["", "feat/nextflow-controller-db-build"]
+        ) as run:
+            with self.assertRaisesRegex(ValueError, "dev branch"):
                 release.publish(SimpleNamespace(remote="origin"))
             self.assertFalse(any("push" in c.args or "tag" in c.args for c in run.call_args_list))
 

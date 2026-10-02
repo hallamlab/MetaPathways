@@ -22,6 +22,7 @@ try:
 
     from os import makedirs, path, listdir, remove, rename
 
+    from metapathways.pt_ec import normalize_ecs
     from metapathways import errorcodes as errormod
     from metapathways import general_utils as gutils
     from metapathways import metapathways_utils as mputils
@@ -427,6 +428,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                             else:
                                 attrib['ec'] = [attrib['ec']]
                         
+                        attrib['ec'] = normalize_ecs(attrib['ec'])
                         # keep all ORFs used for Ptools
                         pt_attrib_dict[shortid] = attrib
                         
@@ -556,11 +558,7 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
             gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
     if 'ec' in attrib:
-        ec_val = attrib['ec']
-        #if ec_val:
-        #    gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
-        ec_list = list(set(attrib['ec']))
-        for ec_val in ec_list:
+        for ec_val in normalize_ecs(attrib['ec']):
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
     if 'taxon' in attrib:

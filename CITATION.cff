@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "Please cite this software and record the release version or Git commit used in your analysis."
+type: software
+title: MetaPathways
+abstract: "A metagenomic analysis pipeline for functional and taxonomic annotation, abundance estimation, genome-bin splitting, pathway inference, and interactive exploration of linked result tables."
+repository-code: "https://github.com/hallamlab/MetaPathways"
+url: "https://github.com/hallamlab/MetaPathways"
+license: MIT
+authors:
+  - family-names: McLaughlin
+    given-names: Ryan J.
+  - family-names: Liu
+    given-names: Tony X.
+  - family-names: Altman
+    given-names: Tomer
+  - family-names: Nallan
+    given-names: Aditi N.
+  - family-names: Hahn
+    given-names: Aria S.
+  - family-names: Anstett
+    given-names: Julia
+  - family-names: Morgan-Lang
+    given-names: Connor
+  - family-names: Konwar
+    given-names: Kishori M.
+  - family-names: Hallam
+    given-names: Steven J.
+keywords:
+  - metagenomics
+  - functional annotation
+  - pathways
+  - Nextflow
+version: "3.5.2"

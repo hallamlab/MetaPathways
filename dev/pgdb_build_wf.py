@@ -32,30 +32,36 @@ from camelot_frs.pgdb_api import genes_of_pathway
 import html2text
 import time
 import traceback
+import tempfile
 
 
-def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container):
-
-	rename_pgdb(pt_inputs, tag)
-	tag_id = tag
-	# Create output dir if doesn't exist
-	Path(pt_outputs).mkdir(parents=True, exist_ok=True)
-	if container:
-		print("NOTE: Using containerized version of Pathway Tools...")
-		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune.sh'
-		sh_notax = 'run-pathway-tools-and-copy-pgdb.sh'
-	else:
-		sh_tax = 'run-pathway-tools-and-copy-pgdb-taxprune_local.sh'
-		sh_notax = 'run-pathway-tools-and-copy-pgdb_local.sh'
-	if tprune == True:
-		pt_cmd = [sh_tax, pt_inputs, pt_outputs, tag_id]
-	elif tprune == False:
-		pt_cmd = [sh_notax, pt_inputs, pt_outputs, tag_id]
-	subprocess.run(pt_cmd)
-	# Uncompress PGDB to create PWYs table
-	pgdb_arc = glob.glob(pt_outputs + '/*.tar.bz2')[0]
-	tar_cmd = ['tar', '-xf', pgdb_arc, '-C', pt_outputs]
-	tar_out = subprocess.run(tar_cmd)
+def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container, image=None, sample_output=None, transport_inference=True, taxon_id=None):
+    from metapathways.pt_container import run_pgdb
+    Path(pt_outputs).mkdir(parents=True, exist_ok=True)
+    # Renaming must not modify the annotation products or another task's inputs.
+    with tempfile.TemporaryDirectory(prefix='mp-pgdb-input-') as work:
+        inputs = str(Path(work) / 'input')
+        shutil.copytree(pt_inputs, inputs)
+        rename_pgdb(inputs, tag)
+        if taxon_id is not None:
+            from metapathways.pt_sequences import set_organism_taxon
+            set_organism_taxon(inputs, taxon_id)
+        if image:
+            run_pgdb(image, inputs, pt_outputs, tag, tprune, sample_output=sample_output, transport_inference=transport_inference)
+        else:
+            if not transport_inference:
+                raise ValueError('--no_transport_inference requires a Pathway Tools SIF')
+            if sample_output is not None:
+                from metapathways.pt_sequences import attach_sequences
+                attach_sequences(inputs, sample_output)
+            suffix = '' if container else '_local'
+            pruning = '_taxprune' if tprune else ''
+            script = f'run-pathway-tools-and-copy-pgdb{pruning}{suffix}.sh'
+            subprocess.run([script, inputs, pt_outputs, tag], check=True)
+    archive = Path(pt_outputs) / f'{tag}cyc.tar.bz2'
+    if not archive.is_file():
+        raise RuntimeError(f'Pathway Tools did not produce {archive}')
+    subprocess.run(['tar', '-xf', str(archive), '-C', pt_outputs], check=True)
 
 
 def rename_pgdb(pt_inputs, tag):
@@ -74,9 +80,10 @@ def rename_pgdb(pt_inputs, tag):
 	os.rename(o_params + '.tmp', o_params)
 
 
-def extract_pwy(pt_outputs):
+def extract_pwy(pt_outputs, pt_id=None):
 	## version.dat file is not in expected directory, create it
-	pt_id = os.path.basename(glob.glob(pt_outputs + '/*.tar.bz2')[0]).split('cyc', 1)[0]
+	if pt_id is None:
+		pt_id = os.path.basename(glob.glob(pt_outputs + '/*.tar.bz2')[0]).rsplit('cyc', 1)[0]
 	flatpath = os.path.join(pt_outputs, '1.0/data')
 	pwy_outfile = os.path.join(pt_outputs, pt_id + '_pwy.tsv')
 	verfile = os.path.join(flatpath.rsplit('/', 2)[0], 'default-version')
@@ -257,8 +264,9 @@ def get_present_rxns(pwy_frame):
 	return pwy_rxns
 
 
-def map_orfs2pwys(mp_outdir, pt_outdir):
-	pt_id = os.path.basename(glob.glob(pt_outdir + '/*.tar.bz2')[0]).split('cyc', 1)[0]
+def map_orfs2pwys(mp_outdir, pt_outdir, pt_id=None):
+	if pt_id is None:
+		pt_id = os.path.basename(glob.glob(pt_outdir + '/*.tar.bz2')[0]).rsplit('cyc', 1)[0]
 	orf_mapfile = glob.glob(os.path.join(mp_outdir, 'results/annotation_table/*.EC_RXN_map.tsv'))[0]
 	pwy_outfile = os.path.join(pt_outdir, pt_id + '_pwy.tsv')
 	pwy2orf_outfile = os.path.join(pt_outdir, pt_id + '_pwy2orf.tsv')
@@ -297,6 +305,8 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 parser = argparse.ArgumentParser(description="Run Ptools on MP output and collect outputs.")
 parser.add_argument("--mp_out", type=str, help="MP3 output directory.", required=True)
 parser.add_argument("--tag", type=str, help="Tag for metagenome PGDB.", required=True)
+parser.add_argument("--taxon_id", type=int)
+parser.add_argument("--no_transport_inference", action="store_true")
 parser.add_argument("--taxprune", action='store_true',
 					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
 					required=False
@@ -304,6 +314,8 @@ parser.add_argument("--taxprune", action='store_true',
 parser.add_argument("--container", action='store_true', dest="container", default=False, required=False,
 					help="Use when using containerized env",
 					)
+parser.add_argument('--image', help='Pathway Tools Apptainer image')
+parser.add_argument('--entity', help=argparse.SUPPRESS)
 args = parser.parse_args()
 
 mp_dir = args.mp_out
@@ -312,42 +324,28 @@ taxprune = args.taxprune
 container = args.container
 
 
-# Build Community-level PGDB
-pt_in = os.path.join(mp_dir, 'ptools')
-pt_out = os.path.join(mp_dir, 'results/pgdb/community')
-print("Building Community-level PGDB.")
-create_pgdb(pt_in, pt_out, taxprune, tag, container)
-print("Completed Community-level PGDB.")
-# Parse PGDB flatfiles to create PWYs TSV table
-print("Extracting Community-level PGDB.")
-extract_pwy(pt_out)
-print("Extracting Complete.")
-# Map inferred pwys to ORFs and ECs/RXNs used
-print("Mapping ORFs to Inferred Pathways.")
-map_orfs2pwys(mp_dir, pt_out)
-print("Mapping Complete.")
+def run_entity(entity):
+    if entity == 'community':
+        inputs = os.path.join(mp_dir, 'ptools')
+        output = os.path.join(mp_dir, 'results/pgdb/community')
+        entity_tag = tag
+    else:
+        inputs = os.path.join(mp_dir, 'magsplitter/results', entity)
+        output = os.path.join(mp_dir, 'results/pgdb/MAGs', entity)
+        entity_tag = entity
+    create_pgdb(inputs, output, taxprune, entity_tag, container, args.image, mp_dir, transport_inference=not args.no_transport_inference, taxon_id=args.taxon_id)
+    extract_pwy(output, entity_tag)
+    map_orfs2pwys(mp_dir, output, entity_tag)
 
-# Build MAG-level PGDBs if they exist
-ms_dir = os.path.join(mp_dir, 'magsplitter/results')
-if os.path.exists(ms_dir):
-    mag_list = glob.glob(ms_dir + '/*')
-    for pt_mag in mag_list:
-        if "non_binned" not in pt_mag:
+
+if args.entity:
+    run_entity(args.entity)
+else:
+    run_entity('community')
+    for mag in sorted(Path(mp_dir, 'magsplitter/results').glob('*')):
+        if mag.is_dir() and 'non_binned' not in mag.name:
             try:
-                mag_id = os.path.basename(pt_mag)
-                mag_tag = mag_id
-                pt_out = os.path.join(mp_dir, 'results/pgdb/MAGs/' + mag_id)
-                print(f"Building PGDB for {mag_id}.")
-                create_pgdb(pt_mag, pt_out, taxprune, mag_tag, container)
-                print("Completed PGDB.")
-                # Parse PGDB flatfiles to create PWYs TSV table
-                print(f"Extracting PGDB for {mag_id}.")
-                extract_pwy(pt_out)
-                print("Extracting Complete.")
-                # Map inferred pwys to ORFs and ECs/RXNs used
-                print(f"Mapping {mag_id} ORFs to Inferred Pathways.")
-                map_orfs2pwys(mp_dir, pt_out)
-                print("Mapping Complete.")
+                run_entity(mag.name)
             except Exception as e:
-                print(f"PGDB build for {mag_id} failed due to: {e}")
+                print(f'PGDB build for {mag.name} failed due to: {e}')
                 traceback.print_exc()

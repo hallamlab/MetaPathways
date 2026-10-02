@@ -10,6 +10,8 @@ MetaPathways is a pipeline for processing and annotating assembled metagenomic s
 
 Release containers contain the validated MetaPathways Conda package and its pinned dependency versions. They include the core annotation pipeline; optional MAGSplitter, camelot-frs, and licensed Pathway Tools require separate installation.
 
+The commands here describe **published MP release images**. They are different from the licensed Pathway Tools SIF created by `metapathways build_pt`. Older release images may not include the Nextflow controller, `analysis_wf` or the report explorer. Use the [source installation guide](../docs/getting-started.md) for this development revision and the [Pathway Tools guide](../docs/pathway-tools.md) for its licensed image.
+
 ## Docker
 
 Use a version tag for reproducible work (replace VERSION with a published release, such as 3.5.0):

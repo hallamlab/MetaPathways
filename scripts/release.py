@@ -125,6 +125,10 @@ def prepare(args):
     readme.write_text(re.sub(r"https://img.shields.io/badge/Version-[^)]*",
                             f"https://img.shields.io/badge/Version-{value}-blue.svg",
                             readme.read_text()))
+    citation = ROOT / "CITATION.cff"
+    if citation.exists():
+        text = re.sub(r"^version:.*\n?", "", citation.read_text(), flags=re.M)
+        citation.write_text(text.rstrip() + f'\nversion: "{value}"\n')
     print(f"Prepared {value}, Conda build {build_number}. Review and commit before publishing.")
 
 
@@ -222,9 +226,11 @@ def build(args):
                 cwd=testdir, log=output / "security-dependencies.log")
             run(*runner, "metapathways", "version", cwd=testdir,
                 log=output / "cli-version.log")
-            run(*runner, "metapathways", "build_db", "--test", cwd=testdir,
+            run(*runner, "python", snapshot / "scripts/check_installed_assets.py",
+                cwd=testdir, log=output / "installed-assets.log")
+            run(*runner, "metapathways", "build_db", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "build-db.log")
-            run(*runner, "metapathways", "run", "--test", cwd=testdir,
+            run(*runner, "metapathways", "run", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "pipeline.log")
             validation.update(validate_run(testdir), scope="core-integration")
             for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:
@@ -375,8 +381,9 @@ def publish(args):
     clean()
     value = version()
     branch = run("git", "branch", "--show-current", capture=True)
-    if branch != "dev":
-        raise ValueError("Publish from the dev branch.")
+    target_branch = getattr(args, "branch", "dev")
+    if target_branch not in ("master", "dev") or branch != target_branch:
+        raise ValueError(f"Publish from the {target_branch} branch after PR review and testing.")
     url = run("git", "remote", "get-url", "--push", args.remote, capture=True)
     if url.removesuffix(".git").rstrip("/") not in (
         f"git@github.com:{REPOSITORY}", f"https://github.com/{REPOSITORY}",
@@ -394,7 +401,7 @@ def publish(args):
             raise ValueError(f"Local {tag} must be an annotated tag.")
     else:
         run("git", "tag", "-a", tag, "-m", f"MetaPathways {value}")
-    run("git", "push", "--atomic", args.remote, "HEAD:refs/heads/dev", f"refs/tags/{tag}")
+    run("git", "push", "--atomic", args.remote, f"HEAD:refs/heads/{target_branch}", f"refs/tags/{tag}")
     print(f"CI will build, test, and publish {tag}: https://github.com/{REPOSITORY}/actions")
 
 
@@ -435,8 +442,10 @@ def main():
     p.add_argument("tag")
     p.add_argument("--output", default=str(ROOT / "dist/release"))
     p.set_defaults(func=github_release)
-    p = commands.add_parser("publish", help="Push dev and its release tag using existing Git credentials.")
+    p = commands.add_parser("publish", help="Push the reviewed master/dev branch and its release tag using existing Git credentials.")
     p.add_argument("--remote", default="origin")
+    p.add_argument("--branch", choices=("master", "dev"), default="dev",
+                   help="Reviewed release branch [dev]; never a feature branch.")
     p.set_defaults(func=publish)
     for command, action in [("container-build", "build"), ("container-push", "push"),
                             ("container-attach", "attach"), ("quay-description", "description")]:

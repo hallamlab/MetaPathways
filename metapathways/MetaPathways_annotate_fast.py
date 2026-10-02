@@ -362,7 +362,7 @@ def insert_orf_into_dict(line, contig_dict, shortenorfid=False):
             seqname = attributes["orf_id"]
             attributes["seqname"] = seqname
         if feature_type == "rRNA":
-            seqname = seqname + "." + attributes["name"] + "_" + str(fields[3])
+            seqname = seqname + "." + attributes["name"] + "_" + "_".join((fields[3], fields[4], fields[6]))
             attributes["seqname"] = seqname
         if not seqname in contig_dict:
             contig_dict[seqname] = []
@@ -566,8 +566,13 @@ def write_16S_tRNA_gene_info(contig_id, f_rec, outputgff_file, tag):
         output_line += "\t" + str(f_rec["score"])
         output_line += "\t" + str(f_rec["strand"])
         output_line += "\t" + str(f_rec["frame"])
-        attributes = "ID=" + str(f_rec["seqname"]).rsplit('-', 1)[1].rsplit('_')[0]
-        attributes += ";" + "locus_tag=" + str(f_rec["name"])
+        # Distinct copies of the same rRNA on a contig are distinct loci.
+        short_contig = contig_id.rsplit('-', 1)[-1]
+        subtype = str(f_rec['name']).removesuffix('_rRNA')
+        strand = 'plus' if f_rec['strand'] == '+' else 'minus'
+        identifier = f"{short_contig}.{subtype}_{f_rec['start']}_{f_rec['end']}_{strand}"
+        attributes = "ID=" + identifier
+        attributes += ";locus_tag=" + identifier
         attributes += ";" + "product=" + f_rec["product"]
         output_line += "\t" + attributes
 
@@ -1013,15 +1018,14 @@ def create_annotation(
                         compact_output=compact_output,
                     )
             count += 1  # move to the next orf
-        # Add rRNA and tRNA records to output gff
-        if rRNA_yes == True:
-            if contig in rRNA_dictionary:
-                for rec in rRNA_dictionary[contig]:
-                    write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_rRNA")
-        if tRNA_yes == True:
-            if contig in tRNA_dictionary:
-                for rec in tRNA_dictionary[contig]:
-                    write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_tRNA")
+    # RNA features belong to contigs, not CDS parser buffers. Emit them once,
+    # including contigs with RNA genes but no protein-coding predictions.
+    for contig, records in rRNA_dictionary.items():
+        for rec in records:
+            write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_rRNA")
+    for contig, records in tRNA_dictionary.items():
+        for rec in records:
+            write_16S_tRNA_gene_info(contig, rec, outputgff_file, "_tRNA")
     output_comp_annot_file1.close()
     output_comp_annot_file2.close()
 

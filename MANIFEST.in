@@ -13,5 +13,20 @@ recursive-include scripts *.py
 recursive-include conda_recipe *.py *.yaml
 include docker/conda_base.yml
 recursive-include tests/release *.py
+include tests/test_read_mapping.py
+include tests/test_pt_container.py
+include tests/test_nextflow.py
 include docker/Dockerfile.release
 include docker/README.quay.md
+
+recursive-include metapathways/report_assets *.html *.js *.css
+include tests/test_reporting.py
+recursive-include docs *.md
+
+include tests/test_analysis_workflow.py
+include tests/test_rna_abundance.py
+include tests/test_metacyc_db.py
+include tests/test_fast_isolation.py
+include tests/test_pt_sequences.py
+
+include CITATION.cff

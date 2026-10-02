@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools.dist import Distribution
+
+
+class PlatformDistribution(Distribution):
+    """The bundled FAST/metacount executables are native Linux binaries."""
+
+    def has_ext_modules(self):
+        return True
 
 PACKAGE_ROOT = Path(os.path.realpath(__file__)).parent
 NAME = "metapathways".lower()
@@ -30,6 +38,7 @@ def read(fname):
 
 if __name__ == "__main__":
     setup(
+        distclass=PlatformDistribution,
         name=NAME,
         version=VERSION,
         author=ver_dict['author'],
@@ -42,7 +51,7 @@ if __name__ == "__main__":
         keywords="metagenomics pipeline",
         url="https://github.com/hallamlab/MetaPathways/",
         packages=find_packages(),
-        package_data={'': ['metapathways/regtests/**/*'],},        
+        package_data={'': ['metapathways/regtests/**/*'], 'metapathways': ['report_assets/*']},
         scripts=["bin/metapathways-install-deps.sh",
                 "bin/metapathways-data-install.sh",
                 "dev/metacount",
