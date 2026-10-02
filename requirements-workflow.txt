@@ -1,0 +1,4 @@
+# Optional workflow helpers, pinned for reproducible source installations.
+# Install after the Mamba environment: python -m pip install --no-deps -r requirements-workflow.txt
+magsplitter @ git+https://github.com/hallamlab/MAGSplitter.git@a83bcd0c6479d3fda15025262b981e348c082bc9
+camelot-frs @ git+https://bitbucket.org/tomeraltman/camelot-frs.git@30a774c7fe7bb8a88b5cd6cadfac1c6d258efc96

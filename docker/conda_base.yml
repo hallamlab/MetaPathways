@@ -9,6 +9,7 @@ dependencies:
   - setuptools>=83,<85
   - urllib3>=2.8.0,<3
   - curl
+  - wget
   - ncurses
   - pysam
   - cython

@@ -24,13 +24,35 @@ Follow [getting started](getting-started.md), including environment activation. 
 mkdir -p ~/mp-reviewer
 cd ~/mp-reviewer
 metapathways build_db --test
-ln -s ~/src/MetaPathways/metapathways/regtests/test_db MPDB
+python -c 'from pathlib import Path; import metapathways; Path("MPDB").symlink_to(Path(metapathways.__file__).parent / "regtests/test_db", target_is_directory=True)'
+# If you have not already downloaded/unpacked cami-reviewer here:
 cp -r ~/src/MetaPathways/metapathways/regtests/cami_reviewer cami-reviewer
 ```
 
 Run the link and copy commands once in a new work directory. `build_db --test` formats the tiny bundled SwissProt/SILVA fixtures and downloads enzyme/taxonomy support records. It needs internet access and a writable installation. This is not an offline test, and the input bundle size is not the total installation size.
 
 The small reference fixture is intentionally incomplete and is largely E. coli oriented. CAMI annotations can therefore be sparse, and RNA tables can be empty. To test richer annotations with your existing production MPDB, replace `-d MPDB` with its path, replace `--annotation_dbs swissprot_test` with `--annotation_dbs swissprot`, and omit the `--rRNA_refdbs` line to use the standard SILVA references. The small input samples remain the same. See [database commands](commands.md).
+
+## Run all three samples first
+
+If the reviewer inputs are already downloaded, place the unpacked `cami-reviewer` folder in `~/mp-reviewer` and skip the copy command above. It must contain `all.tsv` and `inputs/`; keep the folder structure intact. The fixture is also bundled in the repository, so a Zenodo release is not required to run this walkthrough.
+
+```bash
+cd ~/mp-reviewer
+metapathways analysis_wf \
+  --manifest cami-reviewer/all.tsv \
+  -o all -d MPDB \
+  --annotation_dbs swissprot_test \
+  --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
+  --skip_ptools \
+  --threads 4 --memory '4 GB' --max_tasks 2
+
+metapathways report -o all --serve --no-browser --port 8765
+```
+
+This uses ordinary installed CLI commands and the small public reference fixtures. No local Conda package, private staging directory, full SwissProt/UniRef download or Pathway Tools installation is required. `MPDB` is a link to the small database built inside your activated environment; it works with both normal and editable pip installations. The source checkout contains every installation definition and reviewer input used by these instructions. Source dependency installation and reference support downloads still require internet access.
+
+The explorer starts at **Samples**. On a remote machine, use the [SSH tunnel instructions](reports-tutorial.md#view-a-remote-report-through-ssh) and open the token-bearing URL printed by the report command. The single- and two-sample commands below are additional checks; they are not prerequisites for the three-sample run.
 
 ## 2. Run the single-sample workflow
 

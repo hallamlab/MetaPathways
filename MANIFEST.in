@@ -33,3 +33,5 @@ include CITATION.cff
 
 recursive-include tests *.py
 recursive-include docs/validation *.json
+
+include requirements-workflow.txt

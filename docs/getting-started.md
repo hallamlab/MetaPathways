@@ -34,15 +34,14 @@ cd MetaPathways
 git checkout feat/nextflow-controller-db-build
 mamba env create -f docker/conda_base.yml
 conda activate metapathways
-python -m pip install --no-deps --no-build-isolation -e .
-python -m pip install \
-  'git+https://github.com/hallamlab/MAGSplitter.git@main' \
-  'git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs'
+mamba install --yes --override-channels --strict-channel-priority -c conda-forge -c bioconda pip wheel git
+python -m pip install --no-deps --no-build-isolation .
+python -m pip install --no-deps -r requirements-workflow.txt
 ```
 
 This is the development branch documented here. For a release, use its tag and matching documentation. The environment installs the workflow and biological dependencies; MAGSplitter handles genome-bin splitting and Camelot handles pathway extraction. The installation can require substantial downloads. Do not use `sudo pip` to install MP into the operating system's Python.
 
-`-e .` installs MP in editable mode: Python modules are read from this checkout. Some helper scripts are copied into the environment, so rerun the MP `pip install` command after updating the checkout. Package version `3.5.1` alone does not distinguish this feature branch from older code.
+This installs a fixed copy of MP into the environment. Rerun the MP `pip install` command after updating the checkout. Record `git rev-parse HEAD` alongside `metapathways version`: candidate revisions can share version `3.5.2`. Developers may opt into editable mode with `-e .`.
 
 Confirm the installation:
 

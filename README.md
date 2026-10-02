@@ -70,22 +70,21 @@ cd MetaPathways
 git checkout feat/nextflow-controller-db-build
 mamba env create -f docker/conda_base.yml
 conda activate metapathways
-python -m pip install --no-deps --no-build-isolation -e .
+mamba install --yes --override-channels --strict-channel-priority -c conda-forge -c bioconda pip wheel git
+python -m pip install --no-deps --no-build-isolation .
 metapathways version
 metapathways run --help
 ```
 
-Use the release tag or branch you intend to evaluate; do not mix an old package's documentation with this checkout. Editable installation makes local code changes visible to the CLI. Install without `-e` for a fixed source installation.
+Use the release tag or branch you intend to evaluate; do not mix an old package's documentation with this checkout. This installs a fixed copy of the checked-out source. After updating the checkout, rerun the MP pip-install command. Developers can explicitly add `-e` for an editable installation.
 
 For MAG splitting and pathway extraction, also install:
 
 ```bash
-python -m pip install \
-  'git+https://github.com/hallamlab/MAGSplitter.git@main' \
-  'git+https://bitbucket.org/tomeraltman/camelot-frs@dev#egg=camelot-frs'
+python -m pip install --no-deps -r requirements-workflow.txt
 ```
 
-These are moving Git dependencies. Save `pip freeze`, a Conda explicit export and the MP Git commit with your analysis. The report and portal use Python's standard-library SQLite and HTTP server; no web service, JavaScript package installation or external account is required.
+The helper revisions are pinned in `requirements-workflow.txt`. Save `pip freeze`, a Conda explicit export and the MP Git commit with your analysis. The report and portal use Python's standard-library SQLite and HTTP server; no web service, JavaScript package installation or external account is required.
 
 ### Published packages and containers
 
