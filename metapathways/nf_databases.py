@@ -58,7 +58,7 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
         from metapathways.pt_container import registered_image
         source = metacyc_source or registered_image()
         if not source:
-            raise ValueError('MetaCyc requires a licensed source: run build_pt first, or provide --metacyc_source with a complete data directory or SIF. See README.md: MetaCyc from Pathway Tools.')
+            raise ValueError('MetaCyc requires a licensed source: run build_pt first, or provide --metacyc_source with a complete data directory or SIF. See https://metapathways.readthedocs.io/en/latest/pgdb-workflow.html#metacyc-from-pathway-tools.')
         source = source_path(source)
         tasks.append(metacyc_task(root, source, aligner, memory, ['directories']))
         databases = [db for db in databases if db != 'metacyc']

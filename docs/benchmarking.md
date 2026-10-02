@@ -1,6 +1,6 @@
 # Benchmarking and supplementary statistics
 
-[Home](../README.md) · [Reproducibility records](reproducibility.md) · [Result schema](results-schema.md)
+[Home](index.md) · [Reproducibility records](reproducibility.md) · [Result schema](results-schema.md)
 
 ## Define the experiment before starting
 

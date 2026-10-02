@@ -1,6 +1,6 @@
 # Getting started: from a terminal to your first result
 
-[Home and reading order](../README.md#start-here) · Next: [reviewer walkthrough](reviewer-test.md)
+[Home and reading order](index.md) · Next: [reviewer walkthrough](reviewer-test.md)
 
 ## What you will do
 
@@ -22,9 +22,9 @@ On a remote server, the analysis commands run in the SSH terminal on that server
 
 Choose one route, in this order:
 
-1. **[Conda package with Mamba](../README.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package and activate the environment before each session. Workflow helpers are included.
-2. **[Quay Docker or Apptainer](../docker/README.quay.md)** — use a versioned image and the container-specific three-sample instructions. References and outputs must be writable; the public MP image does not contain licensed Pathway Tools.
-3. **[Local installation from GitHub](../README.md#3-local-installation-from-github)** — build the supporting Mamba environment, then install MP with pip from your checkout. Use this route to install from a local checkout or make changes to MP.
+1. **[Conda package with Mamba](installation.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package and activate the environment before each session. Workflow helpers are included.
+2. **[Quay Docker or Apptainer](containers.md)** — use a versioned image and the container-specific three-sample instructions. References and outputs must be writable; the public MP image does not contain licensed Pathway Tools.
+3. **[Local installation from GitHub](installation.md#3-local-installation-from-github)** — build the supporting Mamba environment, then install MP with pip from your checkout. Use this route to install from a local checkout or make changes to MP.
 
 Windows and macOS users can connect to a Linux server. These instructions do not claim a tested native Windows, Apple Silicon, or WSL installation. If Mamba is not installed, follow the official [Miniforge instructions](https://github.com/conda-forge/miniforge) or your HPC's software setup instructions. No MP-specific environment variable is required.
 

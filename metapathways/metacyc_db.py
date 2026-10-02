@@ -30,7 +30,7 @@ def source_path(source):
         if not missing:
             return p
         raise ValueError('Incomplete MetaCyc data directory; missing ' + ', '.join(missing)
-                         + '. Use the Pathway Tools SIF to export the matching flat files; protseq.fsa alone is insufficient. See README.md: MetaCyc from Pathway Tools.')
+                         + '. Use the Pathway Tools SIF to export the matching flat files; protseq.fsa alone is insufficient. See https://metapathways.readthedocs.io/en/latest/pgdb-workflow.html#metacyc-from-pathway-tools.')
     raise ValueError(f'MetaCyc source must be a local SIF or complete data directory: {p}; copy remote SFTP data locally first')
 
 

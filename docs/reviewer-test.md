@@ -1,6 +1,6 @@
 # Reviewer walkthrough: three tiny CAMI samples
 
-[Home](../README.md) · Previous: [getting started](getting-started.md) · Next: [your inputs](inputs.md)
+[Home](index.md) · Previous: [getting started](getting-started.md) · Next: [your inputs](inputs.md)
 
 This walkthrough uses ordinary MP commands and three distinct CAMI II samples included in the repository and installed package. No Pathway Tools license, installer or container is needed for the default commands. They run annotation, paired-read mapping and abundance, genome splitting, and the report/explorer. Pathway inference is explicitly skipped; licensed users can enable it in the optional section below.
 
@@ -18,7 +18,7 @@ Protein taxonomy supports SwissProt (including the small reviewer database), Uni
 
 ## 1. Install MP and prepare the small reference database
 
-Install with [Conda/Mamba or GitHub source](../README.md#quick-start), then activate the MP environment. Container users can follow the same test through [Docker or Apptainer](../docker/README.quay.md).
+Install with [Conda/Mamba or GitHub source](installation.md), then activate the MP environment. Container users can follow the same test through [Docker or Apptainer](containers.md).
 
 ```bash
 metapathways prepare_test -o ~/mp-reviewer
@@ -28,7 +28,7 @@ metapathways build_db --test -d MPDB
 
 `prepare_test` copies the included assemblies, paired reads, genome maps, manifests and reference FASTAs into your workspace. It leaves matching files in place and refuses to overwrite changed files. Use a new workspace for a fresh test. `build_db` indexes the small SwissProt/SILVA references and downloads enzyme/taxonomy support records into `MPDB`. Preparation requires internet access and writable workspace storage; it does not modify your installation.
 
-The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 original K12 test references plus 188 reference targets matched by the three CAMI samples in a full-SwissProt run. The protein FASTA is about 109 KB. This gives the reviewer useful annotation, taxonomy and genome-splitting examples without a full protein database download. Selection and reference provenance are recorded in [`reviewer_reference.json`](../metapathways/regtests/test_db/reviewer_reference.json). The deliberately selected reference set is for workflow testing, not annotation accuracy or biological benchmarking. SILVA fixtures remain small; empty RNA tables can be legitimate.
+The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 original K12 test references plus 188 reference targets matched by the three CAMI samples in a full-SwissProt run. The protein FASTA is about 109 KB. This gives the reviewer useful annotation, taxonomy and genome-splitting examples without a full protein database download. Selection and reference provenance are recorded in [`reviewer_reference.json`](https://github.com/hallamlab/MetaPathways/blob/HEAD/metapathways/regtests/test_db/reviewer_reference.json). The deliberately selected reference set is for workflow testing, not annotation accuracy or biological benchmarking. SILVA fixtures remain small; empty RNA tables can be legitimate.
 
 When updating an existing installation, rerun `metapathways build_db --test -d MPDB` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the reviewer acceptance run.
 
@@ -121,7 +121,7 @@ Tiny genome fragments and sparse annotation references may yield few or no pathw
 
 ## Provenance and validation
 
-The bundle's [README](../metapathways/regtests/cami_reviewer/README.md), `provenance.json`, and `validation.json` describe selection, original sample paths, retained contig regions, matching read counts, hashes, and checks performed. The preparation script is [scripts/prepare_cami_reviewer.py](../scripts/prepare_cami_reviewer.py). No Pathway Tools software or MetaCyc sequence/database material is included.
+The bundle's [README](https://github.com/hallamlab/MetaPathways/blob/HEAD/metapathways/regtests/cami_reviewer/README.md), `provenance.json`, and `validation.json` describe selection, original sample paths, retained contig regions, matching read counts, hashes, and checks performed. The preparation script is [scripts/prepare_cami_reviewer.py](https://github.com/hallamlab/MetaPathways/blob/HEAD/scripts/prepare_cami_reviewer.py). No Pathway Tools software or MetaCyc sequence/database material is included.
 
 Input validation covers all manifests, automatic discovery, intact mate pairing, complete contig-to-genome maps and gene prediction on every retained contig. It does not substitute for the reviewer executing the full workflow above. See [benchmarking](benchmarking.md) before collecting publication statistics from the complete CAMI samples.
 

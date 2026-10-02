@@ -1,6 +1,6 @@
 # Releasing MetaPathways
 
-[User documentation](../README.md) · [Reproducibility](reproducibility.md)
+[User documentation](index.md) · [Reproducibility](reproducibility.md)
 
 This chapter is for maintainers publishing packages, not users installing or running MP. Its release examples describe the existing 3.5.x release process. Every release candidate must pass package and workflow validation before publication.
 

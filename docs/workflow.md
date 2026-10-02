@@ -1,6 +1,6 @@
 # Workflow and output guide
 
-[Start with the README](../README.md) · [Complete CLI flags](cli-reference.md)
+[Start with the README](index.md) · [Complete CLI flags](cli-reference.md)
 
 For guided usage, start with the [command cookbook](commands.md) or [Pathway Tools chapter](pathway-tools.md). This page describes the stage and output contracts.
 
@@ -10,7 +10,7 @@ For guided usage, start with the [command cookbook](commands.md) or [Pathway Too
 
 | Command | Work performed | Requires |
 | --- | --- | --- |
-| `analysis_wf` | One DAG for multiple assemblies, per-sample reads/MAG maps, PGDBs and combined reports | [Layout or manifest](../README.md#analysis-wf-input-layout), MPDB, registered SIF |
+| `analysis_wf` | One DAG for multiple assemblies, per-sample reads/MAG maps, PGDBs and combined reports | [Layout or manifest](analysis.md#analysis-wf-input-layout), MPDB, registered SIF |
 | `build_db` | Download references, build FAST/BLAST indexes and supporting maps through Nextflow | Network, writable database directory, indexing tools |
 | `run` | Assembly QC, prediction, search, annotation, optional mapping, Pathway Tools input preparation | Assembly and compatible MPDB; reads optional |
 | `mag_split` | Reuse existing annotations to create MAG Pathway Tools inputs; preserve the original contig map | Completed community outputs, MAGSplitter, headerless two-column contig map |
@@ -93,7 +93,7 @@ A report requires recognized sample directories. Headers and identifiers matter:
 
 Missing source tables, unannotated placeholders and expected optional MAG failures are visible instead of silently becoming zeros. See [results schema](results-schema.md) for exact semantics and [reproducibility](reproducibility.md) for benchmark limitations.
 
-For complete multi-sample execution, see [automatic input matching](../README.md#analysis-wf-input-layout) and the [custom manifest](../README.md#custom-analysis-manifest). `analysis_wf` assigns independent per-sample dependencies, saves the resolved input manifest, and builds the combined report after Nextflow completes so final statuses are included.
+For complete multi-sample execution, see [automatic input matching](analysis.md#analysis-wf-input-layout) and the [custom manifest](analysis.md#custom-analysis-manifest). `analysis_wf` assigns independent per-sample dependencies, saves the resolved input manifest, and builds the combined report after Nextflow completes so final statuses are included.
 
 ### RNA identifiers and abundance integrity
 
@@ -113,7 +113,7 @@ Each container PGDB attempt saves its internal `pathologic.log`, other available
 
 Older container wrappers deleted the private Pathologic log along with temporary state, so the root cause of a historical exit 255 may be unavailable. Updating MP and repeating the same `ptools` invocation retains successful task receipts and retries unsuccessful entities, saving the internal error if it recurs. This logging fix works with an existing SIF. Newly built images also include NCBI BLAST+; the image recipe hash changes, so `build_pt` creates a separate image when rebuilt.
 
-`build_pt` also snapshots official SRI patches for the selected release and validates a synthetic BLAST database/search before registration. Analysis tasks keep patch downloads disabled. Rebuilding creates a distinct image; changing the selected image can invalidate prior PGDB receipts. A patched image is not evidence that a particular vendor inference bug is resolved. Add `-d /path/to/MPDB -a fast` to prepare matching MetaCyc sequences, indexes and tables after the image build; see [MetaCyc from Pathway Tools](../README.md#metacyc-from-pathway-tools). This optional preparation operates on the reference, not on sample annotations or sample PGDBs.
+`build_pt` also snapshots official SRI patches for the selected release and validates a synthetic BLAST database/search before registration. Analysis tasks keep patch downloads disabled. Rebuilding creates a distinct image; changing the selected image can invalidate prior PGDB receipts. A patched image is not evidence that a particular vendor inference bug is resolved. Add `-d /path/to/MPDB -a fast` to prepare matching MetaCyc sequences, indexes and tables after the image build; see [MetaCyc from Pathway Tools](pgdb-workflow.md#metacyc-from-pathway-tools). This optional preparation operates on the reference, not on sample annotations or sample PGDBs.
 
 Pathway Tools EC inputs are written as one `EC` line per identifier, including
 when source annotations contain comma-, semicolon-, or pipe-separated lists.

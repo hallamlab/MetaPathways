@@ -1,6 +1,6 @@
 # Results schema and EDA portal
 
-[User guide](../README.md#reports-and-the-eda-portal) · [CLI reference](cli-reference.md)
+[User guide](reports-reference.md#reports-and-the-eda-portal) · [CLI reference](cli-reference.md)
 
 For step-by-step browsing and SSH setup, start with the [explorer tutorial](reports-tutorial.md). This page defines the exact table meanings and relationships.
 

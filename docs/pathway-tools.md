@@ -1,6 +1,6 @@
 # Pathway Tools: licensing, image builds, databases and inference
 
-[Home](../README.md) · [Reviewer walkthrough](reviewer-test.md) · [Complete flags](cli-reference.md)
+[Home](index.md) · [Reviewer walkthrough](reviewer-test.md) · [Complete flags](cli-reference.md)
 
 ## Understand the three different databases
 
@@ -71,7 +71,7 @@ metapathways build_pt \
   -o ~/mp-containers -d ~/MPDB -a fast
 ```
 
-The second command exports the bundled MetaCyc protein sequences and biochemical flat files from the SIF, constructs protein-to-reaction mappings and pathway/compound/ontology tables, and indexes the proteins for FAST. It does not refresh SwissProt or the other existing references. The [installed-file table](../README.md#metacyc-from-pathway-tools) lists the exact MPDB destinations.
+The second command exports the bundled MetaCyc protein sequences and biochemical flat files from the SIF, constructs protein-to-reaction mappings and pathway/compound/ontology tables, and indexes the proteins for FAST. It does not refresh SwissProt or the other existing references. The [installed-file table](pgdb-workflow.md#metacyc-from-pathway-tools) lists the exact MPDB destinations.
 
 To add or rebuild MetaCyc later using the registered image:
 
@@ -166,4 +166,4 @@ Look under `results/SampleA/results/pgdb/community/` and `.../MAGs/MAG_ID/` for 
 
 Community failures fail the workflow. MAG failures may be optional, allowing other entities to finish, but remain failures in task records. `SUCCESS` at the overall scheduler level can coexist with optional failures. Never use it alone to claim all MAGs succeeded. The report distinguishes output availability from latest task outcome.
 
-Failed on-disk PGDBs are retained under `diagnostics/ATTEMPT/failed-pgdbs/`. MP does not automatically certify or publish partial recovery. Retry with the same parameters after fixing the cause, and inspect the new execution record. [Restart guidance](../README.md#logs-temporary-files-and-restarting) explains reuse and targeted reruns.
+Failed on-disk PGDBs are retained under `diagnostics/ATTEMPT/failed-pgdbs/`. MP does not automatically certify or publish partial recovery. Retry with the same parameters after fixing the cause, and inspect the new execution record. [Restart guidance](execution.md#logs-temporary-files-and-restarting) explains reuse and targeted reruns.

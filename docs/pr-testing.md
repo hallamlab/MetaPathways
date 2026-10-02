@@ -1,6 +1,6 @@
 # PR tester checklist
 
-[Home](../README.md) · [Reviewer commands](reviewer-test.md) · [Release process](releasing.md)
+[Home](index.md) · [Reviewer commands](reviewer-test.md) · [Release process](releasing.md)
 
 Test the feature branch before merging to `dev` or `master`. Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
 

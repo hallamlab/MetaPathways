@@ -35,3 +35,7 @@ recursive-include tests *.py
 recursive-include docs/validation *.json
 
 include requirements-workflow.txt
+
+include .readthedocs.yaml
+recursive-include docs/assets *.css
+recursive-include docs/templates *.html

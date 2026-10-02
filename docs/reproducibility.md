@@ -1,10 +1,10 @@
 # Reproducibility and validation
 
-[User guide](../README.md) · [Release process](releasing.md)
+[User guide](index.md) · [Release process](releasing.md)
 
 ## Record the actual revision and inputs
 
-MetaPathways is distributed under the [MIT license](../LICENSE); bundled third-party sources retain their notices. GitHub tags, Conda packages and container images are separate publications. A tag alone does not update the other distributions. Record the source Git commit, package build or immutable container digest used for each analysis.
+MetaPathways is distributed under the [MIT license](https://github.com/hallamlab/MetaPathways/blob/HEAD/LICENSE); bundled third-party sources retain their notices. GitHub tags, Conda packages and container images are separate publications. A tag alone does not update the other distributions. Record the source Git commit, package build or immutable container digest used for each analysis.
 
 Preserve:
 

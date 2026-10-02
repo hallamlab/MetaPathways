@@ -1,6 +1,6 @@
 # Explore results, follow links and export tables
 
-[Home](../README.md) · [Exact schema and SQL](results-schema.md) · [Benchmark statistics](benchmarking.md)
+[Home](index.md) · [Exact schema and SQL](results-schema.md) · [Benchmark statistics](benchmarking.md)
 
 ## Open the report or start the explorer
 

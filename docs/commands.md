@@ -1,6 +1,6 @@
 # Command cookbook: run only the modules you need
 
-[Home](../README.md) · [Complete CLI reference](cli-reference.md) · [Stage/output reference](workflow.md)
+[Home](index.md) · [Complete CLI reference](cli-reference.md) · [Stage/output reference](workflow.md)
 
 Use `metapathways COMMAND --help` for your installed revision. `metapathways version` reports the package version; also record the source Git revision. These examples assume an activated environment and writable output paths. Replace `/path/to/MPDB` and input filenames before running them.
 
@@ -104,10 +104,10 @@ The first indexes current results. The second serves that snapshot for searching
 
 ## Resources, failure and restart
 
-Use the [resource and Slurm guide](../README.md#resources-and-slurm) for CPU/memory budgets and cluster flags. With `--threads 8 --max_cpus 32`, up to four ready eight-CPU tasks can fit, or a mixture of threaded and single-CPU tasks, subject to memory. Local execution is default; Slurm uses your logged-in identity, not credentials passed to MP.
+Use the [resource and Slurm guide](resources.md#resources-and-slurm) for CPU/memory budgets and cluster flags. With `--threads 8 --max_cpus 32`, up to four ready eight-CPU tasks can fit, or a mixture of threaded and single-CPU tasks, subject to memory. Local execution is default; Slurm uses your logged-in identity, not credentials passed to MP.
 
 Repeat the same command and output location after a recoverable failure. MP checks durable receipts and tracked files, reuses successful compatible tasks, and retries failed work. No explicit Nextflow `-resume` is required on the MP CLI. A new output directory is appropriate for a fresh benchmark, not for a simple restart.
 
-Changing parameters, references, image, inputs or software can change reuse behavior. Output existence alone is not proof of provenance. Preserve `logs/` and `.metapathways/` receipts if you want to resume. See [restart details](../README.md#logs-temporary-files-and-restarting).
+Changing parameters, references, image, inputs or software can change reuse behavior. Output existence alone is not proof of provenance. Preserve `logs/` and `.metapathways/` receipts if you want to resume. See [restart details](execution.md#logs-temporary-files-and-restarting).
 
 For storage-limited complete workflows, `analysis_wf --compact_results` cleans each completed sample and retains report sources and diagnostics. It is off by default. Read the [retained files and restart rules](benchmarking.md#compact-results-on-limited-storage) before using it; archived PGDBs are removed.

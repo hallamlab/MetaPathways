@@ -45,7 +45,7 @@ class AnalysisTests(unittest.TestCase):
 
     def test_missing_mate_points_to_documentation(self):
         (self.inputs / 'reads/Alpha_R2.fq').unlink()
-        with self.assertRaisesRegex(ValueError, 'README.md#custom-analysis-manifest'):
+        with self.assertRaisesRegex(ValueError, 'analysis.html#custom-analysis-manifest'):
             self.rows()
 
     def test_orphan_and_ambiguous_files_fail(self):

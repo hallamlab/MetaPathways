@@ -1,6 +1,6 @@
 # Organize assemblies, reads and genome assignments
 
-[Home](../README.md) · [Command cookbook](commands.md) · [Manifest reference](../README.md#custom-analysis-manifest)
+[Home](index.md) · [Command cookbook](commands.md) · [Manifest reference](analysis.md#custom-analysis-manifest)
 
 **Want PGDBs? Complete the [Pathway Tools installation guide](pathway-tools.md) first**, including building and registering your licensed SIF with `metapathways build_pt`. Then prepare your inputs and run `analysis_wf`. To run without pathway inference, add `--skip_ptools`.
 
