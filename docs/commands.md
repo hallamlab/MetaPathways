@@ -96,3 +96,5 @@ Use the [resource and Slurm guide](../README.md#resources-and-slurm) for CPU/mem
 Repeat the same command and output location after a recoverable failure. MP checks durable receipts and tracked files, reuses successful compatible tasks, and retries failed work. No explicit Nextflow `-resume` is required on the MP CLI. A new output directory is appropriate for a fresh benchmark, not for a simple restart.
 
 Changing parameters, references, image, inputs or software can change reuse behavior. Output existence alone is not proof of provenance. Preserve `logs/` and `.metapathways/` receipts if you want to resume. See [restart details](../README.md#logs-temporary-files-and-restarting).
+
+For storage-limited complete workflows, `analysis_wf --compact_results` cleans each completed sample and retains report sources and diagnostics. It is off by default. Read the [retained files and restart rules](benchmarking.md#compact-results-on-limited-storage) before using it; archived PGDBs are removed.

@@ -174,6 +174,30 @@ class AnalysisTests(unittest.TestCase):
             wf.main(['-i', str(self.inputs), '-o', str(self.root / 'out'), '-d', '/fake/db', '--skip_ptools'])
         launch.assert_not_called()
 
+    def test_compact_cleanup_is_per_sample_terminal_and_resume_skips_complete(self):
+        def prepare(args, parser):
+            name = Path(args.input_file).stem
+            return [nf.task(name+':path', name, [], sample=name, context={'name':'PATHOLOGIC_INPUT'}),
+                    nf.task(name+':tpm', name, [], sample=name)], args.output_dir
+        command = ['-i', str(self.inputs), '-o', str(self.root/'out'), '-d', '/fake/db',
+                   '--skip_ptools', '--compact_results', '--dryrun']
+        with patch.object(pipeline, 'prepare_annotation', side_effect=prepare), \
+             patch.object(wf.shutil, 'which', return_value='/mock/tool'), \
+             patch.object(nf, 'launch') as launch:
+            wf.main(command)
+            tasks = launch.call_args.args[0]
+            for sample in ('Alpha','Beta'):
+                cleanup = next(t for t in tasks if t['id'] == sample+':compact_results')
+                self.assertEqual(set(cleanup['dependencies']), {sample+':path', sample+':tpm', sample+':mag_split'})
+            with patch('metapathways.compact_results.marker_state', side_effect=['complete', None]):
+                wf.main(command)
+            self.assertTrue(all(t['sample']=='Beta' for t in launch.call_args.args[0]))
+
+    def test_compact_rejects_shared_cache_and_retained_work(self):
+        for flags in (['--keep_work'], ['--work_dir','/tmp/work'], ['--conda_cache','/tmp/cache']):
+            with self.assertRaisesRegex(ValueError, 'cannot be combined'):
+                wf.main(['--compact_results', *flags])
+
     def test_planners_do_not_share_parameter_state(self):
         from metapathways.jobscreator import ContextCreator
         a = ContextCreator({'g': {'key': 'a'}}, {'NUM_CPUS': 8})

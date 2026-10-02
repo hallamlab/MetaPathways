@@ -45,6 +45,8 @@ def parser():
     sub.add_argument('--no_reads', action='store_true', help='Explicitly omit read mapping during automatic discovery')
     sub.add_argument('--no_mags', action='store_true', help='Explicitly omit MAG splitting during automatic discovery')
     sub.add_argument('--skip_ptools', action='store_true', help='Omit community and MAG PGDB construction')
+    sub.add_argument('--compact_results', action='store_true',
+                     help='After each sample finishes, keep report sources, final tables and logs; delete intermediates and PGDB archives')
     sub.add_argument('--image', help='Pathway Tools SIF [registered by build_pt]')
     from metapathways.pt_taxonomy import add_taxonomy_options
     add_taxonomy_options(sub)
@@ -317,6 +319,8 @@ def main(argv=None):
     from metapathways.pt_container import registered_image
     p = parser()
     args = p.parse_args(['analysis_wf'] + list(sys.argv[1:] if argv is None else argv))
+    if args.compact_results and any(getattr(args, k, None) for k in ('keep_work', 'work_dir', 'conda_cache')):
+        fail('--compact_results cannot be combined with --keep_work, --work_dir or --conda_cache')
     if not args.output_dir or not args.refdb_dir or not (args.input_file or args.manifest):
         fail('Provide -o OUTPUT, -d MPDB and either -i INPUTS or --manifest FILE')
     if args.manifest and any((args.input_file, args.reads_dir, args.mag_maps_dir, args.no_reads, args.no_mags)):
@@ -333,12 +337,29 @@ def main(argv=None):
     if any(re.search(r'[^A-Za-z0-9_./-]', str(x)) for x in (output, refdb)):
         fail('Output and MPDB paths must use letters, digits, underscores, hyphens, periods and slashes (legacy tool requirement)')
     rows = validate(read_manifest(args.manifest) if args.manifest else discover(args))
+    from metapathways.compact_results import MARKER, resume_key, marker_state
+    for row in rows:
+        base = output/row['sample_id']
+        if base.is_symlink():
+            fail(f'Sample output must not be a symlink: {base}')
+        if (base/MARKER).exists() and not args.compact_results:
+            fail('This output contains compact samples; resume with --compact_results or use a new output directory')
+        if args.compact_results:
+            protected = [Path(r[k]).resolve() for r in rows
+                         for k in ('assembly', 'reads_1', 'reads_2', 'mag_map') if r[k]]
+            protected += [refdb]
+            if args.image:
+                protected.append(Path(args.image).expanduser().resolve())
+            if any(p == base or base in p.parents for p in protected):
+                fail(f'Compact mode requires inputs, MPDB and SIF outside sample output: {base}')
     image = None
     if not args.skip_ptools:
         image = args.image or registered_image()
         if not image or not Path(image).expanduser().is_file():
             fail('Build a Pathway Tools SIF with metapathways build_pt, pass --image, or explicitly --skip_ptools')
         image = str(Path(image).expanduser().resolve())
+        if args.compact_results and any((output/r['sample_id']) in Path(image).parents for r in rows):
+            fail('Compact mode requires the SIF outside sample output directories')
         if not shutil.which('apptainer'):
             fail('Apptainer is required for Pathway Tools')
     if any(row['mag_map'] for row in rows) and not shutil.which('magsplitter'):
@@ -353,7 +374,16 @@ def main(argv=None):
             fail(f'Another analysis_wf invocation is using {output}')
         staged = save_inputs(rows, output)
         tasks = []
-        for row in staged:
+        for original, row in zip(rows, staged):
+            sample = row['sample_id']
+            key = resume_key(args, original) if args.compact_results else None
+            state = marker_state(output/sample, key, args.force_redo) if args.compact_results else None
+            if state == 'complete':
+                print(f'{sample}: completed compact results retained')
+                continue
+            if state == 'compacting':
+                tasks.append(compact_task(sample, output, key, [], args.memory))
+                continue
             sample_args = copy.copy(args)
             sample_args.input_file = row['assembly']
             sample_args.output_dir, sample_args.refdb_dir = str(output), str(refdb)
@@ -366,9 +396,25 @@ def main(argv=None):
                 task['adopt_existing'] = False
             tasks.extend(annotation)
             tasks.extend(downstream(row, output, annotation, args, image))
+            if args.compact_results:
+                dependencies = [t['id'] for t in tasks if t.get('sample') == sample]
+                tasks.append(compact_task(sample, output, key, dependencies, args.memory))
         if args.force_redo:
             for task in tasks:
                 if task['status'] != 'skip':
                     task['status'] = 'redo'
         print(f'Validated {len(rows)} samples. Resolved inputs: {output / "inputs.resolved.tsv"}')
-        nextflow.launch(tasks, output, args, 'analysis_wf', dryrun=args.dryrun)
+        if tasks:
+            nextflow.launch(tasks, output, args, 'analysis_wf', dryrun=args.dryrun)
+        if args.compact_results and not args.dryrun:
+            # No sample needs staged input links or MP task receipts once complete.
+            for name in ('inputs', 'receipts', 'tmp'):
+                shutil.rmtree(control/name, ignore_errors=True)
+
+
+def compact_task(sample, output, key, dependencies, memory):
+    from metapathways.compact_results import MARKER
+    command = shlex.join([sys.executable, '-m', 'metapathways.compact_results', str(output/sample), key])
+    return nextflow.task(f'{sample}:compact_results', f'{sample}:compact_results', [command],
+                         outputs=[str(output/sample/MARKER)], dependencies=dependencies,
+                         sample=sample, memory=memory, adopt_existing=False)

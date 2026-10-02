@@ -386,6 +386,14 @@ def launch(tasks, output_dir, args, name, dryrun=False):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(path, target)
             summary_path.write_text(json.dumps(summary, indent=2) + '\n')
+            if getattr(args, 'compact_results', False) and not interrupted:
+                # Keep trace, task plans and diagnostics; discard generated NF code.
+                nf.unlink(missing_ok=True)
+                config.unlink(missing_ok=True)
+                shutil.rmtree(run_dir / 'modules', ignore_errors=True)
+                for path in (run_dir / 'nextflow_tasks').rglob('*'):
+                    if path.is_file() and path.name not in ('.command.log', '.command.out', '.command.err'):
+                        path.unlink()
             if not getattr(args, 'keep_work', False) and not interrupted:
                 shutil.rmtree(scratch)
             else:

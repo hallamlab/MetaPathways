@@ -118,3 +118,33 @@ For the complete benchmark, copy the original assemblies, reads, CAMI genome map
 Record a run/scenario ID (`local` or `slurm`), Git commit, environment export, input/reference/SIF checksums, task resource requests, node hardware, scheduler settings, start/end times, and log directory. Compare elapsed run time separately from summed task CPU time; cluster queue delays are part of operational elapsed time but not biological compute time. Do not mix a resumed run with a fresh timing run. If total budgets differ, report that as a throughput/scaling scenario rather than attributing the entire speed difference to Nextflow or Slurm. Keep all per-task traces and both scenario manifests for the supplementary tables.
 
 For a larger concurrency test, the same per-job settings work on either executor: `--threads 8 --memory '64 GB' --max_tasks 100`. Omit aggregate maxima to avoid manual arithmetic. The local executor uses detected host capacity; Slurm permits up to 100 submitted jobs with no implicit aggregate caps. Add `--submit_rate 60` to allow up to one Slurm submission per second. Partition may be omitted to use the cluster default.
+
+## Compact results on limited storage
+
+Add `--compact_results` to `analysis_wf` on either local or Slurm execution. The default keeps all sample outputs. Compact mode is intended for the complete workflow; individual `run`, `mag_split`, and `ptools` commands do not perform this cleanup.
+
+Each sample gets a final cleanup task that waits for **all** its annotation, read-abundance, splitting and requested PGDB tasks. Expected optional MAG failures count as finished attempts; their diagnostics and status remain available. Required failures prevent that sample's cleanup. Other successfully completed samples can already be compacted while the remaining samples run.
+
+Retained files include the source tables and identifier maps used by the explorer, final supporting result tables, pathway TSVs, MAG input gene membership, ORF groups, run statistics and diagnostic logs. MP validates report relationships before deleting anything. Reports and CSV exports can be rebuilt normally with `metapathways report -o OUTPUT`.
+
+Removed files include BAMs, sequence intermediates, raw alignment results, intermediate GenBank/GFF files, Pathway Tools working inputs except report-required membership records, and archived PGDBs (`*cyc.tar.bz2`). Compact output therefore cannot be used to reopen a complete PGDB in Pathway Tools. Original input assemblies/reads, the MPDB, and the SIF are untouched and must reside outside sample output directories.
+
+Nextflow work and its run-local Conda cache are removed at normal controller exit. A successfully completed compact workflow also removes staging links and task-reuse receipts. Small controller locks, sample completion markers, input manifests, task plans, resource traces and logs remain as provenance. Active tasks still need temporary space: this flag reduces accumulated storage after sample completion, not the peak storage needed by concurrent unfinished samples. An interrupted controller retains temporary work until a successful resume, to avoid removing files potentially still in use by scheduler jobs.
+
+`--compact_results` cannot be combined with `--keep_work`, `--work_dir` or `--conda_cache`; shared external caches are never deleted. It does not remove your installed Mamba environment or user-wide Nextflow installation.
+
+Repeat the same compact workflow command to resume an interrupted run. Completed compact samples are retained and skipped; incomplete samples use normal checkpoints. An interrupted cleanup resumes from its marker. Changed settings, input/reference metadata, implementation, missing retained files, or `--force_redo` require a new output directory for compacted samples. Do not delete `compact-results.json` to try to restore checkpoint behavior: the intermediates have been intentionally removed.
+
+For example, add this flag to the existing benchmark command:
+
+```bash
+metapathways analysis_wf \
+  --manifest /project/benchmark/samples.tsv \
+  -o /project/benchmark/compact-results -d /project/MPDB \
+  --image /project/containers/pathway-tools.sif \
+  --annotation_dbs swissprot metacyc \
+  --taxprune --taxonomic_scope all \
+  --threads 8 --compact_results
+```
+
+The cleanup task appears separately in the execution/resource records; distinguish its time from biological stages when preparing benchmark tables.

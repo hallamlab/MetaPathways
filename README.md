@@ -369,6 +369,8 @@ Do not combine `--manifest` with `-i`, discovery-directory flags, `--no_reads` o
 
 ### Outputs, restarting and exploration
 
+By default MP keeps all sample outputs. Add `--compact_results` to `analysis_wf` to remove large intermediates after each sample finishes while retaining rebuildable reports, final tables, logs and benchmark traces. PGDB archives are also removed. See [compact results and restart behavior](docs/benchmarking.md#compact-results-on-limited-storage).
+
 Each sample writes to `analysis/SAMPLE/`. The dataset root contains `inputs.resolved.tsv` with absolute original paths, combined `reports/`, and `logs/analysis_wf/RUN/` with the plan, tool logs, resource trace and task statuses. Staged symlinks and receipts stay under `.metapathways/analysis_wf/`; temporary Nextflow work/cache cleanup follows the ordinary MP resource options.
 
 Repeat the same command/output to resume. The first invocation requires a new output directory. A changed sample list, MAG ID set, or input path mapping requires a new output directory; this prevents silently mixing datasets. Input contents, commands and resource requests are checked through task receipts, and completed outputs without a matching receipt are not adopted by this workflow. `--force_redo` reruns all selected annotation, splitting and PGDB tasks. Do not run another MP command into the same output while an analysis is active.
