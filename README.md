@@ -413,6 +413,8 @@ Independent reference searches may run together, and Nextflow schedules as many 
 
 ### Submit from a Slurm headnode
 
+MP explicitly requests one node (`--nodes=1`) for every Slurm task. Threaded tools use their allocated CPUs on that node; concurrency across nodes comes from separate jobs. No node-count flag is needed in the MP command.
+
 Run from an authenticated login/head node where `sbatch`, `squeue` and `scancel` are available:
 
 ```bash

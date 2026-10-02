@@ -256,7 +256,9 @@ def configuration(tasks, args, conda_cache):
             jobs = min(jobs, cpus // max(t['cpus'] for t in tasks))
         if limit_memory is not None:
             jobs = min(jobs, memory_bytes(limit_memory) // largest_memory)
-        options = []
+        # All MP tools use threads within one node, never distributed MPI ranks.
+        # Some sites reject sbatch submissions that omit an explicit node count.
+        options = ['--nodes=1']
         for key in ('account', 'qos', 'reservation'):
             if getattr(args, key, None):
                 options.append('--' + key + '=' + slurm_token(getattr(args, key)))

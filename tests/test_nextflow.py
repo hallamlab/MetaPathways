@@ -40,6 +40,7 @@ class SchedulingTests(unittest.TestCase):
         text, limits = nf.configuration([self.task], args, self.root)
         self.assertEqual(limits['max_tasks'], 4)
         self.assertIn('--account=lab', text)
+        self.assertIn('--nodes=1', text)
         self.assertIn("executor.submitRateLimit = '6/1min'", text)
         args.max_cpus = 16
         self.assertEqual(nf.configuration([self.task], args, self.root)[1]['max_tasks'], 2)
@@ -69,6 +70,7 @@ class SchedulingTests(unittest.TestCase):
         self.assertIn('executor.queueSize = 100', config)
         self.assertNotIn('process.queue =', config)
         self.assertIn('--account=lab', config)
+        self.assertIn('--nodes=1', config)
         args.max_memory = '128 GB'
         self.assertEqual(nf.configuration(tasks, args, self.root)[1]['max_tasks'], 2)
         args.max_memory, args.max_cpus = None, 24
