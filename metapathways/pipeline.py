@@ -486,7 +486,8 @@ def prepare_annotation(args, parser):
     """ load the sample inputs  it expects either a fasta
         file or  a directory containing fasta and yaml file pairs
     """
-    print(f"Output directory: {output_dir}")
+    if not getattr(args, '_analysis_planning', False):
+        print(f"Output directory: {output_dir}", flush=True)
     globalerrorlogger = mputils.WorkflowLogger(mputils.generate_log_fp(output_dir, basefile_name = 'global_errors_warnings'), open_mode='a')
     input_output_list = {}
     if path.isfile(input_fp):
@@ -562,7 +563,8 @@ def prepare_annotation(args, parser):
 
     try:
          # load the sample information
-         print(f"RUNNING MetaPathways: v{__version__}")
+         if not getattr(args, '_analysis_planning', False):
+              print(f"RUNNING MetaPathways: v{__version__}", flush=True)
          if len(input_output_list):
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]

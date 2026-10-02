@@ -336,6 +336,10 @@ def main(argv=None):
     refdb = Path(args.refdb_dir).expanduser().resolve()
     if any(re.search(r'[^A-Za-z0-9_./-]', str(x)) for x in (output, refdb)):
         fail('Output and MPDB paths must use letters, digits, underscores, hyphens, periods and slashes (legacy tool requirement)')
+    from metapathways._version import __version__
+    print(f'RUNNING MetaPathways: v{__version__}', flush=True)
+    print(f'Output directory: {output}', flush=True)
+    print('Validating sample inputs, read layouts and genome maps...', flush=True)
     rows = validate(read_manifest(args.manifest) if args.manifest else discover(args))
     from metapathways.compact_results import MARKER, resume_key, marker_state
     for row in rows:
@@ -372,19 +376,27 @@ def main(argv=None):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             fail(f'Another analysis_wf invocation is using {output}')
+        print(f'Staging input links for {len(rows)} samples; references: {", ".join(args.annotation_dbs)}', flush=True)
         staged = save_inputs(rows, output)
         tasks = []
-        for original, row in zip(rows, staged):
+        for index, (original, row) in enumerate(zip(rows, staged), 1):
             sample = row['sample_id']
+            prefix = f'Planning [{index}/{len(rows)}] {sample}'
+            pgdbs = 'skipped' if args.skip_ptools else str(1 + len(row['entities']))
+            print(f'{prefix}: reads={row["read_layout"]}; genome bins={len(row["entities"])}; '
+                  f'PGDBs={pgdbs}; compact={"yes" if args.compact_results else "no"}', flush=True)
+            first_task = len(tasks)
             key = resume_key(args, original) if args.compact_results else None
             state = marker_state(output/sample, key, args.force_redo) if args.compact_results else None
             if state == 'complete':
-                print(f'{sample}: completed compact results retained')
+                print(f'{prefix}: completed compact results retained; no tasks scheduled', flush=True)
                 continue
             if state == 'compacting':
                 tasks.append(compact_task(sample, output, key, [], args.memory))
+                print(f'{prefix}: resuming interrupted cleanup only', flush=True)
                 continue
             sample_args = copy.copy(args)
+            sample_args._analysis_planning = True
             sample_args.input_file = row['assembly']
             sample_args.output_dir, sample_args.refdb_dir = str(output), str(refdb)
             sample_args.fwd_fastq = row['reads_1'] or None
@@ -399,11 +411,13 @@ def main(argv=None):
             if args.compact_results:
                 dependencies = [t['id'] for t in tasks if t.get('sample') == sample]
                 tasks.append(compact_task(sample, output, key, dependencies, args.memory))
+            print(f'{prefix}: ready; {len(tasks) - first_task} tasks planned', flush=True)
         if args.force_redo:
             for task in tasks:
                 if task['status'] != 'skip':
                     task['status'] = 'redo'
-        print(f'Validated {len(rows)} samples. Resolved inputs: {output / "inputs.resolved.tsv"}')
+        print(f'Validated {len(rows)} samples. Resolved inputs: {output / "inputs.resolved.tsv"}', flush=True)
+        print(f'Planning complete: {len(tasks)} tasks.', flush=True)
         if tasks:
             nextflow.launch(tasks, output, args, 'analysis_wf', dryrun=args.dryrun)
         if args.compact_results and not args.dryrun:
