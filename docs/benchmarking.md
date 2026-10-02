@@ -6,8 +6,6 @@
 
 Specify which assemblies, reads, genome assignments, reference releases, tool revisions and resource budgets are being evaluated. Use a complete input manifest and a new output directory for a fresh measurement. A reused task is a cache check, not a newly measured biological stage.
 
-For CAMI, distinguish ground-truth source-genome bins from recovered MAGs. Ground-truth bins demonstrate annotation reuse, splitting, per-genome inference and report integration; they do not evaluate binning accuracy or robustness to contamination. Report the number of sample-specific bins separately from the number of distinct source genomes. Contig filtering and absence of selected annotated genes can reduce the number of actual PGDB attempts.
-
 Freeze the MPDB and SIF during the run. Do not change analysis code, dependencies or reference files while tasks are running. Editing documentation does not change the biological workflow, but keep a source record identifying the code actually used. A Git commit alone is insufficient when the working tree has uncommitted changes.
 
 ## Example full workflow
@@ -50,7 +48,7 @@ Keep linked tables rather than forcing differently scoped quantities into one re
 | --- | --- |
 | Sample/input inventory | Sample ID, body site/group, assembly/read/map paths and hashes, read layout, original contig count/bases, input genome-bin count |
 | Sample result statistics | Retained contigs/bases, predicted/annotated features with feature types, reference-hit counts, read mapping/counting statistics |
-| Entity/pathway statistics | Sample/entity, ground-truth or recovered-bin method, selected-input genes, outcome, base pathways, reactions and explicit unique pathway–gene associations |
+| Entity/pathway statistics | Sample/entity, genome-assignment method, selected-input genes, outcome, base pathways, reactions and explicit unique pathway–gene associations |
 | Task performance | Invocation, sample, stage, database/entity where applicable, status, requested CPUs/memory, elapsed time, trace CPU and memory/I/O fields |
 | Run provenance | Host/OS/CPU/RAM, MP/environment/reference/SIF versions and hashes, complete command, start/end, concurrency budget and notes |
 

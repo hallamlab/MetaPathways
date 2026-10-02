@@ -68,7 +68,7 @@ metapathways build_db -d ~/MPDB --func swissprot -a fast
 metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 ```
 
-For assemblies with reads and genome maps, follow the [complete workflow](docs/inputs.md). To add pathway inference, follow the [Pathway Tools installer and image guide](docs/pathway-tools.md). The small reviewer references are for testing only.
+For assemblies with reads and genome maps, follow the [complete workflow](docs/inputs.md). **If you want PGDBs, complete the [Pathway Tools installation guide](docs/pathway-tools.md) before starting that workflow.** The small reviewer references are for testing only.
 
 ## Start here
 
@@ -320,6 +320,8 @@ The portal is a table explorer: it adds no biological plots or interpretation. T
 The full inventory links remaining RNA, sequence, alignment, statistics and raw PGDB products. The relational views cover the recognized formats documented in the schema guide; an arbitrary legacy table is not silently assumed to fit that schema. Missing primary annotations leave explicit placeholder ORFs and import notes; malformed recognized tables stop the rebuild and preserve the previous database.
 
 ## Complete multi-sample analysis
+
+**To build PGDBs, first complete the [Pathway Tools installation guide](docs/pathway-tools.md)** and build/register your licensed SIF with `metapathways build_pt`. Once that setup is complete, run the workflow below. If you do not want pathway inference, add `--skip_ptools`; no Pathway Tools installation is needed.
 
 `analysis_wf` runs annotation, optional read mapping, optional MAG splitting, community/MAG pathway inference, and a combined report. It accepts one or many metagenomes. All computational tasks share **one Nextflow DAG and one resource budget**; samples do not wait for other samples to finish. Community PGDB construction, read mapping, and MAG splitting can proceed together once their annotation inputs are ready. MAG PGDB jobs follow splitting.
 

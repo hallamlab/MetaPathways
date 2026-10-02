@@ -4,6 +4,8 @@
 
 For guided usage, start with the [command cookbook](commands.md) or [Pathway Tools chapter](pathway-tools.md). This page describes the stage and output contracts.
 
+**Before running the complete workflow with PGDBs, follow the [Pathway Tools installation guide](pathway-tools.md)** to build and register your licensed SIF. Use `analysis_wf --skip_ptools` when you do not need pathway inference.
+
 ## Command boundaries
 
 | Command | Work performed | Requires |

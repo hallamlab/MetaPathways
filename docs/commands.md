@@ -57,6 +57,8 @@ To inspect the plan add `--dryrun`. To rerun only read mapping/counting with the
 
 ## analysis_wf: one complete run for N samples
 
+**For PGDBs, complete the [Pathway Tools installation guide](pathway-tools.md) first.** Build/register your licensed SIF with `metapathways build_pt` before running the command below. To omit pathway inference, add `--skip_ptools`; Pathway Tools is then unnecessary.
+
 ```bash
 metapathways analysis_wf --manifest /project/samples.tsv \
   -o analysis -d /path/to/MPDB \

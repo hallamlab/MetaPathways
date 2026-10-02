@@ -2,6 +2,8 @@
 
 [Home](../README.md) · [Command cookbook](commands.md) · [Manifest reference](../README.md#custom-analysis-manifest)
 
+**Want PGDBs? Complete the [Pathway Tools installation guide](pathway-tools.md) first**, including building and registering your licensed SIF with `metapathways build_pt`. Then prepare your inputs and run `analysis_wf`. To run without pathway inference, add `--skip_ptools`.
+
 ## Decide what each sample means
 
 A sample is one assembly with its own reads and optional contig-to-genome assignments. The assembly is required. Reads add abundance measurements. A genome map adds genome-level splitting and PGDBs. MP does not assemble reads or infer bins itself.
@@ -103,11 +105,3 @@ contig_003	GenomeB
 The first column is the original FASTA record ID: the token after `>` up to the first whitespace. Do not use MP's renamed `Sample-C123` IDs here. The second column is the bin ID. Contigs may be absent if unbinned, but every supplied contig must belong to the assembly and must occur at most once in the map. Periods in bin names become underscores; avoid names that collide after normalization. Use names beginning with a letter and consisting of letters, numbers or underscores; `community` and names containing `non_binned` are reserved.
 
 A contig removed by assembly QC cannot contribute features downstream. A mapped genome with no usable annotated features may have no generated PGDB input. Therefore the number of genome IDs in a map is an input inventory, not a promise of that many successful PGDBs.
-
-## CAMI ground-truth bins versus recovered MAGs
-
-CAMI `gsa_mapping.tsv` files provide original contig-to-source-genome assignments, often with taxon, source-sequence and coordinate columns. Convert only the anonymous contig ID and genome ID columns to the two-column format; keep the original file and an ID lookup if bin names are normalized.
-
-These maps are suitable for demonstrating MP's splitting and per-genome analysis features. Describe them as **ground-truth genome bins**, not experimentally recovered MAGs. They do not test a binning algorithm or realistic contamination/recovery errors. A source genome appearing in several samples creates several sample-specific bins, not several distinct reference genomes.
-
-For custom maps, validate duplicate IDs and completeness explicitly before a large benchmark. MP's workflow validation checks supplied IDs against assemblies, but assignment correctness remains a property of your source data.
