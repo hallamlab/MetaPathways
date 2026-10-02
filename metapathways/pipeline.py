@@ -450,7 +450,7 @@ def prepare_annotation(args, parser):
         value = getattr(args, key, None)
         if value and value != 'None':
             setattr(args, key, str(pathlib.Path(value).expanduser().absolute()))
-    budget = args.max_cpus or (32 if args.executor == 'slurm' else nextflow.local_capacity()[0])
+    budget = args.max_cpus or (args.threads if args.executor == 'slurm' else nextflow.local_capacity()[0])
     args.threads = min(args.threads, budget)
     if args.force_redo:
         steps_list = ['PREPROCESS_INPUT', 'ORF_PREDICTION', 'FILTER_AMINOS', 'SCAN_rRNA',

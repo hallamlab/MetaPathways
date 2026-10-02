@@ -46,6 +46,36 @@ class SchedulingTests(unittest.TestCase):
         args.max_memory = '16 GB'
         self.assertEqual(nf.configuration([self.task], args, self.root)[1]['max_tasks'], 1)
 
+    def test_local_job_ceiling_uses_detected_capacity_without_user_totals(self):
+        args = self.args(max_tasks=100)
+        with patch.object(nf, 'local_capacity', return_value=(32, '128 GB')):
+            config, limits = nf.configuration([self.task], args, self.root)
+        self.assertEqual(limits['max_tasks'], 100)
+        self.assertEqual(limits['max_cpus'], 32)
+        self.assertEqual(limits['max_memory'], '128 GB')
+        self.assertIn('executor.queueSize = 100', config)
+        self.assertIn('executor.cpus = 32', config)
+        self.assertIn("executor.memory = '128 GB'", config)
+
+    def test_slurm_job_limit_needs_no_implicit_aggregate_budgets(self):
+        tasks = [nf.task('threaded', 'threaded', [], cpus=8, memory='64 GB'),
+                 nf.task('serial', 'serial', [], cpus=1, memory='64 GB')]
+        args = self.args(executor='slurm', account='lab', max_tasks=100)
+        with patch.object(nf, 'local_capacity', side_effect=AssertionError('Slurm must not use headnode capacity')):
+            config, limits = nf.configuration(tasks, args, self.root)
+        self.assertEqual(limits['max_tasks'], 100)
+        self.assertIsNone(limits['max_cpus'])
+        self.assertIsNone(limits['max_memory'])
+        self.assertIn('executor.queueSize = 100', config)
+        self.assertNotIn('process.queue =', config)
+        self.assertIn('--account=lab', config)
+        args.max_memory = '128 GB'
+        self.assertEqual(nf.configuration(tasks, args, self.root)[1]['max_tasks'], 2)
+        args.max_memory, args.max_cpus = None, 24
+        self.assertEqual(nf.configuration(tasks, args, self.root)[1]['max_tasks'], 3)
+        args.max_cpus, args.max_tasks = None, None
+        self.assertEqual(nf.configuration(tasks, args, self.root)[1]['max_tasks'], 4)
+
     def test_invalid_slurm_options_and_oversized_tasks_rejected(self):
         with self.assertRaisesRegex(ValueError, 'requires --account'):
             nf.configuration([self.task], self.args(executor='slurm'), self.root)

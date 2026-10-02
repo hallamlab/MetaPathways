@@ -40,19 +40,19 @@ def memory(value):
 def add_resources(parser, task_memory='16 GB'):
     group = parser.add_argument_group('Execution Resources')
     group.add_argument('--max_cpus', type=positive, default=None,
-                       help='total CPUs available to this command [available CPUs]')
+                       help='total CPU budget [local: available CPUs; Slurm: no aggregate cap]')
     group.add_argument('--memory', type=memory, default=task_memory,
                        help=f'memory reservation per task [{task_memory}]')
     group.add_argument('--max_memory', type=memory, default=None,
-                       help='total memory available to this command [available host memory; Slurm: 64 GB]')
+                       help='total memory budget [local: available memory; Slurm: no aggregate cap]')
     group.add_argument('--max_tasks', type=positive, default=None,
-                       help='maximum simultaneously running tasks [limited by CPU/memory]')
+                       help='maximum submitted tasks, including queued/running [local: CPU budget; Slurm: 4]')
 
 
     group.add_argument('--executor', choices=['local', 'slurm'], default='local',
                        help='execution backend [local]; Slurm uses your logged-in cluster identity')
     group.add_argument('--account', type=slurm_token, help='Slurm allocation/account')
-    group.add_argument('--partition', type=slurm_token, help='Slurm partition')
+    group.add_argument('--partition', type=slurm_token, help='Slurm partition [cluster default]')
     group.add_argument('--qos', type=slurm_token, help='Slurm quality of service')
     group.add_argument('--reservation', type=slurm_token, help='Slurm reservation')
     group.add_argument('--time_limit', type=duration, default='24h', help='Slurm walltime per task [24h]')
@@ -196,9 +196,9 @@ def local_capacity():
 def configuration(tasks, args, conda_cache):
     backend = getattr(args, 'executor', 'local')
     local_cpus, local_memory = local_capacity() if backend == 'local' else (None, None)
-    cpus = getattr(args, 'max_cpus', None) or (32 if backend == 'slurm' else local_cpus)
-    limit_memory = getattr(args, 'max_memory', None) or ('64 GB' if backend == 'slurm' else local_memory)
-    if any(t['cpus'] < 1 or t['cpus'] > cpus for t in tasks):
+    cpus = getattr(args, 'max_cpus', None) or local_cpus
+    limit_memory = getattr(args, 'max_memory', None) or local_memory
+    if any(t['cpus'] < 1 or (cpus is not None and t['cpus'] > cpus) for t in tasks):
         raise ValueError('Task threads must be positive and no greater than --max_cpus')
     largest_memory = max(memory_bytes(t['memory']) for t in tasks)
     if limit_memory and largest_memory > memory_bytes(limit_memory):
@@ -214,19 +214,22 @@ def configuration(tasks, args, conda_cache):
         # Default Nextflow queueSize (100) can otherwise underutilize large hosts.
         jobs = getattr(args, 'max_tasks', None) or cpus
     else:
-        if not getattr(args, 'account', None) or not getattr(args, 'partition', None):
-            raise ValueError('Slurm requires --account and --partition')
+        if not getattr(args, 'account', None):
+            raise ValueError('Slurm requires --account')
         # Slurm does not use executor.cpus/memory as aggregate limits. Bound
         # submitted jobs conservatively using the largest task request instead.
-        jobs = min(getattr(args, 'max_tasks', None) or 4,
-                   cpus // max(t['cpus'] for t in tasks),
-                   memory_bytes(limit_memory) // largest_memory)
+        jobs = getattr(args, 'max_tasks', None) or 4
+        if cpus is not None:
+            jobs = min(jobs, cpus // max(t['cpus'] for t in tasks))
+        if limit_memory is not None:
+            jobs = min(jobs, memory_bytes(limit_memory) // largest_memory)
         options = []
         for key in ('account', 'qos', 'reservation'):
             if getattr(args, key, None):
                 options.append('--' + key + '=' + slurm_token(getattr(args, key)))
-        config += [f'process.queue = {groovy(slurm_token(args.partition))}',
-                   f'process.clusterOptions = {groovy(" ".join(options))}',
+        if getattr(args, 'partition', None):
+            config.append(f'process.queue = {groovy(slurm_token(args.partition))}')
+        config += [f'process.clusterOptions = {groovy(" ".join(options))}',
                    f'process.time = {groovy(duration(getattr(args, "time_limit", "24h")))}',
                    f'executor.submitRateLimit = {groovy(str(getattr(args, "submit_rate", 6)) + "/1min")}',
                    "executor.queueStatInterval = '1min'", "executor.pollInterval = '10sec'"]
@@ -346,7 +349,8 @@ def launch(tasks, output_dir, args, name, dryrun=False):
                    'run', str(nf), '-work-dir', str(work),
                    '-with-trace', str(run_dir / 'trace.tsv'), '-with-report', str(run_dir / 'report.html'),
                    '-with-timeline', str(run_dir / 'timeline.html')]
-        print(f"MetaPathways: {name}; executor={resources['executor']}; CPU budget={resources['max_cpus']}; task limit={resources['max_tasks']}", flush=True)
+        cpu_budget = resources['max_cpus'] if resources['max_cpus'] is not None else 'per-job requests'
+        print(f"MetaPathways: {name}; executor={resources['executor']}; CPU budget={cpu_budget}; task limit={resources['max_tasks']}", flush=True)
         print(f'Logs and resource reports: {run_dir}', flush=True)
         interrupted = False
         try:

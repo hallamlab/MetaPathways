@@ -115,7 +115,7 @@ metapathways ptools -o results/SampleA \
 
 `-o` here is the **sample directory**, unlike `run` and `analysis_wf`, whose `-o` is the parent output directory. A wrong level can make MP look for missing `ptools/0.pf` inputs.
 
-Every PGDB task uses one CPU. Concurrency comes from multiple independent PGDB tasks; assigning eight threads does not make one Pathway Tools process eight times faster. `ptools --memory` controls each standalone PGDB reservation; `analysis_wf --ptools_memory` controls PGDB reservations within the complete workflow (default 4 GB). The total `--max_memory` still bounds scheduled reservations. Local reservations are not hard memory ceilings.
+Every PGDB task uses one CPU. Concurrency comes from multiple independent PGDB tasks; assigning eight threads does not make one Pathway Tools process eight times faster. `ptools --memory` controls each standalone PGDB reservation; `analysis_wf --ptools_memory` optionally overrides PGDB reservations within the complete workflow; without it PGDBs inherit `--memory`. An explicit `--max_memory` additionally bounds scheduled reservations. Local reservations are not hard memory ceilings.
 
 SIF tasks receive private home, data and temporary state. MP also isolates X-display sockets; independent PGDBs can run together without the native installation's shared state. Native Pathway Tools remains a legacy serialized option for standalone `ptools`; the complete `analysis_wf` requires the SIF route. The old `--container` flag is not a synonym for `--image`; use the image route shown here.
 

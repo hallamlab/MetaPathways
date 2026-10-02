@@ -50,7 +50,7 @@ def parser():
     add_taxonomy_options(sub)
     sub.add_argument('--no_transport_inference', action='store_true', help='Disable TIP transport inference')
     sub.add_argument('--taxprune', action='store_true', help='Enable Pathway Tools taxonomic pruning')
-    sub.add_argument('--ptools_memory', type=nextflow.memory, default='4 GB', help='Memory per single-CPU PGDB task [4 GB]')
+    sub.add_argument('--ptools_memory', type=nextflow.memory, default=None, help='Optional PGDB memory override [same as --memory]')
     return p
 
 
@@ -304,7 +304,7 @@ def downstream(row, output, annotations, args, image):
             [image, str(inputs), str(base / f'results/annotation_table/{sample}.EC_RXN_map.tsv'),
              str(base / f'results/annotation_table/{sample}.ptinput.tsv'), str(base / f'preprocessed/{sample}.fasta')],
             [str(results / (tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
-            [parent if community else f'{sample}:mag_split'], cpus=1, memory=args.ptools_memory,
+            [parent if community else f'{sample}:mag_split'], cpus=1, memory=args.ptools_memory or args.memory,
             sample=sample, entity=entity, allow_failure=not community, adopt_existing=False,
             cache_version='sequence-backed-pgdb-trna-names-v3',
             skip_if_missing=None if community else str(inputs / '0.pf')))

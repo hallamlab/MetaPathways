@@ -118,9 +118,22 @@ class AnalysisTests(unittest.TestCase):
         self.assertTrue(indexed['Alpha:pgdb:mb2_1']['allow_failure'])
         self.assertFalse(indexed['Alpha:pgdb:community']['allow_failure'])
         self.assertEqual(indexed['Alpha:pgdb:mb2_1']['cpus'], 1)
-        self.assertEqual(indexed['Alpha:pgdb:community']['memory'], '4 GB')
+        self.assertEqual(indexed['Alpha:pgdb:community']['memory'], '16 GB')
         for task in tasks:
             self.assertTrue(all(d.split(':')[0] == task['id'].split(':')[0] for d in task['dependencies']))
+
+    def test_one_memory_request_applies_to_all_workflow_jobs_unless_overridden(self):
+        row = self.rows()[0]
+        annotation = [nf.task('Alpha:path', 'path', [], context={'name': 'PATHOLOGIC_INPUT'})]
+        for executor in ('local', 'slurm'):
+            args = self.args('--memory', '64 GB', '--executor', executor)
+            tasks = wf.downstream(row, self.root / 'out', annotation, args, '/fake/image.sif')
+            self.assertTrue(all(t['memory'] == '64 GB' for t in tasks))
+            self.assertTrue(all(t['cpus'] == 1 for t in tasks))
+            args.ptools_memory = '4 GB'
+            tasks = wf.downstream(row, self.root / 'out', annotation, args, '/fake/image.sif')
+            for t in tasks:
+                self.assertEqual(t['memory'], '4 GB' if ':pgdb:' in t['id'] else '64 GB')
 
     def test_standalone_mag_split_invalidates_legacy_cache_and_tracks_coordinates(self):
         base = self.root / 'sample'

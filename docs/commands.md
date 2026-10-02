@@ -56,7 +56,7 @@ metapathways analysis_wf --manifest /project/samples.tsv \
 
 Use [automatic directories or a manifest](inputs.md). All samples share one scheduling budget and dependency graph. Independent tasks can overlap, including mapping and PGDB work. `--skip_ptools` omits inference; discovery's `--no_reads` and `--no_mags` explicitly omit those inputs. In a manifest, blank optional input columns express per-sample omissions.
 
-The workflow validates inputs and writes a resolved manifest before submitting analyses. Required annotation stages cannot be skipped through `skip`; valid completed tasks are reused automatically. `--ptools_memory '8 GB'` changes only each PGDB reservation. `--memory` changes the general task reservation. Increasing the total memory budget does not automatically increase either per-task setting.
+The workflow validates inputs and writes a resolved manifest before submitting analyses. Required annotation stages cannot be skipped through `skip`; valid completed tasks are reused automatically. `--ptools_memory '8 GB'` changes only each PGDB reservation. `--memory` changes all workflow task reservations, including PGDBs unless `--ptools_memory` is explicitly set. Increasing the total memory budget does not automatically increase either per-task setting.
 
 ## mag_split: reuse community annotation
 

@@ -108,17 +108,17 @@ Pipeline Step Arguments:
   --force_redo          Redo all steps [False]
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [16 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64 GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget; Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation
@@ -166,7 +166,7 @@ options:
                         Disable TIP transport inference
   --taxprune            Enable Pathway Tools taxonomic pruning
   --ptools_memory PTOOLS_MEMORY
-                        Memory per single-CPU PGDB task [4 GB]
+                        Optional PGDB memory override [same as --memory]
 
 Minimum Required Arguments:
   -i INPUT_FILE, --input_file INPUT_FILE
@@ -253,17 +253,17 @@ Pipeline Step Arguments:
   --force_redo          Redo all steps [False]
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [16 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64 GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget; Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation
@@ -319,18 +319,18 @@ database arguments:
                         --func includes metacyc]
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [16 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64
-                        GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget;
+                        Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation
@@ -360,17 +360,17 @@ options:
                         TSV file that contains contig-to-MAG mapping [REQUIRED]
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [16 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64 GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget; Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation
@@ -417,18 +417,18 @@ options:
   --dryrun              write and show the build plan without building or registering
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [4 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64
-                        GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget;
+                        Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation
@@ -466,17 +466,17 @@ options:
   --image IMAGE         Pathway Tools SIF [registered by build_pt]
 
 Execution Resources:
-  --max_cpus MAX_CPUS   total CPUs available to this command [available CPUs]
+  --max_cpus MAX_CPUS   total CPU budget [local: available CPUs; Slurm: no aggregate cap]
   --memory MEMORY       memory reservation per task [4 GB]
   --max_memory MAX_MEMORY
-                        total memory available to this command [available host memory; Slurm: 64 GB]
+                        total memory budget [local: available memory; Slurm: no aggregate cap]
   --max_tasks MAX_TASKS
-                        maximum simultaneously running tasks [limited by CPU/memory]
+                        maximum submitted tasks, including queued/running [local: CPU budget; Slurm: 4]
   --executor {local,slurm}
                         execution backend [local]; Slurm uses your logged-in cluster identity
   --account ACCOUNT     Slurm allocation/account
   --partition PARTITION
-                        Slurm partition
+                        Slurm partition [cluster default]
   --qos QOS             Slurm quality of service
   --reservation RESERVATION
                         Slurm reservation

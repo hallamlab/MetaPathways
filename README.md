@@ -347,7 +347,7 @@ metapathways analysis_wf \
   --threads 8 --max_cpus 32
 ```
 
-The registered SIF from `metapathways build_pt` is used automatically; `--image /path/to/ptools.sif` overrides it. Container isolation allows multiple single-CPU Pathway Tools jobs. Annotation tasks default to 16 GB each and PGDB jobs to 4 GB (`--ptools_memory`); memory availability can limit concurrency before CPUs do. Slurm uses the same resource flags described below and requires all inputs, outputs, software and the SIF to be accessible on compute nodes.
+The registered SIF from `metapathways build_pt` is used automatically; `--image /path/to/ptools.sif` overrides it. Container isolation allows multiple single-CPU Pathway Tools jobs. All workflow tasks inherit `--memory` (16 GB by default); `--ptools_memory` optionally overrides only PGDB jobs; memory availability can limit concurrency before CPUs do. Slurm uses the same resource flags described below and requires all inputs, outputs, software and the SIF to be accessible on compute nodes.
 
 For existing flat directories, point `-i` at the assemblies directory and supply `--reads_dir /path/to/reads` and `--mag_maps_dir /path/to/maps`. If only one of those flags is supplied, the other branch defaults to `reads/` or `mag_maps/` under `-i`. Use `--no_reads` or `--no_mags` to explicitly omit those branches for every sample during discovery. Use `--skip_ptools` to omit PGDB construction while retaining annotation, read mapping, MAG splitting and reporting. The manifest below supports a different combination for each sample.
 
@@ -404,7 +404,7 @@ The portal combines samples and keeps sample IDs on all related records so ident
 | Serial stages | One CPU each, including Pathway Tools and Python parsers; native math pools are capped too |
 | `--max_cpus` | CPUs available to the process, including affinity/cgroup limits |
 | `--memory` | Per-task reservation: normally 16 GB; standalone `ptools` defaults to 4 GB |
-| `analysis_wf --ptools_memory` | PGDB task reservation within the complete workflow; 4 GB by default |
+| `analysis_wf --ptools_memory` | Optional PGDB-only override; otherwise inherits `--memory` |
 | `--max_memory` | Currently available host memory, bounded by cgroups |
 | `--max_tasks` | Additional concurrency cap; CPU/memory reservations still apply |
 | `build_db -t` | Legacy total CPU budget; omitted means available CPUs |
@@ -426,12 +426,14 @@ Run from an authenticated login/head node where `sbatch`, `squeue` and `scancel`
 ```bash
 metapathways run -i /shared/sample.fasta -o /shared/results -d /shared/MPDB \
   --executor slurm --account my_project --partition compute \
-  -t 8 --max_cpus 32 --max_memory '64 GB' --max_tasks 4 --time_limit 24h
+  -t 8 --memory '64 GB' --max_tasks 100 --time_limit 24h
 ```
 
-MP uses your existing Slurm identity; it does not take a password or SSH private key. `--qos` and `--reservation` are optional. Inputs, outputs, references, work/cache paths, the MP installation and its environment must have the same absolute paths on compute nodes. Pathway Tools on Slurm requires a SIF. The report's HTML explorer runs locally; it is not a Slurm service.
+MP uses your existing Slurm identity; it does not take a password or SSH private key. `--partition` is optional: omitted means the cluster default. Run `sinfo` to list partitions; these are named node groups/queues with access and time limits. `--qos` and `--reservation` are optional. Inputs, outputs, references, work/cache paths, the MP installation and its environment must have the same absolute paths on compute nodes. Pathway Tools on Slurm requires a SIF. The report's HTML explorer runs locally; it is not a Slurm service.
 
-Protected Slurm defaults are 32 aggregate CPUs, 64 GB aggregate reserved memory, at most four submitted jobs, six submissions per minute and 24 hours per task. The job cap is conservatively reduced using the largest CPU/memory request in the plan. This can leave capacity unused for small stages. Adjust `--submit_rate` and other limits to your site's policy. There are no automatic task retries. MP uses an explicit Nextflow configuration so ambient profiles do not silently override these limits.
+Slurm defaults to at most four submitted jobs, six submissions per minute and 24 hours per task. `--max_tasks 100` directly permits up to 100 queued/running jobs; Slurm decides actual running concurrency. There are no implicit aggregate CPU or memory caps on Slurm. If you explicitly provide `--max_cpus` or `--max_memory`, MP conservatively reduces the job cap using the largest task request. `--submit_rate` independently throttles submissions; for example, `--submit_rate 60` permits one per second. There are no automatic task retries. MP uses an explicit Nextflow configuration so ambient profiles do not silently override these limits.
+
+The basic interface is the same locally and on HPC: `--threads 8 --memory '64 GB' --max_tasks 100`. Serial tasks still request one CPU. In `analysis_wf`, the memory request also applies to PGDBs unless overridden with `--ptools_memory`. Locally, detected available CPUs and memory automatically limit execution; on Slurm, the scheduler determines capacity. Aggregate maxima are optional additional controls, not numbers the user must calculate.
 
 Live Slurm execution still needs validation at your site. Configuration and synthetic local scheduling tests do not establish compatibility with every cluster's authentication, filesystem or resource policies.
 
