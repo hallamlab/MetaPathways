@@ -230,6 +230,16 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
           )
 
 # this function creates the pathway tools input files
+def ptinput_dataframe(features, nucleotide_sequences):
+    """Keep the coordinate schema valid for protein, RNA-only and empty inputs."""
+    frame = pd.DataFrame.from_dict(features, orient='index')
+    for column in ('id', 'seqname', 'start', 'end', 'strand'):
+        if column not in frame:
+            frame[column] = pd.Series(index=frame.index, dtype=object)
+    frame['contig_length'] = [len(nucleotide_sequences[name]) for name in frame['seqname']]
+    return frame
+
+
 def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict, \
         protein_seq_dict, compact_output, orf_to_taxonid={}):
      
@@ -493,7 +503,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 write_input_sequence_file(output_dir_name, shortid, fastaStr)
             '''
         #endif
-    pt_attrib_df = pd.DataFrame.from_dict(pt_attrib_dict, orient='index')
+    pt_attrib_df = ptinput_dataframe(pt_attrib_dict, nucleotide_seq_dict)
     if 'ec' in pt_attrib_df.columns:
         pt_attrib_df['ec'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['ec']]
     if 'rxn' in pt_attrib_df.columns:
@@ -965,5 +975,4 @@ def MetaPathways_create_genbank_ptinput(argv, errorlogger = None, runstatslogger
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         main(sys.argv[1:])
-
 

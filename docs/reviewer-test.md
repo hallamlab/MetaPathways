@@ -31,7 +31,9 @@ cp -r ~/src/MetaPathways/metapathways/regtests/cami_reviewer cami-reviewer
 
 Run the link and copy commands once in a new work directory. `build_db --test` formats the tiny bundled SwissProt/SILVA fixtures and downloads enzyme/taxonomy support records. It needs internet access and a writable installation. This is not an offline test, and the input bundle size is not the total installation size.
 
-The small reference fixture is intentionally incomplete and is largely E. coli oriented. CAMI annotations can therefore be sparse, and RNA tables can be empty. To test richer annotations with your existing production MPDB, replace `-d MPDB` with its path, replace `--annotation_dbs swissprot_test` with `--annotation_dbs swissprot`, and omit the `--rRNA_refdbs` line to use the standard SILVA references. The small input samples remain the same. See [database commands](commands.md).
+The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 original K12 test references plus 188 reference targets matched by the three CAMI samples in a full-SwissProt run. The protein FASTA is about 109 KB. This gives the reviewer useful annotation, taxonomy and genome-splitting examples without a full protein database download. Selection and reference provenance are recorded in [`reviewer_reference.json`](../metapathways/regtests/test_db/reviewer_reference.json). The deliberately selected reference set is for workflow testing, not annotation accuracy or biological benchmarking. SILVA fixtures remain small; empty RNA tables can be legitimate.
+
+When updating an existing installation, rerun `metapathways build_db --test` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the reviewer acceptance run.
 
 ## Run all three samples first
 

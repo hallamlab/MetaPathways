@@ -60,22 +60,9 @@ magsplitter --help
 
 ## First installation check
 
-```bash
-mkdir -p ~/mp-reviewer
-cd ~/mp-reviewer
-metapathways build_db --test
-metapathways run --test
-```
+Follow the **[three-sample reviewer walkthrough](reviewer-test.md)**. It uses the same `analysis_wf` command as a real analysis, with small bundled references, assemblies, paired reads and genome maps. It exercises annotation, read abundance, genome splitting and the reports without requiring Pathway Tools. Database preparation downloads enzyme and taxonomy support records, so internet access is required.
 
-The database command formats the bundled small reference fixtures and downloads support records for enzymes and taxonomy; it needs internet access and a writable installed fixture directory. The run command uses the bundled K12 assembly and paired reads, forces one thread for this example, and writes `~/mp-reviewer/test/k12_test/`. It does not invoke Pathway Tools. Do not pass your production data to `--test`: that flag selects its own inputs and output location.
-
-Expect annotation files under `test/k12_test/results/annotation_table/`, abundance under `test/k12_test/results/rpkm/`, and `test/reports/MP_run_report.html`. Inspect task status and logs if any expected output is absent. A report file existing is not by itself proof that all stages succeeded.
-
-```bash
-metapathways report -o test --serve --no-rebuild
-```
-
-Keep this terminal running while browsing. Ctrl-C stops the report server, not the already completed analysis. On a remote server, use `--no-browser --port 8765` and the SSH tunnel instructions.
+The older `run --test` K12 example remains available for compatibility, but it does not exercise the complete workflow and is not the reviewer acceptance test.
 
 ## Your first real assembly
 

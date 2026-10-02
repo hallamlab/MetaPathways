@@ -1496,11 +1496,12 @@ halt = 0
 
 def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output=False):
 
-    addHeader = True
     if not path.exists(output_dir):
         makedirs(output_dir)
 
-    orf_dict = {}
+    # This is also MAGSplitter's structural ORF-to-contig map. Preserve
+    # predicted CDS even when the selected references have no qualifying hits.
+    orf_dict = {orf: {"contig": contig} for orf, contig in orfToContig.items()}
     for dbname in results.keys():
         gutils.eprintf("\n\tINFO:\tnumber of hits in {}: {}".format(dbname, len(results[dbname].keys())))
         for orfname in results[dbname]:
@@ -1544,6 +1545,9 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
             dbnames.append(dbname)
             headers.append(std_dbname)
 
+    if outputfile.tell() == 0:
+        gutils.fprintf(outputfile, "# %s\n", "\t".join(headers))
+
     sampleName = None
     for orfn in orf_dict:
 
@@ -1562,10 +1566,6 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
                 row.append(orf_dict[orfn][database_maps[dbname]])
             else:
                 row.append("")
-
-        if addHeader:
-            gutils.fprintf(outputfile, "# %s\n", "\t".join(headers))
-            addHeader = False
 
         gutils.fprintf(outputfile, "%s\n", "\t".join(row))
 

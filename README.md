@@ -20,18 +20,7 @@ New to the terminal? Follow the chapters in order. Already installed MP? Start w
 
 ### Quick start after installation
 
-Activate the environment, then run the small included installation example:
-
-```bash
-conda activate metapathways
-mkdir -p ~/mp-reviewer
-cd ~/mp-reviewer
-metapathways build_db --test
-metapathways run --test
-metapathways report -o test --serve --no-rebuild
-```
-
-This downloads support records, uses small bundled references, and checks annotation plus paired-read abundance. It does **not** run Pathway Tools or reproduce the manuscript benchmark. Continue to the [reviewer walkthrough](docs/reviewer-test.md) for the complete workflow. On a remote server, follow [SSH browser access](docs/reports-tutorial.md#view-a-remote-report-through-ssh).
+Use the **[three-sample reviewer walkthrough](docs/reviewer-test.md)** as the installation check. It builds the bundled small reference database and runs `analysis_wf` on the included CAMI assemblies, paired reads and genome maps, then opens the reports. This is the standard test route for both local and Slurm installations; Pathway Tools is optional and requires your own license. On a remote server, follow [SSH browser access](docs/reports-tutorial.md#view-a-remote-report-through-ssh).
 
 ### Which command do I need?
 

@@ -1,4 +1,5 @@
 import csv
+import io
 import shlex
 import tempfile
 import unittest
@@ -7,7 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from metapathways.LCAComputation import LCAComputation
-from metapathways.MetaPathways_create_reports_fast import create_annotation
+from metapathways.MetaPathways_create_reports_fast import create_annotation, print_orf_table
 from metapathways.protein_taxonomy import hit_taxid, hit_taxonomy, raw_lca
 
 
@@ -20,6 +21,34 @@ def tree():
 
 
 class TaxonomyStatusTests(unittest.TestCase):
+    def test_rna_only_and_empty_ptinput_keep_coordinate_schema(self):
+        from metapathways.MetaPathways_create_genbank_ptinput import ptinput_dataframe
+        rna = {'rna1': {'id': 'rna1', 'seqname': 'contig1',
+                       'start': 2, 'end': 9, 'strand': '+'}}
+        frame = ptinput_dataframe(rna, {'contig1': 'A' * 20})
+        self.assertEqual(frame.loc['rna1', 'contig_length'], 20)
+        empty = ptinput_dataframe({}, {})
+        self.assertTrue(empty.empty)
+        self.assertTrue({'id', 'seqname', 'start', 'end', 'strand', 'contig_length'} <= set(empty))
+
+    def test_orf_map_preserves_unannotated_cds_across_batches(self):
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as directory:
+            print_orf_table({'swissprot_test': {}}, {'C1-G1': 'sample-C1'}, directory, output)
+            print_orf_table({'swissprot_test': {'C2-G1': [
+                {'query': 'C2-G1', 'product': 'enzyme'}]}},
+                {'C2-G1': 'sample-C2', 'C2-G2': 'sample-C2'}, directory, output)
+        rows = list(csv.reader(io.StringIO(output.getvalue()), delimiter='\t'))
+        self.assertEqual(rows, [['# ORF_ID', 'CONTIG_ID', 'swissprot_test'],
+            ['C1-G1', 'sample-C1', ''], ['C2-G1', 'sample-C2', 'enzyme'],
+            ['C2-G2', 'sample-C2', '']])
+
+    def test_empty_orf_map_has_header(self):
+        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as directory:
+            print_orf_table({'swissprot_test': {}}, {}, directory, output)
+        self.assertEqual(output.getvalue(), '# ORF_ID\tCONTIG_ID\tswissprot_test\n')
+
     def test_report_task_lists_selected_inputs_and_checkpoints_taxonomy(self):
         from metapathways.jobscreator import ContextCreator
         creator = ContextCreator.__new__(ContextCreator)
