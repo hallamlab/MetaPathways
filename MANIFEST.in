@@ -30,3 +30,6 @@ include tests/test_fast_isolation.py
 include tests/test_pt_sequences.py
 
 include CITATION.cff
+
+recursive-include tests *.py
+recursive-include docs/validation *.json

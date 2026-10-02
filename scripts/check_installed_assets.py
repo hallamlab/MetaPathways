@@ -8,7 +8,7 @@ from metapathways.analysis_workflow import read_manifest, validate
 
 root = Path(metapathways.__file__).resolve().parent
 for name in ('nextflow.py', 'nf_worker.py', 'nf_databases.py', 'analysis_workflow.py',
-             'reporting.py', 'report_server.py', 'pt_container.py', 'pt_sequences.py',
+             'reporting.py', 'report_server.py', 'protein_taxonomy.py', 'pt_container.py', 'pt_sequences.py',
              'bin/fastal', 'bin/fastdb', 'bin/metacount'):
     path = root / name
     assert path.is_file() and path.stat().st_size, f'Missing package asset: {path}'
