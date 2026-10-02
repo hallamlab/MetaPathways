@@ -81,5 +81,7 @@
     "28 RNA features have abundance but no primary protein annotation",
     "PGDBs unavailable because --skip_ptools was used",
     "HTTP 404s from report browsing, not workflow failures"
-  ]
+  ],
+  "report_notes_after_cleanup": 0,
+  "report_cleanup": "Removed generic abundance notices and excluded explicitly identified tRNA/rRNA features from missing protein annotation warnings; all 430 abundance rows retained."
 }

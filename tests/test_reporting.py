@@ -76,6 +76,22 @@ class ReportTests(unittest.TestCase):
         js = (self.reports/'portal.js').read_text()
         self.assertIn("params.get('table')||'samples'", js)
 
+    def test_expected_rna_is_not_a_missing_protein_annotation(self):
+        self.write('alpha', 'results/rpkm/test.orf_counts.tsv',
+            'Gene_ID\tCount\tRPKM\tTPM\tfeature\tseqname\n'
+            'G1\t10\t1\t2\tCDS\tC1\n'
+            'RNA1\t5\t1\t2\ttRNA\tC1\n'
+            'RNA2\t6\t1\t2\trRNA\tC1\n'
+            'MISSING_CDS\t7\t1\t2\tCDS\tC1\n')
+        build_report(self.root)
+        with sqlite3.connect(self.reports/'results.sqlite') as db:
+            messages = [r[0] for r in db.execute("SELECT message FROM issues WHERE sample_id='alpha'")]
+            self.assertFalse(any('original read mapping' in message for message in messages))
+            self.assertEqual([m for m in messages if 'lack primary annotations' in m],
+                ['1 referenced ORF identifiers lack primary annotations; placeholders preserve these relationships.'])
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM abundance_explorer WHERE sample_id='alpha'").fetchone()[0],4)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM orfs WHERE sample_id='alpha' AND orf_id IN ('RNA1','RNA2')").fetchone()[0],2)
+
     def write(self, sample, relative, value):
         path=self.root/sample/relative
         path.parent.mkdir(parents=True,exist_ok=True)

@@ -314,12 +314,15 @@ class Importer:
                     self.db.execute('INSERT INTO pathway_orfs VALUES(?,?,?,?)', (s, entity, r['PWY_NAME'], identifier))
                 if number(r['ORF_COUNT'], True) != len(identifiers):
                     self.issue(s, path.relative_to(self.root), f"{entity}/{r['PWY_NAME']}: reported ORF count differs from unique listed ORFs.")
+        known_rna_features = set()
         for path in sorted((directory/'results/rpkm').glob('*.contig_counts.tsv')) + sorted((directory/'results/rpkm').glob('*.orf_counts.tsv')):
             feature = 'contig' if path.name.endswith('.contig_counts.tsv') else 'orf'
             source_id = self.source(path, 'read abundance')
             for r in rows(path):
                 identifier = r['Contig'] if feature == 'contig' else r['Gene_ID']
                 if feature == 'orf':
+                    if r.get('feature') in ('tRNA', 'rRNA'):
+                        known_rna_features.add(identifier)
                     self.orf(s, identifier)
                     if r.get('seqname'):
                         self.db.execute('INSERT OR IGNORE INTO contigs(sample_id,contig_id) VALUES(?,?)', (s, r['seqname']))
@@ -352,8 +355,8 @@ class Importer:
                     (s, feature, identifier, orf_id, contig_id,
                      *(cleaned.get(k) for k in ('length_bp','count','mean_coverage','coverage_variance','trimmed_mean_coverage','rpkm','tpm')),
                      source_id))
-            self.issue(s, path.relative_to(self.root), 'Abundance is copied from source output; this report cannot establish that the original read mapping was correct.')
-        missing = self.db.execute('SELECT COUNT(*) FROM orfs WHERE sample_id=? AND annotation_present=0', (s,)).fetchone()[0]
+        missing = sum(identifier not in known_rna_features for (identifier,) in
+                      self.db.execute('SELECT orf_id FROM orfs WHERE sample_id=? AND annotation_present=0', (s,)))
         if missing:
             self.issue(s, directory.relative_to(self.root), f'{missing} referenced ORF identifiers lack primary annotations; placeholders preserve these relationships.')
         self.db.commit()

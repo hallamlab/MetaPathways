@@ -6,7 +6,7 @@ Status updated 2026-10-02. Development and pre-release testing are on `feat/next
 
 ## Completed checks
 
-- 114 runtime/regression tests and 17 release-control tests pass. Tests cover independent per-database taxonomy, SwissProt taxon parsing, database order, report joins, abundance exports, workflow scheduling, checkpoint behavior, sequence staging and release safeguards.
+- 115 runtime/regression tests and 17 release-control tests pass. Tests cover independent per-database taxonomy, SwissProt taxon parsing, database order, report joins, abundance exports, workflow scheduling, checkpoint behavior, sequence staging and release safeguards.
 - The user completed the three-sample CAMI reviewer workflow locally with SwissProt and `--skip_ptools`: 51/51 successful tasks. [Detailed result audit](validation/reviewer-2026-10-02.json).
 - All CDS records, mapped gene/RNA abundance rows, contig measurements and nine genome bins were reconciled. Report SQLite integrity and foreign keys pass. Expected RNA warnings and unavailable PGDBs are explained in the audit.
 - CLI documentation and local documentation links pass validation.
