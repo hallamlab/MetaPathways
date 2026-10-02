@@ -20,28 +20,15 @@ On a remote server, the analysis commands run in the SSH terminal on that server
 
 ## Install on Linux x86-64
 
-The supported source-install path uses Linux x86-64, Conda/Mamba, and Git. Windows and macOS users can connect to a Linux server. This guide does not claim a tested native Windows, Apple Silicon, or WSL installation.
+Choose one route, in this order:
 
-If `conda --version` and `mamba --version` do not work, follow the official [Miniforge installation instructions](https://github.com/conda-forge/miniforge). Reopen your terminal after shell initialization. Ask your administrator about Git and cluster installation policies if needed.
+1. **[Conda package with Mamba](../README.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package, add the pinned workflow helpers shown there, and activate the environment before each session.
+2. **[Quay Docker or Apptainer](../docker/README.quay.md)** — use a versioned image and the container-specific three-sample instructions. References and outputs must be writable; the public MP image does not contain licensed Pathway Tools.
+3. **[Local installation from GitHub](../README.md#3-local-installation-from-github)** — build the supporting Mamba environment, then install MP with pip from your checkout. Use this route when building from source or when the version documented here has not been published as a package/image yet.
 
-Use a writable source checkout. The following commands put it in `~/src/MetaPathways`, which the reviewer walkthrough also uses:
+Windows and macOS users can connect to a Linux server. These instructions do not claim a tested native Windows, Apple Silicon, or WSL installation. If Mamba is not installed, follow the official [Miniforge instructions](https://github.com/conda-forge/miniforge) or your HPC's software setup instructions. No MP-specific environment variable is required.
 
-```bash
-mkdir -p ~/src
-cd ~/src
-git clone https://github.com/hallamlab/MetaPathways.git
-cd MetaPathways
-git checkout feat/nextflow-controller-db-build
-mamba env create -f docker/conda_base.yml
-conda activate metapathways
-mamba install --yes --override-channels --strict-channel-priority -c conda-forge -c bioconda pip wheel git
-python -m pip install --no-deps --no-build-isolation .
-python -m pip install --no-deps -r requirements-workflow.txt
-```
-
-This is the development branch documented here. For a release, use its tag and matching documentation. The environment installs the workflow and biological dependencies; MAGSplitter handles genome-bin splitting and Camelot handles pathway extraction. The installation can require substantial downloads. Do not use `sudo pip` to install MP into the operating system's Python.
-
-This installs a fixed copy of MP into the environment. Rerun the MP `pip install` command after updating the checkout. Record `git rev-parse HEAD` alongside `metapathways version`: candidate revisions can share version `3.5.2`. Developers may opt into editable mode with `-e .`.
+The source installation makes a fixed copy of the checked-out code. After updating the checkout, reinstall with `python -m pip install --no-deps --no-build-isolation .`. Record `git rev-parse HEAD` alongside `metapathways version`. Developers may explicitly choose an editable installation with `-e .`. Do not update an installation while it is running an analysis.
 
 Confirm the installation:
 

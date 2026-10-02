@@ -2,7 +2,7 @@
 
 [Home](../README.md) · Previous: [getting started](getting-started.md) · Next: [your inputs](inputs.md)
 
-This walkthrough uses ordinary MP commands and three distinct CAMI II samples included in the checkout. No Pathway Tools license, installer or container is needed for the default commands. They run annotation, paired-read mapping and abundance, genome splitting, and the report/explorer. Pathway inference is explicitly skipped; licensed users can enable it in the optional section below.
+This walkthrough uses ordinary MP commands and three distinct CAMI II samples included in the repository and installed package. No Pathway Tools license, installer or container is needed for the default commands. They run annotation, paired-read mapping and abundance, genome splitting, and the report/explorer. Pathway inference is explicitly skipped; licensed users can enable it in the optional section below.
 
 The input bundle is about **2.4 MiB**, separate from software and reference-database downloads. Each sample contains three 50 kb assembly regions assigned to three CAMI source genomes:
 
@@ -18,15 +18,15 @@ Protein taxonomy supports SwissProt (including the small reviewer database), Uni
 
 ## 1. Install MP and prepare the small reference database
 
-Follow [getting started](getting-started.md), including environment activation. The examples assume your checkout is `~/src/MetaPathways`; substitute your actual path if different.
+Install with [Conda/Mamba or GitHub source](../README.md#quick-start), then activate the MP environment. No source checkout is needed for the test inputs. Container users should follow the [Docker or Apptainer version of this test](../docker/README.quay.md), which handles writable reference storage and workflow helpers.
 
 ```bash
 mkdir -p ~/mp-reviewer
 cd ~/mp-reviewer
 metapathways build_db --test
 python -c 'from pathlib import Path; import metapathways; Path("MPDB").symlink_to(Path(metapathways.__file__).parent / "regtests/test_db", target_is_directory=True)'
-# If you have not already downloaded/unpacked cami-reviewer here:
-cp -r ~/src/MetaPathways/metapathways/regtests/cami_reviewer cami-reviewer
+# Skip this copy if you already unpacked cami-reviewer here.
+python -c 'from pathlib import Path; import shutil, metapathways; shutil.copytree(Path(metapathways.__file__).parent / "regtests/cami_reviewer", "cami-reviewer")'
 ```
 
 Run the link and copy commands once in a new work directory. `build_db --test` formats the tiny bundled SwissProt/SILVA fixtures and downloads enzyme/taxonomy support records. It needs internet access and a writable installation. This is not an offline test, and the input bundle size is not the total installation size.

@@ -24,7 +24,7 @@ python -m pip freeze > pip-freeze.txt
 metapathways version > metapathways-version.txt
 ```
 
-The environment specification in `docker/conda_base.yml` is not an exact lock. Optional MAGSplitter/Camelot installations from branch URLs move over time; the resolved Git revisions in `pip freeze` matter. The source revision's setup checks used Nextflow 26.04.6, Python 3.11 and Apptainer 1.5.4, with Pathway Tools 29.5 startup validation. This does not establish end-to-end biological equivalence for the orchestration migration.
+The environment specification in `docker/conda_base.yml` is not an exact lock. MAGSplitter and Camelot revisions are pinned in `requirements-workflow.txt`; record the resolved revisions in `pip freeze` along with the environment. The source revision's setup checks used Nextflow 26.04.6, Python 3.11 and Apptainer 1.5.4, with Pathway Tools 29.5 startup validation. This does not establish end-to-end biological equivalence for the orchestration migration.
 
 ## Installation example versus biological validation
 

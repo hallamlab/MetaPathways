@@ -158,6 +158,7 @@ options:
   --no_reads            Explicitly omit read mapping during automatic discovery
   --no_mags             Explicitly omit MAG splitting during automatic discovery
   --skip_ptools         Omit community and MAG PGDB construction
+  --compact_results     After each sample finishes, keep report sources, final tables and logs; delete intermediates and PGDB archives
   --image IMAGE         Pathway Tools SIF [registered by build_pt]
   --taxon_id TAXON_ID   Override PGDB NCBI taxon in private inputs; applies to every selected entity
   --taxonomic_scope {all,bacteria,archaea,eukaryotes}

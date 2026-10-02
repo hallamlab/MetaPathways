@@ -2,7 +2,78 @@
 
 Functional and taxonomic annotation of genomes and metagenomes, with community- and MAG-level pathway inference. MetaPathways (MP) takes assemblies, optionally maps reads, creates Pathway Tools inputs, and organizes the results for downstream analysis.
 
-This source revision uses **Nextflow behind the MP CLI**, supports local and Slurm execution, builds isolated Pathway Tools containers, and provides a searchable results portal. These additions are under development on `feat/nextflow-controller-db-build`; an older published `3.5.1` package or image does **not** necessarily include them. Record the Git revision as well as the package version.
+MP uses Nextflow to run work locally or through Slurm, supports isolated Pathway Tools containers, and provides searchable reports with CSV export.
+
+## Quick start
+
+Choose **Conda/Mamba** for the preferred installation, **Quay Docker/Apptainer** for containers, or **GitHub source** for a local build. The supported platform is Linux x86-64. The commands below target MP **3.5.2**; package and image commands require that version to be published. If it is not yet available in a registry, use the GitHub installation. Do not substitute an older release for these workflow instructions.
+
+### 1. Conda package with Mamba (preferred)
+
+```bash
+mamba create -n metapathways --override-channels --strict-channel-priority \
+  -c hallamlab -c conda-forge -c bioconda \
+  metapathways=3.5.2 pip git
+conda activate metapathways
+
+# Workflow helpers are currently installed separately from the Conda package.
+python -m pip install --no-deps \
+  'magsplitter @ git+https://github.com/hallamlab/MAGSplitter.git@a83bcd0c6479d3fda15025262b981e348c082bc9' \
+  'camelot-frs @ git+https://bitbucket.org/tomeraltman/camelot-frs.git@30a774c7fe7bb8a88b5cd6cadfac1c6d258efc96'
+```
+
+Run the included three-sample test in a new directory:
+
+```bash
+mkdir -p ~/mp-reviewer
+cd ~/mp-reviewer
+python - <<'PYTHON'
+from pathlib import Path
+import shutil
+import metapathways
+fixtures = Path(metapathways.__file__).parent / 'regtests'
+shutil.copytree(fixtures / 'cami_reviewer', 'cami-reviewer')
+Path('MPDB').symlink_to(fixtures / 'test_db', target_is_directory=True)
+PYTHON
+metapathways build_db --test
+metapathways analysis_wf \
+  --manifest cami-reviewer/all.tsv -o all -d MPDB \
+  --annotation_dbs swissprot_test \
+  --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
+  --skip_ptools --threads 4 --memory '4 GB' --max_tasks 2
+metapathways report -o all --serve --no-browser --port 8765
+```
+
+The test data is **included**, so no separate download or Git clone is needed after installation. Reference preparation still downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference needs your own licensed Pathway Tools installation and is skipped here. Open the URL printed by the report server; for a remote machine, use the [SSH tunnel instructions](docs/reports-tutorial.md#view-a-remote-report-through-ssh).
+
+### 2. Quay: Docker or Apptainer
+
+```bash
+# Docker
+docker pull quay.io/hallamlab/metapathways:3.5.2
+
+# Or Apptainer
+apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
+```
+
+Follow the complete [Docker three-sample test](docker/README.quay.md#docker-three-sample-test) or [Apptainer three-sample test](docker/README.quay.md#apptainer-three-sample-test). Both use the same bundled data and `analysis_wf` options above. Those instructions add the workflow helpers and place test references in writable storage; simply pulling the core image is not sufficient for MAG splitting. The public MP image and your licensed Pathway Tools SIF are separate images.
+
+### 3. Local installation from GitHub
+
+```bash
+mkdir -p ~/src
+cd ~/src
+git clone https://github.com/hallamlab/MetaPathways.git
+cd MetaPathways
+mamba env create -f docker/conda_base.yml
+conda activate metapathways
+mamba install --yes --override-channels --strict-channel-priority \
+  -c conda-forge -c bioconda pip wheel git
+python -m pip install --no-deps --no-build-isolation .
+python -m pip install --no-deps -r requirements-workflow.txt
+```
+
+Then run the **same three-sample commands under option 1**, starting at `mkdir -p ~/mp-reviewer`. They copy the inputs from the installed package, so the test does not depend on your checkout location. If that working directory already contains a test, choose a new directory for a fresh run. For a specific released version, check out its release tag before installing.
 
 ## Start here
 
@@ -17,10 +88,6 @@ New to the terminal? Follow the chapters in order. Already installed MP? Start w
 7. **[Resources and Slurm](#resources-and-slurm):** per-tool threads, total budgets, cluster submission and restart behavior.
 8. **[Benchmarking](docs/benchmarking.md):** resource measurements, supplementary tables, figures and interpretation limits.
 9. **[Maintainer release guide](docs/releasing.md):** PR testing, Conda/Quay publication and Zenodo setup; [current readiness audit](docs/release-readiness.md).
-
-### Quick start after installation
-
-Use the **[three-sample reviewer walkthrough](docs/reviewer-test.md)** as the installation check. It builds the bundled small reference database and runs `analysis_wf` on the included CAMI assemblies, paired reads and genome maps, then opens the reports. This is the standard test route for both local and Slurm installations; Pathway Tools is optional and requires your own license. On a remote server, follow [SSH browser access](docs/reports-tutorial.md#view-a-remote-report-through-ssh).
 
 ### Which command do I need?
 
@@ -47,58 +114,11 @@ Use the **[three-sample reviewer walkthrough](docs/reviewer-test.md)** as the in
 
 The remainder of this README is a compact working reference. The linked chapters provide the step-by-step explanations.
 
-## Installation
+## Installation details and reviewer test
 
-### Install this source revision
+The [getting-started guide](docs/getting-started.md) explains installation choices, activation, troubleshooting and basic terminal use. The [reviewer walkthrough](docs/reviewer-test.md) explains expected outputs, single- and two-sample variants, automatic discovery and optional licensed pathway inference.
 
-Use Linux x86-64 with Conda or Mamba. The bundled native executables target that platform. The environment supplies Python, Nextflow, Java through its dependencies, Apptainer and the annotation tools.
-
-```bash
-git clone https://github.com/hallamlab/MetaPathways.git
-cd MetaPathways
-git checkout feat/nextflow-controller-db-build
-mamba env create -f docker/conda_base.yml
-conda activate metapathways
-mamba install --yes --override-channels --strict-channel-priority -c conda-forge -c bioconda pip wheel git
-python -m pip install --no-deps --no-build-isolation .
-metapathways version
-metapathways run --help
-```
-
-Use the release tag or branch you intend to evaluate; do not mix an old package's documentation with this checkout. This installs a fixed copy of the checked-out source. After updating the checkout, rerun the MP pip-install command. Developers can explicitly add `-e` for an editable installation.
-
-For MAG splitting and pathway extraction, also install:
-
-```bash
-python -m pip install --no-deps -r requirements-workflow.txt
-```
-
-The helper revisions are pinned in `requirements-workflow.txt`. Save `pip freeze`, a Conda explicit export and the MP Git commit with your analysis. The report and portal use Python's standard-library SQLite and HTTP server; no web service, JavaScript package installation or external account is required.
-
-### Published packages and containers
-
-For a published stable version, use the matching [GitHub release](https://github.com/hallamlab/MetaPathways/releases) and its documentation. The [container guide](docker/README.quay.md) explains Docker and Apptainer images. Installing the released package is distinct from installing the development features described above.
-
-## Try the included example
-
-In a writable environment with this checkout installed:
-
-```bash
-mkdir -p ~/metapathways-example
-cd ~/metapathways-example
-metapathways build_db --test
-metapathways run --test
-```
-
-`build_db --test` indexes the included small SwissProt/SILVA fixtures and downloads ExPASy enzyme records and NCBI taxonomy. It requires internet access and writes to the installed package's test database directory. `run --test` uses the included K12 assembly and paired reads and writes `test/k12_test/`.
-
-Open `test/reports/MP_run_report.html` for an output inventory, or launch the explorer:
-
-```bash
-metapathways report -o test --serve --no-rebuild
-```
-
-Check task status and the sample's `errors_warnings_log.txt` as well as the report. This example is an installation check; it does not run Pathway Tools or reproduce the manuscript benchmark.
+The standard installation check is the three-sample workflow above. The legacy `run --test` K12 example remains available for compatibility, but is not the complete reviewer test.
 
 ## Prepare reference databases
 
