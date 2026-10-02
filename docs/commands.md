@@ -8,6 +8,7 @@ Use `metapathways COMMAND --help` for your installed revision. `metapathways ver
 
 | Goal | Command | Meaning of `-o` |
 | --- | --- | --- |
+| Prepare the bundled reviewer data | `prepare_test` | Workspace containing inputs and reference FASTAs |
 | Annotate one or more assemblies | `run` | Parent of sample directories |
 | Annotate, map reads, split genomes, infer pathways and report | `analysis_wf` | Parent of sample directories |
 | Prepare public/licensed reference indexes and tables | `build_db` | Use `-d` for the MPDB root |
@@ -15,6 +16,16 @@ Use `metapathways COMMAND --help` for your installed revision. `metapathways ver
 | Split existing annotations by genome | `mag_split` | One existing sample directory |
 | Infer community/genome pathways from existing annotations | `ptools` | One existing sample directory |
 | Index/view existing results | `report` | One sample or a parent of samples |
+
+## prepare_test: try the included data
+
+```bash
+metapathways prepare_test -o ~/mp-reviewer
+cd ~/mp-reviewer
+metapathways build_db --test -d MPDB
+```
+
+The first command copies the bundled three-sample inputs and reference FASTAs into a writable workspace. The second builds the reference indexes and supporting tables there. Existing identical inputs are retained; changed inputs are never overwritten. Continue with the [reviewer workflow](reviewer-test.md).
 
 ## build_db: references before analysis
 

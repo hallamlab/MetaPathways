@@ -22,13 +22,13 @@ On a remote server, the analysis commands run in the SSH terminal on that server
 
 Choose one route, in this order:
 
-1. **[Conda package with Mamba](../README.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package, add the pinned workflow helpers shown there, and activate the environment before each session.
+1. **[Conda package with Mamba](../README.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package and activate the environment before each session. Workflow helpers are included.
 2. **[Quay Docker or Apptainer](../docker/README.quay.md)** — use a versioned image and the container-specific three-sample instructions. References and outputs must be writable; the public MP image does not contain licensed Pathway Tools.
 3. **[Local installation from GitHub](../README.md#3-local-installation-from-github)** — build the supporting Mamba environment, then install MP with pip from your checkout. Use this route to install from a local checkout or make changes to MP.
 
 Windows and macOS users can connect to a Linux server. These instructions do not claim a tested native Windows, Apple Silicon, or WSL installation. If Mamba is not installed, follow the official [Miniforge instructions](https://github.com/conda-forge/miniforge) or your HPC's software setup instructions. No MP-specific environment variable is required.
 
-The source installation makes a fixed copy of the checked-out code. After updating the checkout, reinstall with `python -m pip install --no-deps --no-build-isolation .`. Record `git rev-parse HEAD` alongside `metapathways version`. Developers may explicitly choose an editable installation with `-e .`. Do not update an installation while it is running an analysis.
+The source installation makes a fixed copy of the checked-out code. After updating the checkout, reinstall with `python -m pip install .`. Record `git rev-parse HEAD` alongside `metapathways version`. Developers may explicitly choose an editable installation with `-e .`. Do not update an installation while it is running an analysis.
 
 Confirm the installation:
 
@@ -82,20 +82,3 @@ Continue with the [reviewer walkthrough](reviewer-test.md), [command cookbook](c
 | Manifest | A TSV listing sample IDs and exact input paths |
 | Receipt | MP's record used to decide whether a completed task can be reused |
 | TSV / CSV | Table with tab-separated / comma-separated fields |
-
-## Wheel-build cleanup errors on shared filesystems
-
-If pip fails with `Directory not empty` while removing `build/bdist.../wheel`, the installation did not complete. This is a build-directory cleanup failure, not an analysis or Slurm error. Update the checkout, then build from a clean snapshot in node-local `/tmp` using your activated MP environment:
-
-```bash
-git pull --ff-only
-mp_build_dir=$(mktemp -d /tmp/metapathways-build.XXXXXX)
-git archive HEAD | tar -x -C "$mp_build_dir"
-python -m pip install --no-cache-dir --no-deps --no-build-isolation "$mp_build_dir"
-```
-
-Only continue to the workflow after pip reports successful installation. The snapshot uses committed files from the checkout; it excludes stale build products and uncommitted edits. Your existing MPDB, SIF, inputs and outputs stay in place. The temporary build directory can be removed after a successful installation:
-
-```bash
-rm -rf -- "$mp_build_dir"
-```

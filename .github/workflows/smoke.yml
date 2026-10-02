@@ -35,12 +35,15 @@ jobs:
         run: python -m build --no-isolation
       - name: Check installed CLI outside the source directory
         run: |
-          python -m pip install --no-deps dist/*.whl
+          python -m pip install dist/*.whl
           cp scripts/check_installed_assets.py "$RUNNER_TEMP/check_installed_assets.py"
           cd "$RUNNER_TEMP"
           python check_installed_assets.py
           metapathways version
-          for command in run analysis_wf build_db mag_split build_pt ptools report; do
+          magsplitter --help
+          python -c "import camelot_frs"
+          metapathways prepare_test -o reviewer
+          for command in prepare_test run analysis_wf build_db mag_split build_pt ptools report; do
             metapathways "$command" -h
           done
       - name: Check GitHub documentation and CLI reference

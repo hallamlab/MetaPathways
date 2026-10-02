@@ -5,7 +5,7 @@ USER $MAMBA_USER
 ARG VERSION
 ARG REVISION
 LABEL org.opencontainers.image.title="MetaPathways" \
-      org.opencontainers.image.description="Core metagenomic annotation pipeline" \
+      org.opencontainers.image.description="Metagenomic annotation and analysis workflow" \
       org.opencontainers.image.source="https://github.com/hallamlab/MetaPathways" \
       org.opencontainers.image.url="https://github.com/hallamlab/MetaPathways" \
       org.opencontainers.image.licenses="MIT" \
@@ -15,6 +15,6 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER package/ /tmp/release-package/
 RUN micromamba install --yes --name base --file /tmp/release-package/explicit.txt && \
     micromamba clean --all --yes && rm -rf /tmp/release-package
 # Apptainer exec bypasses Docker's entrypoint; expose the environment there too.
-ENV PATH="/opt/conda/bin:${PATH}" PYTHONNOUSERSITE=1
+ENV PATH="/opt/conda/bin:${PATH}" PYTHONNOUSERSITE=1 NXF_HOME=/work/.nextflow
 WORKDIR /work
 CMD ["metapathways", "--help"]

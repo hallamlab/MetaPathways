@@ -50,7 +50,7 @@ if __name__ == "__main__":
         license=ver_dict['license'],
         keywords="metagenomics pipeline",
         url="https://github.com/hallamlab/MetaPathways/",
-        packages=find_packages(),
+        packages=find_packages(include=["metapathways", "metapathways.*"]),
         package_data={'': ['metapathways/regtests/**/*'], 'metapathways': ['report_assets/*']},
         scripts=["bin/metapathways-install-deps.sh",
                 "bin/metapathways-data-install.sh",
@@ -79,5 +79,6 @@ if __name__ == "__main__":
             "test": ["pytest", "pytest-cov", "tox"],
         },
         python_requires=">=3.10",
-        install_requires=[],
+        install_requires=[line.strip() for line in read("requirements-workflow.txt").splitlines()
+                          if line.strip() and not line.startswith("#")],
     )

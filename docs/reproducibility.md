@@ -18,19 +18,19 @@ Preserve:
 Example environment records:
 
 ```bash
-git rev-parse HEAD > metapathways-commit.txt
-conda list --explicit > conda-explicit.txt
-python -m pip freeze > pip-freeze.txt
+mamba list --explicit > conda-explicit.txt
 metapathways version > metapathways-version.txt
 ```
 
-The environment specification in `docker/conda_base.yml` is not an exact lock. MAGSplitter and Camelot revisions are pinned in `requirements-workflow.txt`; record the resolved revisions in `pip freeze` along with the environment. The source revision's setup checks used Nextflow 26.04.6, Python 3.11 and Apptainer 1.5.4, with Pathway Tools 29.5 startup validation. This does not establish end-to-end biological equivalence for the orchestration migration.
+For a source installation, also record `git rev-parse HEAD` from the checkout and `python -m pip freeze` from its activated environment.
+
+The environment specification in `docker/conda_base.yml` is not an exact lock. MAGSplitter and Camelot revisions are pinned in `requirements-workflow.txt`; the release package includes both helpers from those exact sources. Record the MP artifact checksum along with the environment. The source revision's setup checks used Nextflow 26.04.6, Python 3.11 and Apptainer 1.5.4, with Pathway Tools 29.5 startup validation. This does not establish end-to-end biological equivalence for the orchestration migration.
 
 ## Installation example versus biological validation
 
-`build_db --test` formats bundled SwissProt/SILVA sequence fixtures and downloads current ExPASy/NCBI support records into the installed package. `run --test` uses the included K12 FASTA and paired reads. It is neither offline nor fully pinned, and it does not run Pathway Tools.
+`prepare_test -o WORKSPACE` copies the bundled three-sample inputs and reference FASTAs. From that workspace, `build_db --test -d MPDB` formats the fixtures and downloads current ExPASy/NCBI support records. The reviewer test is neither offline nor fully pinned; record the downloaded reference dates. Its default workflow skips Pathway Tools.
 
-The current feature work has synthetic/unit checks for read-layout arguments, task ordering/resources, resume/cleanup, container isolation interfaces, report joins and export behavior. Real synthetic Nextflow tasks exercise scheduling and logging; concurrent Pathway Tools startup checks exercise private container state. These checks do not substitute for real annotations, PGDB construction, or execution on an actual Slurm cluster. The small reviewer walkthrough and any user-run benchmarks must be evaluated through their retained results and task records. Do not infer full biological validation from unit-test success. See the [reviewer protocol](reviewer-test.md) and [benchmark measurement guide](benchmarking.md).
+The test suite includes synthetic/unit checks for read-layout arguments, task ordering/resources, resume/cleanup, container isolation interfaces, report joins and export behavior. Real synthetic Nextflow tasks exercise scheduling and logging; concurrent Pathway Tools startup checks exercise private container state. These checks do not substitute for real annotations, PGDB construction, or execution on an actual Slurm cluster. The small reviewer walkthrough and any user-run benchmarks must be evaluated through their retained results and task records. Do not infer full biological validation from unit-test success. See the [reviewer protocol](reviewer-test.md) and [benchmark measurement guide](benchmarking.md).
 
 Run the software checks from the checkout:
 

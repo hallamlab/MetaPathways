@@ -8,7 +8,7 @@ Status updated 2026-10-02. This is a maintainer record of pre-release testing. V
 
 Public metadata checked on 2026-10-02: [Anaconda](https://api.anaconda.org/package/hallamlab/metapathways) lists 3.5.1 as latest; the [latest GitHub release](https://api.github.com/repos/hallamlab/MetaPathways/releases/latest) is `v3.5.1-build1`; [Quay tags](https://quay.io/api/v1/repository/hallamlab/metapathways/tag/?limit=5) list 3.5.1 images. The 3.5.2 installation examples are release instructions, not evidence of publication. Until publication, testers install the reviewed checkout.
 
-The current Conda recipe and core release image omit the MAGSplitter/Camelot VCS helpers. The user guides explicitly install pinned helpers for the complete three-sample test. Container instructions include a helper layer and writable test-reference mounts. These Docker/Apptainer walkthroughs still require end-to-end validation against the published 3.5.2 artifacts; documentation checks alone do not establish that validation. The source/Mamba three-sample test has been run successfully.
+The Conda recipe includes pinned MAGSplitter and Camelot sources at build time; the Quay image uses that same Conda artifact. `prepare_test` copies bundled inputs and reference seeds into writable storage. Final Conda and Docker/Apptainer artifacts must pass release integration before publication; unit tests and documentation checks alone do not establish that validation.
 
 ## Completed checks
 

@@ -2,7 +2,7 @@
 
 [Home](../README.md) · [Reviewer commands](reviewer-test.md) · [Release process](releasing.md)
 
-Test the feature branch before merging to `dev` or `master`. Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. Version 3.5.1 alone does not identify this branch.
+Test the feature branch before merging to `dev` or `master`. Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
 
 1. Follow [source installation](getting-started.md). Check out the PR's exact commit after cloning; do not test an older editable installation by accident. Record the MAGSplitter and Camelot revisions installed separately.
 2. Follow the [CAMI reviewer walkthrough](reviewer-test.md), running its single-sample and two-sample commands with `--skip_ptools`. Check required task outcomes, nonempty abundance outputs, the three genome-bin assignments per sample, and distinct paired read paths.

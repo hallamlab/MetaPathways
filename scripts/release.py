@@ -224,6 +224,9 @@ def build(args):
                 "assert Version(version('setuptools')) >= Version('83.0.0'); "
                 "print({n: version(n) for n in ['urllib3', 'setuptools']})",
                 cwd=testdir, log=output / "security-dependencies.log")
+            run(*runner, "magsplitter", "--help", cwd=testdir, log=output / "magsplitter.log")
+            run(*runner, "python", "-c", "import camelot_frs", cwd=testdir, log=output / "camelot.log")
+            run(*runner, "metapathways", "prepare_test", "-o", "reviewer", cwd=testdir, log=output / "reviewer-inputs.log")
             run(*runner, "metapathways", "version", cwd=testdir,
                 log=output / "cli-version.log")
             run(*runner, "python", snapshot / "scripts/check_installed_assets.py",

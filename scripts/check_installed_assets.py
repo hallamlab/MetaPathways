@@ -7,7 +7,7 @@ import metapathways
 from metapathways.analysis_workflow import read_manifest, validate
 
 root = Path(metapathways.__file__).resolve().parent
-for name in ('nextflow.py', 'nf_worker.py', 'nf_databases.py', 'analysis_workflow.py',
+for name in ('reviewer.py', 'nextflow.py', 'nf_worker.py', 'nf_databases.py', 'analysis_workflow.py',
              'reporting.py', 'report_server.py', 'protein_taxonomy.py', 'pt_container.py', 'pt_sequences.py',
              'bin/fastal', 'bin/fastdb', 'bin/metacount'):
     path = root / name

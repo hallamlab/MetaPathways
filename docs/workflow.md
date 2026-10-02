@@ -97,8 +97,6 @@ For complete multi-sample execution, see [automatic input matching](../README.md
 
 RNA annotations are emitted once per locus, including contigs with no CDS predictions. rRNA IDs include contig, subtype, coordinates and strand; distinct copies of the same rRNA must not share a gene ID. GFF-to-GTF conversion rejects duplicate IDs before mapping. ORF abundance uses featureCounts' `Length` column, requires a one-to-one gene-ID join with the GTF, and reports zero RPKM/TPM when all counts are zero. Tool output and errors are streamed into the task log, and failed sorting/conversion/counting/calculation commands stop the task immediately.
 
-Earlier versions could repeat RNA annotations at CDS parser buffer boundaries, omit RNA-only contigs and collapse separate rRNA loci into one ID. Existing derived annotations must be regenerated; updating MP alone does not repair saved results. After reinstalling this source revision, repeat the original `metapathways run` command with `--ANNOTATE_ORFS redo`, keeping the same input, database and resource settings. Changed annotation products invalidate dependent receipts; avoid `--force_redo` if you intend to retain successful ORF predictions and reference searches. Counting and RNA-derived results must be reviewed again. This does not rebuild previously generated PGDBs automatically under the standalone `run` command.
-
 ### Concurrent FAST searches
 
 MP supplies FAST's `-X` option with a unique temporary directory for each search and reference-score invocation. FAST's default temporary names use a time-based seed and can collide when independent searches start in the same second. Older wrappers could therefore mix hits from different databases even when both processes returned success. A parser error showing Swiss-Prot `sp|...` targets in a MetaCyc result is one symptom; the databases themselves may be intact.
@@ -108,8 +106,6 @@ The corrected planner invalidates previous functional-search and reference-score
 ### Pathway Tools failure diagnostics
 
 Before each community or MAG PGDB invocation, MP expands its compact `0.pf` annotations into per-contig PathoLogic inputs in private staging. Each genetic element has an annotation file and a `SEQ-FILE` containing its real preprocessed contig sequence. Feature IDs are preserved. The sample's `ptinput.tsv` supplies each feature's original contig, coordinates and strand; these restore MAG member coordinates that the splitter copied from a representative annotation. Missing sequences, unmapped/duplicate features or invalid source coordinates stop preparation before Pathway Tools starts. Unannotated contigs without PGDB features are omitted. The sequence counts and coordinate-restoration counts are retained in `diagnostics/<invocation>/input/sequence-input.json`. This enables Pathway Tools to derive protein sequences for its PGDB BLAST databases. The source annotation files and MAG split outputs are not modified.
-
-Older compact inputs described one sequence-less element named `0`, which caused `Chromosome 0: The chromosome has no sequence` and protein BLAST database creation warnings even with BLAST installed. Update MP, including its installed `pgdb_build_wf.py` script (`python -m pip install -e /path/to/MetaPathways`), then repeat `metapathways ptools -o /path/to/sample-output` to rebuild PGDBs with sequence-backed inputs. No annotation, read-mapping or SIF rebuild is needed. The planner invalidates previous PGDB receipts for this change and tracks the sequence inputs.
 
 Each container PGDB attempt saves its internal `pathologic.log`, other available logs, reports and `execution.json` under the entity output's `diagnostics/ATTEMPT/` directory. The execution record identifies the image, exit code and phase (`build`, `export`, or `archive`). On failure MP also prints the last 80 lines of the internal Pathologic log. These diagnostics survive temporary container-state cleanup. An optional MAG task failing does not by itself establish that the failure is biological or expected; inspect its diagnostics. Community PGDB failures remain fatal.
 
@@ -174,8 +170,8 @@ use `--entity community` with `ptools` for a community-only experiment.
 enabled, avoiding the separate unpruned rescoring pass documented for
 `-no-taxonomic-pruning` in the Pathway Tools User Guide (printed pp. 16–17).
 This broad taxon includes multicellular eukaryotes too and is not a microbial-only
-filter. It is an experimental workaround, not demonstrated equivalence to
-unpruned inference. Neither flag changes MP's gene taxonomic annotations.
+filter. Pruned and unpruned inference are different analysis settings.
+Neither flag changes MP's gene taxonomic annotations.
 
 `--taxonomic_scope all|bacteria|archaea|eukaryotes` provides readable aliases
 for taxon IDs 131567, 2, 2157, and 2759, respectively; `euks` is accepted as an

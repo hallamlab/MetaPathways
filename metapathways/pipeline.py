@@ -236,7 +236,7 @@ def ptParser():
 def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
     parser = argparse.ArgumentParser(description='automated database install')
     db = parser.add_argument_group(title="database arguments")
-    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=False, default='./',
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=False, default=None,
                     help="path to save the reference DB, [DEFAULT \"./\"]")
     db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
                     help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
@@ -252,7 +252,7 @@ def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
     parser.add_argument("--snakemake", nargs='*', required=False, default=[],
                         help="legacy compatibility flags; use the resource flags for new runs")
 
-    parser.add_argument("--test", action="store_true", help="use test values for all arguments")
+    parser.add_argument("--test", action="store_true", help="build reviewer SwissProt/SILVA references; use -d for the prepared MPDB directory")
 
     nextflow.add_resources(parser)
     return parser
@@ -614,7 +614,7 @@ def build_db():
 
     # Check for the --test flag and set test values if present
     if args.test:
-        args.refdb_dir = pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db")
+        args.refdb_dir = args.refdb_dir or pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db")
         args.func = ["swissprot_test"]
         args.aligner = "fast"
         args.threads = 1
@@ -636,6 +636,7 @@ def build_db():
         if missing_required:
             parser.error(f"The following arguments are required: {', '.join(missing_required)}")
 
+    args.refdb_dir = args.refdb_dir or "./"
     input_error = False
     help_printed = False
 
@@ -799,6 +800,7 @@ def help():
         Where COMMAND is one of :
             help
             version
+            prepare_test
             build_db
             build_pt
             run
@@ -829,6 +831,11 @@ def report():
     report_main(sys.argv[2:])
 
 
+def prepare_test():
+    from metapathways.reviewer import main as reviewer_main
+    reviewer_main(sys.argv[2:])
+
+
 def analysis_wf():
     from metapathways.analysis_workflow import main as analysis_main
     analysis_main(sys.argv[2:])
@@ -839,7 +846,7 @@ def main():
         help()
         return
     command = sys.argv[1]
-    fn = {'help': help, 'version': version, 'build_db': build_db, 'build_pt': build_pt,
+    fn = {'prepare_test': prepare_test, 'help': help, 'version': version, 'build_db': build_db, 'build_pt': build_pt,
           'run': run, 'analysis_wf': analysis_wf, 'mag_split': mag_split, 'ptools': ptools, 'report': report}.get(command, help)
     log_dir = None
     if command in ('run', 'analysis_wf', 'mag_split', 'ptools', 'build_db', 'build_pt', 'report') and not any(x in sys.argv for x in ('-h', '--help')):
@@ -850,7 +857,7 @@ def main():
         options, _ = probe.parse_known_args(sys.argv[2:])
         log_dir = options.refdb_dir or '.' if command == 'build_db' else options.output_dir
         if options.test and command in ('run', 'build_db'):
-            log_dir = './test' if command == 'run' else pathlib.Path(__file__).parent / 'regtests/test_db'
+            log_dir = './test' if command == 'run' else options.refdb_dir or pathlib.Path(__file__).parent / 'regtests/test_db'
         if command == 'build_pt' and not log_dir:
             from metapathways.pt_container import parser as pt_parser
             log_dir = pt_parser().get_default('output_dir')

@@ -134,7 +134,7 @@ SIF tasks receive private home, data and temporary state. MP also isolates X-dis
 
 The scope applies to all selected entities in that invocation. It guides pathway inference; it does not remove contigs or rewrite MP's gene-level taxonomic annotations. To use different scopes for different MAGs, run separate entity-specific `ptools` commands.
 
-**Set both flags intentionally.** Specifying `--taxonomic_scope all` alone does not turn pruning on. Omitting the flags preserves historical behavior: pruning is off by default and the input taxon is retained. In Pathway Tools 29.5 the no-pruning route includes a second unpruned rescore pass. We observed a compound/inverse-link failure in that pass; `--taxprune --taxonomic_scope all` avoided it in tested community/MAG runs. This is not proven equivalent to unpruned inference and does not disable all other pathway-selection rules. Record the choice in your methods.
+**Set both flags intentionally.** Specifying `--taxonomic_scope all` alone does not turn pruning on. Omitting the flags retains the input taxon and leaves pruning off. Pruning constrains inference using the chosen taxon; it does not disable other pathway-selection rules. Pruned and unpruned inference are different analysis settings, so record the choice in your methods. Pathway Tools 29.5 can fail with a compound/inverse-link error during its unpruned rescore pass; MP retains the failure diagnostics and does not certify partial output as successful.
 
 See the vendor User Guide's batch PathoLogic discussion and [MP's diagnostic detail](workflow.md#pathway-tools-failure-diagnostics). The installed PDF is authoritative for the installed version.
 

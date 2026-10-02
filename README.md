@@ -8,36 +8,22 @@ MetaPathways has since advanced as a modular tool, deepening our understanding o
 
 ## Quick start
 
-Choose **Conda/Mamba** for the preferred installation, **Quay Docker/Apptainer** for containers, or **GitHub source** for a local build. The supported platform is Linux x86-64. The commands below use MP **3.5.2**.
+Install MetaPathways, try the included three-sample dataset, then use your own data. Linux x86-64 is supported. Choose one installation method below; **Mamba is recommended**.
 
 ### 1. Conda package with Mamba (preferred)
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda \
-  metapathways=3.5.2 pip git
+  -c hallamlab -c conda-forge -c bioconda metapathways=3.5.2
 conda activate metapathways
-
-# Workflow helpers are currently installed separately from the Conda package.
-python -m pip install --no-deps \
-  'magsplitter @ git+https://github.com/hallamlab/MAGSplitter.git@a83bcd0c6479d3fda15025262b981e348c082bc9' \
-  'camelot-frs @ git+https://bitbucket.org/tomeraltman/camelot-frs.git@30a774c7fe7bb8a88b5cd6cadfac1c6d258efc96'
 ```
 
-Run the included three-sample test in a new directory:
+This installs MP and its workflow dependencies, including MAGSplitter and Camelot. Prepare the included data, build the small reference database, and run all three samples:
 
 ```bash
-mkdir -p ~/mp-reviewer
+metapathways prepare_test -o ~/mp-reviewer
 cd ~/mp-reviewer
-python - <<'PYTHON'
-from pathlib import Path
-import shutil
-import metapathways
-fixtures = Path(metapathways.__file__).parent / 'regtests'
-shutil.copytree(fixtures / 'cami_reviewer', 'cami-reviewer')
-Path('MPDB').symlink_to(fixtures / 'test_db', target_is_directory=True)
-PYTHON
-metapathways build_db --test
+metapathways build_db --test -d MPDB
 metapathways analysis_wf \
   --manifest cami-reviewer/all.tsv -o all -d MPDB \
   --annotation_dbs swissprot_test \
@@ -46,7 +32,7 @@ metapathways analysis_wf \
 metapathways report -o all --serve --no-browser --port 8765
 ```
 
-The test data is **included**, so no separate download or Git clone is needed after installation. Reference preparation still downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference needs your own licensed Pathway Tools installation and is skipped here. Open the URL printed by the report server; for a remote machine, use the [SSH tunnel instructions](docs/reports-tutorial.md#view-a-remote-report-through-ssh).
+Open the URL printed by the report server. On a remote server, use an [SSH tunnel](docs/reports-tutorial.md#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package; database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
 
 ### 2. Quay: Docker or Apptainer
 
@@ -58,24 +44,31 @@ docker pull quay.io/hallamlab/metapathways:3.5.2
 apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
 ```
 
-Follow the complete [Docker three-sample test](docker/README.quay.md#docker-three-sample-test) or [Apptainer three-sample test](docker/README.quay.md#apptainer-three-sample-test). Both use the same bundled data and `analysis_wf` options above. Those instructions add the workflow helpers and place test references in writable storage; simply pulling the core image is not sufficient for MAG splitting. The public MP image and your licensed Pathway Tools SIF are separate images.
+The image includes the same workflow dependencies and reviewer data. Follow the [Docker three-sample test](docker/README.quay.md#docker-three-sample-test) or [Apptainer three-sample test](docker/README.quay.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
 
 ### 3. Local installation from GitHub
 
 ```bash
-mkdir -p ~/src
-cd ~/src
 git clone https://github.com/hallamlab/MetaPathways.git
 cd MetaPathways
 mamba env create -f docker/conda_base.yml
 conda activate metapathways
-mamba install --yes --override-channels --strict-channel-priority \
-  -c conda-forge -c bioconda pip wheel git
-python -m pip install --no-deps --no-build-isolation .
-python -m pip install --no-deps -r requirements-workflow.txt
+mamba install --yes -c conda-forge pip
+python -m pip install .
 ```
 
-Then run the **same three-sample commands under option 1**, starting at `mkdir -p ~/mp-reviewer`. They copy the inputs from the installed package, so the test does not depend on your checkout location. If that working directory already contains a test, choose a new directory for a fresh run. For a specific released version, check out its release tag before installing.
+Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-reviewer`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
+
+### Try your own data
+
+Build a production reference database, then annotate an assembly:
+
+```bash
+metapathways build_db -d ~/MPDB --func swissprot -a fast
+metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
+```
+
+For assemblies with reads and genome maps, follow the [complete workflow](docs/inputs.md). To add pathway inference, follow the [Pathway Tools installer and image guide](docs/pathway-tools.md). The small reviewer references are for testing only.
 
 ## Start here
 
@@ -97,6 +90,7 @@ New to the terminal? Follow the chapters in order. Already installed MP? Start w
 | --- | --- |
 | Complete workflow for one or many metagenomes | `metapathways analysis_wf` |
 | Annotate assemblies, optionally map reads | `metapathways run` |
+| Prepare the included reviewer data | `metapathways prepare_test` |
 | Prepare reference databases | `metapathways build_db` |
 | Build/register a licensed Pathway Tools SIF | `metapathways build_pt` |
 | Split existing community annotations into genome bins | `metapathways mag_split` |
@@ -255,7 +249,7 @@ MetaCyc is opt-in and is not downloaded by the ordinary default `build_db` comma
 metapathways ptools -o results/sample --taxprune --taxonomic_scope all
 ```
 
-These examples explicitly use broad cellular-life taxonomic pruning, a tested workaround for the separate unpruned rescoring failure in Pathway Tools 29.5. It is not proven equivalent to unpruned inference; see [scope choices](docs/pathway-tools.md#choose-a-taxonomic-scope).
+These examples use broad cellular-life taxonomic pruning. Choose the scope to match your analysis and record it in your methods; see [scope choices](docs/pathway-tools.md#choose-a-taxonomic-scope).
 
 Each SIF task gets private Pathway Tools data, home and temporary state, allowing concurrent isolated instances. Pathway Tools uses one CPU per PGDB. A community PGDB failure fails the command. Native Pathway Tools is still supported when no image is selected, but serialized to protect shared state. The legacy `--container` flag retains its original meaning and bypasses automatic SIF selection.
 

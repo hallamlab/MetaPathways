@@ -7,7 +7,7 @@ import sys
 from urllib.parse import unquote, urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
-files=[ROOT/'README.md', *sorted((ROOT/'docs').glob('*.md'))]
+files=[ROOT/'README.md', *sorted((ROOT/'docs').glob('*.md')), ROOT/'docker/README.quay.md']
 errors=[]
 for source in files:
     content=re.sub(r'```.*?```','',source.read_text(),flags=re.S)

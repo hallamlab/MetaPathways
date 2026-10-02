@@ -18,26 +18,23 @@ Protein taxonomy supports SwissProt (including the small reviewer database), Uni
 
 ## 1. Install MP and prepare the small reference database
 
-Install with [Conda/Mamba or GitHub source](../README.md#quick-start), then activate the MP environment. No source checkout is needed for the test inputs. Container users should follow the [Docker or Apptainer version of this test](../docker/README.quay.md), which handles writable reference storage and workflow helpers.
+Install with [Conda/Mamba or GitHub source](../README.md#quick-start), then activate the MP environment. Container users can follow the same test through [Docker or Apptainer](../docker/README.quay.md).
 
 ```bash
-mkdir -p ~/mp-reviewer
+metapathways prepare_test -o ~/mp-reviewer
 cd ~/mp-reviewer
-metapathways build_db --test
-python -c 'from pathlib import Path; import metapathways; Path("MPDB").symlink_to(Path(metapathways.__file__).parent / "regtests/test_db", target_is_directory=True)'
-# Skip this copy if you already unpacked cami-reviewer here.
-python -c 'from pathlib import Path; import shutil, metapathways; shutil.copytree(Path(metapathways.__file__).parent / "regtests/cami_reviewer", "cami-reviewer")'
+metapathways build_db --test -d MPDB
 ```
 
-Run the link and copy commands once in a new work directory. `build_db --test` formats the tiny bundled SwissProt/SILVA fixtures and downloads enzyme/taxonomy support records. It needs internet access and a writable installation. This is not an offline test, and the input bundle size is not the total installation size.
+`prepare_test` copies the included assemblies, paired reads, genome maps, manifests and reference FASTAs into your workspace. It leaves matching files in place and refuses to overwrite changed files. Use a new workspace for a fresh test. `build_db` indexes the small SwissProt/SILVA references and downloads enzyme/taxonomy support records into `MPDB`. Preparation requires internet access and writable workspace storage; it does not modify your installation.
 
 The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 original K12 test references plus 188 reference targets matched by the three CAMI samples in a full-SwissProt run. The protein FASTA is about 109 KB. This gives the reviewer useful annotation, taxonomy and genome-splitting examples without a full protein database download. Selection and reference provenance are recorded in [`reviewer_reference.json`](../metapathways/regtests/test_db/reviewer_reference.json). The deliberately selected reference set is for workflow testing, not annotation accuracy or biological benchmarking. SILVA fixtures remain small; empty RNA tables can be legitimate.
 
-When updating an existing installation, rerun `metapathways build_db --test` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the reviewer acceptance run.
+When updating an existing installation, rerun `metapathways build_db --test -d MPDB` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the reviewer acceptance run.
 
 ## Run all three samples first
 
-If the reviewer inputs are already downloaded, place the unpacked `cami-reviewer` folder in `~/mp-reviewer` and skip the copy command above. It must contain `all.tsv` and `inputs/`; keep the folder structure intact. The fixture is bundled in the repository and installed package; no separate dataset download is needed.
+The fixture is included in both the repository and installed package; no separate input download is needed. Keep the prepared folder structure intact so manifest paths resolve correctly.
 
 ```bash
 cd ~/mp-reviewer
@@ -52,7 +49,7 @@ metapathways analysis_wf \
 metapathways report -o all --serve --no-browser --port 8765
 ```
 
-This uses ordinary installed CLI commands and the small public reference fixtures. No local Conda package, private staging directory, full SwissProt/UniRef download or Pathway Tools installation is required. `MPDB` is a link to the small database built inside your activated environment; it works with both normal and editable pip installations. The source checkout contains every installation definition and reviewer input used by these instructions. Source dependency installation and reference support downloads still require internet access.
+The analysis uses the references in your workspace’s `MPDB` directory. It requires neither a full SwissProt/UniRef download nor Pathway Tools.
 
 The explorer starts at **Samples**. On a remote machine, use the [SSH tunnel instructions](reports-tutorial.md#view-a-remote-report-through-ssh) and open the token-bearing URL printed by the report command. The single- and two-sample commands below are additional checks; they are not prerequisites for the three-sample run.
 
