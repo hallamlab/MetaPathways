@@ -37,7 +37,7 @@ When updating an existing installation, rerun `metapathways build_db --test` aft
 
 ## Run all three samples first
 
-If the reviewer inputs are already downloaded, place the unpacked `cami-reviewer` folder in `~/mp-reviewer` and skip the copy command above. It must contain `all.tsv` and `inputs/`; keep the folder structure intact. The fixture is also bundled in the repository, so a Zenodo release is not required to run this walkthrough.
+If the reviewer inputs are already downloaded, place the unpacked `cami-reviewer` folder in `~/mp-reviewer` and skip the copy command above. It must contain `all.tsv` and `inputs/`; keep the folder structure intact. The fixture is bundled in the repository and installed package; no separate dataset download is needed.
 
 ```bash
 cd ~/mp-reviewer

@@ -2,7 +2,7 @@
 
 [Home and quick start](../README.md#quick-start) · [Reviewer dataset](../docs/reviewer-test.md) · [Licensed Pathway Tools](../docs/pathway-tools.md)
 
-Use a versioned `quay.io/hallamlab/metapathways` image on Linux x86-64. These examples target **3.5.2** and require that image to be published; if the tag is unavailable, use the [GitHub installation](../README.md#3-local-installation-from-github). An older image is not a substitute for the current workflow. No registry publication is implied by these instructions.
+Use a versioned `quay.io/hallamlab/metapathways` image on Linux x86-64. These examples use MP **3.5.2**.
 
 The public MP image contains annotation software and the small reviewer fixtures, not production reference databases or licensed Pathway Tools. Current core release images omit MAGSplitter and Camelot; the one-time helper layer below supplies their pinned revisions. It does not rebuild MP or include any licensed material. The same three-sample test is used for both container runtimes.
 

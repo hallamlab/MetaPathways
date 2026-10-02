@@ -6,7 +6,7 @@ MP uses Nextflow to run work locally or through Slurm, supports isolated Pathway
 
 ## Quick start
 
-Choose **Conda/Mamba** for the preferred installation, **Quay Docker/Apptainer** for containers, or **GitHub source** for a local build. The supported platform is Linux x86-64. The commands below target MP **3.5.2**; package and image commands require that version to be published. If it is not yet available in a registry, use the GitHub installation. Do not substitute an older release for these workflow instructions.
+Choose **Conda/Mamba** for the preferred installation, **Quay Docker/Apptainer** for containers, or **GitHub source** for a local build. The supported platform is Linux x86-64. The commands below use MP **3.5.2**.
 
 ### 1. Conda package with Mamba (preferred)
 
