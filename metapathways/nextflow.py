@@ -117,7 +117,8 @@ def process_definition(t, name, manifest):
     package_root = str(Path(__file__).resolve().parent.parent)
     command = shlex.join([sys.executable, '-m', 'metapathways.nf_worker', str(manifest), t['id']])
     body = f'export PYTHONPATH={shlex.quote(package_root)}${{PYTHONPATH:+:$PYTHONPATH}}\n{command}\n'
-    inputs = '\n'.join(f'    val dependency_{i}' for i in range(max(1, len(t['dependencies']))))
+    count = len(t['dependencies'])
+    inputs = '\n'.join(f'    val dependency_{i}' for i in range(1 if count > 64 else max(1, count)))
     return f'''process {name} {{
     tag {groovy(t['label'])}
     cpus {t['cpus']}
@@ -142,6 +143,26 @@ def render_modules(tasks, manifest, batch_size=64):
     if batch_size < 1 or batch_size > 64:
         raise ValueError('Workflow module size must be between 1 and 64')
     tasks = ordered(tasks)
+    # Sample completion/cleanup has a large fan-in. Flattening every sample's
+    # channels into main.nf can exceed the JVM's 64 KiB method limit even though
+    # process definitions are batched. Keep independent sample DAGs in named
+    # subworkflows so both process code AND channel wiring stay bounded.
+    samples = list(dict.fromkeys(t.get('sample') for t in tasks))
+    by_id = {t['id']: t for t in tasks}
+    if len(samples) > 1 and None not in samples and all(
+            by_id[dep].get('sample') == t['sample'] for t in tasks for dep in t['dependencies']):
+        files, includes, calls = {}, [], []
+        for i, sample in enumerate(samples):
+            name = f'SAMPLE_{i:04d}'
+            subset = [t for t in tasks if t['sample'] == sample]
+            for relative, content in render_modules(subset, manifest, batch_size).items():
+                if relative == 'main.nf':
+                    content = content.replace('\nworkflow {\n', f'\nworkflow {name} {{\n')
+                files[f'samples/{name}/{relative}'] = content
+            includes.append(f"include {{ {name} }} from './samples/{name}/main'")
+            calls.append(f'    {name}()')
+        files['main.nf'] = 'nextflow.enable.dsl=2\n\n' + '\n'.join(includes) + '\n\nworkflow {\n' + '\n'.join(calls) + '\n}\n'
+        return files
     names = {t['id']: f'TASK_{i:04d}' for i, t in enumerate(tasks)}
     batches = [tasks[i:i + batch_size] for i in range(0, len(tasks), batch_size)]
     owner = {t['id']: i for i, batch in enumerate(batches) for t in batch}
@@ -150,14 +171,23 @@ def render_modules(tasks, manifest, batch_size=64):
     for i, batch in enumerate(batches):
         workflow = f'BATCH_{i:04d}'
         external = list(dict.fromkeys(dep for t in batch for dep in t['dependencies'] if owner[dep] != i))
-        ports = {dep: f'upstream_{j}' for j, dep in enumerate(external)}
+        bundled = len(external) > 64
+        ports = {dep: ('upstream.' if bundled else '') + f'upstream_{j}' for j, dep in enumerate(external)}
         blocks = [process_definition(t, names[t['id']], manifest) for t in batch]
         lines = [f'workflow {workflow} {{']
         if external:
-            lines += ['    take:'] + [f'    {ports[dep]}' for dep in external]
+            lines += ['    take:'] + (['    upstream'] if bundled else [f'    {ports[dep]}' for dep in external])
         lines.append('    main:')
         for t in batch:
-            args = ', '.join(ports[dep] if owner[dep] != i else names[dep] + '.out' for dep in t['dependencies'])
+            channels = [ports[dep] if owner[dep] != i else names[dep] + '.out' for dep in t['dependencies']]
+            args = ', '.join(channels)
+            if len(channels) > 64:
+                # One completion gate, with bounded operator argument counts.
+                # collect emits only after every prerequisite channel closes.
+                args = 'Channel.empty()'
+                for start in range(0, len(channels), 32):
+                    args += '.mix(' + ', '.join(channels[start:start+32]) + ')'
+                args += '.collect()'
             lines.append(f"    {names[t['id']]}({args or 'Channel.value(true)'})")
         emitted = [t['id'] for t in batch if t['id'] in exports]
         if emitted:
@@ -166,6 +196,9 @@ def render_modules(tasks, manifest, batch_size=64):
         files[f'modules/{workflow}.nf'] = '\n\n'.join(blocks) + '\n\n' + '\n'.join(lines) + '\n'
         includes.append(f"include {{ {workflow} }} from './modules/{workflow}'")
         args = ', '.join(f'BATCH_{owner[dep]:04d}.out.done_{names[dep]}' for dep in external)
+        if bundled:
+            args = '[' + ', '.join(f'upstream_{j}: BATCH_{owner[dep]:04d}.out.done_{names[dep]}'
+                                  for j, dep in enumerate(external)) + ']'
         calls.append(f'    {workflow}({args})')
     files['main.nf'] = 'nextflow.enable.dsl=2\n\n' + '\n'.join(includes) + '\n\nworkflow {\n' + '\n'.join(calls) + '\n}\n'
     return files
@@ -386,11 +419,12 @@ def launch(tasks, output_dir, args, name, dryrun=False):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(path, target)
             summary_path.write_text(json.dumps(summary, indent=2) + '\n')
-            if getattr(args, 'compact_results', False) and not interrupted:
+            if getattr(args, 'compact_results', False) and summary['status'] == 'SUCCESS':
                 # Keep trace, task plans and diagnostics; discard generated NF code.
                 nf.unlink(missing_ok=True)
                 config.unlink(missing_ok=True)
                 shutil.rmtree(run_dir / 'modules', ignore_errors=True)
+                shutil.rmtree(run_dir / 'samples', ignore_errors=True)
                 for path in (run_dir / 'nextflow_tasks').rglob('*'):
                     if path.is_file() and path.name not in ('.command.log', '.command.out', '.command.err'):
                         path.unlink()

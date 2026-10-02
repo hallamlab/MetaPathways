@@ -117,6 +117,32 @@ class SchedulingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unknown dependency'):
             nf.render_modules(tasks, self.root / 'tasks.json')
 
+    def test_compact_sample_fan_in_is_wired_inside_sample_modules(self):
+        tasks = []
+        for sample in range(49):
+            ids = [f'{sample}:pgdb:{i}' for i in range(132)]
+            tasks.extend(nf.task(i, i, ['true'], sample=str(sample)) for i in ids)
+            tasks.append(nf.task(f'{sample}:compact', 'compact', ['true'],
+                                 sample=str(sample), dependencies=ids))
+        files = nf.render_modules(tasks, self.root/'tasks.json')
+        self.assertLess(len(files['main.nf']), 10000)
+        self.assertNotIn('.out.', files['main.nf'])
+        self.assertEqual(files['main.nf'].count('include { SAMPLE_'), 49)
+        for i in range(49):
+            module = files[f'samples/SAMPLE_{i:04d}/main.nf']
+            self.assertIn(f'workflow SAMPLE_{i:04d}', module)
+            self.assertIn('BATCH_0000.out.done_TASK_0000', module)
+            self.assertIn('BATCH_0002([upstream_0:', module)
+            cleanup = files[f'samples/SAMPLE_{i:04d}/modules/BATCH_0002.nf']
+            self.assertIn('Channel.empty().mix(', cleanup)
+            self.assertIn('.collect()', cleanup)
+            self.assertNotIn('val dependency_1', cleanup)
+            self.assertIn('    take:\n    upstream\n', cleanup)
+        # Never hide a cross-sample dependency behind independent workflows.
+        tasks[-1]['dependencies'].append('0:pgdb:0')
+        files = nf.render_modules(tasks, self.root/'tasks.json')
+        self.assertNotIn('samples/SAMPLE_0000/main.nf', files)
+
     def test_database_restart_restores_directories_without_invalidating_downloads(self):
         from metapathways.nf_databases import plan
         tasks = plan(self.root, ['swissprot', 'cazy'], 'fast')
