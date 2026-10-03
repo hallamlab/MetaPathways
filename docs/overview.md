@@ -1,5 +1,7 @@
 # What MetaPathways does
 
+For the tool-by-tool diagrams and citations, see the [detailed workflow](detailed-workflow.md).
+
 MetaPathways connects assembly annotations, read abundance and optional pathway inference in a shared set of sample and genome results. It accepts one sample or a collection and runs locally or through Slurm.
 
 ```mermaid

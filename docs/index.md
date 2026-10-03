@@ -48,6 +48,7 @@ reports-reference
 results-schema
 architecture
 data-flow
+detailed-workflow
 workflow
 cli-reference
 benchmarking

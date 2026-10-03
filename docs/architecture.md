@@ -1,5 +1,7 @@
 # Software architecture: local and HPC
 
+For the tool-by-tool diagrams and citations, see the [detailed workflow](detailed-workflow.md).
+
 The MP command validates inputs and creates a dependency graph. Nextflow schedules ready tasks using the selected executor; the biological tools perform the same work in either mode. The MP controller and Nextflow continue running until the workflow finishes.
 
 ```mermaid

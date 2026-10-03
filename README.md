@@ -95,6 +95,7 @@ The complete guide is at **[metapathways.readthedocs.io](https://metapathways.re
 - [Pathway Tools setup](https://metapathways.readthedocs.io/en/latest/pathway-tools.html): obtain the installer and build your licensed image **before running PGDB inference**.
 - [Local resources and Slurm](https://metapathways.readthedocs.io/en/latest/resources.html): threads, memory and cluster submission.
 - [Reports and exploration](https://metapathways.readthedocs.io/en/latest/reports-tutorial.html): browse results and export tables.
+- [Detailed workflow and tool citations](https://metapathways.readthedocs.io/en/latest/detailed-workflow.html), with diagrams and a downloadable bibliography.
 - [Architecture](https://metapathways.readthedocs.io/en/latest/architecture.html), [data flow](https://metapathways.readthedocs.io/en/latest/data-flow.html), and [CLI reference](https://metapathways.readthedocs.io/en/latest/cli-reference.html).
 
 ## Team, support and citation

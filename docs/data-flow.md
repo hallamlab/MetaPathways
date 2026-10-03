@@ -1,5 +1,7 @@
 # Data flow: inputs to connected results
 
+For the tool-by-tool diagrams and citations, see the [detailed workflow](detailed-workflow.md).
+
 The arrows show which data products feed each calculation. They do not require independent branches to run serially. MP preserves sample, contig, feature and entity identifiers so the final tables can be joined and explored.
 
 ```mermaid

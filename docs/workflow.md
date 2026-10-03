@@ -1,5 +1,7 @@
 # Workflow and output guide
 
+For the tool-by-tool diagrams and citations, see the [detailed workflow](detailed-workflow.md).
+
 [Start with the README](index.md) · [Complete CLI flags](cli-reference.md)
 
 For guided usage, start with the [command cookbook](commands.md) or [Pathway Tools chapter](pathway-tools.md). This page describes the stage and output contracts.
