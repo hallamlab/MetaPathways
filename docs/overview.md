@@ -7,7 +7,7 @@ The [main workflow figure](index.md) and the diagrams below share the appnote's 
 MetaPathways connects assembly annotations, read abundance and optional pathway inference in a shared set of sample and genome results. It accepts one sample or a collection and runs locally or through Slurm.
 
 ```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 flowchart LR
     A[Assemblies] --> B[Functional and taxonomic annotation]
     R[Reads] --> C[Read abundance]

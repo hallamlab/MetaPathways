@@ -5,7 +5,7 @@ For the tool-by-tool diagrams and citations, see the [detailed workflow](detaile
 The MP command validates inputs and creates a dependency graph. Nextflow schedules ready tasks using the selected executor; the biological tools perform the same work in either mode. The MP controller and Nextflow continue running until the workflow finishes.
 
 ```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 flowchart TB
     U[User command and manifest] --> MP["MP controller<br/>Validate and plan"]
     MP --> NF["Nextflow<br/>Dependencies and task scheduling"]

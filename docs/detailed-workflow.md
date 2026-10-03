@@ -15,7 +15,7 @@ Download {download}`the software and database bibliography <assets/workflow-tool
 These are setup commands, run before sample analysis. An existing compatible MPDB and SIF can be reused across samples and computers; they are not rebuilt for each sample.
 
 ```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 flowchart TB
     PUBLIC["Selected public references<br/>Proteins, SILVA, taxonomy and EC data"] --> BUILD["build_db through Nextflow<br/>Download and prepare reference files"]
     BUILD --> INDEX["fastdb or makeblastdb<br/>Protein indexes and BLAST nucleotide indexes"]
@@ -66,7 +66,7 @@ Each worker checks its task receipt and tracked inputs before either reusing val
 This diagram follows the **stage order for nucleotide FASTA input**. Boxes grouping multiple MP transformations are abbreviated for readability. The reference searches within a group can run concurrently; this does not imply that all RNA prediction and protein search stages run independently within a sample. Protein-only inputs follow the compatible reduced path described in the [stage reference](workflow.md).
 
 ```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 flowchart TB
     ASM["Assembly FASTA<br/>Original contig identifiers"] --> QC["PREPROCESS_INPUT - MP<br/>Sequence filtering and identifier map"]
     QC --> ORF["ORF_PREDICTION<br/>pProdigal wrapping Prodigal"]
@@ -109,7 +109,7 @@ MP combines protein and RNA evidence, performs feature-overlap processing throug
 Solid arrows show the downstream processing paths; dotted arrows connect existing products to reporting. Additional inputs are named inside the relevant boxes. The abundance branch requires reads. The PGDB branch requires Pathway Tools; genome-specific PGDBs additionally require a contig-to-genome map.
 
 ```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 flowchart TB
     PI["Completed PATHOLOGIC_INPUT<br/>Community features and feature-to-contig relationships"] --> COV["COMPUTE_TPM - CoverM<br/>Reads plus sample contigs<br/>Mapping and contig coverage"]
     COV --> BAM{"SAMtools<br/>Name-sort the exact CoverM BAM"}
