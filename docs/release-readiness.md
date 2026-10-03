@@ -25,7 +25,7 @@ The Conda recipe includes pinned MAGSplitter and Camelot sources at build time; 
 1. Build/install the final committed candidate and record artifact checksums alongside its source commit.
 2. Complete the full local benchmark with the licensed Pathway Tools image and MPDB, retaining task traces and logs.
 3. Complete the HPC Slurm test and benchmark with shared-storage paths, recording requested resources separately from measured consumption.
-4. Have the tester review the feature branch/PR before merging to `dev` or `master`.
+4. Have the tester review the feature PR before merging to `dev`; promote to production through a separate `dev` → `master` PR and validate the production commit.
 5. Run the release integration and optional container checks, verify registry credentials and metadata, and publish only after explicit release approval. Anaconda, Quay and Zenodo uploads are not part of the local test or feature push.
 
 ```{include} includes/cami-references.md

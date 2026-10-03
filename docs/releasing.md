@@ -17,21 +17,28 @@ SHA256 checksums. Licensed Pathway Tools is obtained separately by the user.
 
 ## Normal release using GitHub CI
 
-After tester sign-off and merging the PR, from a clean checkout of the reviewed release branch (`dev` by default), using your existing Git SSH/HTTPS credentials:
+Use the existing branches: **feature branch → `dev` → `master`**. `dev` is the integration branch; `master` is the production branch. A new `main` branch is unnecessary. GitHub's default branch and the Read the Docs `latest` version are separate settings; neither setting promotes a release.
+
+Open feature work as a draft PR targeting `dev` while benchmarks or reviewer checks are pending. Record the tested commit and outstanding checks in the PR. After benchmark review, independent tester sign-off and passing CI, mark it ready and merge into `dev`. Then open a separate promotion PR from `dev` into `master`, review the complete diff, and validate the resulting production commit before tagging. An older `master` can include changes accumulated on `dev` before the feature PR; review those too. Do not reset or force-push production to bypass that review.
+
+Prepare any version changes on the feature branch before final PR review:
 
 ```bash
 python scripts/release.py prepare 3.5.2
 git diff
 git add README.md CITATION.cff metapathways/_version.py conda_recipe/meta_template.yaml
 git commit -m "Prepare MetaPathways 3.5.2"
-python scripts/release.py publish --branch dev
 ```
 
 Commit the release script, workflow, tests, and other implementation files as well
 when installing this workflow for the first time. If `prepare` changes nothing,
-there is no version-only commit to make.
+there is no version-only commit to make. After the promotion PR is merged, the production commit is validated and release approval is given, use a clean, up-to-date checkout of `master` with your existing Git SSH/HTTPS credentials:
 
-`publish` requires a clean checkout on the selected release branch (`dev` by default; `--branch master` selects `master`). It creates an annotated tag and
+```bash
+python scripts/release.py publish --branch master
+```
+
+`publish` requires a clean checkout on the selected release branch. Always pass `--branch master` for production publication; the helper also accepts `dev` and retains it as its historical default. It creates an annotated tag and
 pushes the branch and tag atomically to `hallamlab/MetaPathways`. It never force
 pushes, moves a published tag, or automatically commits your work. GitHub CLI
 login is unnecessary on your machine.
@@ -243,7 +250,7 @@ review; passing this gate does not mean the image has no vulnerabilities.
 
 ## Feature-branch review before publication
 
-The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to dev/master → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged reviewer/report assets.
+The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to `dev` → promotion PR to `master` → production validation → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged reviewer/report assets.
 
 Use the [PR tester checklist](pr-testing.md) for independent installation, the single- and two-sample CAMI workflows, restart behavior, optional licensed Pathway Tools, and report exports. Record the tested Git commit. Record the source commit as well as the package version when testing a candidate.
 
