@@ -342,6 +342,8 @@ def launch(tasks, output_dir, args, name, dryrun=False):
         cache = Path(cache_override).expanduser().resolve() if cache_override else scratch / 'conda'
         config_text, resources = configuration(tasks, args, cache)
         for t in tasks:
+            t['compact_results'] = bool(getattr(args, 'compact_results', False))
+            t['scratch_dir'] = getattr(args, 'scratch_dir', None)
             key = hashlib.sha256(t['id'].encode()).hexdigest()
             t['receipt'] = str(state / 'receipts' / (key + '.json'))
             t['log'] = str(run_dir / 'tasks' / (key + '.log'))
@@ -413,23 +415,28 @@ def launch(tasks, output_dir, args, name, dryrun=False):
                     if key in t:
                         record[key] = t[key]
             summary['tasks'] = records
+            summary_path.write_text(json.dumps(summary, indent=2) + '\n')
+            compact_exit = getattr(args, 'compact_results', False) and not interrupted
             # Preserve wrapper diagnostics even for scheduler/bootstrap failures
             # before a worker could open its own log.
-            for path in work.rglob('.command.*'):
-                if path.is_file():
-                    target = run_dir / 'nextflow_tasks' / path.relative_to(work)
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(path, target)
-            summary_path.write_text(json.dumps(summary, indent=2) + '\n')
-            if getattr(args, 'compact_results', False) and summary['status'] == 'SUCCESS':
+            if compact_exit:
+                from metapathways.compact_storage import archive_directory
+                archive_directory(work, run_dir/'nextflow_tasks.tar.gz')
+                if (run_dir/'tasks').is_dir():
+                    archive_directory(run_dir/'tasks', run_dir/'task_logs.tar.gz')
+                    shutil.rmtree(run_dir/'tasks')
+            else:
+                for path in work.rglob('.command.*'):
+                    if path.is_file():
+                        target = run_dir / 'nextflow_tasks' / path.relative_to(work)
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(path, target)
+            if compact_exit:
                 # Keep trace, task plans and diagnostics; discard generated NF code.
                 nf.unlink(missing_ok=True)
                 config.unlink(missing_ok=True)
                 shutil.rmtree(run_dir / 'modules', ignore_errors=True)
                 shutil.rmtree(run_dir / 'samples', ignore_errors=True)
-                for path in (run_dir / 'nextflow_tasks').rglob('*'):
-                    if path.is_file() and path.name not in ('.command.log', '.command.out', '.command.err'):
-                        path.unlink()
             if not getattr(args, 'keep_work', False) and not interrupted:
                 shutil.rmtree(scratch)
             else:

@@ -9,6 +9,8 @@ import subprocess
 import sys
 import time
 import traceback
+import tempfile
+from contextlib import ExitStack
 
 
 def fingerprint(paths):
@@ -134,11 +136,17 @@ def main(argv=None):
     tasks = json.loads(Path(manifest).read_text())
     t = next(t for t in tasks if t['id'] == identifier)
     if direct:
-        if t.get('host_serial'):
-            with open(f'/tmp/metapathways-ptools-{os.getuid()}.lock', 'a') as lock:
+        with ExitStack() as contexts:
+            if t.get('compact_results') and not t['id'].endswith(':compact_results'):
+                from metapathways.compact_storage import task_scratch
+                work = contexts.enter_context(task_scratch(t.get('scratch_dir')))
+                os.environ['TMPDIR'] = str(work)
+                os.environ['METAPATHWAYS_COMPACT_SCRATCH'] = str(work)
+                tempfile.tempdir = None
+            if t.get('host_serial'):
+                lock = contexts.enter_context(open(f'/tmp/metapathways-ptools-{os.getuid()}.lock', 'a'))
                 fcntl.flock(lock, fcntl.LOCK_EX)
-                return execute(t)
-        return execute(t)
+            return execute(t)
     logfile = Path(t['log'])
     logfile.parent.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()

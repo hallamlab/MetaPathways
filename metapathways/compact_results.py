@@ -23,7 +23,9 @@ def resume_key(args, row):
         code.update(source.relative_to(Path(__file__).parent).as_posix().encode())
         code.update(source.read_bytes())
     options['implementation_sha256'] = code.hexdigest()
-    for key in ('dryrun', 'force_redo'):
+    for key in ('dryrun', 'force_redo', 'max_tasks', 'max_cpus', 'max_memory',
+                'executor', 'account', 'partition', 'qos', 'reservation',
+                'time_limit', 'submit_rate', 'scratch_dir'):
         options.pop(key, None)
     paths = [Path(row[k]) for k in ('assembly', 'reads_1', 'reads_2', 'mag_map') if row[k]]
     from metapathways.pt_container import registered_image
@@ -100,6 +102,8 @@ def compact(base, key):
                 p = Path(directory)/name
                 rel = p.relative_to(base)
                 if (rel.parts[0] in ('logs', 'run_statistics', 'reports') or
+                    (rel.parts[:2] == ('results', 'pgdb') and
+                     (name.endswith('cyc.tar.bz2') or name.endswith('.tar.gz'))) or
                     p.suffix == '.log' or name.endswith('_log.txt') or
                     (rel.parts[0] == 'results' and p.suffix in ('.tsv', '.txt'))):
                     keep.add(rel.as_posix())

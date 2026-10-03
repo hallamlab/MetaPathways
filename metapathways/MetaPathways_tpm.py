@@ -16,6 +16,7 @@ try:
     import shutil
     import subprocess
     import shlex
+    import os
     
     from os import path, _exit, rename, system
 
@@ -373,6 +374,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             raise RuntimeError(f'CoverM did not create the expected BAM: {bam_in}')
         sort_out = options.bwaFolder + PATHDELIM + options.sample_name + '.sorted.bam'
         tmp_bam = options.bwaFolder + PATHDELIM + options.sample_name + '.tmp'
+        if os.environ.get('METAPATHWAYS_COMPACT_SCRATCH'):
+            tmp_bam = path.join(os.environ['METAPATHWAYS_COMPACT_SCRATCH'], options.sample_name + '.sort')
         feat = options.bwaFolder + PATHDELIM + options.sample_name + '.annot.featurecounts.txt'
         abund_calc = path.join(path.dirname(options.output), path.basename(options.output).rsplit('.', 2)[0] + '.orf_counts.tsv')
 

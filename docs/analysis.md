@@ -66,7 +66,7 @@ Do not combine `--manifest` with `-i`, discovery-directory flags, `--no_reads` o
 
 ## Outputs, restarting and exploration
 
-By default MP keeps all sample outputs. Add `--compact_results` to `analysis_wf` to remove large intermediates after each sample finishes while retaining rebuildable reports, final tables, logs and benchmark traces. PGDB archives are also removed. See [compact results and restart behavior](benchmarking.md#compact-results-on-limited-storage).
+By default MP keeps all sample outputs. Add `--compact_results` to `analysis_wf` to remove large intermediates after each sample finishes while retaining rebuildable reports, final tables, logs and benchmark traces. PGDB archives are retained; builds and extraction use worker scratch, and diagnostics are bundled. See [compact results and restart behavior](benchmarking.md#compact-results-on-limited-storage).
 
 Each sample writes to `analysis/SAMPLE/`. The dataset root contains `inputs.resolved.tsv` with absolute original paths, combined `reports/`, and `logs/analysis_wf/RUN/` with the plan, tool logs, resource trace and task statuses. Staged symlinks and receipts stay under `.metapathways/analysis_wf/`; temporary Nextflow work/cache cleanup follows the ordinary MP resource options.
 

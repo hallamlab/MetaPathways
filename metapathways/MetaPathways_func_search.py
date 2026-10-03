@@ -220,7 +220,7 @@ def _execute_FAST(options, logger=None):
                 for line in stream:
                     if line.startswith('volumes='):
                         volumes = int(line.split('=', 1)[1])
-        with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.path.dirname(output)) as work:
+        with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.environ.get('METAPATHWAYS_COMPACT_SCRATCH') or os.path.dirname(output)) as work:
             parts = []
             for v in range(volumes or 1):
                 part = os.path.join(work, f'hits-{v}.tsv')
@@ -235,7 +235,8 @@ def _execute_FAST(options, logger=None):
                     raise RuntimeError('FAST returned success without producing its output')
                 parts.append(part)
             if len(parts) == 1:
-                rename(parts[0], output)
+                from metapathways.compact_storage import publish_file
+                publish_file(parts[0], output)
             else:
                 merged = os.path.join(work, 'merged.tsv')
                 with open(merged, 'w') as destination:
@@ -247,7 +248,8 @@ def _execute_FAST(options, logger=None):
                     table = pd.read_csv(merged, sep='\t', header=None)
                     table.sort_values(by=[0, 11], ascending=[True, False], inplace=True)
                     table.to_csv(merged, sep='\t', header=False, index=False)
-                rename(merged, output)
+                from metapathways.compact_storage import publish_file
+                publish_file(merged, output)
         return (0, '')
     except Exception as exc:
         message = 'Could not run FAST correctly: ' + str(exc)

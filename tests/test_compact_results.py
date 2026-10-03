@@ -46,7 +46,7 @@ class CompactTests(unittest.TestCase):
         self.assertEqual((outside/'important').read_text(), 'keep')
         self.assertFalse((self.base/'external_link').exists())
         self.assertFalse((self.base/'bwa').exists())
-        self.assertFalse((self.base/'results/pgdb/community/alphacyc.tar.bz2').exists())
+        self.assertTrue((self.base/'results/pgdb/community/alphacyc.tar.bz2').exists())
         self.assertTrue((self.base/'logs/ptools/run1/summary.json').is_file())
         self.assertEqual(marker_state(self.base, 'key'), 'complete')
         compact(self.base, 'key')

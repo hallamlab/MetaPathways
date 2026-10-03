@@ -110,4 +110,4 @@ Repeat the same command and output location after a recoverable failure. MP chec
 
 Changing parameters, references, image, inputs or software can change reuse behavior. Output existence alone is not proof of provenance. Preserve `logs/` and `.metapathways/` receipts if you want to resume. See [restart details](execution.md#logs-temporary-files-and-restarting).
 
-For storage-limited complete workflows, `analysis_wf --compact_results` cleans each completed sample and retains report sources and diagnostics. It is off by default. Read the [retained files and restart rules](benchmarking.md#compact-results-on-limited-storage) before using it; archived PGDBs are removed.
+For storage-limited complete workflows, `analysis_wf --compact_results` cleans each completed sample and retains report sources and diagnostics. It is off by default. Read the [retained files and restart rules](benchmarking.md#compact-results-on-limited-storage) before using it; PGDB archives are retained and temporary PGDB trees stay in worker scratch.

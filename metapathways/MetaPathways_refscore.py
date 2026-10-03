@@ -171,7 +171,7 @@ def blast_against_itself(blast_executable, seq_subset_file, blast_table_out):
 
 def last_against_itself(last_executable, seq_subset_file, last_table_out):
     dirname = os.path.dirname(seq_subset_file.name)
-    with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.path.abspath(dirname)) as work:
+    with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.environ.get('METAPATHWAYS_COMPACT_SCRATCH') or os.path.abspath(dirname)) as work:
         cmd = shlex.join([last_executable, '-o', last_table_out, '-f', '0', '-X', work,
                           dirname + PATHDELIM + 'subset_db', seq_subset_file.name])
         result = sysutils.getstatusoutput(cmd)

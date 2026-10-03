@@ -258,6 +258,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if os.environ.get('METAPATHWAYS_COMPACT_SCRATCH'):
+        import tempfile
+        args.tmp_dir = tempfile.mkdtemp(prefix='trna-', dir=os.environ['METAPATHWAYS_COMPACT_SCRATCH'])
+
     if not os.path.exists(args.tmp_dir):
         os.makedirs(args.tmp_dir)
 

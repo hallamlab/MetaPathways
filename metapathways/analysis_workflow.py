@@ -46,7 +46,8 @@ def parser():
     sub.add_argument('--no_mags', action='store_true', help='Explicitly omit MAG splitting during automatic discovery')
     sub.add_argument('--skip_ptools', action='store_true', help='Omit community and MAG PGDB construction')
     sub.add_argument('--compact_results', action='store_true',
-                     help='After each sample finishes, keep report sources, final tables and logs; delete intermediates and PGDB archives')
+                     help='Use task scratch, archive PGDBs/diagnostics, and remove completed sample intermediates')
+    sub.add_argument('--scratch_dir', help='Worker-local scratch directory for compact mode [Slurm: SLURM_TMPDIR; local: system temporary directory]')
     sub.add_argument('--image', help='Pathway Tools SIF [registered by build_pt]')
     from metapathways.pt_taxonomy import add_taxonomy_options
     add_taxonomy_options(sub)
@@ -294,6 +295,8 @@ def downstream(row, output, annotations, args, image):
         results = base / 'results/pgdb/community' if community else base / 'results/pgdb/MAGs' / entity
         tag = sample if community else entity
         cmd = [sys.executable, script, '--mp_out', str(base), '--tag', sample, '--entity', entity, '--image', image]
+        if getattr(args, 'compact_results', False):
+            cmd.append('--compact_results')
         if args.taxprune:
             cmd.append('--taxprune')
         if args.no_transport_inference:
@@ -319,6 +322,8 @@ def main(argv=None):
     from metapathways.pt_container import registered_image
     p = parser()
     args = p.parse_args(['analysis_wf'] + list(sys.argv[1:] if argv is None else argv))
+    if args.scratch_dir and not args.compact_results:
+        fail('--scratch_dir requires --compact_results')
     if args.compact_results and any(getattr(args, k, None) for k in ('keep_work', 'work_dir', 'conda_cache')):
         fail('--compact_results cannot be combined with --keep_work, --work_dir or --conda_cache')
     if not args.output_dir or not args.refdb_dir or not (args.input_file or args.manifest):

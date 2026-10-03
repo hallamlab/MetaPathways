@@ -316,6 +316,7 @@ parser.add_argument("--container", action='store_true', dest="container", defaul
 					)
 parser.add_argument('--image', help='Pathway Tools Apptainer image')
 parser.add_argument('--entity', help=argparse.SUPPRESS)
+parser.add_argument('--compact_results', action='store_true', help=argparse.SUPPRESS)
 args = parser.parse_args()
 
 mp_dir = args.mp_out
@@ -333,9 +334,15 @@ def run_entity(entity):
         inputs = os.path.join(mp_dir, 'magsplitter/results', entity)
         output = os.path.join(mp_dir, 'results/pgdb/MAGs', entity)
         entity_tag = entity
-    create_pgdb(inputs, output, taxprune, entity_tag, container, args.image, mp_dir, transport_inference=not args.no_transport_inference, taxon_id=args.taxon_id)
-    extract_pwy(output, entity_tag)
-    map_orfs2pwys(mp_dir, output, entity_tag)
+    def build(destination):
+        create_pgdb(inputs, destination, taxprune, entity_tag, container, args.image, mp_dir, transport_inference=not args.no_transport_inference, taxon_id=args.taxon_id)
+        extract_pwy(destination, entity_tag)
+        map_orfs2pwys(mp_dir, destination, entity_tag)
+    if args.compact_results:
+        from metapathways.compact_storage import compact_pgdb
+        compact_pgdb(output, entity_tag, build)
+    else:
+        build(output)
 
 
 if args.entity:

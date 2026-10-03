@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import tarfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -301,6 +302,32 @@ class SchedulingTests(unittest.TestCase):
         self.assertEqual(sentinel.read_text(), 'keep')
         self.assertEqual((run/'console.log').read_text(), 'all terminal output\n')
         self.assertEqual(len(list((run/'nextflow_tasks').rglob('.command.log'))), 1)
+
+    @patch.object(nf.shutil, 'which', return_value='/bin/nextflow')
+    def test_compact_exit_bundles_logs_on_success_and_failure(self, _):
+        for failure in (False, True):
+            with self.subTest(failure=failure):
+                root = self.root / str(failure)
+                def run(*args):
+                    self.fake_run(*args)
+                    if failure:
+                        raise subprocess.CalledProcessError(1, ['nextflow'])
+                with patch.object(nf, 'stream_run', side_effect=run):
+                    try:
+                        nf.launch([self.task], root,
+                                  self.args(max_cpus=8, max_memory='64 GB', compact_results=True), 'test')
+                    except subprocess.CalledProcessError:
+                        self.assertTrue(failure)
+                log = next((root/'logs/test').iterdir())
+                summary = json.loads((log/'summary.json').read_text())
+                self.assertEqual(summary['tasks'][0]['status'], 'SUCCESS')
+                self.assertFalse((log/'tasks').exists())
+                self.assertFalse(Path(summary['work_dir']).exists())
+                with tarfile.open(log/'nextflow_tasks.tar.gz') as archive:
+                    self.assertEqual(archive.extractfile('work/fixture/.command.log').read(),
+                                     b'scheduler and tool output\n')
+                with tarfile.open(log/'task_logs.tar.gz') as archive:
+                    self.assertTrue(any(n.endswith('.json') for n in archive.getnames()))
 
     @patch.object(nf.shutil, 'which', return_value='/bin/nextflow')
     def test_explicit_directories_preserved(self, _):
