@@ -30,7 +30,7 @@ The previous `quick_start.html`, `install.html` and `usage.html` addresses redir
 
 ## Shared diagram scale
 
-ASPIRE and MetaPathways use a shared 2,240-unit-wide white canvas for documentation previews. Smaller diagrams are centered without stretching; Mermaid diagrams use a common 1.5× scale to bring their 16-pixel labels close to the publication figures’ typography. Preview width is responsive, but relative scale stays consistent across pages. Click a diagram to open its SVG for closer inspection. Original publication SVG/PDF downloads stay tightly cropped.
+ASPIRE and MetaPathways use a shared 2,240-unit-wide white canvas for documentation previews. MP’s main workflow in the README and documentation home page uses its cropped SVG at full available width for readability. Smaller diagrams are centered without stretching; Mermaid diagrams use a common 1.5× scale to bring their 16-pixel labels close to the publication figures’ typography. Preview width is responsive, but relative scale stays consistent across pages. Click a diagram to open its SVG for closer inspection. Original publication SVG/PDF downloads stay tightly cropped.
 
 Edit Mermaid sources under `docs/diagrams/`, or the original publication SVGs under `docs/assets/`. To rebuild the committed previews from the repository root, in the documentation environment:
 
