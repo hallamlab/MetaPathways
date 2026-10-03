@@ -1,0 +1,373 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1340" width="1500" height="1340" role="img" aria-labelledby="workflow-title workflow-desc">
+  <title id="workflow-title">MetaPathways: annotation, abundance, pathway inference and exploration</title>
+  <desc id="workflow-desc">Six conceptual modules extend the appnote workflow: preprocessing; sequence feature prediction; functional and taxonomic annotation; optional community and genome pathway inference; optional read abundance; and integrated reports and explorer. Nextflow schedules local or Slurm tasks. Assemblies and references are required; reads, genome maps and licensed pathway inference are optional. Numbered modules are not an execution schedule.</desc>
+  <rect width="1500" height="1340" fill="#FFFFFF" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#111111" />
+    </marker>
+  </defs>
+  <style>text { font-family: "Times New Roman", Times, serif; fill: #111111; } .wire { fill: none; stroke: #111111; stroke-width: 1.5; marker-end: url(#arrow); }</style>
+  <rect x="20" y="260" width="105" height="1000" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5" />
+  <text x="73" y="765" font-size="72" text-anchor="middle" transform="rotate(-90 73 765)">
+    <tspan x="73" dy="0">MetaPathways</tspan>
+  </text>
+  <rect x="155" y="20" width="690" height="135" rx="16" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="1.5" />
+  <text x="178" y="50" font-size="27" text-anchor="start">
+    <tspan x="178" dy="0">Inputs</tspan>
+  </text>
+  <text x="178" y="80" font-size="21" text-anchor="start">
+    <tspan x="178" dy="0">Required: assembled metagenomes and reference databases</tspan>
+  </text>
+  <text x="178" y="109" font-size="21" text-anchor="start">
+    <tspan x="178" dy="0">Optional: reads and contig-to-genome membership maps</tspan>
+  </text>
+  <text x="178" y="137" font-size="21" text-anchor="start">
+    <tspan x="178" dy="0">For PGDBs: your licensed Pathway Tools installation / SIF</tspan>
+  </text>
+  <rect x="875" y="20" width="605" height="135" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5" />
+  <text x="930" y="52" font-size="20" text-anchor="middle">
+    <tspan x="930" dy="0">Module</tspan>
+  </text>
+  <text x="1050" y="52" font-size="20" text-anchor="middle">
+    <tspan x="1050" dy="0">Compute</tspan>
+  </text>
+  <text x="1170" y="52" font-size="20" text-anchor="middle">
+    <tspan x="1170" dy="0">Data</tspan>
+  </text>
+  <text x="1290" y="52" font-size="20" text-anchor="middle">
+    <tspan x="1290" dy="0">Input</tspan>
+  </text>
+  <text x="1410" y="52" font-size="20" text-anchor="middle">
+    <tspan x="1410" dy="0">Output</tspan>
+  </text>
+  <rect x="918" y="72" width="24" height="24" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <path d="M 1050 71 L 1063 84 L 1050 97 L 1037 84 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <circle cx="1170" cy="84" r="12" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <circle cx="1290" cy="84" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <circle cx="1410" cy="84" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1177" y="131" font-size="19" text-anchor="middle">
+    <tspan x="1177" dy="0">Symbols describe roles, not task concurrency.</tspan>
+  </text>
+  <rect x="155" y="177" width="1325" height="70" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5" />
+  <text x="817" y="205" font-size="27" text-anchor="middle">
+    <tspan x="817" dy="0">MetaPathways + Nextflow  •  Local server or Slurm cluster</tspan>
+  </text>
+  <text x="817" y="233" font-size="20" text-anchor="middle">
+    <tspan x="817" dy="0">Input validation, dependencies, concurrent samples / tasks, resource requests, checkpoints and logs</tspan>
+  </text>
+  <text x="270" y="340" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Preprocessing</tspan>
+  </text>
+  <rect x="407" y="327" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="347" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">1</tspan>
+  </text>
+  <path d="M 433 340 L 526 340" class="wire" />
+  <circle cx="540" cy="340" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="300" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">Assembly</tspan>
+  </text>
+  <path d="M 552 340 L 664 340" class="wire" />
+  <path d="M 680 327 L 693 340 L 680 353 L 667 340 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="680" y="280" font-size="20" text-anchor="middle">
+    <tspan x="680" dy="0">Format</tspan>
+    <tspan x="680" dy="22">validation</tspan>
+  </text>
+  <path d="M 695 340 L 819 340" class="wire" />
+  <path d="M 835 327 L 848 340 L 835 353 L 822 340 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="835" y="280" font-size="20" text-anchor="middle">
+    <tspan x="835" dy="0">Contig</tspan>
+    <tspan x="835" dy="22">filtering</tspan>
+  </text>
+  <path d="M 850 340 L 974 340" class="wire" />
+  <path d="M 990 327 L 1003 340 L 990 353 L 977 340 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="990" y="280" font-size="20" text-anchor="middle">
+    <tspan x="990" dy="0">Identifier</tspan>
+    <tspan x="990" dy="22">mapping</tspan>
+  </text>
+  <path d="M 1005 340 L 1119 340" class="wire" />
+  <path d="M 1135 327 L 1148 340 L 1135 353 L 1122 340 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="280" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">Sequence</tspan>
+    <tspan x="1135" dy="22">statistics</tspan>
+  </text>
+  <path d="M 1150 340 L 1337 340" class="wire" />
+  <circle cx="1350" cy="340" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="300" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">QC'ed contigs</tspan>
+  </text>
+  <text x="270" y="480" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Sequence feature</tspan>
+    <tspan x="270" dy="31">prediction</tspan>
+  </text>
+  <rect x="407" y="482" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="502" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">2</tspan>
+  </text>
+  <path d="M 433 495 L 526 495" class="wire" />
+  <circle cx="540" cy="495" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="455" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">QC'ed contigs</tspan>
+  </text>
+  <path d="M 552 495 L 694 495" class="wire" />
+  <path d="M 710 482 L 723 495 L 710 508 L 697 495 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="710" y="457" font-size="20" text-anchor="middle">
+    <tspan x="710" dy="0">CDS / ORFs</tspan>
+  </text>
+  <text x="710" y="534" font-size="18" text-anchor="middle">
+    <tspan x="710" dy="0">pProdigal</tspan>
+  </text>
+  <path d="M 725 495 L 909 495" class="wire" />
+  <path d="M 925 482 L 938 495 L 925 508 L 912 495 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="925" y="457" font-size="20" text-anchor="middle">
+    <tspan x="925" dy="0">rRNAs</tspan>
+  </text>
+  <text x="925" y="534" font-size="18" text-anchor="middle">
+    <tspan x="925" dy="0">barrnap</tspan>
+  </text>
+  <path d="M 940 495 L 1119 495" class="wire" />
+  <path d="M 1135 482 L 1148 495 L 1135 508 L 1122 495 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="457" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">tRNAs</tspan>
+  </text>
+  <text x="1135" y="534" font-size="18" text-anchor="middle">
+    <tspan x="1135" dy="0">ptRNAscan-SE</tspan>
+  </text>
+  <path d="M 1150 495 L 1337 495" class="wire" />
+  <circle cx="1350" cy="495" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="433" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">Features and</tspan>
+    <tspan x="1350" dy="22">coordinates</tspan>
+  </text>
+  <text x="270" y="625" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Functional &amp;</tspan>
+    <tspan x="270" dy="31">taxonomic</tspan>
+    <tspan x="270" dy="31">annotation</tspan>
+  </text>
+  <rect x="407" y="642" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="662" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">3</tspan>
+  </text>
+  <path d="M 433 655 L 526 655" class="wire" />
+  <circle cx="540" cy="655" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="593" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">Predicted features</tspan>
+    <tspan x="540" dy="22">and references</tspan>
+  </text>
+  <path d="M 552 655 L 664 655" class="wire" />
+  <path d="M 680 642 L 693 655 L 680 668 L 667 655 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="680" y="595" font-size="20" text-anchor="middle">
+    <tspan x="680" dy="0">Similarity</tspan>
+    <tspan x="680" dy="22">search</tspan>
+  </text>
+  <text x="680" y="694" font-size="18" text-anchor="middle">
+    <tspan x="680" dy="0">FAST / BLAST</tspan>
+  </text>
+  <path d="M 695 655 L 819 655" class="wire" />
+  <path d="M 835 642 L 848 655 L 835 668 L 822 655 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="835" y="595" font-size="20" text-anchor="middle">
+    <tspan x="835" dy="0">Score</tspan>
+    <tspan x="835" dy="22">filtering</tspan>
+  </text>
+  <path d="M 850 655 L 974 655" class="wire" />
+  <path d="M 990 642 L 1003 655 L 990 668 L 977 655 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="990" y="595" font-size="20" text-anchor="middle">
+    <tspan x="990" dy="0">Annotation</tspan>
+    <tspan x="990" dy="22">mapping</tspan>
+  </text>
+  <path d="M 1005 655 L 1119 655" class="wire" />
+  <path d="M 1135 642 L 1148 655 L 1135 668 L 1122 655 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="595" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">Taxonomy</tspan>
+    <tspan x="1135" dy="22">and LCA</tspan>
+  </text>
+  <text x="1135" y="694" font-size="18" text-anchor="middle">
+    <tspan x="1135" dy="0">Per reference DB</tspan>
+  </text>
+  <path d="M 1150 655 L 1337 655" class="wire" />
+  <circle cx="1350" cy="655" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="593" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">Annotation tables,</tspan>
+    <tspan x="1350" dy="22">GFF / GenBank</tspan>
+  </text>
+  <text x="270" y="815" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Community &amp;</tspan>
+    <tspan x="270" dy="31">genome pathway</tspan>
+    <tspan x="270" dy="31">inference</tspan>
+  </text>
+  <rect x="407" y="832" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="852" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">4</tspan>
+  </text>
+  <path d="M 433 845 L 526 845" class="wire" />
+  <text x="270" y="907" font-size="17" text-anchor="middle">
+    <tspan x="270" dy="0">Optional • licensed Pathway Tools</tspan>
+  </text>
+  <circle cx="540" cy="845" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="782" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">Annotations</tspan>
+    <tspan x="540" dy="23.0">and sequences</tspan>
+  </text>
+  <circle cx="540" cy="903" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="934" font-size="18" text-anchor="middle">
+    <tspan x="540" dy="0">Optional</tspan>
+    <tspan x="540" dy="20.7">genome map</tspan>
+  </text>
+  <path d="M 553 845 L 590 845 L 590 813 L 815 813 L 815 832" class="wire" />
+  <text x="702" y="800" font-size="18" text-anchor="middle">
+    <tspan x="702" dy="0">Community</tspan>
+  </text>
+  <path d="M 553 845 L 602 845 L 602 889 L 664 889" class="wire" />
+  <path d="M 553 903 L 620 903 L 620 889 L 664 889" class="wire" />
+  <path d="M 680 876 L 693 889 L 680 902 L 667 889 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="680" y="930" font-size="18" text-anchor="middle">
+    <tspan x="680" dy="0">MAGSplitter</tspan>
+  </text>
+  <path d="M 695 889 L 780 889 L 780 845 L 818 845" class="wire" />
+  <text x="739" y="876" font-size="18" text-anchor="middle">
+    <tspan x="739" dy="0">Genomes</tspan>
+  </text>
+  <path d="M 835 832 L 848 845 L 835 858 L 822 845 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="835" y="785" font-size="20" text-anchor="middle">
+    <tspan x="835" dy="0">Pathway</tspan>
+    <tspan x="835" dy="22">inference</tspan>
+  </text>
+  <text x="835" y="884" font-size="18" text-anchor="middle">
+    <tspan x="835" dy="0">PathoLogic</tspan>
+  </text>
+  <path d="M 850 845 L 974 845" class="wire" />
+  <path d="M 990 832 L 1003 845 L 990 858 L 977 845 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="990" y="785" font-size="20" text-anchor="middle">
+    <tspan x="990" dy="0">Export</tspan>
+    <tspan x="990" dy="22">PGDBs</tspan>
+  </text>
+  <path d="M 1005 845 L 1119 845" class="wire" />
+  <path d="M 1135 832 L 1148 845 L 1135 858 L 1122 845 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="785" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">Collect pathway–</tspan>
+    <tspan x="1135" dy="22">gene links</tspan>
+  </text>
+  <text x="1135" y="884" font-size="18" text-anchor="middle">
+    <tspan x="1135" dy="0">Camelot / MP</tspan>
+  </text>
+  <path d="M 1150 845 L 1337 845" class="wire" />
+  <circle cx="1350" cy="845" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="782" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">PGDB archives,</tspan>
+    <tspan x="1350" dy="23.0">pathway tables</tspan>
+  </text>
+  <text x="270" y="1060" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Read abundance</tspan>
+  </text>
+  <rect x="407" y="1047" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="1067" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">5</tspan>
+  </text>
+  <path d="M 433 1060 L 526 1060" class="wire" />
+  <text x="270" y="1122" font-size="17" text-anchor="middle">
+    <tspan x="270" dy="0">Optional • supplied reads</tspan>
+  </text>
+  <circle cx="540" cy="1060" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="998" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">Reads, contigs</tspan>
+    <tspan x="540" dy="22">and feature GFF</tspan>
+  </text>
+  <path d="M 552 1060 L 664 1060" class="wire" />
+  <path d="M 680 1047 L 693 1060 L 680 1073 L 667 1060 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="680" y="1000" font-size="20" text-anchor="middle">
+    <tspan x="680" dy="0">Read</tspan>
+    <tspan x="680" dy="22">mapping</tspan>
+  </text>
+  <text x="680" y="1099" font-size="18" text-anchor="middle">
+    <tspan x="680" dy="0">CoverM</tspan>
+  </text>
+  <path d="M 695 1060 L 819 1060" class="wire" />
+  <path d="M 835 1047 L 848 1060 L 835 1073 L 822 1060 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="835" y="1000" font-size="20" text-anchor="middle">
+    <tspan x="835" dy="0">BAM</tspan>
+    <tspan x="835" dy="22">sorting</tspan>
+  </text>
+  <text x="835" y="1099" font-size="18" text-anchor="middle">
+    <tspan x="835" dy="0">SAMtools</tspan>
+  </text>
+  <path d="M 850 1060 L 974 1060" class="wire" />
+  <path d="M 990 1047 L 1003 1060 L 990 1073 L 977 1060 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="990" y="1000" font-size="20" text-anchor="middle">
+    <tspan x="990" dy="0">Feature</tspan>
+    <tspan x="990" dy="22">counting</tspan>
+  </text>
+  <text x="990" y="1099" font-size="18" text-anchor="middle">
+    <tspan x="990" dy="0">featureCounts</tspan>
+  </text>
+  <path d="M 1005 1060 L 1119 1060" class="wire" />
+  <path d="M 1135 1047 L 1148 1060 L 1135 1073 L 1122 1060 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="1000" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">Abundance</tspan>
+    <tspan x="1135" dy="22">normalization</tspan>
+  </text>
+  <text x="1135" y="1099" font-size="18" text-anchor="middle">
+    <tspan x="1135" dy="0">MP</tspan>
+  </text>
+  <path d="M 1150 1060 L 1337 1060" class="wire" />
+  <circle cx="1350" cy="1060" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="976" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">Contig coverage,</tspan>
+    <tspan x="1350" dy="22">feature counts,</tspan>
+    <tspan x="1350" dy="22">RPKM / TPM</tspan>
+  </text>
+  <text x="270" y="1205" font-size="27" text-anchor="middle">
+    <tspan x="270" dy="0">Reports &amp;</tspan>
+    <tspan x="270" dy="31">explorer</tspan>
+  </text>
+  <rect x="407" y="1207" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
+  <text x="420" y="1227" font-size="20" text-anchor="middle">
+    <tspan x="420" dy="0">6</tspan>
+  </text>
+  <path d="M 433 1220 L 526 1220" class="wire" />
+  <circle cx="540" cy="1220" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
+  <text x="540" y="1158" font-size="20" text-anchor="middle">
+    <tspan x="540" dy="0">Available tables</tspan>
+    <tspan x="540" dy="22">and execution logs</tspan>
+  </text>
+  <path d="M 552 1220 L 694 1220" class="wire" />
+  <path d="M 710 1207 L 723 1220 L 710 1233 L 697 1220 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="710" y="1160" font-size="20" text-anchor="middle">
+    <tspan x="710" dy="0">Import and</tspan>
+    <tspan x="710" dy="22">link results</tspan>
+  </text>
+  <text x="710" y="1259" font-size="18" text-anchor="middle">
+    <tspan x="710" dy="0">MP / SQLite</tspan>
+  </text>
+  <path d="M 725 1220 L 909 1220" class="wire" />
+  <path d="M 925 1207 L 938 1220 L 925 1233 L 912 1220 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="925" y="1160" font-size="20" text-anchor="middle">
+    <tspan x="925" dy="0">Sample-first</tspan>
+    <tspan x="925" dy="22">exploration</tspan>
+  </text>
+  <text x="925" y="1259" font-size="18" text-anchor="middle">
+    <tspan x="925" dy="0">HTML report / portal</tspan>
+  </text>
+  <path d="M 940 1220 L 1119 1220" class="wire" />
+  <path d="M 1135 1207 L 1148 1220 L 1135 1233 L 1122 1220 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
+  <text x="1135" y="1160" font-size="20" text-anchor="middle">
+    <tspan x="1135" dy="0">Search, subset</tspan>
+    <tspan x="1135" dy="22">and export</tspan>
+  </text>
+  <text x="1135" y="1259" font-size="18" text-anchor="middle">
+    <tspan x="1135" dy="0">EDA_portal.html</tspan>
+  </text>
+  <path d="M 1150 1220 L 1337 1220" class="wire" />
+  <circle cx="1350" cy="1220" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
+  <text x="1350" y="1158" font-size="20" text-anchor="middle">
+    <tspan x="1350" dy="0">Run report and</tspan>
+    <tspan x="1350" dy="22">selected CSVs</tspan>
+  </text>
+  <text x="817" y="1293" font-size="20" text-anchor="middle">
+    <tspan x="817" dy="0">Conceptual modules, not the exact execution order. Independent tasks can overlap.</tspan>
+  </text>
+  <text x="817" y="1320" font-size="19" text-anchor="middle">
+    <tspan x="817" dy="0">Reports remain available without reads or PGDBs; genome-specific pathways require a membership map.</tspan>
+  </text>
+</svg>

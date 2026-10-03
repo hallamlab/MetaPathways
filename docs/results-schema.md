@@ -15,6 +15,7 @@ The schema version is recorded in `schema.json`, together with generation time, 
 ## Relationships
 
 ```mermaid
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
 erDiagram
     samples ||--o{ contigs : contains
     contigs ||--o{ orfs : contains
