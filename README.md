@@ -10,7 +10,7 @@ MetaPathways has since advanced as a modular tool, deepening our understanding o
 
 [![MetaPathways workflow: preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer. Nextflow schedules local or Slurm tasks.](docs/assets/workflow-main.svg)](docs/assets/workflow-main.svg)
 
-Assemblies and references drive annotation; optional reads add abundance, and contig-to-genome maps enable genome-specific analysis. PGDB inference requires licensed Pathway Tools. The final report and explorer connect available results for searching, subsetting and CSV export. Numbered modules summarize the biology; see the [detailed workflow](https://metapathways.readthedocs.io/en/latest/detailed-workflow.html) for task dependencies and citations.
+Assemblies and references drive annotation; optional reads add abundance, and contig-to-genome maps enable genome-specific analysis. PGDB inference requires licensed Pathway Tools. The final report and explorer connect available results for searching, subsetting and CSV export. Numbered modules summarize the biology; see the [detailed workflow](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html) for task dependencies and citations.
 
 ## Quick start
 
@@ -38,7 +38,7 @@ metapathways analysis_wf \
 metapathways report -o all --serve --no-browser --port 8765
 ```
 
-Open the URL printed by the report server. On a remote server, use an [SSH tunnel](https://metapathways.readthedocs.io/en/latest/reports-tutorial.html#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package and is derived from CAMI II ([Meyer et al., 2022](#cami-references)); database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
+Open the URL printed by the report server. On a remote server, use an [SSH tunnel](https://hallamlab-metapathways.readthedocs.io/en/latest/reports-tutorial.html#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package and is derived from CAMI II ([Meyer et al., 2022](#cami-references)); database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
 
 ### 2. Quay: Docker or Apptainer
 
@@ -50,7 +50,7 @@ docker pull quay.io/hallamlab/metapathways:3.5.2
 apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
 ```
 
-The image includes the same workflow dependencies and reviewer data. Follow the [Docker three-sample test](https://metapathways.readthedocs.io/en/latest/containers.html#docker-three-sample-test) or [Apptainer three-sample test](https://metapathways.readthedocs.io/en/latest/containers.html#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
+The image includes the same workflow dependencies and reviewer data. Follow the [Docker three-sample test](https://hallamlab-metapathways.readthedocs.io/en/latest/containers.html#docker-three-sample-test) or [Apptainer three-sample test](https://hallamlab-metapathways.readthedocs.io/en/latest/containers.html#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
 
 ### 3. Local installation from GitHub
 
@@ -74,7 +74,7 @@ metapathways build_db -d ~/MPDB --func swissprot -a fast
 metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 ```
 
-For assemblies with reads and genome maps, follow the [complete workflow](https://metapathways.readthedocs.io/en/latest/inputs.html). **If you want PGDBs, complete the [Pathway Tools installation guide](https://metapathways.readthedocs.io/en/latest/pathway-tools.html) before starting that workflow.** The small reviewer references are for testing only.
+For assemblies with reads and genome maps, follow the [complete workflow](https://hallamlab-metapathways.readthedocs.io/en/latest/inputs.html). **If you want PGDBs, complete the [Pathway Tools installation guide](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html) before starting that workflow.** The small reviewer references are for testing only.
 
 ## Conceptual overview
 
@@ -84,15 +84,15 @@ For assemblies with reads and genome maps, follow the [complete workflow](https:
 
 ## Full documentation
 
-The complete guide is at **[metapathways.readthedocs.io](https://metapathways.readthedocs.io/)**. Documentation source stays in this repository under `docs/`.
+The complete guide is at **[hallamlab-metapathways.readthedocs.io](https://hallamlab-metapathways.readthedocs.io/)**. Documentation source stays in this repository under `docs/`.
 
-- [Reviewer walkthrough](https://metapathways.readthedocs.io/en/latest/reviewer-test.html): expected results and single-/two-sample variants.
-- [Complete workflow](https://metapathways.readthedocs.io/en/latest/analysis.html): inputs, manifests and end-to-end execution.
-- [Pathway Tools setup](https://metapathways.readthedocs.io/en/latest/pathway-tools.html): obtain the installer and build your licensed image **before running PGDB inference**.
-- [Local resources and Slurm](https://metapathways.readthedocs.io/en/latest/resources.html): threads, memory and cluster submission.
-- [Reports and exploration](https://metapathways.readthedocs.io/en/latest/reports-tutorial.html): browse results and export tables.
-- [Detailed workflow and tool citations](https://metapathways.readthedocs.io/en/latest/detailed-workflow.html), with diagrams and a downloadable bibliography.
-- [Architecture](https://metapathways.readthedocs.io/en/latest/architecture.html), [data flow](https://metapathways.readthedocs.io/en/latest/data-flow.html), and [CLI reference](https://metapathways.readthedocs.io/en/latest/cli-reference.html).
+- [Reviewer walkthrough](https://hallamlab-metapathways.readthedocs.io/en/latest/reviewer-test.html): expected results and single-/two-sample variants.
+- [Complete workflow](https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html): inputs, manifests and end-to-end execution.
+- [Pathway Tools setup](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html): obtain the installer and build your licensed image **before running PGDB inference**.
+- [Local resources and Slurm](https://hallamlab-metapathways.readthedocs.io/en/latest/resources.html): threads, memory and cluster submission.
+- [Reports and exploration](https://hallamlab-metapathways.readthedocs.io/en/latest/reports-tutorial.html): browse results and export tables.
+- [Detailed workflow and tool citations](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html), with diagrams and a downloadable bibliography.
+- [Architecture](https://hallamlab-metapathways.readthedocs.io/en/latest/architecture.html), [data flow](https://hallamlab-metapathways.readthedocs.io/en/latest/data-flow.html), and [CLI reference](https://hallamlab-metapathways.readthedocs.io/en/latest/cli-reference.html).
 
 ## Team, support and citation
 

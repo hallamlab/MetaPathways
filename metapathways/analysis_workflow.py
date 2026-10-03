@@ -16,8 +16,8 @@ import sys
 from metapathways import nextflow
 
 FIELDS = ('sample_id', 'assembly', 'read_layout', 'reads_1', 'reads_2', 'mag_map')
-GUIDE = ('https://metapathways.readthedocs.io/en/latest/analysis.html#analysis-wf-input-layout '
-         'and https://metapathways.readthedocs.io/en/latest/analysis.html#custom-analysis-manifest')
+GUIDE = ('https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html#analysis-wf-input-layout '
+         'and https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html#custom-analysis-manifest')
 FASTA = re.compile(r'(.+)\.(?:fasta|fna|fa)(?:\.gz)?$')
 READS = re.compile(r'(.+)_(R1|R2|interleaved|single)\.(?:fastq|fq)(?:\.gz)?$')
 SAFE = re.compile(r'[A-Za-z][A-Za-z0-9_]*\Z')

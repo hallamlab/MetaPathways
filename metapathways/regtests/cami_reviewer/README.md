@@ -1,6 +1,6 @@
 # Tiny CAMI II reviewer inputs
 
-Use the [reviewer walkthrough](https://metapathways.readthedocs.io/en/latest/reviewer-test.html) for normal MP commands.
+Use the [reviewer walkthrough](https://hallamlab-metapathways.readthedocs.io/en/latest/reviewer-test.html) for normal MP commands.
 
 <!-- bundle-content -->
 

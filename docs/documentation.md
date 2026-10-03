@@ -24,7 +24,7 @@ In the existing **metapathways** project, connect `hallamlab/MetaPathways`. The 
 
 Activate the branch you want to preview under **Versions** and trigger a build. Keep the public default on the intended main/development branch; switch it to the updated branch after the documentation is merged. Enable pull-request previews if desired. Branch previews allow review before changing the site's default version.
 
-The project address stays **https://metapathways.readthedocs.io/**. Repository changes supply the build configuration; linking the project, version activation and default-version settings are managed in Read the Docs. Confirm a successful build there before announcing updated hosted pages.
+The project address stays **https://hallamlab-metapathways.readthedocs.io/**. Repository changes supply the build configuration; linking the project, version activation and default-version settings are managed in Read the Docs. Confirm a successful build there before announcing updated hosted pages.
 
 The previous `quick_start.html`, `install.html` and `usage.html` addresses redirect to the corresponding new pages.
 
