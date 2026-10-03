@@ -14,23 +14,9 @@ The schema version is recorded in `schema.json`, together with generation time, 
 
 ## Relationships
 
-```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"},"themeCSS":".edgeLabel .background { fill: #FFFFFF !important; opacity: 1 !important; } .edgeLabel text { fill: #111111 !important; }"}}%%
-erDiagram
-    samples ||--o{ contigs : contains
-    contigs ||--o{ orfs : contains
-    orfs ||--o{ annotations : has
-    annotations ||--o{ annotation_terms : describes
-    samples ||--o{ entities : contains
-    entities ||--o{ contig_mags : assigns
-    contigs ||--o{ contig_mags : belongs
-    entities ||--o{ entity_orfs : supplies
-    orfs ||--o{ entity_orfs : supplies
-    entities ||--o{ pathways : infers
-    pathways ||--o{ pathway_orfs : supports
-    orfs ||--o{ pathway_orfs : participates
-    orfs ||--o{ orf_groups : groups
-```
+[![Results schema](assets/diagrams/results-schema.svg)](assets/diagrams/results-schema.svg)
+
+[Zoom diagram](assets/diagrams/results-schema.svg) · [Mermaid source](diagrams/results-schema.mmd)
 
 Always scope contig and ORF identifiers by `sample_id`. Scope a pathway by `(sample_id, entity_id, pathway_id)`: the same pathway in a community and a MAG is two inference records. `community` is the reserved community entity identifier. MAG identifiers come from output directories or the preserved contig map. As in MAGSplitter, periods in original MAG names become underscores in entity IDs; `contig_mags.original_mag_id` retains the supplied identifier. Sources use database-local integer `source_id` values; these IDs may change on rebuild and are not global identifiers.
 

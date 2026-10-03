@@ -8,7 +8,7 @@ MetaPathways has since advanced as a modular tool, deepening our understanding o
 
 ## Workflow
 
-[![MetaPathways workflow: preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer. Nextflow schedules local or Slurm tasks.](docs/assets/workflow.svg)](docs/assets/workflow.svg)
+[![MetaPathways workflow: preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer. Nextflow schedules local or Slurm tasks.](docs/assets/diagrams/workflow.svg)](docs/assets/workflow.svg)
 
 Assemblies and references drive annotation; optional reads add abundance, and contig-to-genome maps enable genome-specific analysis. PGDB inference requires licensed Pathway Tools. The final report and explorer connect available results for searching, subsetting and CSV export. Numbered modules summarize the biology; see the [detailed workflow](https://metapathways.readthedocs.io/en/latest/detailed-workflow.html) for task dependencies and citations.
 
@@ -78,28 +78,9 @@ For assemblies with reads and genome maps, follow the [complete workflow](https:
 
 ## Conceptual overview
 
-```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#333333","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
-flowchart LR
-    A[Assemblies] --> B[Functional and taxonomic annotation]
-    R[Reads] --> C[Read abundance]
-    A --> C
-    B --> D[Community and genome pathways]
-    G[Genome assignments] --> D
-    P[Licensed Pathway Tools] --> D
-    B --> E[Reports and explorer]
-    C --> E
-    D --> E
-    E --> F[Filtered tables and CSV exports]
-    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
-    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
-    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
-    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
-    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
-    class A,R,G,P input;
-    class B,C,D,E module;
-    class F output;
-```
+[![Readme](docs/assets/diagrams/readme.svg)](docs/assets/diagrams/readme.svg)
+
+[Zoom diagram](docs/assets/diagrams/readme.svg) · [Mermaid source](docs/diagrams/readme.mmd)
 
 ## Full documentation
 

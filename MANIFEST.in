@@ -42,3 +42,5 @@ recursive-include docs/templates *.html
 recursive-include docs/assets *.bib
 
 recursive-include docs/assets *.svg
+
+recursive-include docs/diagrams *.mmd *.json

@@ -16,7 +16,7 @@ python -m http.server 8000 --directory docs/_build/html
 
 Open `http://localhost:8000`. The documentation build does not install MP, reference databases, or Pathway Tools. It uses the committed CLI reference; after changing CLI arguments, regenerate that page from an MP development environment with `python scripts/generate_cli_docs.py`.
 
-Mermaid diagrams use ordinary fenced `mermaid` blocks, which render on GitHub and through the Sphinx extension. Keep the conceptual diagram in the README consistent with `overview.md`. HTML diagrams load the pinned Mermaid JavaScript version from jsDelivr. The GitHub documentation job builds with warnings treated as errors.
+Mermaid sources live in `docs/diagrams/`; GitHub and Read the Docs display the committed SVG previews at a shared scale. Keep the conceptual diagram in the README consistent with `overview.md`. The GitHub documentation job builds with warnings treated as errors.
 
 ## Connect Read the Docs
 
@@ -27,3 +27,17 @@ Activate the branch you want to preview under **Versions** and trigger a build. 
 The project address stays **https://metapathways.readthedocs.io/**. Repository changes supply the build configuration; linking the project, version activation and default-version settings are managed in Read the Docs. Confirm a successful build there before announcing updated hosted pages.
 
 The previous `quick_start.html`, `install.html` and `usage.html` addresses redirect to the corresponding new pages.
+
+## Shared diagram scale
+
+ASPIRE and MetaPathways use a shared 2,240-unit-wide white canvas for documentation previews. Smaller diagrams are centered without stretching; Mermaid diagrams use a common 1.5× scale to bring their 16-pixel labels close to the publication figures’ typography. Preview width is responsive, but relative scale stays consistent across pages. Click a diagram to open its SVG for closer inspection. Original publication SVG/PDF downloads stay tightly cropped.
+
+Edit Mermaid sources under `docs/diagrams/`, or the original publication SVGs under `docs/assets/`. To rebuild the committed previews from the repository root, in the documentation environment:
+
+```bash
+python -m pip install -r docs/diagram-requirements.txt
+python -m playwright install chromium
+python scripts/render_workflow_diagrams.py
+```
+
+Chromium requires its usual Linux system libraries. Rendering downloads the pinned Mermaid bundle; ordinary Sphinx builds need neither Chromium nor network access for diagrams. `docs/diagrams/figures.json` records the source mapping and shared canvas size. If a future diagram needs a wider canvas, update both projects together. Do not hand-edit generated files in `docs/assets/diagrams/`.

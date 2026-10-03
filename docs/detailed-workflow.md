@@ -14,30 +14,9 @@ Download {download}`the software and database bibliography <assets/workflow-tool
 
 These are setup commands, run before sample analysis. An existing compatible MPDB and SIF can be reused across samples and computers; they are not rebuilt for each sample.
 
-```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
-flowchart TB
-    PUBLIC["Selected public references<br/>Proteins, SILVA, taxonomy and EC data"] --> BUILD["build_db through Nextflow<br/>Download and prepare reference files"]
-    BUILD --> INDEX["fastdb or makeblastdb<br/>Protein indexes and BLAST nucleotide indexes"]
-    BUILD --> TABLES["MP reference preparation<br/>Identifiers, taxonomy and EC mappings"]
-    INDEX --> MPDB["MPDB<br/>Searchable references and supporting tables"]
-    TABLES --> MPDB
-    INSTALLER["User-supplied licensed installer"] --> PTBUILD["build_pt through Nextflow<br/>Apptainer build and official SRI patches"]
-    PTBUILD --> CHECK["Validate Pathway Tools startup<br/>and BLAST database creation/search"]
-    CHECK --> SIF["Registered private SIF<br/>Pathway Tools and bundled MetaCyc"]
-    SIF -. optional matching reference preparation .-> META["MP MetaCyc preparation<br/>protseq.fsa and companion flat files"]
-    META --> METAINDEX["FAST or BLAST protein index<br/>EC, reaction and pathway mappings"]
-    METAINDEX --> MPDB
-    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
-    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
-    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
-    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
-    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
-    class PUBLIC,INSTALLER input;
-    class BUILD,PTBUILD module;
-    class INDEX,TABLES,CHECK,META,METAINDEX compute;
-    class MPDB,SIF output;
-```
+[![Detailed workflow 1](assets/diagrams/detailed-workflow-1.svg)](assets/diagrams/detailed-workflow-1.svg)
+
+[Zoom diagram](assets/diagrams/detailed-workflow-1.svg) · [Mermaid source](diagrams/detailed-workflow-1.mmd)
 
 `build_db` prepares selected public references and the supporting MPDB structure. FAST uses `fastdb`; BLAST+ uses `makeblastdb`. rRNA searches require nucleotide BLAST indexes. MP's own preparation scripts build the lookup tables consumed by annotation and reporting. Database options and custom references are described in [database construction](databases.md).
 
@@ -65,38 +44,9 @@ Each worker checks its task receipt and tracked inputs before either reusing val
 
 This diagram follows the **stage order for nucleotide FASTA input**. Boxes grouping multiple MP transformations are abbreviated for readability. The reference searches within a group can run concurrently; this does not imply that all RNA prediction and protein search stages run independently within a sample. Protein-only inputs follow the compatible reduced path described in the [stage reference](workflow.md).
 
-```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
-flowchart TB
-    ASM["Assembly FASTA<br/>Original contig identifiers"] --> QC["PREPROCESS_INPUT - MP<br/>Sequence filtering and identifier map"]
-    QC --> ORF["ORF_PREDICTION<br/>pProdigal wrapping Prodigal"]
-    ORF --> AA["ORF_TO_AMINO and FILTER_AMINOS - MP<br/>CDS coordinates, nucleotide and protein sequences"]
-    AA --> SEARCH["FUNC_SEARCH - one task per selected database<br/>FAST fastal or BLAST+ blastp"]
-    DB["MPDB protein indexes"] -. reference input .-> SEARCH
-    SEARCH --> SCORE["COMPUTE_REFSCORES - MP<br/>Sequence-based reference scores for hit filtering"]
-    SCORE --> PARSE["PARSE_FUNC_SEARCH - MP<br/>Per-database thresholds and parsed hits"]
-    PARSE --> RRNA["SCAN_rRNA - barrnap<br/>rRNA coordinates and sequences"]
-    QC -. contig sequences .-> RRNA
-    RRNA --> SILVA["SCAN_rRNA - BLAST+ blastn and MP<br/>Search selected rRNA references and summarize"]
-    RDB["MPDB rRNA indexes<br/>For example SILVA SSU and LSU"] -. reference input .-> SILVA
-    SILVA --> TRNA["SCAN_tRNA - ptRNAscan wrapping tRNAscan-SE<br/>tRNA coordinates and identities"]
-    QC -. contig sequences .-> TRNA
-    TRNA --> ANN["ANNOTATE_ORFS - MP<br/>Combine protein hits and RNA features<br/>pybedtools / BEDTools overlap processing"]
-    ANN --> REPORTS["CREATE_ANNOT_REPORTS - MP<br/>Functional assignments and per-database taxonomy / LCA"]
-    TAX["Reference taxon identifiers<br/>and NCBI taxonomy tree"] -. lookup data .-> REPORTS
-    REPORTS --> GBK["GENBANK_FILE - MP<br/>Annotated sequence export"]
-    GBK --> PI["PATHOLOGIC_INPUT - MP<br/>PF features, feature coordinates, ORF map and EC / reaction map"]
-    PI --> NEXT["Continue to abundance and optional PGDBs"]
-    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
-    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
-    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
-    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
-    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
-    class ASM,DB,RDB,TAX input;
-    class QC,AA,SCORE,PARSE,ANN,REPORTS,GBK,PI module;
-    class ORF,SEARCH,RRNA,SILVA,TRNA compute;
-    class NEXT output;
-```
+[![Detailed workflow 2](assets/diagrams/detailed-workflow-2.svg)](assets/diagrams/detailed-workflow-2.svg)
+
+[Zoom diagram](assets/diagrams/detailed-workflow-2.svg) · [Mermaid source](diagrams/detailed-workflow-2.mmd)
 
 pProdigal parallelizes [Prodigal](#prodigal) gene prediction. MP derives and filters protein sequences before searching the selected protein references with FAST or [BLAST+](#blast). MP computes sequence-based reference scores and then applies its configured search thresholds and score-ratio rules. FAST is a threaded implementation derived from [LAST](#last); citing FAST does not mean the separate LAST executable was run.
 
@@ -108,38 +58,9 @@ MP combines protein and RNA evidence, performs feature-overlap processing throug
 
 Solid arrows show the downstream processing paths; dotted arrows connect existing products to reporting. Additional inputs are named inside the relevant boxes. The abundance branch requires reads. The PGDB branch requires Pathway Tools; genome-specific PGDBs additionally require a contig-to-genome map.
 
-```mermaid
-%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
-flowchart TB
-    PI["Completed PATHOLOGIC_INPUT<br/>Community features and feature-to-contig relationships"] --> COV["COMPUTE_TPM - CoverM<br/>Reads plus sample contigs<br/>Mapping and contig coverage"]
-    COV --> BAM{"SAMtools<br/>Name-sort the exact CoverM BAM"}
-    BAM --> FC{"featureCounts<br/>BAM plus MP-generated GTF<br/>Counts for annotated features"}
-    FC --> AB["Abundance outputs<br/>Contig coverage and feature counts<br/>MP abund_calc.py normalization"]
-    COV -. contig statistics .-> AB
-    PI --> COM["Community PGDB staging - MP<br/>Sample sequences, feature coordinates<br/>and translation tables"]
-    PI --> SPLIT{"MAGSplitter<br/>Use contig-to-genome map<br/>Partition existing features"}
-    SPLIT --> MAG["Per-genome PGDB staging - MP<br/>Corresponding contig sequences<br/>and feature coordinates"]
-    COM --> PT["Pathway Tools / PathoLogic<br/>Licensed SIF with MetaCyc<br/>One private instance per entity<br/>Build and save PGDB"]
-    MAG --> PT
-    PT --> EXPORT["Pathway Tools export then Camelot / MP<br/>Read flat files and extract pathway-to-gene associations"]
-    EXPORT --> PW["PGDB archive<br/>Pathway and pathway-to-ORF tables"]
-    AB --> DONE["Sample terminal tasks finish<br/>Optional compact-results cleanup"]
-    PW --> DONE
-    DONE --> REPORT["MP report controller<br/>Import tables into SQLite with scoped identifiers"]
-    AN["Annotation, taxonomy and membership tables<br/>Sample statistics and execution records"] -. report sources .-> REPORT
-    REPORT --> HTML["MP_run_report.html<br/>Run details, outcomes and resource summaries"]
-    REPORT --> EDA["EDA_portal.html<br/>Samples to features, annotations and pathways<br/>Search, subset and export CSV"]
-    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
-    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
-    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
-    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
-    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
-    class PI input;
-    class COV,BAM,FC,COM,SPLIT,MAG,PT,EXPORT compute;
-    class AB,PW,AN data;
-    class DONE,REPORT module;
-    class HTML,EDA output;
-```
+[![Detailed workflow 3](assets/diagrams/detailed-workflow-3.svg)](assets/diagrams/detailed-workflow-3.svg)
+
+[Zoom diagram](assets/diagrams/detailed-workflow-3.svg) · [Mermaid source](diagrams/detailed-workflow-3.mmd)
 
 [CoverM](#coverm) generates contig abundance and the BAM used for feature counting. MP invokes `coverm contig` without overriding its mapper, so the mapper follows the installed CoverM version's default. Check that version and its logged command/backend when recording methods; a directory called `bwa/` is **not** evidence that BWA performed the mapping. Backend citations are listed below for use when applicable.
 
