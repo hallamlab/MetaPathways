@@ -24,7 +24,7 @@ metapathways analysis_wf \
 metapathways report -o all --serve --no-browser --port 8765
 ```
 
-Open the URL printed by the report server. On a remote server, use an [SSH tunnel](reports-tutorial.md#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package; database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
+Open the URL printed by the report server. On a remote server, use an [SSH tunnel](reports-tutorial.md#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package and is derived from CAMI II ([Meyer et al., 2022](#cami-references)); database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
 
 ## 2. Quay: Docker or Apptainer
 
@@ -62,3 +62,5 @@ metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 
 For assemblies with reads and genome maps, follow the [complete workflow](inputs.md). **If you want PGDBs, complete the [Pathway Tools installation guide](pathway-tools.md) before starting that workflow.** The small reviewer references are for testing only.
 
+```{include} includes/cami-references.md
+```

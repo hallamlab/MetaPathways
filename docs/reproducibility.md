@@ -4,7 +4,7 @@
 
 ## Record the actual revision and inputs
 
-MetaPathways is distributed under the [MIT license](https://github.com/hallamlab/MetaPathways/blob/HEAD/LICENSE); bundled third-party sources retain their notices. GitHub tags, Conda packages and container images are separate publications. A tag alone does not update the other distributions. Record the source Git commit, package build or immutable container digest used for each analysis.
+MetaPathways is distributed under the {download}`MIT license <../LICENSE>`; bundled third-party sources retain their notices. GitHub tags, Conda packages and container images are separate publications. A tag alone does not update the other distributions. Record the source Git commit, package build or immutable container digest used for each analysis.
 
 Preserve:
 
@@ -44,7 +44,7 @@ The report HTTP tests require permission to bind a temporary loopback socket. Bi
 
 ## Historical benchmark provenance
 
-The repository's previous reproducibility notes describe the [v1 preprint](https://doi.org/10.1101/2024.06.04.597460), section 3.1, as reporting 15 CAMI2 Human Microbiome metagenomes and 622 MAGs from five body sites, SwissProt 2023_05, MetaCyc 27.1, MetaBAT2 2.15 and Pathway Tools 27.0, with 16 cores on Ubuntu 20.04.6. These are historical settings, not the defaults or a newly verified reproduction of this source revision.
+The repository's previous reproducibility notes describe the [v1 preprint](https://doi.org/10.1101/2024.06.04.597460), section 3.1, as reporting 15 CAMI II human-microbiome metagenomes ([Meyer et al., 2022](#cami-references)) and 622 MAGs from five body sites, SwissProt 2023_05, MetaCyc 27.1, MetaBAT2 2.15 and Pathway Tools 27.0, with 16 cores on Ubuntu 20.04.6. These are historical settings, not the defaults or a newly verified reproduction of this source revision.
 
 The [CAMI2 study](https://doi.org/10.1038/s41592-022-01431-4) identifies the human collection at [PUBLISSO, DOI 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). A collection DOI does not identify the exact assembly/read/bin selections used by a particular benchmark. The K12 installation fixture does not substitute for those records.
 
@@ -57,3 +57,6 @@ Only measured trace fields should support resource plots. A report rebuilt over 
 Documentation is maintained in this README-led GitHub tree. CI checks local Markdown links and generated CLI reference freshness; no Sphinx/Read the Docs deployment is required. Git history retains the former RST documentation.
 
 No new version DOI or archive has been assigned by this feature work. Publish and archive a validated release before claiming a corresponding version DOI in a manuscript. Use [maintainer release instructions](releasing.md) for package/container publication.
+
+```{include} includes/cami-references.md
+```

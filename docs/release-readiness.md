@@ -13,7 +13,7 @@ The Conda recipe includes pinned MAGSplitter and Camelot sources at build time; 
 ## Completed checks
 
 - 125 runtime/regression tests and 17 release-control tests pass. Tests cover independent per-database taxonomy, SwissProt taxon parsing, database order, report joins, abundance exports, workflow scheduling, checkpoint behavior, sequence staging and release safeguards.
-- The user completed the three-sample CAMI reviewer workflow locally with SwissProt and `--skip_ptools`: 51/51 successful tasks. [Detailed result audit](validation/reviewer-2026-10-02.json).
+- The user completed the three-sample CAMI II reviewer workflow ([Meyer et al., 2022](#cami-references)) locally with SwissProt and `--skip_ptools`: 51/51 successful tasks. [Detailed result audit](validation/reviewer-2026-10-02.json).
 - All CDS records, mapped gene/RNA abundance rows, contig measurements and nine genome bins were reconciled. Report SQLite integrity and foreign keys pass. Expected RNA warnings and unavailable PGDBs are explained in the audit.
 - CLI documentation and local documentation links pass validation.
 - The earlier 3.5.2 candidate was built and installed successfully as a Conda package. Artifacts are specific to their source commit; rebuild from the final feature commit to include subsequent taxonomy and explorer changes.
@@ -27,3 +27,6 @@ The Conda recipe includes pinned MAGSplitter and Camelot sources at build time; 
 3. Complete the HPC Slurm test and benchmark with shared-storage paths, recording requested resources separately from measured consumption.
 4. Have the tester review the feature branch/PR before merging to `dev` or `master`.
 5. Run the release integration and optional container checks, verify registry credentials and metadata, and publish only after explicit release approval. Anaconda, Quay and Zenodo uploads are not part of the local test or feature push.
+
+```{include} includes/cami-references.md
+```

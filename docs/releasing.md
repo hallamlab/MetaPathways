@@ -123,7 +123,7 @@ validates, and uploads to Anaconda using this controller; it requires the
 packaging environment above and does not publish a GitHub tag. Publishing
 containers, PyPI wheels, and licensed Pathway Tools runs is outside this release
 workflow. The K12 example validates installation and core operation; it does
-not reproduce the manuscript's CAMI2 performance benchmark. Reference downloads
+not reproduce the manuscript's CAMI II performance benchmark ([Meyer et al., 2022](#cami-references)). Reference downloads
 are moving resources, and dependency specifications are not a complete lock.
 The recorded Conda export includes a temporary local URL for MetaPathways itself;
 when recreating it, replace that URL with the downloaded release package.
@@ -273,3 +273,6 @@ Treat the software snapshot, built packages/container assets, and manuscript ben
 | Zenodo | CFF metadata and documented release process | GitHub integration enabled, correct organization authorization, archived release/DOI verified |
 
 Secret values must never be committed or printed. Repository files alone cannot verify the current account permissions or secret configuration. A local source build is not proof of a successful Conda solve, registry upload, or Zenodo deposit.
+
+```{include} includes/cami-references.md
+```

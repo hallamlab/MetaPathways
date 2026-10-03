@@ -1,8 +1,10 @@
 # Tiny CAMI II reviewer inputs
 
-Use the [reviewer walkthrough](../../../docs/reviewer-test.md) for normal MP commands.
+Use the [reviewer walkthrough](https://metapathways.readthedocs.io/en/latest/reviewer-test.html) for normal MP commands.
 
-This bundle contains three different samples from the CAMI II human-associated short-read dataset: Urogenital_22, Gastrointestinal_5 and Skin_28. Each has three 50,000-base assembly regions from three source genomes, intact paired simulated reads, and a headerless contig-to-genome map. Total input size is about 2.4 MiB compressed. No Pathway Tools installer, image, MetaCyc reference or licensed PGDB is included.
+<!-- bundle-content -->
+
+This bundle contains three different samples from the CAMI II human-associated short-read dataset ([Meyer et al., 2022](#cami-references)): Urogenital_22, Gastrointestinal_5 and Skin_28. Each has three 50,000-base assembly regions from three source genomes, intact paired simulated reads, and a headerless contig-to-genome map. Total input size is about 2.4 MiB compressed. No Pathway Tools installer, image, MetaCyc reference or licensed PGDB is included.
 
 - `single.tsv`: Urogenital_22.
 - `pair.tsv`: Gastrointestinal_5 and Skin_28.
@@ -29,4 +31,10 @@ Run from the source checkout. The output directory must not already exist. Sourc
 
 ## Source attribution
 
-Derived from the CAMI II multi-sample human microbiome dataset, [DOI 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). Cite the CAMI II study, Meyer et al., *Critical Assessment of Metagenome Interpretation: the second round of challenges*, Nature Methods (2022), [DOI 10.1038/s41592-022-01431-4](https://doi.org/10.1038/s41592-022-01431-4). Cropping, read selection, mate separation and MP-format maps are the modifications made here. The data retain their source terms; the MP software license does not relicense third-party data.
+Cropping, read selection, mate separation and MP-format maps are the modifications made here. The data retain their source terms; the MP software license does not relicense third-party data. The source collection is CAMI II; the original CAMI paper credits the initiative ([Sczyrba et al., 2017](#cami-references)).
+
+## CAMI references
+
+- **CAMI:** Sczyrba, A., Hofmann, P., Belmann, P., et al. (2017). *Critical Assessment of Metagenome Interpretation—a benchmark of metagenomics software*. **Nature Methods 14**(11), 1063–1071. [DOI: 10.1038/nmeth.4458](https://doi.org/10.1038/nmeth.4458). [CAMI project website](https://cami-challenge.org/).
+- **CAMI II:** Meyer, F., Fritz, A., Deng, Z.-L., et al. (2022). *Critical Assessment of Metagenome Interpretation: the second round of challenges*. **Nature Methods 19**(4), 429–440. [DOI: 10.1038/s41592-022-01431-4](https://doi.org/10.1038/s41592-022-01431-4). [CAMI project website](https://cami-challenge.org/).
+- **Source dataset for the MP reviewer subset:** CAMI II multi-sample human microbiome dataset. [Dataset DOI: 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). The bundled inputs are selected and cropped subsets of this collection; their exact transformations and file hashes are recorded in the bundle provenance.

@@ -109,7 +109,7 @@ metapathways analysis_wf \
   --max_tasks 2 --submit_rate 6 --time_limit 2h
 ```
 
-The example uses the full public SwissProt/SILVA references in your MPDB. If using the bundled test references, select `swissprot_test` and `SILVA_SSU_test SILVA_LSU_test` as in the reviewer walkthrough. The two-hour limit is a small-input example, not a full CAMI task limit. Follow your site's policy for keeping the Nextflow controller running: some sites permit a persistent headnode session, others require a controller allocation. MP preparation and report generation run in that controller, while scheduled biological stages run on compute nodes.
+The example uses the full public SwissProt/SILVA references in your MPDB. If using the bundled test references, select `swissprot_test` and `SILVA_SSU_test SILVA_LSU_test` as in the reviewer walkthrough. The two-hour limit is a small-input example, not a full CAMI II ([Meyer et al., 2022](#cami-references)) task limit. Follow your site's policy for keeping the Nextflow controller running: some sites permit a persistent headnode session, others require a controller allocation. MP preparation and report generation run in that controller, while scheduled biological stages run on compute nodes.
 
 For the complete benchmark, copy the original assemblies, reads, CAMI genome maps, reference database and your licensed Pathway Tools SIF onto storage accessible to all selected nodes. Write an HPC-specific manifest pointing there; local server paths and symlinks are not portable. Use a new output directory. Supply the same analysis options, reference release, pruning scope, and image content as on the single server. Pass `--image /shared/project/pathway-tools.sif` explicitly if its user registration differs on the cluster.
 
@@ -146,3 +146,6 @@ metapathways analysis_wf \
 ```
 
 The cleanup task appears separately in the execution/resource records; distinguish its time from biological stages when preparing benchmark tables.
+
+```{include} includes/cami-references.md
+```

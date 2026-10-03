@@ -15,6 +15,8 @@ installation
 getting-started
 containers
 reviewer-test
+reviewer-bundle
+cami-references
 ```
 
 ## Run your analysis

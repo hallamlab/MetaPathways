@@ -2,7 +2,7 @@
 
 [Home and quick start](installation.md) · [Reviewer dataset](reviewer-test.md) · [Licensed Pathway Tools](pathway-tools.md)
 
-Use the versioned `quay.io/hallamlab/metapathways:3.5.2` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample reviewer dataset. Production references and licensed Pathway Tools are supplied separately.
+Use the versioned `quay.io/hallamlab/metapathways:3.5.2` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample reviewer dataset derived from CAMI II ([Meyer et al., 2022](#cami-references)). Production references and licensed Pathway Tools are supplied separately.
 
 ## Docker three-sample test
 
@@ -66,3 +66,6 @@ The reference build downloads enzyme and taxonomy support files. Complete refere
 Mount all inputs, references and outputs into the container and use their container-visible paths in manifests. For Slurm, use the [Mamba installation](installation.md#1-conda-package-with-mamba-preferred) on shared storage so the controller and compute jobs can use the same environment. Follow the [resource and Slurm guide](resources.md#resources-and-slurm) for submission limits.
 
 The public MP image does not include Pathway Tools or MetaCyc. Licensed users should follow the [Pathway Tools guide](pathway-tools.md) to build a separate SIF from their own installer. That image can be copied to another compatible host and selected with `--image`.
+
+```{include} includes/cami-references.md
+```

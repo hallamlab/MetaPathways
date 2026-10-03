@@ -13,6 +13,8 @@ for source in files:
     content=re.sub(r'```.*?```','',source.read_text(),flags=re.S)
     for link in re.findall(r'\]\(([^\s)]+)\)',content):
         url=urlsplit(link)
+        if 'github.com/hallamlab/MetaPathways/blob/HEAD/' in link:
+            errors.append(f'{source.relative_to(ROOT)}: default-branch link can mismatch this docs version: {link}')
         if url.scheme or url.netloc or not url.path:
             continue
         target=(source.parent/unquote(url.path)).resolve()
