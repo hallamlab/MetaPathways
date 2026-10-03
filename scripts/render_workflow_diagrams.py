@@ -35,7 +35,8 @@ def main():
             rendered.append((item['name'], ET.fromstring(svg), config['mermaid_scale']))
         browser.close()
     for name in ['workflow', 'workflow-brief']:
-        source = ROOT / 'docs/assets' / (name + '.svg')
+        source_name = 'workflow-main' if name == 'workflow' else name
+        source = ROOT / 'docs/assets' / (source_name + '.svg')
         if source.exists():
             rendered.append((name, ET.parse(source).getroot(), 1))
     width = config['canvas_width']

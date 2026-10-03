@@ -8,7 +8,7 @@ MetaPathways has since advanced as a modular tool, deepening our understanding o
 
 ## Workflow
 
-[![MetaPathways workflow: preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer. Nextflow schedules local or Slurm tasks.](docs/assets/workflow.svg)](docs/assets/workflow.svg)
+[![MetaPathways workflow: preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer. Nextflow schedules local or Slurm tasks.](docs/assets/workflow-main.svg)](docs/assets/workflow-main.svg)
 
 Assemblies and references drive annotation; optional reads add abundance, and contig-to-genome maps enable genome-specific analysis. PGDB inference requires licensed Pathway Tools. The final report and explorer connect available results for searching, subsetting and CSV export. Numbered modules summarize the biology; see the [detailed workflow](https://metapathways.readthedocs.io/en/latest/detailed-workflow.html) for task dependencies and citations.
 

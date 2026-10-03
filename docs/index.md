@@ -5,10 +5,10 @@ Annotate metagenomes, measure read abundance, infer community and genome pathway
 **New users:** start with [installation and the three-sample test](installation.md). The small input dataset and workflow helpers are included. **Want PGDBs? Follow the [Pathway Tools installation guide](pathway-tools.md) before running the complete workflow.**
 
 ```{container} mp-primary-workflow
-[![MetaPathways workflow: six conceptual modules for preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer, orchestrated by Nextflow locally or on Slurm.](assets/workflow.svg)](assets/workflow.svg)
+[![MetaPathways workflow: six conceptual modules for preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer, orchestrated by Nextflow locally or on Slurm.](assets/workflow-main.svg)](assets/workflow-main.svg)
 ```
 
-The numbered modules summarize the biology, not the scheduler's execution order. Optional reads add abundance; genome maps add genome-specific analysis. The report and explorer connect available results for searching, subsetting and CSV export. [View the SVG](assets/workflow.svg) · [Detailed workflow and citations](detailed-workflow.md).
+The numbered modules summarize the biology, not the scheduler's execution order. Optional reads add abundance; genome maps add genome-specific analysis. The report and explorer connect available results for searching, subsetting and CSV export. [View the SVG](assets/workflow-main.svg) · [Detailed workflow and citations](detailed-workflow.md).
 
 ## Start simple
 
