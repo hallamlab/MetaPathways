@@ -4,6 +4,7 @@ channels:
   - bioconda
 dependencies:
   - python=3.11
+  - pip
   - nextflow>=25.10,<27
   - apptainer>=1.3,<2
   - setuptools>=83,<85

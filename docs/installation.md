@@ -44,9 +44,8 @@ The image includes the same workflow dependencies and reviewer data. Follow the 
 git clone https://github.com/hallamlab/MetaPathways.git
 cd MetaPathways
 mamba env create -f docker/conda_base.yml
+mamba run -n metapathways python -m pip install .
 conda activate metapathways
-mamba install --yes -c conda-forge pip
-python -m pip install .
 ```
 
 Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-reviewer`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
