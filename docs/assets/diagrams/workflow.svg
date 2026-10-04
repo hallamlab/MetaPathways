@@ -8,7 +8,14 @@
     </marker>
   </defs>
   <style>text { font-family: "Times New Roman", Times, serif; fill: #111111; } .wire { fill: none; stroke: #111111; stroke-width: 1.5; marker-end: url(#arrow); } .branch { fill: none; stroke: #111111; stroke-width: 1.5; stroke-linejoin: miter; }</style>
-  <rect x="155" y="20" width="690" height="135" rx="16" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="1.5" />
+  <g id="workflow-heading" transform="translate(0 -157)"><rect x="155" y="177" width="1325" height="70" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5" />
+  <text x="817" y="205" font-size="27" text-anchor="middle">
+    <tspan x="817" dy="0">MetaPathways + Nextflow  •  Local server or Slurm cluster</tspan>
+  </text>
+  <text x="817" y="233" font-size="20" text-anchor="middle">
+    <tspan x="817" dy="0">Input validation, dependencies, concurrent samples / tasks, resource requests, checkpoints and logs</tspan>
+  </text>
+  </g><g id="workflow-inputs-and-legend" transform="translate(0 95)"><rect x="155" y="20" width="690" height="135" rx="16" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="1.5" />
   <text x="178" y="50" font-size="27" text-anchor="start">
     <tspan x="178" dy="0">Inputs</tspan>
   </text>
@@ -42,14 +49,7 @@
   <circle cx="1170" cy="84" r="12" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
   <circle cx="1290" cy="84" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3" />
   <circle cx="1410" cy="84" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
-  <rect x="155" y="177" width="1325" height="70" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5" />
-  <text x="817" y="205" font-size="27" text-anchor="middle">
-    <tspan x="817" dy="0">MetaPathways + Nextflow  •  Local server or Slurm cluster</tspan>
-  </text>
-  <text x="817" y="233" font-size="20" text-anchor="middle">
-    <tspan x="817" dy="0">Input validation, dependencies, concurrent samples / tasks, resource requests, checkpoints and logs</tspan>
-  </text>
-  <text x="270" y="340" font-size="27" text-anchor="middle">
+  </g><text x="270" y="340" font-size="27" text-anchor="middle">
     <tspan x="270" dy="0">Preprocessing</tspan>
   </text>
   <rect x="407" y="327" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
