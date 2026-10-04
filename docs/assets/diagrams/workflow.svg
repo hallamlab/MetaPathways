@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1330" width="2240" height="1330" role="img"><title>Workflow</title><rect width="2240" height="1330" fill="#ffffff" /><svg viewBox="135 0 1365 1290" width="1365" height="1290" role="img" aria-labelledby="workflow-title workflow-desc" x="437.5" y="20">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2240 1330" width="2240" height="1330" role="img"><title>Workflow Main</title><rect width="2240" height="1330" fill="#ffffff" /><svg viewBox="135 0 1365 1290" width="1365" height="1290" role="img" aria-labelledby="workflow-title workflow-desc" x="437.5" y="20">
   <title id="workflow-title">MetaPathways: annotation, abundance, pathway inference and exploration</title>
   <desc id="workflow-desc">Six conceptual modules extend the appnote workflow: preprocessing; sequence feature prediction; functional and taxonomic annotation; optional community and genome pathway inference; optional read abundance; and integrated reports and explorer. Nextflow schedules local or Slurm tasks. Assemblies and references are required; reads, genome maps and licensed pathway inference are optional. Numbered modules are not an execution schedule.</desc>
   <rect width="1500" height="1290" fill="#FFFFFF" />
@@ -358,4 +358,4 @@
   <circle cx="770" cy="845" r="2.5" fill="#111111" />
   <text x="270" y="907" font-size="17" text-anchor="middle">Optional • licensed Pathway Tools</text>
   <text x="270" y="1122" font-size="17" text-anchor="middle">Optional • supplied reads</text>
-</svg></svg>
+<path d="M 420 354 L 420 481" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 509 L 420 641" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 669 L 420 831" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 859 L 420 1046" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 1074 L 420 1206" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /></svg></svg>
