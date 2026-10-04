@@ -415,7 +415,7 @@ def upload_conda(args):
         raise ValueError("Expected exactly one validated Conda package.")
     label = "rc" if "rc" in manifest["version"] else "main"
     # anaconda-client reads BINSTAR_API_TOKEN; never put credentials on the command line.
-    run("anaconda", "upload", "--user", "hallamlab", "--label", label, packages[0])
+    run("anaconda", "upload", "--user", os.environ.get("ANACONDA_OWNER", "hallamlab"), "--label", label, packages[0])
 
 
 def container_command(args):
@@ -451,7 +451,7 @@ def main():
                    help="Reviewed release branch [dev]; never a feature branch.")
     p.set_defaults(func=publish)
     for command, action in [("container-build", "build"), ("container-push", "push"),
-                            ("container-attach", "attach"), ("quay-description", "description")]:
+                            ("container-verify", "verify"), ("container-attach", "attach"), ("quay-description", "description")]:
         p = commands.add_parser(command)
         p.add_argument("--output", default=str(ROOT / "dist/release"))
         p.add_argument("--container-output", default=str(ROOT / "dist/containers"))

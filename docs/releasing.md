@@ -52,23 +52,49 @@ The tag workflow:
 5. Runs database preparation and the included K12 integration test.
 6. Requires all 16 named stages, nonempty key outputs, and no error markers.
 7. Records logs, dependency exports, revision, and SHA-256 checksums.
-8. Publishes a GitHub release with those downloadable assets.
-9. Optionally uploads the same validated Conda package to Anaconda.org.
+8. Retains the validated assets in GitHub Actions; tag pushes never publish.
+
+To publish, open **Actions → Release → Run workflow**, select the matching
+version tag, and select the destinations you intend to publish. All switches
+default to off: **publish_anaconda**, **publish_quay**, and **publish_github**.
+Anaconda and Quay publish independently; neither requires a GitHub release.
+The GitHub option may trigger archiving through an existing Zenodo integration.
+There is no separate Zenodo API upload or checkbox.
 
 Only successful full builds are publishable. Release candidates are marked as
 GitHub prereleases and use the `hallamlab/label/rc` Conda channel; stable versions
 use `hallamlab` / label `main`. No wheel is advertised as platform-independent.
 
 To test CI without publishing, select **Actions → Release → Run workflow** on
-the feature branch (or the reviewed `dev`/`master` branch). Leave `release_tag` and `source_run_id` blank; optionally enable `test_containers` to build and scan Docker/SIF artifacts too. This does not publish packages, registry images, a GitHub release, or a DOI. Assets are retained as an Actions artifact. Dispatching the
-workflow on a release tag also enables publishing.
+the feature branch (or the reviewed `dev`/`master` branch). Leave `release_tag` and `source_run_id` blank; optionally enable `test_containers` to build and scan Docker/SIF artifacts too. This does not publish packages, registry images, a GitHub release, or a DOI. Assets are retained as an Actions artifact. Selecting a tag alone does not enable publishing; destination checkboxes must be selected explicitly.
+
+## Shared release controls (MetaPathways and SCARAB)
+
+Both projects use the same manual **publish_anaconda** and **publish_quay**
+checkboxes, unchecked by default. Both require a matching version tag and
+successful validation for the selected destination. Store secrets in the
+GitHub **release** environment (repository Actions secrets also work).
+Optional environment approval rules are respected.
+
+No variables are required. `ANACONDA_OWNER` defaults to `hallamlab`;
+`QUAY_REPOSITORY` defaults to `quay.io/hallamlab/metapathways` here and
+`quay.io/hallamlab/scarab` in SCARAB. These optional variables override registry
+destinations only. The old `PUBLISH_CONDA` and `PUBLISH_QUAY` variables are
+ignored and can be removed.
+
+Each registry has its own publishing job. Use **Re-run failed jobs** to retry
+a failed upload with the original tested artifacts while they remain available,
+without rebuilding or repeating a successful upload to the other registry.
+Do not use **Re-run all jobs** for an upload retry. No force-overwrite is used
+for Conda packages. If an upload actually succeeded before its job failed,
+inspect the registry before retrying.
 
 ## Enable Anaconda.org uploads
 
 In GitHub repository **Settings → Secrets and variables → Actions**:
 
 - Add the secret **ANACONDA_API_TOKEN**, with upload access to `hallamlab`.
-- Set the repository variable **PUBLISH_CONDA** to `true`.
+- Select **publish_anaconda** in the manual release form when ready to upload.
 
 GitHub releases work without this configuration. GitHub authentication does not
 authenticate Anaconda.org. The token is passed only to the upload step through
@@ -127,9 +153,8 @@ Anaconda upload, rerun only the failed Anaconda job.
 `make release-prepare VERSION=3.5.0`, `make release-build`, and
 `make release-publish` wrap these commands. `make full-build` now builds,
 validates, and uploads to Anaconda using this controller; it requires the
-packaging environment above and does not publish a GitHub tag. Publishing
-containers, PyPI wheels, and licensed Pathway Tools runs is outside this release
-workflow. The K12 example validates installation and core operation; it does
+packaging environment above and does not publish a GitHub tag. Publishing PyPI wheels and running licensed Pathway Tools are outside this release
+workflow; Docker and Apptainer validation is described below. The K12 example validates installation and core operation; it does
 not reproduce the manuscript's CAMI II performance benchmark ([Meyer et al., 2022](#cami-references)). Reference downloads
 are moving resources, and dependency specifications are not a complete lock.
 The recorded Conda export includes a temporary local URL for MetaPathways itself;
@@ -147,6 +172,7 @@ After committing and pushing the workflow fix to `dev`, open **Actions → Relea
 
 - `release_tag`: `v3.5.0`
 - `source_run_id`: `36760751744`
+- `publish_github`: checked only when ready to resume publication
 
 This reuses the successful Conda build from that run and checks its source commit
 against the original tag. Do not move the tag or run `publish` again for it.
@@ -154,13 +180,13 @@ An ordinary “Re-run jobs” on the old run still uses the old workflow.
 
 ## Docker, Apptainer, and Quay
 
-Every tagged release (including manual recovery with `release_tag`) builds a
+Selecting **test_containers**, **publish_quay**, or **publish_github** builds a
 Linux amd64 Docker image from the exact validated Conda package and explicit
 dependency export. It runs the core integration test in Docker, requires all 16
 stages and six nonempty outputs, then converts that same image into an Apptainer
 SIF. Apptainer is checked for the exact version and CLI startup; its read-only
 filesystem is not used for the bundled database-writing integration test.
-The SIF, container checksums, and validation logs are attached to GitHub.
+The SIF, container checksums, and validation logs are attached to GitHub only when **publish_github** is selected.
 They are also retained in the workflow's `container-assets` artifact.
 
 In Quay, open the **hallamlab organization → Robot Accounts → Create Robot
@@ -171,7 +197,7 @@ In GitHub **Settings → Secrets and variables → Actions**, configure:
 | --- | --- | --- |
 | Secret | `QUAY_USERNAME` | Full robot username, e.g. `hallamlab+github_releases` |
 | Secret | `QUAY_PASSWORD` | Robot token generated by Quay |
-| Variable | `PUBLISH_QUAY` | `true` |
+| Optional variable | `QUAY_REPOSITORY` | Defaults to `quay.io/hallamlab/metapathways` |
 | Optional secret | `QUAY_API_TOKEN` | Quay OAuth token with `repo:write` access |
 
 The robot credentials upload images. The OAuth token updates the repository
@@ -264,20 +290,36 @@ The Conda package includes the Nextflow controller, reporting assets, reviewer d
 
 `CITATION.cff` supplies software authors (from MP's existing author metadata), title, repository, and license. Confirm the author list before publication. No DOI or release date has been invented. `prepare` adds/updates the selected software version. We maintain one citation metadata file; Zenodo prioritizes `.zenodo.json` over CFF if both exist, so do not add a conflicting second file. See [Zenodo's supported metadata](https://help.zenodo.org/docs/github/describe-software/).
 
-A repository administrator must link their GitHub account to Zenodo, grant the required organization access, and enable `hallamlab/MetaPathways` in Zenodo's GitHub settings. See [enable a repository](https://help.zenodo.org/docs/github/enable-repository/). This connection is account-side configuration and cannot be inferred from committed files or the existence of an earlier release. Our GitHub Actions workflow does not call the Zenodo API or store a Zenodo token.
+Zenodo deposits are **manual and separate from GitHub releases**. In
+[Zenodo's GitHub settings](https://zenodo.org/account/settings/github/), turn
+**off** the switches for `hallamlab/MetaPathways` and `hallamlab/SCARAB`.
+This is an account-side step: repository workflow edits cannot disable an
+existing Zenodo webhook. Until it is disabled, publishing a GitHub release can
+still create a Zenodo record. Neither workflow calls the Zenodo API or needs
+a Zenodo token.
 
-Keep pre-merge tests as branches, PRs, and Actions artifacts. Once enabled, the integration ingests new releases; do not publish a release candidate casually if you are not ready for it to become an archive record. After the intended release, verify its Zenodo record, version, source commit/tag, author metadata, license, and DOI before announcing it. Record both the version-specific DOI and concept DOI where applicable, and use the version-specific DOI for an exact release citation.
+When a release is approved for archiving, download its tested source archive
+and checksums, then upload it through Zenodo's dashboard. For an existing
+software record, use **New version** to preserve the version relationship and
+concept DOI; do not create an unrelated record for each release. Review the
+version, repository/tag link, license, creators, affiliations, and ORCIDs in the
+draft before clicking **Publish**. Keep drafts unpublished while testing.
 
-Treat the software snapshot, built packages/container assets, and manuscript benchmark data as separate deliverables. Do not assume the GitHub integration copies every release attachment or later-added SIF, nor that it deposits your benchmark outputs. Inspect the archive contents and arrange a separate data deposit with its own provenance if required. Never deposit the licensed Pathway Tools installer, SIF, or MetaCyc databases as public MP assets.
+Do not infer the software author list or affiliations from GitHub contributor
+accounts. Use the reviewed `CITATION.cff` and confirm any affiliations with the
+authors. Older tags without citation metadata may have been archived with
+GitHub-derived creator details. Fix creator names or affiliations on an
+existing published record using **Edit**; a metadata correction does not need
+a new software version. See [editing published records](https://help.zenodo.org/docs/deposit/manage-records/).
 
 ## Account-side release checklist
 
 | Service | Repository preparation | Maintainer verification before publishing |
 | --- | --- | --- |
 | GitHub | PR smoke checks, manual package/container validation, tag workflow | Protect the target branch, require smoke checks and tester approval; choose a new version |
-| Anaconda.org | Recipe, installed-package integration, checksums, RC/main labels | `ANACONDA_API_TOKEN` has upload access to `hallamlab`; `PUBLISH_CONDA=true` |
-| Quay | Build from validated package, Docker test, SIF conversion, vulnerability gate | Repository exists; robot has Write permission; `QUAY_USERNAME`, `QUAY_PASSWORD`, `PUBLISH_QUAY=true` |
-| Zenodo | CFF metadata and documented release process | GitHub integration enabled, correct organization authorization, archived release/DOI verified |
+| Anaconda.org | Recipe, installed-package integration, checksums, RC/main labels | `ANACONDA_API_TOKEN` has upload access to `hallamlab`; manual `publish_anaconda` selection |
+| Quay | Build from validated package, Docker test, SIF conversion, vulnerability gate | Repository exists; robot has Write permission; `QUAY_USERNAME`, `QUAY_PASSWORD`, manual `publish_quay` selection |
+| Zenodo | CFF metadata and documented release process | Automatic GitHub integration disabled; manually reviewed deposit and DOI verified |
 
 Secret values must never be committed or printed. Repository files alone cannot verify the current account permissions or secret configuration. A local source build is not proof of a successful Conda solve, registry upload, or Zenodo deposit.
 
