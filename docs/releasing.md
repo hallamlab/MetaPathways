@@ -288,7 +288,7 @@ The Conda package includes the Nextflow controller, reporting assets, reviewer d
 
 ## Zenodo and software citation
 
-`CITATION.cff` supplies software authors (from MP's existing author metadata), title, repository, and license. Confirm the author list before publication. No DOI or release date has been invented. `prepare` adds/updates the selected software version. We maintain one citation metadata file; Zenodo prioritizes `.zenodo.json` over CFF if both exist, so do not add a conflicting second file. See [Zenodo's supported metadata](https://help.zenodo.org/docs/github/describe-software/).
+`CITATION.cff` supplies the application note's nine authors in manuscript order, their explicit manuscript affiliations, the software title, repository, and license. Release builds reject missing citation metadata, duplicate or incomplete author entries, mismatched citation versions, and an overriding `.zenodo.json`. Confirm any later author or affiliation changes against the manuscript before publication. No DOI or release date has been invented. `prepare` adds/updates the selected software version. We maintain one citation metadata file; Zenodo prioritizes `.zenodo.json` over CFF if both exist, so do not add a conflicting second file. See [Zenodo's supported metadata](https://help.zenodo.org/docs/github/describe-software/).
 
 Zenodo deposits are **manual and separate from GitHub releases**. In
 [Zenodo's GitHub settings](https://zenodo.org/account/settings/github/), turn

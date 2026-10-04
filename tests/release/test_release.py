@@ -15,6 +15,16 @@ spec.loader.exec_module(release)
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_citation_requires_reviewed_unambiguous_authors(self):
+        author = {'given-names': 'Example', 'family-names': 'Author', 'affiliation': 'Reviewed institution'}
+        release.validate_citation({'version': '3.5.2', 'authors': [author]}, '3.5.2')
+        for data in ({}, {'version': '3.5.1', 'authors': [author]},
+                     {'version': '3.5.2', 'authors': []},
+                     {'version': '3.5.2', 'authors': [author, author]},
+                     {'version': '3.5.2', 'authors': [{'name': 'GitHub display name'}]}):
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                release.validate_citation(data, '3.5.2')
+
     def test_explicit_versions_only(self):
         for value in ["3.5.0", "v3.5.1", "3.6.0rc1"]:
             self.assertEqual(release.valid_version(value), value.removeprefix("v"))

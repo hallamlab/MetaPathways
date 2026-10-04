@@ -151,9 +151,33 @@ def validate_run(directory):
     return {"successful_stages": sorted(STAGES), "nonempty_outputs": OUTPUTS}
 
 
+def validate_citation(data, value):
+    if not isinstance(data, dict) or data.get('version') != value:
+        raise ValueError('CITATION.cff must match the release version.')
+    authors = data.get('authors')
+    if not isinstance(authors, list) or not authors:
+        raise ValueError('CITATION.cff must contain the reviewed manuscript authors.')
+    names = set()
+    for author in authors:
+        if not isinstance(author, dict) or not all(
+            isinstance(author.get(key), str) and author[key].strip()
+            for key in ('family-names', 'given-names', 'affiliation')
+        ):
+            raise ValueError('Each citation author needs a name and reviewed affiliation.')
+        name = (author['family-names'].strip().casefold(), author['given-names'].strip().casefold())
+        if name in names:
+            raise ValueError('Duplicate citation author; review CITATION.cff.')
+        names.add(name)
+
+
 def build(args):
     clean()
     value = version()
+    import yaml
+    citation = ROOT / 'CITATION.cff'
+    if not citation.is_file() or (ROOT / '.zenodo.json').exists():
+        raise ValueError('Release requires CITATION.cff without an overriding .zenodo.json.')
+    validate_citation(yaml.safe_load(citation.read_text()), value)
     number = recipe_build((ROOT / "conda_recipe/meta_template.yaml").read_text())
     tag = release_tag(value, number)
     if args.tag and args.tag != tag:
