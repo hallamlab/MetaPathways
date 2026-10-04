@@ -1,0 +1,46 @@
+{
+  "canvas_width": 2240,
+  "mermaid_scale": 1.5,
+  "figures": [
+    {
+      "name": "readme",
+      "page": "README.md",
+      "index": 0
+    },
+    {
+      "name": "results-schema",
+      "page": "docs/results-schema.md",
+      "index": 0
+    },
+    {
+      "name": "architecture",
+      "page": "docs/architecture.md",
+      "index": 0
+    },
+    {
+      "name": "overview",
+      "page": "docs/overview.md",
+      "index": 0
+    },
+    {
+      "name": "detailed-workflow-1",
+      "page": "docs/detailed-workflow.md",
+      "index": 0
+    },
+    {
+      "name": "detailed-workflow-2",
+      "page": "docs/detailed-workflow.md",
+      "index": 1
+    },
+    {
+      "name": "detailed-workflow-3",
+      "page": "docs/detailed-workflow.md",
+      "index": 2
+    },
+    {
+      "name": "data-flow",
+      "page": "docs/data-flow.md",
+      "index": 0
+    }
+  ]
+}

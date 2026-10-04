@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-02",
+  "version": "3.5.2",
+  "dataset": "bundled three-sample CAMI reviewer inputs",
+  "output_directory": "/data/users/ryan/MetaPathways_AppNote/mp352-conda-reviewer/output-taxonomy",
+  "workflow_tasks": 51,
+  "all_tasks_successful": true,
+  "sqlite_integrity": "ok",
+  "foreign_key_violations": 0,
+  "report_schema": 3,
+  "pathway_tools_executed": false,
+  "samples": [
+    {
+      "sample": "Gastrointestinal_5",
+      "assembly_contigs": 3,
+      "read_pairs": 2326,
+      "CDS": 140,
+      "abundance_rows": 155,
+      "genome_bins": 3,
+      "reference_hit_taxonomy_rows": 311,
+      "primary_rows_with_hit_taxonomy": 68,
+      "orf_tpm_sum": 1000000.0000000001,
+      "contig_tpm_sum": 1000000.0399999999,
+      "unannotated_placeholders_are_only_RNA": true,
+      "feature_counts": {
+        "CDS": 140,
+        "tRNA": 12,
+        "rRNA": 3
+      }
+    },
+    {
+      "sample": "Skin_28",
+      "assembly_contigs": 3,
+      "read_pairs": 3000,
+      "CDS": 117,
+      "abundance_rows": 121,
+      "genome_bins": 3,
+      "reference_hit_taxonomy_rows": 221,
+      "primary_rows_with_hit_taxonomy": 63,
+      "orf_tpm_sum": 1000000.0000000006,
+      "contig_tpm_sum": 1000000.06,
+      "unannotated_placeholders_are_only_RNA": true,
+      "feature_counts": {
+        "CDS": 117,
+        "tRNA": 4
+      }
+    },
+    {
+      "sample": "Urogenital_22",
+      "assembly_contigs": 3,
+      "read_pairs": 3000,
+      "CDS": 136,
+      "abundance_rows": 145,
+      "genome_bins": 3,
+      "reference_hit_taxonomy_rows": 244,
+      "primary_rows_with_hit_taxonomy": 68,
+      "orf_tpm_sum": 999999.9999999998,
+      "contig_tpm_sum": 999999.93,
+      "unannotated_placeholders_are_only_RNA": true,
+      "feature_counts": {
+        "CDS": 136,
+        "tRNA": 6,
+        "rRNA": 3
+      }
+    }
+  ],
+  "checks_passed": [
+    "paired FASTQ identifiers and sequence/quality lengths",
+    "all CDS represented in primary annotations",
+    "every source abundance value matches the wide explorer",
+    "no unavailable ORF coverage converted to zero",
+    "functional taxonomy joined by sample/ORF/database/target",
+    "primary taxonomy agrees with selected reference hit",
+    "all primary annotation placeholders explained by RNA features",
+    "three contigs assigned to three genome bins per sample",
+    "TPM sums approximately one million separately for ORF and contig features",
+    "51 Nextflow trace rows completed with exit zero"
+  ],
+  "expected_messages": [
+    "Two Skin_28 BLAST empty-query warnings: no rRNA queries in this subset",
+    "28 RNA features have abundance but no primary protein annotation",
+    "PGDBs unavailable because --skip_ptools was used",
+    "HTTP 404s from report browsing, not workflow failures"
+  ],
+  "report_notes_after_cleanup": 0,
+  "report_cleanup": "Removed generic abundance notices and excluded explicitly identified tRNA/rRNA features from missing protein annotation warnings; all 430 abundance rows retained."
+}

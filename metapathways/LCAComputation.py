@@ -232,24 +232,8 @@ class LCAComputation:
 
     # extracts taxon names for a refseq annotation
     def get_species(self, hit, dbname):
-        accession_PATT = re.compile(r"ref\|(.*)\|")
-        if not "comment" in hit and not "target" in hit:
-            return None
-        species = ""
-        try:
-            if 'eggnog' in dbname.lower():
-                m = hit['target'].split('.', 1)[0]
-                species = str(m)
-            elif 'uniref' in dbname.lower():
-                m = hit['product'].split('TaxID ', 1)[1].split(' ')[0]
-                species = str(m)
-        except:
-            return None
-
-        if species and species != "":
-            return species
-        else:
-            return None
+        from metapathways.protein_taxonomy import hit_taxid
+        return hit_taxid(hit, dbname)
 
     # used for optimization
     def set_results_dictionary(self, results_dictionary):

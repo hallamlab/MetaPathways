@@ -8,6 +8,9 @@ __status__ = "Release"
 
 try:
     import traceback
+    import csv
+    from itertools import groupby
+    from metapathways.protein_taxonomy import (supports_taxonomy, hit_taxonomy, raw_lca, taxon_label, NOT_COMPUTED, UNCLASSIFIED)
     import re
     import gc
     import resource
@@ -395,18 +398,13 @@ def create_annotation(
 
             orfToContig[shortORFId] = contig
 
-            taxonomy = None
-            if shortORFId in Taxons:
-                taxonomy1 = Taxons[shortORFId]
-                taxonomy_id = lca.get_supported_taxon(taxonomy1, return_id=True)
-                preferred_taxonomy = lca.get_preferred_taxonomy(taxonomy_id)
-
-                if preferred_taxonomy:
-                    taxonomy = preferred_taxonomy
-                else:
-                    taxonomy = Taxons[shortORFId]
-            else:
-                taxonomy = "root"
+            # The GFF records the database and target that supplied this annotation.
+            source_db = orf.get("sourcedb", "")
+            candidates = results_dictionary.get(source_db, {}).get(shortORFId, [])
+            hit = next((h for h in candidates if h.get("target") == orf["target"]), {})
+            _, taxonomy = hit_taxonomy(hit, source_db, lca)
+            lca_taxonomy = Taxons.get(source_db, {}).get(shortORFId,
+                UNCLASSIFIED if supports_taxonomy(source_db) else NOT_COMPUTED)
             product = orf["product"]
             orf_id = orf["id"]
             seqname = orf["seqname"]
@@ -423,7 +421,7 @@ def create_annotation(
             gutils.fprintf(output_table_file, "\t%s", orf["strand"])
             gutils.fprintf(output_table_file, "\t%s", orf["target"])
             gutils.fprintf(output_table_file, "\t%s", product)
-            gutils.fprintf(output_table_file, "\t%s\n", taxonomy)
+            gutils.fprintf(output_table_file, "\t%s\t%s\t%s\n", taxonomy, source_db, lca_taxonomy)
 
     output_table_file.close()
 
@@ -1290,7 +1288,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
                        output_table_file,
                        '\t'.join(["ORF_ID", "ORF_length", "start", "end", 
                        "Contig_Name", "Contig_length", 
-                       "strand", "target", "product", "taxonomy"])+"\n"
+                       "strand", "target", "product", "taxonomy", "reference_db", "lca_taxonomy"])+"\n"
         )
 
 
@@ -1307,7 +1305,7 @@ def main(argv, errorlogger=None, runstatslogger=None):
     else:
         database_names = opts.database_name
         input_blastouts = opts.input_blastout
-        weight_dbs = opts.weight_db
+        weight_dbs = [1] * len(database_names)
 
     ##### uncomment the following lines
     for dbname, blastoutput in zip(database_names, input_blastouts):
@@ -1334,56 +1332,40 @@ def main(argv, errorlogger=None, runstatslogger=None):
         blastParsers[dbname].setMaxErrorsLimit(5)
         blastParsers[dbname].setErrorAndWarningLogger(errorlogger)
 
-    # this part of the code computes the occurence of each of the taxons
-    # which is use in the later stage is used to evaluate the min support
-    # as used in the MEGAN software
-
-    start = 0
+    # Train each database independently. Neither LCA support nor assignments
+    # may be inherited from a different reference database.
     Length = len(listOfOrfs)
     _stride = 5000000
     Taxons = {}
-    while start < Length:
-        pickorfs = {}
-        last = min(Length, start + _stride)
-        for i in range(start, last):
-            pickorfs[listOfOrfs[i]] = "root"
-        start = last
-        # print 'Num of Min support orfs ' + str(start)
-        results_dictionary = {}
-        for dbname, blastoutput in zip(database_names, input_blastouts):
-            if "eggnog" in dbname:
-                results = "eggnog"
-            elif "uniref" in dbname:
-                results = "uniref"
+    for dbname in database_names:
+        if not supports_taxonomy(dbname):
+            continue
+        for node in lca.taxid_to_ptaxid.values():
+            node[2] = 0
+        raw_taxons = {}
+        known_orfs = set(listOfOrfs)
+        for orf_id, group in groupby(blastParsers[dbname], key=lambda hit: hit['query']):
+            records = [hit for hit in group if isWithinCutoffs(hit, opts)]
+            if orf_id not in known_orfs or not records:
+                continue
+            taxid = raw_lca(records, dbname, lca)
+            raw_taxons[orf_id] = taxid
+            if taxid is not None:
+                lca.update_taxon_support_count(lca.id_to_name[taxid])
+        Taxons[dbname] = {}
+        for orf_id, taxid in raw_taxons.items():
+            if taxid is None:
+                label = UNCLASSIFIED
             else:
-                results = False
-            if results:
-                try:
-                    results_dictionary[dbname] = {}
-                    gutils.eprintf("\nScanning database : %s...", dbname)
-                    process_parsed_blastoutput(
-                        dbname,
-                        blastParsers[dbname],
-                        opts,
-                        results_dictionary[dbname],
-                        pickorfs,
-                        callnum=1,
-                    )
-                    lca.set_results_dictionary(results_dictionary)
-                    lca.compute_min_support_tree(
-                        opts.input_annotated_gff, pickorfs, dbname=dbname
-                    )
-                    for key, taxon in pickorfs.items():
-                        Taxons[key] = taxon
-                except:
-                    gutils.eprintf("ERROR: while training for min support tree %s\n", dbname)
-                    errormod.insert_error(errorcode)
-                    traceback.print_exc()
-    for dbname in results_dictionary.keys():
-        gutils.eprintf(
-            "\n\tINFO:\tNumber of collected in block  hits in {}: {}".format(
-                dbname, len(results_dictionary[dbname].keys())
-        ))
+                supported = lca.get_supported_taxon(lca.id_to_name[taxid], return_id=True)
+                label = taxon_label(lca, supported)
+            Taxons[dbname][orf_id] = label
+        gutils.eprintf("\nTaxonomy computed independently for %s: %d ORFs\n", dbname, len(raw_taxons))
+
+    taxonomy_path = path.join(opts.output_dir, opts.sample_name + '.annotation_taxonomy.tsv')
+    with open(taxonomy_path, 'w') as stream:
+        csv.writer(stream, delimiter='\t').writerow(
+            ['orf_id', 'reference_db', 'target', 'taxid', 'taxonomy', 'lca_taxonomy'])
 
     # this loop determines the actual/final taxonomy of each of the ORFs
     # taking into consideration the min support
@@ -1432,6 +1414,22 @@ def main(argv, errorlogger=None, runstatslogger=None):
                  ))
 
             gutils.eprintf("\n\tINFO:\tNumber of ORFs processed  : %s\n", str(start))
+
+            # Keep hit taxonomy distinct from the within-database ORF LCA.
+            with open(taxonomy_path, 'a') as stream:
+                writer = csv.writer(stream, delimiter='\t')
+                for dbname, orfs in results_dictionary.items():
+                    for orf_id, hits in orfs.items():
+                        seen = set()
+                        for hit in hits:
+                            if hit['target'] in seen:
+                                continue
+                            seen.add(hit['target'])
+                            taxid, label = hit_taxonomy(hit, dbname, lca)
+                            consensus = Taxons.get(dbname, {}).get(orf_id,
+                                UNCLASSIFIED if supports_taxonomy(dbname) else NOT_COMPUTED)
+                            output_id = mputils.ShortenORFId(orf_id) if opts.compact_output else orf_id
+                            writer.writerow([output_id, dbname, hit['target'], taxid, label, consensus])
 
             # create the annotations now
             orfToContig = {}
@@ -1498,11 +1496,12 @@ halt = 0
 
 def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output=False):
 
-    addHeader = True
     if not path.exists(output_dir):
         makedirs(output_dir)
 
-    orf_dict = {}
+    # This is also MAGSplitter's structural ORF-to-contig map. Preserve
+    # predicted CDS even when the selected references have no qualifying hits.
+    orf_dict = {orf: {"contig": contig} for orf, contig in orfToContig.items()}
     for dbname in results.keys():
         gutils.eprintf("\n\tINFO:\tnumber of hits in {}: {}".format(dbname, len(results[dbname].keys())))
         for orfname in results[dbname]:
@@ -1546,6 +1545,9 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
             dbnames.append(dbname)
             headers.append(std_dbname)
 
+    if outputfile.tell() == 0:
+        gutils.fprintf(outputfile, "# %s\n", "\t".join(headers))
+
     sampleName = None
     for orfn in orf_dict:
 
@@ -1564,10 +1566,6 @@ def print_orf_table(results, orfToContig, output_dir, outputfile, compact_output
                 row.append(orf_dict[orfn][database_maps[dbname]])
             else:
                 row.append("")
-
-        if addHeader:
-            gutils.fprintf(outputfile, "# %s\n", "\t".join(headers))
-            addHeader = False
 
         gutils.fprintf(outputfile, "%s\n", "\t".join(row))
 

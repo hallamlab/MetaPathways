@@ -1,0 +1,4 @@
+sample_id	assembly	read_layout	reads_1	reads_2	mag_map
+Urogenital_22	inputs/assemblies/Urogenital_22.fasta.gz	paired	inputs/reads/Urogenital_22_R1.fastq.gz	inputs/reads/Urogenital_22_R2.fastq.gz	inputs/mag_maps/Urogenital_22.tsv
+Gastrointestinal_5	inputs/assemblies/Gastrointestinal_5.fasta.gz	paired	inputs/reads/Gastrointestinal_5_R1.fastq.gz	inputs/reads/Gastrointestinal_5_R2.fastq.gz	inputs/mag_maps/Gastrointestinal_5.tsv
+Skin_28	inputs/assemblies/Skin_28.fasta.gz	paired	inputs/reads/Skin_28_R1.fastq.gz	inputs/reads/Skin_28_R2.fastq.gz	inputs/mag_maps/Skin_28.tsv

@@ -5,20 +5,13 @@ import pandas as pd
 
 
 def extract_gene_id(gff_row):
-    seqname = gff_row['seqname']
-    feature = gff_row['feature']
-    start = gff_row['start']
-    end = gff_row['end']
-    attribute_str = gff_row['attribute']
-    attributes = attribute_str.split(';')
-    #if feature == 'CDS':
-    for attribute in attributes:
+    for attribute in str(gff_row['attribute']).split(';'):
+        if '=' not in attribute:
+            continue
         key, value = attribute.strip().split('=', 1)
-        if key == 'ID':
-            gene_id = "gene_id \"" + value + "\""
-    #else:
-    #    gene_id = "gene_id \"" + seqname + "\""
-    return gene_id
+        if key == 'ID' and value:
+            return 'gene_id "' + value + '";'
+    raise ValueError(f"GFF feature is missing ID: {gff_row['seqname']}:{gff_row['start']}")
 
 
 def gff_to_gtf(input_file, output_file, feature_types):
@@ -39,6 +32,14 @@ def gff_to_gtf(input_file, output_file, feature_types):
 
     # Extract gene_id from the attribute column and create a new column 'gene_id'
     gff_df['gene_id'] = gff_df.apply(extract_gene_id, axis=1)
+
+    if gff_df['gene_id'].duplicated().any():
+        raise ValueError('Duplicate gene IDs in GFF; regenerate annotations with corrected RNA IDs before counting.')
+    for column in ('start', 'end'):
+        values = pd.to_numeric(gff_df[column], errors='raise')
+        if values.isna().any() or (values < 1).any() or (values % 1 != 0).any():
+            raise ValueError(f'Invalid GFF {column} coordinates')
+        gff_df[column] = values.astype('int64')
 
     # Write the GTF output
     gff_df.to_csv(output_file, sep='\t', index=False, columns=['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'gene_id'], header=False, quoting=3)

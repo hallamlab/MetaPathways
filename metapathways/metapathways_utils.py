@@ -62,7 +62,7 @@ def exit_process(message=None, logger=None):
     if logger:
         logger.printf("ERROR\tExiting the Python code\n")
         logger.printf("ERROR\t" + message + "\n")
-    _exit(0)
+    raise SystemExit(1)
 
 
 def exit_step(message=None):

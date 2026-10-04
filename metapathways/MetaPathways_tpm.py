@@ -15,6 +15,8 @@ try:
     import multiprocessing
     import shutil
     import subprocess
+    import shlex
+    import os
     
     from os import path, _exit, rename, system
 
@@ -180,7 +182,8 @@ def runUsingBWA(bwaExec, sample_name, indexFile, readgroup, readFiles, bwaFolder
             readFiles[0],
         )
 
-    st_cmd = "samtools sort -O bam -o %s -T %s %s" % (
+    st_cmd = "samtools sort -@ %d -O bam -o %s -T %s %s" % (
+        max(0, int(num_threads) - 1),
         stOutputTmp,
         stInterTmp,
         bwaOutput,
@@ -244,10 +247,32 @@ def getReadFiles(readdir, sample_name):
     return fastqgroups
 
 
+def coverm_read_arguments(forward, reverse=None, interleaved=False):
+    """Validate read layout, including the legacy serialized ``None`` value."""
+    forward = None if forward in (None, '', 'None') else forward
+    reverse = None if reverse in (None, '', 'None') else reverse
+    if not forward:
+        raise ValueError('A forward, single-end, or interleaved FASTQ is required.')
+    if interleaved:
+        if reverse:
+            raise ValueError('Interleaved input cannot also specify a reverse FASTQ.')
+        return ['--interleaved', forward]
+    if reverse:
+        if path.realpath(forward) == path.realpath(reverse) or (
+                path.exists(forward) and path.exists(reverse) and path.samefile(forward, reverse)):
+            raise ValueError('Paired FASTQs must be different files; use --interleaved for one interleaved file.')
+        return ['-1', forward, '-2', reverse]
+    return ['--single', forward]
+
+
 def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     parser = createParser()
 
     options, args = parser.parse_args(argv)
+    try:
+        read_arguments = coverm_read_arguments(options.fwd_fastq, options.rev_fastq, options.interleaved)
+    except ValueError as error:
+        parser.error(str(error))
     if not (options.contigs != None and path.exists(options.contigs)):
         parser.error("ERROR\tThe contigs file is missing")
         errormod.insert_error(10)
@@ -304,33 +329,24 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append('-m trimmed_mean')
     command.append('-m rpkm')
     command.append('-m tpm')
-    # set up fastqs
-    if options.fwd_fastq and options.rev_fastq:
-        command.append('-1')
-        command.append(options.fwd_fastq)
-        command.append('-2')
-        command.append(options.fwd_fastq)
-    elif options.fwd_fastq and options.interleaved:
-        command.append('--interleaved')
-        command.append(options.fwd_fastq)
-    elif options.fwd_fastq and not options.interleaved:
-        command.append('--single')
-        command.append(options.fwd_fastq)
-    else:
-        parser.error("ERROR\tFASTQs not specified correctly.")
-        errormod.insert_error(10)
-        return 1
+    command.extend(shlex.quote(str(arg)) for arg in read_arguments)
     command.append('-r')
     command.append(options.contigs)
     command.append('--output-file')
     command.append(options.output)
     command.append('-t')
-    command.append(options.num_threads)
+    command.append(str(options.num_threads))
     command.append('--bam-file-cache-directory')
     command.append(options.bwaFolder)
     command.append('--min-read-percent-identity 97')
     command.append('--min-read-aligned-percent 97')
     command.append('--exclude-supplementary')
+
+    gff_in = options.orfgff
+    gtf_out = path.join(path.dirname(gff_in), path.basename(gff_in).rsplit('.', 1)[0] + '.gtf')
+    # Reject malformed/duplicate annotation IDs before expensive mapping.
+    with open(options.stats, 'w') as stat_out:
+        run_logged(['gff2gtf.py', '--feature', 'CDS,rRNA,tRNA,pseudogene', gff_in, gtf_out], stat_out)
 
     rpkmstatus = 0
     rpkmtext = ''
@@ -340,57 +356,41 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         rpkmstatus = 1
         pass
 
-    with open(options.stats, 'w') as stat_out:
+    with open(options.stats, 'a') as stat_out:
         stat_out.write(' '.join(command))
         stat_out.write('\n\n')
         stat_out.write(rpkmtext)
         stat_out.write('\n\n')
 
+        # A failed mapping must not trigger abundance calculations on cached BAMs.
+        if rpkmstatus != 0:
+            gutils.eprintf("ERROR\tRPKM calculation was unsuccessful\n")
+            errormod.insert_error(10)
+            return 1
+
         #Start custom abundance analysis
-        bam_in = glob.glob(options.bwaFolder + PATHDELIM + '*.bam')[0]
+        bam_in = path.join(options.bwaFolder, path.basename(options.contigs) + '.' + path.basename(options.fwd_fastq) + '.bam')
+        if not path.isfile(bam_in):
+            raise RuntimeError(f'CoverM did not create the expected BAM: {bam_in}')
         sort_out = options.bwaFolder + PATHDELIM + options.sample_name + '.sorted.bam'
         tmp_bam = options.bwaFolder + PATHDELIM + options.sample_name + '.tmp'
-        gff_in = options.orfgff
-        gtf_out = path.join(path.dirname(options.orfgff), path.basename(options.orfgff).rsplit('.', 1)[0] + '.annot.gtf')
+        if os.environ.get('METAPATHWAYS_COMPACT_SCRATCH'):
+            tmp_bam = path.join(os.environ['METAPATHWAYS_COMPACT_SCRATCH'], options.sample_name + '.sort')
         feat = options.bwaFolder + PATHDELIM + options.sample_name + '.annot.featurecounts.txt'
-        gen_lens = options.bwaFolder + PATHDELIM + options.sample_name + '.annot.genelengths.txt'
         abund_calc = path.join(path.dirname(options.output), path.basename(options.output).rsplit('.', 2)[0] + '.orf_counts.tsv')
 
-        samcmd = ['samtools', 'sort', '-n', '-T', f'{tmp_bam}', '-o', f'{sort_out}', f'{bam_in}']
-        stat_out.write(' '.join(samcmd))
-        stat_out.write('\n\n')
-        sam_result = subprocess.Popen(' '.join(samcmd), stdout=stat_out, stderr=subprocess.PIPE, shell=True)    
-        stat_out.write('\n')
-        sam_result.wait()
+        # samtools -@ counts additional threads, beyond the main thread.
+        samcmd = ['samtools', 'sort', '-@', str(max(0, int(options.num_threads) - 1)), '-n', '-T', f'{tmp_bam}', '-o', f'{sort_out}', f'{bam_in}']
+        run_logged(samcmd, stat_out)
 
-        gtfcmd = ['gff2gtf.py', '--feature', 'CDS,rRNA,tRNA,pseudogene', f'{gff_in}', f'{gtf_out}']
-        stat_out.write(' '.join(gtfcmd))
-        stat_out.write('\n')
-        gtf_result = subprocess.Popen(' '.join(gtfcmd), stdout=stat_out, stderr=subprocess.PIPE, shell=True)    
-        stat_out.write('\n')
-        gtf_result.wait()
+        featcmd = ['featureCounts', '-t', 'CDS,rRNA,tRNA,pseudogene', '-O', '-T', str(options.num_threads),
+                   '-a', gtf_out, '-o', feat, sort_out]
+        if read_arguments[0] != '--single':
+            featcmd.insert(1, '-p')
+        run_logged(featcmd, stat_out)
 
-        featcmd = ['featureCounts', '-t', 'CDS,rRNA,tRNA,pseudogene', '-p', '-O', '-T', f'{options.num_threads}', '-a', f'{gtf_out}', '-o', f'{feat}', f'{sort_out}']
-        stat_out.write(' '.join(featcmd))
-        stat_out.write('\n')
-        feat_result = subprocess.Popen(' '.join(featcmd), stdout=stat_out, stderr=subprocess.PIPE, shell=True)    
-        stat_out.write('\n')
-        feat_result.wait()
-
-        cutcmd = f'cut -f4,5,9 {gtf_out} | sed \'s/gene_id //g\' | gawk \'{{print $3,$2-$1+1}}\' | tr \' \' \'\t\' > {gen_lens}'
-        stat_out.write(cutcmd)
-        stat_out.write('\n')
-        cut_result = subprocess.Popen(cutcmd, stdout=stat_out, stderr=subprocess.PIPE, shell=True)    
-        stat_out.write('\n')
-        cut_result.wait()    
-
-        abuncmd = ['abund_calc.py', '--counts-file', f'{feat}', '--gene-lengths-file', f'{gen_lens}', '--gtf-file', f'{gtf_out}', '--output', f'{abund_calc}']
-        stat_out.write('\n')
-        stat_out.write(' '.join(abuncmd))
-        stat_out.write('\n')
-        abund_result = subprocess.Popen(' '.join(abuncmd), stdout=stat_out, stderr=subprocess.PIPE, shell=True)    
-        stat_out.write('\n')
-        abund_result.wait()
+        abuncmd = ['abund_calc.py', '--counts-file', feat, '--gtf-file', gtf_out, '--output', abund_calc]
+        run_logged(abuncmd, stat_out)
 
     if rpkmstatus != 0:
         gutils.eprintf("ERROR\tRPKM calculation was unsuccessful\n")
@@ -399,6 +399,23 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         # exit_process("ERROR\tFailed to run RPKM" )
 
     return rpkmstatus
+
+
+def run_logged(command, log):
+    """Stream both output channels and stop immediately on a failed subcommand."""
+    display = shlex.join(command)
+    print('Command: ' + display, flush=True)
+    log.write(display + '\n')
+    log.flush()
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                          text=True, errors='replace') as process:
+        for line in process.stdout:
+            print(line, end='', flush=True)
+            log.write(line)
+            log.flush()
+        code = process.wait()
+    if code:
+        raise subprocess.CalledProcessError(code, command)
 
 
 def runRPKMCommand(runcommand=None):
@@ -505,7 +522,7 @@ def MetaPathways_tpm(argv, extra_command=None, errorlogger=None, runstatslogger=
     if errorlogger != None:
         errorlogger.write("#STEP\tRPKM_CALCULATION\n")
     try:
-        main(
+        status = main(
             argv,
             errorlogger=errorlogger,
             runcommand=extra_command,
@@ -515,7 +532,7 @@ def MetaPathways_tpm(argv, extra_command=None, errorlogger=None, runstatslogger=
         errormod.insert_error(10)
         return (1, traceback.print_exc(10))
 
-    return (0, "")
+    return (status, "")
 
 
 if __name__ == "__main__":

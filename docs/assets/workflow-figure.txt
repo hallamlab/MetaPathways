@@ -1,0 +1,15 @@
+MetaPathways workflow figure provenance
+
+Original: MP_3.5_AppNote_v1.docx, word/media/image2.svg (Figure 1).
+Original SHA256: 1022b063bdcd08376b1fa0e5b556c32aaad3b2cea633317ceea6ee848d35f593
+
+workflow-appnote-original.svg preserves the embedded SVG unchanged.
+workflow-main.svg is an editable vector adaptation for the Nextflow workflow.
+It retains the serif typography, numbered module rows,
+blue inputs, green outputs, diamond compute symbols and thin black arrows.
+Updates: optional reads and contig-to-genome maps; per-database taxonomy;
+Nextflow/local/Slurm orchestration; read abundance; combined report and explorer.
+The vertical banner and footer notes are omitted; optional/licensing notes
+remain beside the relevant modules, and the symbol legend is compact.
+The numbered biological modules are conceptual, not the scheduler DAG.
+The source DOCX has not been modified.

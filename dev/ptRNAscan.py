@@ -24,7 +24,8 @@ def run_tRNAscan(thread_id, args):
             break
 
         print(f"Thread {thread_id}: Processing {input_file}")
-        cmd = ["tRNAscan-SE", input_file]
+        # Parallelism is provided by the outer workers; avoid nested CPU pools.
+        cmd = ["tRNAscan-SE", "--thread", "1", input_file]
 
         for flag, file_path in output_files.items():
             cmd.extend([flag, file_path])
@@ -256,6 +257,10 @@ if __name__ == "__main__":
     parser.add_argument('--quiet', action='store_true', help='Disable stdout')
 
     args = parser.parse_args()
+
+    if os.environ.get('METAPATHWAYS_COMPACT_SCRATCH'):
+        import tempfile
+        args.tmp_dir = tempfile.mkdtemp(prefix='trna-', dir=os.environ['METAPATHWAYS_COMPACT_SCRATCH'])
 
     if not os.path.exists(args.tmp_dir):
         os.makedirs(args.tmp_dir)

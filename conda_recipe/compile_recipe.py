@@ -23,7 +23,15 @@ def main():
     deps = yaml.safe_load((ROOT / "docker/conda_base.yml").read_text())
     if not all(isinstance(d, str) for d in deps["dependencies"]):
         parser.error("Conda runtime dependencies must be explicit package strings, not pip/VCS entries.")
+    helper_sources = []
+    for line in (ROOT / "requirements-workflow.txt").read_text().splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        name, source = line.split(" @ ", 1)
+        url, checksum = source.split("#sha256=", 1)
+        helper_sources.append(f"  - url: {url}\n    sha256: {checksum}\n    folder: helper-sources/{name}")
     replacements = {
+        "<HELPER_SOURCES>": "\n".join(helper_sources),
         "<NAME>": NAME,
         "<VERSION>": VERSION,
         "<ENTRY>": "\n".join(f"    - {e}" for e in ENTRY_POINTS),

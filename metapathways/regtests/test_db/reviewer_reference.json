@@ -1,0 +1,1434 @@
+{
+  "description": "Small interface-test reference: original K12 fixture plus genuine SwissProt best-hit targets from the three CAMI reviewer samples. Selection is deliberately biased to exercise annotation, taxonomy and MAG splitting; not for accuracy assessment.",
+  "source": "MPDB_260131/functional/swissprot",
+  "source_sha256": "987e9d468c2691008b8c7d9d3eea79dec207b5c892312f8d63d1fe6f5b01cead",
+  "original_ids": [
+    "sp|A7ZHS2|LPXB_ECO24",
+    "sp|B1X6D4|AROE_ECODH",
+    "sp|B1XD36|GLND_ECODH",
+    "sp|B5Z0I6|GLO2_ECO5E",
+    "sp|B7M1Y6|RNH2_ECO8A",
+    "sp|C4ZUE2|FMT_ECOBW",
+    "sp|C4ZUE3|RSMB_ECOBW",
+    "sp|P0A914|PAL_SHIFL",
+    "sp|P0A9W9|YRDA_ECOLI",
+    "sp|P0ABG1|CDSA_ECOLI",
+    "sp|P0ABV0|TOLQ_ECO57",
+    "sp|P0ABV9|TOLR_SHIFL",
+    "sp|P0AE20|MAP1_ECO57",
+    "sp|P0AEH1|RSEP_ECOLI",
+    "sp|P0AEZ8|MLTD_ECOL6",
+    "sp|P0AFP0|YADS_ECOLI",
+    "sp|P0AGJ0|TRKA_ECO57",
+    "sp|P0C0V0|DEGP_ECOLI",
+    "sp|P19934|TOLA_ECOLI",
+    "sp|P21645|LPXD_ECOLI",
+    "sp|P30852|SMF_ECOLI",
+    "sp|P30863|DKGB_ECOLI",
+    "sp|P30864|YAFC_ECOLI",
+    "sp|P30866|YAFE_ECOLI",
+    "sp|P37028|BTUF_ECOLI",
+    "sp|P37047|CDAR_ECOLI",
+    "sp|P37049|YAEI_ECOLI",
+    "sp|P45568|DXR_ECOLI",
+    "sp|P45748|TSAC_ECOLI",
+    "sp|P45768|YHDY_ECOLI",
+    "sp|P45769|YHDZ_ECOLI",
+    "sp|P45771|YRDD_ECOLI",
+    "sp|P45795|YRDB_ECOLI",
+    "sp|P45955|CPOB_ECOLI",
+    "sp|P60475|UPPS_SHIFL",
+    "sp|Q3YWX5|SMG_SHISS",
+    "sp|Q3Z5I0|SKP_SHISS",
+    "sp|Q59827|DGTP_SHIBO",
+    "sp|Q8X8X5|DPO3A_ECO57"
+  ],
+  "added_ids": [
+    "sp|A0A086F3E3|TM175_CHRP1",
+    "sp|A0A0H2ZQT7|WALJ_STRP2",
+    "sp|A0A0H3GCG4|PDEA_LISM4",
+    "sp|A0A4Y1WBN6|YYCJ_BACAN",
+    "sp|A0PXQ3|PANB_CLONN",
+    "sp|A0Q8S8|CRGA_MYCA1",
+    "sp|A3DHZ4|DNAA_ACET2",
+    "sp|A5INP9|HUTH_STAA9",
+    "sp|A5TY85|PKNA_MYCTA",
+    "sp|A6QD58|WALK_STAAE",
+    "sp|A6U2M4|SYL_STAA2",
+    "sp|A8YW47|RS6_LACH4",
+    "sp|A8YYT2|SYS_STAAT",
+    "sp|A8Z4J3|RISB_STAAT",
+    "sp|A9KHK4|GLRP_LACP7",
+    "sp|A9KPP1|DNAA_LACP7",
+    "sp|B2UYM8|SYY_CLOBA",
+    "sp|B5ELX2|RPOB_ACIF5",
+    "sp|B8I2Z3|PANC_RUMCH",
+    "sp|C0SPC1|CCRZ_BACSU",
+    "sp|C4Z940|RECF_AGARV",
+    "sp|E3GC98|MDTG_ENTLS",
+    "sp|F9UMX3|GLPF4_LACPL",
+    "sp|H8L901|RACD_ENTFU",
+    "sp|H8L902|ASL_ENTFU",
+    "sp|O06672|DPO3B_STRPN",
+    "sp|O32068|YTZG_BACSU",
+    "sp|O34357|YTPP_BACSU",
+    "sp|O34546|YTTB_BACSU",
+    "sp|O34760|YTNP_BACSU",
+    "sp|O34924|YTOP_BACSU",
+    "sp|O34943|YTPR_BACSU",
+    "sp|O34948|YKWC_BACSU",
+    "sp|O35008|YTQA_BACSU",
+    "sp|O50628|GYRA_HALH5",
+    "sp|P05057|KANU_STAAU",
+    "sp|P05649|DPO3B_BACSU",
+    "sp|P05650|RLBA_BACSU",
+    "sp|P05653|GYRA_BACSU",
+    "sp|P07944|PBP_STAAU",
+    "sp|P0A0B2|MECR_STAEP",
+    "sp|P0A0C3|REPB_STAAU",
+    "sp|P0A0C4|REPB_BACSP",
+    "sp|P0A0C7|PRE2_STAAU",
+    "sp|P0A150|YGIDB_PSEPU",
+    "sp|P0A4C6|RS4_BORBR",
+    "sp|P0A4E5|RPOA_BORPE",
+    "sp|P0A4X9|MBTM_MYCBO",
+    "sp|P0AGA4|SECY_ECO57",
+    "sp|P0C1L0|T431_STAA8",
+    "sp|P0C2T9|METC_LACLC",
+    "sp|P0DG03|GYRA_STRPQ",
+    "sp|P0DKR7|WHB5B_MYCTO",
+    "sp|P10249|SUCP_STRMU",
+    "sp|P19834|YI11_STRCL",
+    "sp|P26497|SP0J_BACSU",
+    "sp|P27159|XYLR_STAXY",
+    "sp|P37478|WALR_BACSU",
+    "sp|P37484|GDPP_BACSU",
+    "sp|P37522|SOJ_BACSU",
+    "sp|P39062|ACSA_BACSU",
+    "sp|P39912|AROG_BACSU",
+    "sp|P50854|RISA_ACTPL",
+    "sp|P54744|PKNB_MYCLE",
+    "sp|P56067|CYSM_HELPY",
+    "sp|P63453|MBTL_MYCBO",
+    "sp|P65476|MURC_STAAW",
+    "sp|P65592|NUSG_NEIMB",
+    "sp|P65763|PPIA_MYCBO",
+    "sp|P65884|PURA_STAAM",
+    "sp|P66936|GYRB_STAAM",
+    "sp|P67705|Y023_MYCBO",
+    "sp|P67925|BLE_GEOSE",
+    "sp|P68263|MECI_STAEP",
+    "sp|P71590|FHAA_MYCTU",
+    "sp|P77307|FETB_ECOLI",
+    "sp|P82371|SCRK_LACLC",
+    "sp|P94604|GYRB_CLOAB",
+    "sp|P94605|GYRA_CLOAB",
+    "sp|P96670|YDEM_BACSU",
+    "sp|P96726|YWQN_BACSU",
+    "sp|P99178|SYS_STAAN",
+    "sp|P9WG46|GYRA_MYCTO",
+    "sp|P9WHW4|PSTP_MYCTO",
+    "sp|P9WJB4|FHAB_MYCTO",
+    "sp|P9WJF2|CWSA_MYCTO",
+    "sp|P9WKD0|PBPA_MYCTO",
+    "sp|P9WMA1|Y025_MYCTU",
+    "sp|P9WMA2|Y010_MYCTO",
+    "sp|P9WMA7|Y007_MYCTU",
+    "sp|P9WMB1|Y0026_MYCTU",
+    "sp|P9WN34|TRPG_MYCTO",
+    "sp|P9WN99|RODA_MYCTU",
+    "sp|P9WPL1|CP144_MYCTU",
+    "sp|Q03928|HSP18_CLOAB",
+    "sp|Q03UD8|RS6_LEVBA",
+    "sp|Q03UE4|DNAA_LEVBA",
+    "sp|Q04CW7|RS18_LACDB",
+    "sp|Q04CX5|DNAA_LACDB",
+    "sp|Q0AU85|METN_SYNWW",
+    "sp|Q0TTK8|FTSH_CLOP1",
+    "sp|Q13SP0|MNMG_PARXL",
+    "sp|Q1GC33|RL9_LACDA",
+    "sp|Q1GC40|RECF_LACDA",
+    "sp|Q1LI29|EFG1_CUPMC",
+    "sp|Q1WVN7|RS18_LIGS1",
+    "sp|Q1WVP2|RECF_LIGS1",
+    "sp|Q1WVQ8|MURE_LIGS1",
+    "sp|Q1WVR1|MSCL_LIGS1",
+    "sp|Q1WVT3|MSRB_LIGS1",
+    "sp|Q24PG6|SFSA_DESHY",
+    "sp|Q2FFZ0|TRMB_STAA3",
+    "sp|Q2FXG9|MNMM_STAA8",
+    "sp|Q2G2P8|NNRD_STAA8",
+    "sp|Q2L284|RL14_BORA1",
+    "sp|Q2L2H8|RS12_BORA1",
+    "sp|Q58481|Y1081_METJA",
+    "sp|Q59495|SUCP_LEUME",
+    "sp|Q59935|MANA_STRMU",
+    "sp|Q5HF24|DAAA_STAAC",
+    "sp|Q5HF39|ACUC_STAAC",
+    "sp|Q5HJX8|PURA_STAAC",
+    "sp|Q5HK03|GYRB_STAEQ",
+    "sp|Q5XD45|Y533_STRP6",
+    "sp|Q65G33|ACUA_BACLD",
+    "sp|Q6G8G1|RIBBA_STAAS",
+    "sp|Q6GD38|DUS_STAAS",
+    "sp|Q6GKU3|DPO3B_STAAR",
+    "sp|Q795R8|YTFP_BACSU",
+    "sp|Q79GC6|EFTU_BORPA",
+    "sp|Q7A0M4|Y1682_STAAW",
+    "sp|Q7A514|ROT_STAAN",
+    "sp|Q7A522|PEPVL_STAAN",
+    "sp|Q7A528|Y1564_STAAN",
+    "sp|Q7TT91|EFTU_BORPE",
+    "sp|Q7VTA7|RS11_BORPE",
+    "sp|Q7VTA8|RS13_BORPE",
+    "sp|Q7VTB0|IF12_BORPE",
+    "sp|Q7VTB2|RL15_BORPE",
+    "sp|Q7VTB7|RS8_BORPE",
+    "sp|Q7VTB8|RS14_BORPE",
+    "sp|Q7VTB9|RL5_BORPE",
+    "sp|Q7VTC0|RL24_BORPE",
+    "sp|Q7VTC4|RS17_BORPE",
+    "sp|Q7VTC6|RL16_BORPE",
+    "sp|Q7VTD1|RL23_BORPE",
+    "sp|Q7VTD4|RS10_BORPE",
+    "sp|Q7VTD6|RS7_BORPE",
+    "sp|Q7W2E0|RL6_BORPA",
+    "sp|Q7W2F1|RL22_BORPA",
+    "sp|Q7W2F2|RS19_BORPA",
+    "sp|Q7W2F5|RL4_BORPA",
+    "sp|Q7W2H3|RL11_BORPA",
+    "sp|Q7WRA5|RL30_BORBR",
+    "sp|Q7WRA6|RS5_BORBR",
+    "sp|Q7WRA7|RL18_BORBR",
+    "sp|Q7WRB7|RL29_BORBR",
+    "sp|Q7WRB9|RS3_BORBR",
+    "sp|Q7WRC2|RL2_BORBR",
+    "sp|Q7WRC5|RL3_BORBR",
+    "sp|Q7WRD8|RPOC_BORBR",
+    "sp|Q7WRE0|RL7_BORBR",
+    "sp|Q7WRE1|RL10_BORBR",
+    "sp|Q7WRE2|RL1_BORBR",
+    "sp|Q7WRF0|RSMG_BORBR",
+    "sp|Q830C9|Y2859_ENTFA",
+    "sp|Q833S7|PAND_ENTFA",
+    "sp|Q839Z1|GYRB_ENTFA",
+    "sp|Q83AH2|PARB_COXBU",
+    "sp|Q890K1|SSB_LACPL",
+    "sp|Q8NW33|CCPA_STAAW",
+    "sp|Q8NYV4|DUS_STAAW",
+    "sp|Q8R8N9|Y1956_CALS4",
+    "sp|Q932M0|GYRA_STAAM",
+    "sp|Q97MB3|DPO4_CLOAB",
+    "sp|Q97N21|SYS2_CLOAB",
+    "sp|Q9KTJ6|METI_VIBCH",
+    "sp|Q9L7L3|GYRB_MYCPA",
+    "sp|Q9L7L4|Y004_MYCPA",
+    "sp|Q9L7L5|RECF_MYCPA",
+    "sp|Q9L7L6|DPO3B_MYCPA",
+    "sp|Q9L7L7|DNAA_MYCPA",
+    "sp|Q9R2F4|CHNE_ACIJO",
+    "sp|Q9WXS3|UXUB_THEMA",
+    "sp|Q9X4C9|DNAB_GEOSE",
+    "sp|Q9Y6N5|SQOR_HUMAN",
+    "sp|Q9ZF37|YSUP_LACHE",
+    "sp|Q9ZLB9|ASPG_HELPJ"
+  ],
+  "supporting_hits": [
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G1",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q13SP0|MNMG_PARXL"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G2",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRF0|RSMG_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G3",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|P0A150|YGIDB_PSEPU"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G5",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q83AH2|PARB_COXBU"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G6",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q9ZLB9|ASPG_HELPJ"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G7",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7TT91|EFTU_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G9",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|P65592|NUSG_NEIMB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G10",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7W2H3|RL11_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G11",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRE2|RL1_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G12",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRE1|RL10_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G13",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRE0|RL7_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G14",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|B5ELX2|RPOB_ACIF5"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G15",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRD8|RPOC_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G25",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q2L2H8|RS12_BORA1"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G26",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTD6|RS7_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G27",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q1LI29|EFG1_CUPMC"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G28",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q79GC6|EFTU_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G29",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTD4|RS10_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G30",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRC5|RL3_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G31",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7W2F5|RL4_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G32",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTD1|RL23_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G33",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRC2|RL2_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G34",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7W2F2|RS19_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G35",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7W2F1|RL22_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G36",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRB9|RS3_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G37",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTC6|RL16_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G38",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRB7|RL29_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G39",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTC4|RS17_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G41",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q9R2F4|CHNE_ACIJO"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G43",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q2L284|RL14_BORA1"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G44",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTC0|RL24_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G45",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTB9|RL5_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G46",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTB8|RS14_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G47",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTB7|RS8_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G48",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7W2E0|RL6_BORPA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G49",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRA7|RL18_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G50",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRA6|RS5_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G51",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7WRA5|RL30_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G52",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTB2|RL15_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G53",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|P0AGA4|SECY_ECO57"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G54",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTB0|IF12_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G56",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTA8|RS13_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G57",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|Q7VTA7|RS11_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G58",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|P0A4C6|RS4_BORBR"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C1-G59",
+      "contig": "Gastrointestinal_5-C1",
+      "target": "sp|P0A4E5|RPOA_BORPE"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G1",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|A9KPP1|DNAA_LACP7"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G4",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|C4Z940|RECF_AGARV"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G5",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|P94604|GYRB_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G6",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|P94605|GYRA_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G9",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|A0PXQ3|PANB_CLONN"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G10",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|B8I2Z3|PANC_RUMCH"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G11",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|Q833S7|PAND_ENTFA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G26",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|Q0TTK8|FTSH_CLOP1"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C2-G36",
+      "contig": "Gastrointestinal_5-C2",
+      "target": "sp|B2UYM8|SYY_CLOBA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G1",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|A3DHZ4|DNAA_ACET2"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G5",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|P94604|GYRB_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G8",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|P37522|SOJ_BACSU"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G9",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|P26497|SP0J_BACSU"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G11",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q97N21|SYS2_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G12",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q8R8N9|Y1956_CALS4"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G15",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q58481|Y1081_METJA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G16",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q24PG6|SFSA_DESHY"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G17",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q9WXS3|UXUB_THEMA"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G19",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|A9KHK4|GLRP_LACP7"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G27",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q03928|HSP18_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G31",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q97MB3|DPO4_CLOAB"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G39",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q0AU85|METN_SYNWW"
+    },
+    {
+      "sample": "Gastrointestinal_5",
+      "orf": "C3-G40",
+      "contig": "Gastrointestinal_5-C3",
+      "target": "sp|Q9KTJ6|METI_VIBCH"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G2",
+      "contig": "Skin_28-C1",
+      "target": "sp|Q6GKU3|DPO3B_STAAR"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G5",
+      "contig": "Skin_28-C1",
+      "target": "sp|P66936|GYRB_STAAM"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G6",
+      "contig": "Skin_28-C1",
+      "target": "sp|Q932M0|GYRA_STAAM"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G7",
+      "contig": "Skin_28-C1",
+      "target": "sp|Q2G2P8|NNRD_STAA8"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G8",
+      "contig": "Skin_28-C1",
+      "target": "sp|A5INP9|HUTH_STAA9"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G9",
+      "contig": "Skin_28-C1",
+      "target": "sp|P99178|SYS_STAAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G14",
+      "contig": "Skin_28-C1",
+      "target": "sp|P37484|GDPP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G16",
+      "contig": "Skin_28-C1",
+      "target": "sp|Q9X4C9|DNAB_GEOSE"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G17",
+      "contig": "Skin_28-C1",
+      "target": "sp|P65884|PURA_STAAM"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G22",
+      "contig": "Skin_28-C1",
+      "target": "sp|A0A4Y1WBN6|YYCJ_BACAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G28",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0C1L0|T431_STAA8"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G29",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0A0C3|REPB_STAAU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G30",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0A0C4|REPB_BACSP"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G31",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0A0C7|PRE2_STAAU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G32",
+      "contig": "Skin_28-C1",
+      "target": "sp|P67925|BLE_GEOSE"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G33",
+      "contig": "Skin_28-C1",
+      "target": "sp|P05057|KANU_STAAU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G34",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0C1L0|T431_STAA8"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G38",
+      "contig": "Skin_28-C1",
+      "target": "sp|P96670|YDEM_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G39",
+      "contig": "Skin_28-C1",
+      "target": "sp|P07944|PBP_STAAU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G40",
+      "contig": "Skin_28-C1",
+      "target": "sp|P0A0B2|MECR_STAEP"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G41",
+      "contig": "Skin_28-C1",
+      "target": "sp|P68263|MECI_STAEP"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C1-G42",
+      "contig": "Skin_28-C1",
+      "target": "sp|P27159|XYLR_STAXY"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G2",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q6GKU3|DPO3B_STAAR"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G5",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q5HK03|GYRB_STAEQ"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G6",
+      "contig": "Skin_28-C2",
+      "target": "sp|P05653|GYRA_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G7",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q2G2P8|NNRD_STAA8"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G8",
+      "contig": "Skin_28-C2",
+      "target": "sp|A5INP9|HUTH_STAA9"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G9",
+      "contig": "Skin_28-C2",
+      "target": "sp|A8YYT2|SYS_STAAT"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G14",
+      "contig": "Skin_28-C2",
+      "target": "sp|P37484|GDPP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G16",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q9X4C9|DNAB_GEOSE"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G17",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q5HJX8|PURA_STAAC"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G19",
+      "contig": "Skin_28-C2",
+      "target": "sp|A6QD58|WALK_STAAE"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G22",
+      "contig": "Skin_28-C2",
+      "target": "sp|A0A4Y1WBN6|YYCJ_BACAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G26",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q6GD38|DUS_STAAS"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G31",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q9Y6N5|SQOR_HUMAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G32",
+      "contig": "Skin_28-C2",
+      "target": "sp|Q8NYV4|DUS_STAAW"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C2-G36",
+      "contig": "Skin_28-C2",
+      "target": "sp|P96726|YWQN_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G1",
+      "contig": "Skin_28-C3",
+      "target": "sp|P39062|ACSA_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G2",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q65G33|ACUA_BACLD"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G3",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q5HF39|ACUC_STAAC"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G4",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q8NW33|CCPA_STAAW"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G5",
+      "contig": "Skin_28-C3",
+      "target": "sp|P39912|AROG_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G7",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q7A0M4|Y1682_STAAW"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G8",
+      "contig": "Skin_28-C3",
+      "target": "sp|P65476|MURC_STAAW"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G10",
+      "contig": "Skin_28-C3",
+      "target": "sp|O34943|YTPR_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G11",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q7A528|Y1564_STAAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G12",
+      "contig": "Skin_28-C3",
+      "target": "sp|O34357|YTPP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G13",
+      "contig": "Skin_28-C3",
+      "target": "sp|O34924|YTOP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G15",
+      "contig": "Skin_28-C3",
+      "target": "sp|O34760|YTNP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G16",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q2FFZ0|TRMB_STAA3"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G17",
+      "contig": "Skin_28-C3",
+      "target": "sp|C0SPC1|CCRZ_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G18",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q5HF24|DAAA_STAAC"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G19",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q7A522|PEPVL_STAAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G21",
+      "contig": "Skin_28-C3",
+      "target": "sp|O32068|YTZG_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G23",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q795R8|YTFP_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G26",
+      "contig": "Skin_28-C3",
+      "target": "sp|A6U2M4|SYL_STAA2"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G27",
+      "contig": "Skin_28-C3",
+      "target": "sp|O34546|YTTB_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G28",
+      "contig": "Skin_28-C3",
+      "target": "sp|O35008|YTQA_BACSU"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G29",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q2FXG9|MNMM_STAA8"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G30",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q7A514|ROT_STAAN"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G35",
+      "contig": "Skin_28-C3",
+      "target": "sp|A8Z4J3|RISB_STAAT"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G36",
+      "contig": "Skin_28-C3",
+      "target": "sp|Q6G8G1|RIBBA_STAAS"
+    },
+    {
+      "sample": "Skin_28",
+      "orf": "C3-G37",
+      "contig": "Skin_28-C3",
+      "target": "sp|P50854|RISA_ACTPL"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G1",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q04CX5|DNAA_LACDB"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G2",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|O06672|DPO3B_STRPN"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G4",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q1GC40|RECF_LACDA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G5",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q839Z1|GYRB_ENTFA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G6",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|O50628|GYRA_HALH5"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G7",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|A8YW47|RS6_LACH4"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G8",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q890K1|SSB_LACPL"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G9",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q04CW7|RS18_LACDB"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G10",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|A0A0H3GCG4|PDEA_LISM4"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G11",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q1GC33|RL9_LACDA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G12",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q9X4C9|DNAB_GEOSE"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G21",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|P77307|FETB_ECOLI"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G32",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q830C9|Y2859_ENTFA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G38",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q59935|MANA_STRMU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G39",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|P82371|SCRK_LACLC"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G46",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|F9UMX3|GLPF4_LACPL"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G48",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|P10249|SUCP_STRMU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C1-G49",
+      "contig": "Urogenital_22-C1",
+      "target": "sp|Q59495|SUCP_LEUME"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G1",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|Q9L7L7|DNAA_MYCPA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G2",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|Q9L7L6|DPO3B_MYCPA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G3",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|Q9L7L5|RECF_MYCPA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G4",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|Q9L7L4|Y004_MYCPA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G5",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|Q9L7L3|GYRB_MYCPA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G6",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WG46|GYRA_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G7",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WMA7|Y007_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G16",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WPL1|CP144_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G17",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WJF2|CWSA_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G18",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P19834|YI11_STRCL"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G19",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P65763|PPIA_MYCBO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G20",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WMA2|Y010_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G21",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|A0Q8S8|CRGA_MYCA1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G23",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WN34|TRPG_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G24",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P54744|PKNB_MYCLE"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G25",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|A5TY85|PKNA_MYCTA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G26",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WKD0|PBPA_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G27",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WN99|RODA_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G28",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WHW4|PSTP_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G29",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WJB4|FHAB_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G30",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P71590|FHAA_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G32",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P63453|MBTL_MYCBO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G33",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P0A4X9|MBTM_MYCBO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G41",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P0DKR7|WHB5B_MYCTO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G42",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P67705|Y023_MYCBO"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G44",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WMA1|Y025_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C2-G45",
+      "contig": "Urogenital_22-C2",
+      "target": "sp|P9WMB1|Y0026_MYCTU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G1",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q03UE4|DNAA_LEVBA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G2",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P05649|DPO3B_BACSU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G3",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P05650|RLBA_BACSU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G4",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q1WVP2|RECF_LIGS1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G5",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q839Z1|GYRB_ENTFA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G6",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P0DG03|GYRA_STRPQ"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G7",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q03UD8|RS6_LEVBA"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G8",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q890K1|SSB_LACPL"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G9",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q1WVN7|RS18_LIGS1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G10",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|O34948|YKWC_BACSU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G14",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|A0A086F3E3|TM175_CHRP1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G15",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q1WVR1|MSCL_LIGS1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G18",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q1WVQ8|MURE_LIGS1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G19",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|H8L902|ASL_ENTFU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G20",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|H8L901|RACD_ENTFU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G21",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|E3GC98|MDTG_ENTLS"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G23",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q9ZF37|YSUP_LACHE"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G28",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P56067|CYSM_HELPY"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G29",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P0C2T9|METC_LACLC"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G31",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q1WVT3|MSRB_LIGS1"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G39",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|Q5XD45|Y533_STRP6"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G40",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|P37478|WALR_BACSU"
+    },
+    {
+      "sample": "Urogenital_22",
+      "orf": "C3-G46",
+      "contig": "Urogenital_22-C3",
+      "target": "sp|A0A0H2ZQT7|WALJ_STRP2"
+    }
+  ],
+  "fixture_sha256": "65352f9ae580c02293093f2e59057707ae1d1a1458c3a8c48bf5b9de5ac38d3d",
+  "source_release": "UniProtKB/Swiss-Prot Release 2026_01 of 28-Jan-2026"
+}

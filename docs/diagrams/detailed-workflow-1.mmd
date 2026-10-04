@@ -1,0 +1,22 @@
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+flowchart TB
+    PUBLIC["Selected public references<br/>Proteins, SILVA, taxonomy and EC data"] --> BUILD["build_db through Nextflow<br/>Download and prepare reference files"]
+    BUILD --> INDEX["fastdb or makeblastdb<br/>Protein indexes and BLAST nucleotide indexes"]
+    BUILD --> TABLES["MP reference preparation<br/>Identifiers, taxonomy and EC mappings"]
+    INDEX --> MPDB["MPDB<br/>Searchable references and supporting tables"]
+    TABLES --> MPDB
+    INSTALLER["User-supplied licensed installer"] --> PTBUILD["build_pt through Nextflow<br/>Apptainer build and official SRI patches"]
+    PTBUILD --> CHECK["Validate Pathway Tools startup<br/>and BLAST database creation/search"]
+    CHECK --> SIF["Registered private SIF<br/>Pathway Tools and bundled MetaCyc"]
+    SIF -. optional matching reference preparation .-> META["MP MetaCyc preparation<br/>protseq.fsa and companion flat files"]
+    META --> METAINDEX["FAST or BLAST protein index<br/>EC, reaction and pathway mappings"]
+    METAINDEX --> MPDB
+    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
+    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
+    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
+    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
+    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
+    class PUBLIC,INSTALLER input;
+    class BUILD,PTBUILD module;
+    class INDEX,TABLES,CHECK,META,METAINDEX compute;
+    class MPDB,SIF output;

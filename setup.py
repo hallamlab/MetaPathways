@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools.dist import Distribution
+
+
+class PlatformDistribution(Distribution):
+    """The bundled FAST/metacount executables are native Linux binaries."""
+
+    def has_ext_modules(self):
+        return True
 
 PACKAGE_ROOT = Path(os.path.realpath(__file__)).parent
 NAME = "metapathways".lower()
@@ -30,6 +38,7 @@ def read(fname):
 
 if __name__ == "__main__":
     setup(
+        distclass=PlatformDistribution,
         name=NAME,
         version=VERSION,
         author=ver_dict['author'],
@@ -41,8 +50,8 @@ if __name__ == "__main__":
         license=ver_dict['license'],
         keywords="metagenomics pipeline",
         url="https://github.com/hallamlab/MetaPathways/",
-        packages=find_packages(),
-        package_data={'': ['metapathways/regtests/**/*'],},        
+        packages=find_packages(include=["metapathways", "metapathways.*"]),
+        package_data={'': ['metapathways/regtests/**/*'], 'metapathways': ['report_assets/*']},
         scripts=["bin/metapathways-install-deps.sh",
                 "bin/metapathways-data-install.sh",
                 "dev/metacount",
@@ -65,11 +74,11 @@ if __name__ == "__main__":
         entry_points={"console_scripts": ENTRY_POINTS},
         long_description=read("README.md"),
         include_package_data=True,
-        data_files=[('data_file_test', ['README.md', 'Makefile'])],
         classifiers=CLASSIFIERS,
         extras_require={
             "test": ["pytest", "pytest-cov", "tox"],
         },
         python_requires=">=3.10",
-        install_requires=[],
+        install_requires=[line.strip() for line in read("requirements-workflow.txt").splitlines()
+                          if line.strip() and not line.startswith("#")],
     )

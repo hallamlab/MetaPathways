@@ -1,0 +1,11 @@
+.wy-nav-content { max-width: 1150px; }
+.mermaid { overflow-x: auto; margin: 1.5rem 0; }
+.mermaid svg { max-width: 100%; height: auto; }
+.rst-content table.docutils td { vertical-align: top; }
+
+/* Shared 2240-unit canvases preserve scale between workflow previews. */
+.rst-content img[src*="/diagrams/"] { display: block; width: 100%; max-width: 100%; height: auto; margin: 1.5rem auto; }
+
+/* Give the primary workflow the available screen width on the home page. */
+.wy-nav-content:has(.mp-primary-workflow) { max-width: none; padding-left: 12px; padding-right: 12px; }
+.mp-primary-workflow img { display: block; width: 100%; max-width: 100%; height: auto; margin: 1.5rem auto; }

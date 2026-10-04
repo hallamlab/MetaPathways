@@ -194,7 +194,7 @@ deploy-conda: release-upload-conda
 ### Docs:
 
 docs-local:
-	sphinx-build ./docs/src ./docs/build
+	$(PYTHON) scripts/check_docs.py
 
 ### Build & Install Extensions
 ##
