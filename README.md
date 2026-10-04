@@ -6,7 +6,7 @@ The development of high-throughput sequencing technologies over the past decade 
 
 MetaPathways has since advanced as a modular tool, deepening our understanding of microbial metabolism at various biological levels. With this release, we have addressed previous challenges in modularity and database management. v3.5 enhances user accessibility through streamlined installation via package indexes or containers, refined modules, and interface upgrades. It boasts updated algorithm support for sequence feature prediction, annotation, metabolic inference, and coverage metrics. Tested on mock community data, Metapathways v3.5 demonstrates improved performance and usability. With automated installation and database management, this open-source tool makes advanced metagenomic analysis more accessible. Metapathways v3.5 represents a significant step forward in automated, comprehensive metagenomic analysis, facilitating a deeper exploration of microbial interactions and metabolic functions in environmental genomics.
 
-**[Read the full user guide on Read the Docs](https://hallamlab-metapathways.readthedocs.io/)**
+**[Full user guide](https://hallamlab-metapathways.readthedocs.io/en/latest/index.html)** · [Reviewer test](https://hallamlab-metapathways.readthedocs.io/en/latest/reviewer-test.html) · [Issues and feature requests](https://github.com/hallamlab/MetaPathways/issues)
 
 ## Quick start
 
