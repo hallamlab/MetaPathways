@@ -264,3 +264,19 @@ invalidate PGDB checkpoints.
 
 To publish an already completed standalone full screen, repeat its command with
 `--publish`; completed attempts are reused.
+
+## Intermittent container startup failures
+
+PGDB builds automatically retry an explicit Apptainer container-creation mount
+failure up to two times (three attempts total), waiting 5 seconds and then 15
+seconds. This applies only before the container shell starts. Input-validation
+errors, missing images, and failures during container setup, pathway inference,
+export or archiving are not retried by this mechanism. A persistent mount error
+still fails the task and needs investigation of the cluster/container runtime.
+
+Each attempt streams to the task log and is saved as `container-attempt-N.log`.
+`execution.json` records each attempt's exit code, stage, elapsed seconds and any
+retry delay. Compact mode preserves these diagnostics in its existing archives.
+Task resource/runtime measurements include all attempts and delays; retain these
+records when separating successful execution from infrastructure retry overhead.
+No SIF rebuild or additional command-line flag is required.

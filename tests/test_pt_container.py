@@ -184,7 +184,7 @@ class ContainerTests(unittest.TestCase):
         inputs.mkdir()
         (inputs / '0.pf').write_text('ID\tgene1\n')
         output = self.root / 'failed'
-        def fail(command, **kwargs):
+        def fail(command, *args, **kwargs):
             state = Path(command[command.index('--home')+1].rsplit(':', 1)[0])
             (state / 'stage.txt').write_text('build\n')
             (state / 'input/pathologic.log').write_text('Specific Lisp failure\n')
@@ -192,7 +192,7 @@ class ContainerTests(unittest.TestCase):
             kb.mkdir(parents=True)
             (kb / 'samplebase.ocelot').write_text('saved checkpoint')
             raise subprocess.CalledProcessError(255, command)
-        with patch.object(pt.subprocess, 'run', side_effect=fail), contextlib.redirect_stdout(io.StringIO()) as console:
+        with patch.object(pt, '_run_pgdb_container', side_effect=fail), contextlib.redirect_stdout(io.StringIO()) as console:
             with self.assertRaises(subprocess.CalledProcessError):
                 pt.run_pgdb(self.image, inputs, output, 'sample')
         records = list(output.glob('diagnostics/*/execution.json'))
@@ -212,7 +212,7 @@ class ContainerTests(unittest.TestCase):
         inputs = self.root / 'input'
         inputs.mkdir()
         output = self.root / 'success'
-        def success(command, **kwargs):
+        def success(command, *args, **kwargs):
             script = command[command.index('-ec') + 1]
             self.assertIn('mkdir -p /data/blastdb /tmp/.X11-unix', script)
             self.assertEqual(script.count('-nolisten local'), 2)
@@ -224,7 +224,7 @@ class ContainerTests(unittest.TestCase):
             (state / 'stage.txt').write_text('archive\n')
             (state / 'input/pathologic.log').write_text('Pathologic finished\n')
             (state / 'output/samplecyc.tar.bz2').write_bytes(b'fixture archive')
-        with patch.object(pt.subprocess, 'run', side_effect=success):
+        with patch.object(pt, '_run_pgdb_container', side_effect=success):
             pt.run_pgdb(self.image, inputs, output, 'sample')
         record = next(output.glob('diagnostics/*/execution.json'))
         self.assertEqual(json.loads(record.read_text())['status'], 'SUCCESS')
@@ -240,7 +240,7 @@ class ContainerTests(unittest.TestCase):
         inputs = self.root / 'input'
         inputs.mkdir()
         output = self.root / 'no-archive'
-        with patch.object(pt.subprocess, 'run'), self.assertRaisesRegex(RuntimeError, 'no PGDB archive'):
+        with patch.object(pt, '_run_pgdb_container'), self.assertRaisesRegex(RuntimeError, 'no PGDB archive'):
             pt.run_pgdb(self.image, inputs, output, 'sample')
         record = next(output.glob('diagnostics/*/execution.json'))
         self.assertEqual(json.loads(record.read_text())['status'], 'FAILED')
@@ -279,11 +279,11 @@ class ContainerTests(unittest.TestCase):
         inputs = self.root/'switch-input'
         inputs.mkdir()
         for enabled in (True, False):
-            def run(command, **kwargs):
+            def run(command, *args, **kwargs):
                 self.assertEqual('-tip' in command, enabled)
                 state = Path(command[command.index('--home')+1].rsplit(':', 1)[0])
                 (state/'output/samplecyc.tar.bz2').write_bytes(b'archive')
-            with patch.object(pt.subprocess, 'run', side_effect=run):
+            with patch.object(pt, '_run_pgdb_container', side_effect=run):
                 pt.run_pgdb(self.image, inputs, self.root/str(enabled), 'sample', transport_inference=enabled)
 
     def test_worker_rechecks_outputs_and_directory_inputs(self):
@@ -334,3 +334,48 @@ class ContainerTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class ContainerStartupRetryTests(unittest.TestCase):
+    def test_mount_failure_retries_and_records_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory)
+            status = {}
+            failure = 'FATAL: container creation failed: mount hook function failure: mount /etc/hosts error'
+            with patch.object(pt, '_stream_container', side_effect=[(255, failure), (0, '')]), patch.object(pt.time, 'sleep') as sleep:
+                pt._run_pgdb_container(['fixture'], state, status)
+            self.assertEqual([a['exit_code'] for a in status['container_attempts']], [255, 0])
+            sleep.assert_called_once_with(5)
+
+    def test_persistent_mount_failure_stops_after_three_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            status = {}
+            with patch.object(pt, '_stream_container', return_value=(255, 'container creation failed: mount hook function failure')) as run, patch.object(pt.time, 'sleep') as sleep:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    pt._run_pgdb_container(['fixture'], Path(directory), status)
+            self.assertEqual(run.call_count, 3)
+            self.assertEqual([c.args[0] for c in sleep.call_args_list], [5, 15])
+            self.assertEqual(len(status['container_attempts']), 3)
+
+    def test_no_retry_after_shell_entry_or_for_unrelated_errors(self):
+        for stage, error in [('container setup', 'container creation failed: mount hook function failure'),
+                             ('build', 'container creation failed: mount hook function failure'),
+                             ('container startup', 'FATAL: image not found')]:
+            with self.subTest(stage=stage, error=error), tempfile.TemporaryDirectory() as directory:
+                state = Path(directory)
+                def fail(command, log):
+                    (state/'stage.txt').write_text(stage)
+                    return 255, error
+                with patch.object(pt, '_stream_container', side_effect=fail) as run, patch.object(pt.time, 'sleep') as sleep:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        pt._run_pgdb_container(['fixture'], state, {})
+                self.assertEqual(run.call_count, 1)
+                sleep.assert_not_called()
+
+    def test_output_is_streamed_and_saved(self):
+        import sys
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()) as console:
+            log = Path(directory)/'attempt.log'
+            code, tail = pt._stream_container([sys.executable, '-c', 'import sys; print("startup failure", file=sys.stderr); sys.exit(255)'], log)
+            self.assertEqual(code, 255)
+            self.assertIn('startup failure', tail)
+            self.assertEqual(log.read_text(), console.getvalue())

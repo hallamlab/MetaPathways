@@ -13,6 +13,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+from collections import deque
 import uuid
 from urllib.request import build_opener, HTTPRedirectHandler
 
@@ -210,6 +212,47 @@ def validate(image, directory):
     return result.stdout
 
 
+def _stream_container(command, log):
+    """Tee output to the task console and an attempt log; keep bounded error text."""
+    tail = deque(maxlen=100)
+    with log.open('w') as stream:
+        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              text=True, errors='replace') as process:
+            for line in process.stdout:
+                stream.write(line)
+                stream.flush()
+                print(line, end='', flush=True)
+                tail.append(line)
+            return process.wait(), ''.join(tail)
+
+
+def _run_pgdb_container(command, state, status):
+    """Retry only explicit mount failures before the container shell starts."""
+    attempts = status['container_attempts'] = []
+    for attempt in range(1, 4):
+        (state / 'stage.txt').write_text('container startup\n')
+        log = state / f'container-attempt-{attempt}.log'
+        started = time.monotonic()
+        code, tail = _stream_container(command, log)
+        stage = (state / 'stage.txt').read_text().strip()
+        retryable = (code != 0 and stage == 'container startup'
+                     and 'container creation failed' in tail.lower()
+                     and 'mount hook function failure' in tail.lower())
+        record = dict(attempt=attempt, exit_code=code, stage=stage,
+                      elapsed_seconds=time.monotonic() - started, log=log.name,
+                      retryable=retryable)
+        attempts.append(record)
+        if code == 0:
+            return
+        if not retryable or attempt == 3:
+            raise subprocess.CalledProcessError(code, command)
+        delay = (5, 15)[attempt - 1]
+        record['retry_delay_seconds'] = delay
+        print(f'Apptainer startup mount failure (attempt {attempt}/3); '
+              f'retrying in {delay}s. Pathway Tools has not started.', flush=True)
+        time.sleep(delay)
+
+
 def run_pgdb(image, inputs, outputs, tag, taxprune=True, sample_output=None, transport_inference=True):
     """Run one PGDB with no shared host Pathway Tools state."""
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_-]*', tag):
@@ -221,6 +264,7 @@ def run_pgdb(image, inputs, outputs, tag, taxprune=True, sample_output=None, tra
         shutil.copytree(inputs, state / 'input')
         (state / 'output').mkdir()
         script = '''set -eu
+printf 'container setup\\n' > /data/stage.txt
 cp -a /opt/ptools-local-template /data/ptools-local
 if test -f /opt/mp-ncbirc; then cp /opt/mp-ncbirc /data/.ncbirc; fi
 mkdir -p /data/blastdb /tmp/.X11-unix
@@ -252,7 +296,7 @@ xvfb-run -a -e /data/build-xvfb.log -s '-screen 0 1280x1024x24 -nolisten local' 
                 attach_sequences(state / 'input', sample_output)
             from metapathways.pt_reactions import filter_reactions
             filter_reactions(state / 'input', image=image, sample_output=sample_output)
-            subprocess.run(invocation, check=True)
+            _run_pgdb_container(invocation, state, status)
             archive = state / 'output' / f'{tag}cyc.tar.bz2'
             if not archive.is_file() or not archive.stat().st_size:
                 raise RuntimeError(f'Pathway Tools produced no PGDB archive for {tag}')
