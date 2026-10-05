@@ -210,7 +210,7 @@ def validate(image, directory):
     return result.stdout
 
 
-def run_pgdb(image, inputs, outputs, tag, taxprune=False, sample_output=None, transport_inference=True):
+def run_pgdb(image, inputs, outputs, tag, taxprune=True, sample_output=None, transport_inference=True):
     """Run one PGDB with no shared host Pathway Tools state."""
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_-]*', tag):
         raise ValueError('PGDB tag must start with a letter or underscore and contain only letters, digits, underscores or hyphens')
@@ -250,6 +250,8 @@ xvfb-run -a -e /data/build-xvfb.log -s '-screen 0 1280x1024x24 -nolisten local' 
                 from metapathways.pt_sequences import attach_sequences
                 (state / 'stage.txt').write_text('input preparation\n')
                 attach_sequences(state / 'input', sample_output)
+            from metapathways.pt_reactions import filter_reactions
+            filter_reactions(state / 'input', image=image, sample_output=sample_output)
             subprocess.run(invocation, check=True)
             archive = state / 'output' / f'{tag}cyc.tar.bz2'
             if not archive.is_file() or not archive.stat().st_size:
@@ -275,7 +277,7 @@ xvfb-run -a -e /data/build-xvfb.log -s '-screen 0 1280x1024x24 -nolisten local' 
             status['stage'] = stage.read_text().strip() if stage.is_file() else 'container startup'
             for source in state.rglob('*'):
                 if source.is_file() and (source.suffix.lower() in ('.log', '.err', '.out')
-                                         or source.name in ('stage.txt', 'sequence-input.json', 'organism-params.dat')
+                                         or source.name in ('stage.txt', 'sequence-input.json', 'ptools-reaction-filter.json', 'organism-params.dat')
                                          or 'reports' in source.relative_to(state).parts):
                     destination = diagnostics / source.relative_to(state)
                     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -328,6 +330,7 @@ def parser():
     p.add_argument('-i', '--installer', required=True, help='local Pathway Tools Linux x86-64 installer')
     p.add_argument('--ptools_version', help='release number if the installer was renamed; otherwise inferred from its filename')
     p.add_argument('-d', '--refdb_dir', help='also export and prepare the licensed MetaCyc reference in this MPDB after building the SIF')
+    p.add_argument('--skip_pt_screen', action='store_true', help='Skip default reaction compatibility screening when building MetaCyc with -d')
     p.add_argument('-a', '--aligner', choices=('fast', 'blast'), default='fast', help='MetaCyc reference index format with -d [fast]')
     default = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'metapathways/containers'
     p.add_argument('-o', '--output_dir', default=str(default), help='container directory [~/.local/share/metapathways/containers]')
@@ -367,8 +370,10 @@ def main(argv=None):
                      cpus=args.threads, memory=args.memory, adopt_existing=False)
     tasks = [t]
     if args.refdb_dir:
-        from metapathways.nf_databases import metacyc_task
+        from metapathways.nf_databases import metacyc_task, screen_task
         tasks.append(metacyc_task(args.refdb_dir, image, args.aligner, args.memory, [t['id']]))
+        if not args.skip_pt_screen:
+            tasks.append(screen_task(args.refdb_dir, image, args.memory, resources=args))
     nextflow.launch(tasks, output, args, 'build_pt', dryrun=args.dryrun)
     if not args.dryrun:
         metadata = json.loads(Path(str(image) + '.json').read_text())

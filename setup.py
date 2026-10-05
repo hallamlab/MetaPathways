@@ -51,7 +51,7 @@ if __name__ == "__main__":
         keywords="metagenomics pipeline",
         url="https://github.com/hallamlab/MetaPathways/",
         packages=find_packages(include=["metapathways", "metapathways.*"]),
-        package_data={'': ['metapathways/regtests/**/*'], 'metapathways': ['report_assets/*']},
+        package_data={'': ['metapathways/regtests/**/*'], 'metapathways': ['report_assets/*', 'resources/*.json']},
         scripts=["bin/metapathways-install-deps.sh",
                 "bin/metapathways-data-install.sh",
                 "dev/metacount",

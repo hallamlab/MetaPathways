@@ -22,6 +22,8 @@ def resume_key(args, row):
     for source in sorted(Path(__file__).parent.rglob('*.py')):
         code.update(source.relative_to(Path(__file__).parent).as_posix().encode())
         code.update(source.read_bytes())
+    from metapathways.pt_reactions import BLACKLIST
+    code.update(BLACKLIST.read_bytes())
     options['implementation_sha256'] = code.hexdigest()
     for key in ('dryrun', 'force_redo', 'max_tasks', 'max_cpus', 'max_memory',
                 'executor', 'account', 'partition', 'qos', 'reservation',

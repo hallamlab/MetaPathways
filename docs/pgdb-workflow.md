@@ -1,5 +1,10 @@
 # MAGs and pathway inference
 
+PGDB inference defaults to **taxonomic pruning enabled, scope `all` (cellular life)**.
+MetaCyc builds default to reaction compatibility screening. See [defaults and
+opt-outs](pathway-tools.md#defaults-and-explicit-choices) before changing these
+analysis settings.
+
 ## Build Pathway Tools once
 
 Follow the [Pathway Tools licensing and installer guide](pathway-tools.md#get-the-installer) to obtain your licensed Linux x86-64 installer, then provide it to MP:
@@ -83,4 +88,4 @@ metapathways ptools -o results/sample --taxprune --taxonomic_scope all
 
 MAG splitting reuses the community annotation and contig mapping. It also preserves the supplied map at `magsplitter/contig_to_mag.tsv`, allowing the report to connect all retained MAG contigs and their ORFs. MAG Pathway Tools inputs are a smaller, selected set and are shown separately.
 
-Pathway Tools can fail for individual MAGs. These failures are recorded and allowed to remain optional; they do not fail an otherwise successful community workflow. Missing or failed inference is not equivalent to “zero pathways.” Inspect `entities` and execution history in the portal. `--taxprune` enables taxonomic pruning; the default leaves it off.
+Pathway Tools can fail for individual MAGs. These failures are recorded and allowed to remain optional; they do not fail an otherwise successful community workflow. Missing or failed inference is not equivalent to “zero pathways.” Inspect `entities` and execution history in the portal. `--taxprune` is enabled by default with `--taxonomic_scope all` (cellular life). Use `--no_taxprune` to opt out.

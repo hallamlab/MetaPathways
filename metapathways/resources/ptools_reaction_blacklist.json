@@ -1,0 +1,12 @@
+{
+  "TRANS-RXN8J2-121": {
+    "reason": "Pathway Tools 29.5 imports protein substrates before name matching, then dereferences a missing raw-gene record for BSU21480-MONOMER.",
+    "evidence": "Reproduced with Skin_13 C137456-G1 alone; removing the explicit METACYC line permits a complete build, with the same reaction recovered by name matching.",
+    "image_sha256": "be2ab905fa6b6d0eeba6b056d9682565001ac9a416c462eb1a8da900e46cdb8b"
+  },
+  "RXN8J2-204": {
+    "reason": "Pathway Tools 29.5 fails during enzyme-name matching after explicit reaction import.",
+    "evidence": "Two isolated MPDB reaction screens failed with a NIL-reference error; no-reaction control succeeded.",
+    "image_sha256": "be2ab905fa6b6d0eeba6b056d9682565001ac9a416c462eb1a8da900e46cdb8b"
+  }
+}

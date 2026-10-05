@@ -130,7 +130,8 @@ class ContainerTests(unittest.TestCase):
         with patch.object(pt.nextflow, 'launch') as launch:
             pt.main(['-i', str(self.installer), '-o', str(self.root/'images'), '-d', str(self.root/'MPDB'), '-a', 'blast', '--dryrun'])
         tasks = launch.call_args.args[0]
-        self.assertEqual(len(tasks), 2)
+        self.assertEqual(len(tasks), 3)
+        self.assertEqual(tasks[2]['id'], 'screen_metacyc')
         self.assertEqual(tasks[1]['dependencies'], [tasks[0]['id']])
         self.assertEqual(tasks[1]['inputs'], [tasks[0]['outputs'][0]])
         self.assertIn(str(self.root/'MPDB/functional/formatted/metacyc.pdb'), tasks[1]['outputs'])
@@ -178,6 +179,7 @@ class ContainerTests(unittest.TestCase):
 
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')
     def test_pgdb_failure_preserves_private_error_log(self, _):
+        self.image.touch()
         inputs = self.root / 'input'
         inputs.mkdir()
         (inputs / '0.pf').write_text('ID\tgene1\n')
@@ -206,6 +208,7 @@ class ContainerTests(unittest.TestCase):
 
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')
     def test_pgdb_success_preserves_log_and_publishes_archive(self, _):
+        self.image.touch()
         inputs = self.root / 'input'
         inputs.mkdir()
         output = self.root / 'success'
@@ -233,6 +236,7 @@ class ContainerTests(unittest.TestCase):
 
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')
     def test_missing_archive_is_failure_with_diagnostics(self, _):
+        self.image.touch()
         inputs = self.root / 'input'
         inputs.mkdir()
         output = self.root / 'no-archive'
@@ -271,6 +275,7 @@ class ContainerTests(unittest.TestCase):
 
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')
     def test_transport_switch_controls_tip_argument(self, _):
+        self.image.touch()
         inputs = self.root/'switch-input'
         inputs.mkdir()
         for enabled in (True, False):

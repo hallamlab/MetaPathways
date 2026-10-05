@@ -221,8 +221,8 @@ def ptParser():
                         help="Custom name for ePGDB [optional]")
     ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
                         help="Flag only used in containerized env [special flag]")
-    ptools_parser.add_argument('--taxprune', action="store_true", dest="taxprune", default=False,
-                             help='Set taxonomic pruning in pathway tools to True')
+    from metapathways.pt_taxonomy import add_pruning_options
+    add_pruning_options(ptools_parser)
     from metapathways.pt_taxonomy import add_taxonomy_options
     add_taxonomy_options(ptools_parser)
     ptools_parser.add_argument('--no_transport_inference', action='store_true', help='Disable TIP transport inference (SIF only)')
@@ -242,6 +242,8 @@ def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
                     help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
     db.add_argument("-a", "--aligner", required=False, default="fast",
                     help=f"local aligner to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    db.add_argument('--skip_pt_screen', action='store_true', help='Skip default PTools reaction compatibility screening for MetaCyc')
+    db.add_argument('--screen_image', help='PTools SIF for screening a MetaCyc directory [registered SIF]')
     db.add_argument('--metacyc_source', help='licensed MetaCyc data directory or Pathway Tools SIF [registered SIF when --func includes metacyc]')
 
     # "options" group
@@ -680,7 +682,7 @@ def build_db():
         if args.metacyc_source and 'metacyc' not in args.func:
             parser.error('--metacyc_source requires --func metacyc (optionally alongside other databases)')
         tasks = plan(args.refdb_dir, args.func, args.aligner, test=args.test, memory=args.memory,
-                     metacyc_source=args.metacyc_source)
+                     metacyc_source=args.metacyc_source, skip_pt_screen=args.skip_pt_screen, screen_image=args.screen_image, resources=args)
         if force:
             for t in tasks:
                 t['status'] = 'redo'
@@ -766,8 +768,7 @@ def ptools():
             cmd += ['--image', image]
         elif args.container:
             cmd.append('--container')
-        if args.taxprune:
-            cmd.append('--taxprune')
+        cmd.append('--taxprune' if args.taxprune else '--no_taxprune')
         if args.no_transport_inference:
             cmd.append('--no_transport_inference')
         from metapathways.pt_taxonomy import resolve_taxon
@@ -779,8 +780,13 @@ def ptools():
                 str(output / 'preprocessed' / (output.name + '.fasta'))],
             [str(results / (entity_tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
             cpus=1, memory=args.memory, allow_failure=entity != 'community', adopt_existing=False,
-            cache_version='sequence-backed-pgdb-trna-names-v3', host_serial=not bool(image)))
-        tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(output / 'orf_prediction' / (output.name + '.cds.gff'))]
+            cache_version='sequence-backed-pgdb-compatibility-v5', host_serial=not bool(image)))
+        from metapathways.pt_reactions import BLACKLIST
+        tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(output / 'orf_prediction' / (output.name + '.cds.gff'))]
+        from metapathways.pt_reactions import compatibility_path
+        compatibility = compatibility_path(output)
+        if compatibility and compatibility.is_file():
+            tasks[-1]['fingerprint_inputs'].append(str(compatibility))
     if not image:
         args.max_tasks = 1
         print('Native Pathway Tools tasks are serialized; build_pt enables isolated parallel runs.')
@@ -803,6 +809,7 @@ def help():
             prepare_test
             build_db
             build_pt
+            screen_pt
             run
             analysis_wf
             mag_split
@@ -826,6 +833,11 @@ def build_pt():
         sys.exit(1)
 
 
+def screen_pt():
+    from metapathways.pt_screen import main as screen_main
+    screen_main(sys.argv[2:])
+
+
 def report():
     from metapathways.report_server import main as report_main
     report_main(sys.argv[2:])
@@ -847,9 +859,9 @@ def main():
         return
     command = sys.argv[1]
     fn = {'prepare_test': prepare_test, 'help': help, 'version': version, 'build_db': build_db, 'build_pt': build_pt,
-          'run': run, 'analysis_wf': analysis_wf, 'mag_split': mag_split, 'ptools': ptools, 'report': report}.get(command, help)
+          'screen_pt': screen_pt, 'run': run, 'analysis_wf': analysis_wf, 'mag_split': mag_split, 'ptools': ptools, 'report': report}.get(command, help)
     log_dir = None
-    if command in ('run', 'analysis_wf', 'mag_split', 'ptools', 'build_db', 'build_pt', 'report') and not any(x in sys.argv for x in ('-h', '--help')):
+    if command in ('run', 'analysis_wf', 'mag_split', 'ptools', 'build_db', 'build_pt', 'screen_pt', 'report') and not any(x in sys.argv for x in ('-h', '--help')):
         probe = argparse.ArgumentParser(add_help=False)
         probe.add_argument('-o', '--output_dir')
         probe.add_argument('-d', '--refdb_dir')

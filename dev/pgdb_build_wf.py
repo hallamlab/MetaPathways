@@ -12,7 +12,7 @@ Options:
 	--sif=FILE	Path to the Ptools SIF file.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
 	--tag=STR	Tag for metagenome PGDB.
-	--taxprune	Use taxonomic pruning when building PGDBs [True or False; default: False]
+	--taxprune	Use taxonomic pruning when building PGDBs [enabled by default; --no_taxprune disables]
 """
 
 
@@ -54,6 +54,9 @@ def create_pgdb(pt_inputs, pt_outputs, tprune, tag, container, image=None, sampl
             if sample_output is not None:
                 from metapathways.pt_sequences import attach_sequences
                 attach_sequences(inputs, sample_output)
+            from metapathways.pt_reactions import filter_reactions
+            filter_reactions(inputs, sample_output=sample_output)
+            shutil.copy2(Path(inputs)/'ptools-reaction-filter.json', Path(pt_outputs)/'ptools-reaction-filter.json')
             suffix = '' if container else '_local'
             pruning = '_taxprune' if tprune else ''
             script = f'run-pathway-tools-and-copy-pgdb{pruning}{suffix}.sh'
@@ -307,10 +310,8 @@ parser.add_argument("--mp_out", type=str, help="MP3 output directory.", required
 parser.add_argument("--tag", type=str, help="Tag for metagenome PGDB.", required=True)
 parser.add_argument("--taxon_id", type=int)
 parser.add_argument("--no_transport_inference", action="store_true")
-parser.add_argument("--taxprune", action='store_true',
-					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
-					required=False
-					)
+from metapathways.pt_taxonomy import add_pruning_options
+add_pruning_options(parser)
 parser.add_argument("--container", action='store_true', dest="container", default=False, required=False,
 					help="Use when using containerized env",
 					)
@@ -335,7 +336,7 @@ def run_entity(entity):
         output = os.path.join(mp_dir, 'results/pgdb/MAGs', entity)
         entity_tag = entity
     def build(destination):
-        create_pgdb(inputs, destination, taxprune, entity_tag, container, args.image, mp_dir, transport_inference=not args.no_transport_inference, taxon_id=args.taxon_id)
+        create_pgdb(inputs, destination, taxprune, entity_tag, container, args.image, mp_dir, transport_inference=not args.no_transport_inference, taxon_id=args.taxon_id if args.taxon_id is not None else 131567)
         extract_pwy(destination, entity_tag)
         map_orfs2pwys(mp_dir, destination, entity_tag)
     if args.compact_results:

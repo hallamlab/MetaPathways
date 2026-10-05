@@ -2,6 +2,22 @@
 
 [Home](index.md) · [Reviewer walkthrough](reviewer-test.md) · [Complete flags](cli-reference.md)
 
+## Defaults and explicit choices
+
+| Setting | MP default | Your alternative |
+| --- | --- | --- |
+| Reaction compatibility screening when building MetaCyc | Enabled; successful full screens automatically publish an MPDB compatibility list | `--skip_pt_screen` on `build_pt` or `build_db` |
+| Taxonomic pruning for PGDB inference | Enabled; avoids the unpruned rescoring pass | `--no_taxprune` |
+| Organism taxonomic scope | `all`: NCBI 131567, cellular life; broad enough for mixed-domain inputs | `--taxonomic_scope bacteria`, `archaea`, `eukaryotes`, or `--taxon_id ID` |
+| Transport inference in SIF runs | Enabled | `--no_transport_inference` |
+| CPUs per PGDB | One; concurrency uses independent PGDBs | Control concurrency through the workflow resource flags |
+
+These defaults apply to `ptools` and `analysis_wf`. Taxonomic scope guides PGDB
+inference without changing the gene-level taxonomy in MP annotation tables.
+The compatibility list removes only unsafe **explicit reaction assignments**,
+not genes, annotations or sequences; the same reaction may still be inferred
+later. The sections below explain the evidence, limits and diagnostic records.
+
 ## Understand the three different databases
 
 | Name | What it contains | How you use it |
@@ -134,9 +150,15 @@ SIF tasks receive private home, data and temporary state. MP also isolates X-dis
 
 The scope applies to all selected entities in that invocation. It guides pathway inference; it does not remove contigs or rewrite MP's gene-level taxonomic annotations. To use different scopes for different MAGs, run separate entity-specific `ptools` commands.
 
-**Set both flags intentionally.** Specifying `--taxonomic_scope all` alone does not turn pruning on. Omitting the flags retains the input taxon and leaves pruning off. Pruning constrains inference using the chosen taxon; it does not disable other pathway-selection rules. Pruned and unpruned inference are different analysis settings, so record the choice in your methods. Pathway Tools 29.5 can fail with a compound/inverse-link error during its unpruned rescore pass; MP retains the failure diagnostics and does not certify partial output as successful.
+**Defaults: taxonomic pruning enabled, scope `all` (cellular life).** You can omit both flags for that behavior. Use `--no_taxprune` to disable pruning, `--taxonomic_scope bacteria`, `archaea` or `eukaryotes` to narrow the scope, or `--taxon_id` for a specific taxon. Pruning constrains inference using the chosen taxon; it does not disable other pathway-selection rules. Record these settings in your methods. Pathway Tools 29.5 can fail during its unpruned rescore pass; MP retains diagnostics rather than treating partial output as successful.
 
 See the vendor User Guide's batch PathoLogic discussion and [MP's diagnostic detail](workflow.md#pathway-tools-failure-diagnostics). The installed PDF is authoritative for the installed version.
+
+## Explicit reaction blacklist
+
+For SIF runs, MP applies a matching MPDB compatibility list to private staged community and MAG PGDB inputs. Its bundled fallback, `metapathways/resources/ptools_reaction_blacklist.json`, is restricted to the exact SIF tested for those entries. Legacy native runs use the bundled known-trigger list because they have no SIF fingerprint. It removes only listed `METACYC` reaction assignments; original annotation tables, feature IDs, sequences, EC assignments and function names are retained. Each attempt records removed assignments and reasons in `ptools-reaction-filter.json` alongside its input diagnostics (native runs save the audit in the entity output directory). Compact SIF runs include this audit in the diagnostic archive.
+
+The bundled known triggers are `TRANS-RXN8J2-121` and `RXN8J2-204`. For `TRANS-RXN8J2-121` in Pathway Tools 29.5, supplying it explicitly imports sublancin precursor proteins before name matching; an imported protein has no input raw-gene record, causing a NIL structure error. A one-ORF reproducer confirmed the failure. Omitting the explicit assignment allowed the build to finish and name matching recovered the same reaction later. This filter prevents the known early-import failure; it does not forbid later inference of the reaction or certify all Pathway Tools inputs. Changes to the blacklist invalidate affected PGDB checkpoints.
 
 ## Transport inference and sequence-backed inputs
 
@@ -167,3 +189,78 @@ Look under `results/SampleA/results/pgdb/community/` and `.../MAGs/MAG_ID/` for 
 Community failures fail the workflow. MAG failures may be optional, allowing other entities to finish, but remain failures in task records. `SUCCESS` at the overall scheduler level can coexist with optional failures. Never use it alone to claim all MAGs succeeded. The report distinguishes output availability from latest task outcome.
 
 Failed on-disk PGDBs are retained under `diagnostics/ATTEMPT/failed-pgdbs/`. MP does not automatically certify or publish partial recovery. Retry with the same parameters after fixing the cause, and inspect the new execution record. [Restart guidance](execution.md#logs-temporary-files-and-restarting) explains reuse and targeted reruns.
+
+## Screen reaction compatibility (maintainers)
+
+After building a licensed Pathway Tools image, maintainers can screen the explicit
+reaction IDs in an MPDB against that image:
+
+```bash
+metapathways screen_pt -d MPDB -o reaction-screen --max_tasks 1
+```
+
+The command uses the image registered by `build_pt`; use `--image /path/to/ptools.sif`
+to select another image. Each container has a private home and temporary PGDB.
+Publication downloads are disabled. `--scratch_dir /path/to/local/scratch` places
+these temporary builds on local storage; only inputs, diagnostic logs and receipts
+are retained in the output. This is a local maintainer command, not a Slurm workflow.
+
+The screen first builds a no-reaction baseline, then tests batches of 100 reaction
+IDs. Failed batches are split until individual triggers are isolated. A candidate
+requires two isolated failures and a successful no-reaction control. Timeouts and
+uncertain results are recorded as inconclusive. Batch failures whose two halves
+pass are recorded separately as possible interactions.
+
+For a targeted check:
+
+```bash
+metapathways screen_pt -d MPDB -o reaction-check \
+  --reactions TRANS-RXN8J2-121
+```
+
+Repeat the same command to reuse completed attempts and retry interrupted or
+inconclusive attempts; earlier diagnostics are preserved. The image, mapping table and
+screen settings must match the saved checkpoint; use a new output directory when
+changing them. `--max_tasks` can be changed on resume. Each build defaults to a
+30-minute timeout (`--timeout`, in seconds).
+
+Review `summary.json`, `blacklist-candidates.json` and each attempt's logs before
+adding any entry to the shipped blacklist. Standalone candidates are not activated unless you explicitly use `--publish`.
+Publication requires a full screen with no inconclusive or interaction failures. Synthetic explicit-ID screening does not certify all enzyme names,
+taxonomic contexts or combinations of reactions.
+
+### Automatic compatibility screening during MetaCyc builds
+
+`build_pt -i INSTALLER -d MPDB` and `build_db -d MPDB --func metacyc`
+now screen reactions **by default**, after preparing MetaCyc. No additional user
+command is needed. The screen tests the licensed SIF and database together, bisects
+failed batches, and requires repeated isolated failures plus successful controls.
+It adds time to the build and retains screen evidence under
+`MPDB/.metapathways/ptools-screens/`. Screening honors `--max_tasks`, capped by the CPU and memory budgets. Each
+PTools container uses one CPU; `--memory` is its memory reservation. For example,
+`--max_tasks 32 --memory '8 GB'` can screen 32 batches concurrently when 32 CPUs
+and 256 GB of memory are available. Local runs default to available resources;
+Slurm defaults to four screening containers if `--max_tasks` is omitted.
+The outer Nextflow screening task reserves the aggregate CPU and memory for
+those containers. On Slurm they run together inside one job allocation, not
+as separate cluster jobs. Planning prints the effective concurrency and
+reservation. Failed-batch splitting proceeds sequentially within each batch.
+
+Use `--skip_pt_screen` on either build command to opt out. When importing a
+MetaCyc data directory instead of a SIF, provide `--screen_image /path/to/ptools.sif`
+or first register an image with `build_pt`; directory data alone cannot run the
+compatibility checks. An unresolved screen fails the screening stage while
+retaining the prepared database and diagnostic checkpoints.
+
+A completed default screen publishes
+`MPDB/functional_categories/ptools_reaction_compatibility.json`. MP finds it using
+the reference database recorded in the sample run log and checks its mapping and
+SIF fingerprints before using it for PGDB builds. It records the selected list in
+`ptools-reaction-filter.json`. A mismatch uses only fallback entries confirmed for the selected SIF, rather
+than applying an unrelated database-specific list. If neither matches, MP does
+not assume other versions share the same defects; rebuild MetaCyc with screening
+for the selected image. Compatibility-list changes
+invalidate PGDB checkpoints.
+
+To publish an already completed standalone full screen, repeat its command with
+`--publish`; completed attempts are reused.

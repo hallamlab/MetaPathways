@@ -21,7 +21,7 @@ def metacyc_task(root, source, aligner, memory='16 GB', dependencies=()):
                 cache_outputs=[str(root/'functional/formatted/metacyc.*')])
 
 
-def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=None):
+def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=None, skip_pt_screen=False, screen_image=None, resources=None):
     root = Path(root).resolve()
     scripts = Path(__file__).parent / 'build_DBs'
     q = lambda p: shlex.quote(str(p))
@@ -61,6 +61,11 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
             raise ValueError('MetaCyc requires a licensed source: run build_pt first, or provide --metacyc_source with a complete data directory or SIF. See https://hallamlab-metapathways.readthedocs.io/en/latest/pgdb-workflow.html#metacyc-from-pathway-tools.')
         source = source_path(source)
         tasks.append(metacyc_task(root, source, aligner, memory, ['directories']))
+        if not skip_pt_screen:
+            image = screen_image or (str(source) if source.is_file() else registered_image())
+            if not image:
+                raise ValueError('MetaCyc screening requires a PTools SIF: run build_pt, provide --screen_image, or explicitly use --skip_pt_screen')
+            tasks.append(screen_task(root, image, memory, resources=resources))
         databases = [db for db in databases if db != 'metacyc']
         if not databases:
             # Adding MetaCyc to an existing MPDB must not refresh unrelated references.
@@ -130,3 +135,37 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
                 f'{python} {q(scripts/(db+"_mapper.py"))} {q(ec)} {q(root/"functional_categories")}'],
                 [fasta, ec, idmap], [root/f'functional_categories/EC_map.{db}.tsv'], deps+[ec_dep, idmap_dep])
     return tasks
+
+
+def screen_task(root, image, memory='16 GB', resources=None):
+    slots, reservation = screen_resources(resources, memory)
+    root, image = Path(root).expanduser().resolve(), Path(image).expanduser().resolve()
+    output = root/'.metapathways/ptools-screens'/image.name
+    mapping = root/'functional_categories/MetaCyc-monomer-rxn-pairs.tsv'
+    # The screen manifest also validates mapping identity before reusing receipts.
+    command = shlex.join([sys.executable, '-m', 'metapathways.pt_screen', '-d', str(root),
+                         '-o', str(output), '--image', str(image), '--publish', '--database_screen', '--max_tasks', str(slots)])
+    return task('screen_metacyc', 'Screen MetaCyc reaction compatibility', [command],
+                [str(image), str(mapping)], [str(root/'functional_categories/ptools_reaction_compatibility.json')],
+                ['prepare_metacyc'], memory=reservation, cpus=slots, adopt_existing=False)
+
+
+def screen_resources(args, per_container_memory):
+    from metapathways.nextflow import local_capacity, memory_bytes
+    local = getattr(args, 'executor', 'local') == 'local'
+    available_cpus, available_memory = local_capacity() if local else (None, None)
+    cpu_budget = getattr(args, 'max_cpus', None) or available_cpus
+    memory_budget = getattr(args, 'max_memory', None) or available_memory
+    requested = getattr(args, 'max_tasks', None) or (cpu_budget if local else 4)
+    slots = min(requested, cpu_budget) if cpu_budget else requested
+    per_container = memory_bytes(per_container_memory)
+    if memory_budget:
+        capacity = memory_bytes(memory_budget)//per_container
+        if capacity < 1:
+            raise ValueError('A screening container requests more memory than the available screening budget')
+        slots = min(slots, capacity)
+    # The outer task reserves resources for every nested single-CPU PTools container.
+    reservation = f'{slots * per_container / (1024 ** 2):.6f} MB'
+    print(f'Reaction screening: {slots} concurrent containers; 1 CPU and '
+          f'{per_container_memory} per container; total reservation {reservation}', flush=True)
+    return slots, reservation

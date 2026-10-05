@@ -52,8 +52,43 @@ class MetaCycTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'protseq.fsa alone is insufficient'):
             mc.source_path(self.source/'protseq.fsa')
 
+    def test_screen_concurrency_and_aggregate_reservations(self):
+        import argparse
+        from metapathways.nf_databases import screen_task
+        args = argparse.Namespace(executor='local', max_tasks=32, max_cpus=None, max_memory=None)
+        with patch('metapathways.nextflow.local_capacity', return_value=(32, '256 GB')):
+            task = screen_task(self.root/'db', self.root/'pt.sif', '8 GB', resources=args)
+        self.assertIn('--max_tasks 32', task['commands'][0])
+        self.assertEqual(task['cpus'], 32)
+        from metapathways.nextflow import memory_bytes
+        self.assertEqual(memory_bytes(task['memory']), memory_bytes('256 GB'))
+        args.max_cpus, args.max_memory = 12, '32 GB'
+        with patch('metapathways.nextflow.local_capacity', return_value=(32, '256 GB')):
+            task = screen_task(self.root/'db', self.root/'pt.sif', '8 GB', resources=args)
+        self.assertEqual(task['cpus'], 4)
+        self.assertIn('--max_tasks 4', task['commands'][0])
+        self.assertEqual(memory_bytes(task['memory']), memory_bytes('32 GB'))
+
+    def test_slurm_screen_reserves_selected_concurrency(self):
+        import argparse
+        from metapathways.nf_databases import screen_task
+        args = argparse.Namespace(executor='slurm', max_tasks=8, max_cpus=None, max_memory=None)
+        task = screen_task(self.root/'db', self.root/'pt.sif', '4 GB', resources=args)
+        self.assertEqual(task['cpus'], 8)
+        from metapathways.nextflow import memory_bytes
+        self.assertEqual(memory_bytes(task['memory']), memory_bytes('32 GB'))
+
+    def test_metacyc_screen_default_and_opt_out(self):
+        image = self.root/'pt.sif'
+        image.write_bytes(b'licensed-image-fixture')
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, screen_image=image)
+        self.assertEqual([t['id'] for t in tasks], ['directories', 'prepare_metacyc', 'screen_metacyc'])
+        self.assertIn('--publish', tasks[-1]['commands'][0])
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
+        self.assertEqual(len(tasks), 2)
+
     def test_metacyc_only_plan_does_not_download_unrelated_references(self):
-        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source)
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
         self.assertEqual([t['id'] for t in tasks], ['directories', 'prepare_metacyc'])
         self.assertFalse(tasks[-1]['adopt_existing'])
         self.assertTrue(all(any(n in o for o in tasks[-1]['outputs']) for n in mc.TABLES))

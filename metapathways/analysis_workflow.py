@@ -52,7 +52,8 @@ def parser():
     from metapathways.pt_taxonomy import add_taxonomy_options
     add_taxonomy_options(sub)
     sub.add_argument('--no_transport_inference', action='store_true', help='Disable TIP transport inference')
-    sub.add_argument('--taxprune', action='store_true', help='Enable Pathway Tools taxonomic pruning')
+    from metapathways.pt_taxonomy import add_pruning_options
+    add_pruning_options(sub)
     sub.add_argument('--ptools_memory', type=nextflow.memory, default=None, help='Optional PGDB memory override [same as --memory]')
     return p
 
@@ -297,8 +298,7 @@ def downstream(row, output, annotations, args, image):
         cmd = [sys.executable, script, '--mp_out', str(base), '--tag', sample, '--entity', entity, '--image', image]
         if getattr(args, 'compact_results', False):
             cmd.append('--compact_results')
-        if args.taxprune:
-            cmd.append('--taxprune')
+        cmd.append('--taxprune' if args.taxprune else '--no_taxprune')
         if args.no_transport_inference:
             cmd.append('--no_transport_inference')
         from metapathways.pt_taxonomy import resolve_taxon
@@ -311,9 +311,14 @@ def downstream(row, output, annotations, args, image):
             [str(results / (tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
             [parent if community else f'{sample}:mag_split'], cpus=1, memory=args.ptools_memory or args.memory,
             sample=sample, entity=entity, allow_failure=not community, adopt_existing=False,
-            cache_version='sequence-backed-pgdb-trna-names-v3',
+            cache_version='sequence-backed-pgdb-compatibility-v5',
             skip_if_missing=None if community else str(inputs / '0.pf')))
-        tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(base / f'orf_prediction/{sample}.cds.gff')]
+        from metapathways.pt_reactions import BLACKLIST
+        tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(base / f'orf_prediction/{sample}.cds.gff')]
+        from metapathways.pt_reactions import compatibility_path
+        compatibility = Path(args.refdb_dir)/'functional_categories/ptools_reaction_compatibility.json'
+        if compatibility and compatibility.is_file():
+            tasks[-1]['fingerprint_inputs'].append(str(compatibility))
     return tasks
 
 

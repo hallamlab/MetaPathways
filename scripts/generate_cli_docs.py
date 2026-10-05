@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
-COMMANDS=('prepare_test','run','analysis_wf','build_db','mag_split','build_pt','ptools','report')
+COMMANDS=('prepare_test','run','analysis_wf','build_db','mag_split','build_pt','screen_pt','ptools','report')
 
 
 def render():

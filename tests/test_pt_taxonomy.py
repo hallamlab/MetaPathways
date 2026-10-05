@@ -18,8 +18,8 @@ class TaxonomyTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(resolve_taxon(self.parser().parse_args(['--taxonomic_scope', name])), taxon)
 
-    def test_omission_preserves_existing_behavior_and_numeric_ids_work(self):
-        self.assertIsNone(resolve_taxon(self.parser().parse_args([])))
+    def test_default_cellular_life_and_numeric_ids_work(self):
+        self.assertEqual(resolve_taxon(self.parser().parse_args([])), 131567)
         self.assertEqual(resolve_taxon(self.parser().parse_args(['--taxon_id', '562'])), 562)
 
     def test_invalid_and_conflicting_options_fail_early(self):
@@ -35,3 +35,11 @@ class TaxonomyTests(unittest.TestCase):
         args = analysis_workflow.parser().parse_args(['analysis_wf', '-i', '/tmp/in', '-o', '/tmp/out',
                                                       '-d', '/tmp/db', '--taxonomic_scope', 'euks'])
         self.assertEqual(resolve_taxon(args), 2759)
+
+    def test_pruning_defaults_and_opt_out(self):
+        parser = pipeline.ptParser()
+        self.assertTrue(parser.parse_args(['ptools', '-o', '/tmp/out']).taxprune)
+        self.assertFalse(parser.parse_args(['ptools', '-o', '/tmp/out', '--no_taxprune']).taxprune)
+        parser = analysis_workflow.parser()
+        self.assertTrue(parser.parse_args(['analysis_wf']).taxprune)
+        self.assertFalse(parser.parse_args(['analysis_wf', '--no_taxprune']).taxprune)

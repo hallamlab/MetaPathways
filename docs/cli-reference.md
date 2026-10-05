@@ -177,10 +177,11 @@ options:
   --image IMAGE         Pathway Tools SIF [registered by build_pt]
   --taxon_id TAXON_ID   Override PGDB NCBI taxon in private inputs; applies to every selected entity
   --taxonomic_scope {all,bacteria,archaea,eukaryotes}
-                        Named PGDB taxon override; all means cellular life; euks aliases eukaryotes. Use --taxprune to retain pruning and avoid unpruned rescoring. Omitting both options preserves the input taxon.
+                        Named PGDB taxon override; all means cellular life; euks aliases eukaryotes. Taxonomic pruning is enabled by default. Default: all (cellular life).
   --no_transport_inference
                         Disable TIP transport inference
-  --taxprune            Enable Pathway Tools taxonomic pruning
+  --taxprune            Enable taxonomic pruning [default]
+  --no_taxprune         Disable taxonomic pruning and perform unpruned rescoring
   --ptools_memory PTOOLS_MEMORY
                         Optional PGDB memory override [same as --memory]
 
@@ -301,12 +302,12 @@ Miscellaneous Arguments:
 ## build_db
 
 ```text
-usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER]
-                    [--metacyc_source METACYC_SOURCE] [-t INT] [--dryrun]
-                    [--snakemake [SNAKEMAKE ...]] [--test] [--max_cpus MAX_CPUS] [--memory MEMORY]
-                    [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS] [--executor {local,slurm}]
-                    [--account ACCOUNT] [--partition PARTITION] [--qos QOS]
-                    [--reservation RESERVATION] [--time_limit TIME_LIMIT]
+usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--skip_pt_screen]
+                    [--screen_image SCREEN_IMAGE] [--metacyc_source METACYC_SOURCE] [-t INT]
+                    [--dryrun] [--snakemake [SNAKEMAKE ...]] [--test] [--max_cpus MAX_CPUS]
+                    [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
+                    [--executor {local,slurm}] [--account ACCOUNT] [--partition PARTITION]
+                    [--qos QOS] [--reservation RESERVATION] [--time_limit TIME_LIMIT]
                     [--submit_rate SUBMIT_RATE] [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE]
                     [--keep_work]
 
@@ -331,6 +332,9 @@ database arguments:
   -a ALIGNER, --aligner ALIGNER
                         local aligner to index for, select one of ['fast', 'blast'], [DEFAULT
                         fast]
+  --skip_pt_screen      Skip default PTools reaction compatibility screening for MetaCyc
+  --screen_image SCREEN_IMAGE
+                        PTools SIF for screening a MetaCyc directory [registered SIF]
   --metacyc_source METACYC_SOURCE
                         licensed MetaCyc data directory or Pathway Tools SIF [registered SIF when
                         --func includes metacyc]
@@ -405,13 +409,13 @@ Execution Resources:
 
 ```text
 usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION] [-d REFDB_DIR]
-                             [-a {fast,blast}] [-o OUTPUT_DIR] [-t THREADS] [--dryrun]
-                             [--max_cpus MAX_CPUS] [--memory MEMORY] [--max_memory MAX_MEMORY]
-                             [--max_tasks MAX_TASKS] [--executor {local,slurm}]
-                             [--account ACCOUNT] [--partition PARTITION] [--qos QOS]
-                             [--reservation RESERVATION] [--time_limit TIME_LIMIT]
-                             [--submit_rate SUBMIT_RATE] [--work_dir WORK_DIR]
-                             [--conda_cache CONDA_CACHE] [--keep_work]
+                             [--skip_pt_screen] [-a {fast,blast}] [-o OUTPUT_DIR] [-t THREADS]
+                             [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
+                             [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
+                             [--executor {local,slurm}] [--account ACCOUNT]
+                             [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
+                             [--time_limit TIME_LIMIT] [--submit_rate SUBMIT_RATE]
+                             [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE] [--keep_work]
 
 Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.
 
@@ -425,6 +429,8 @@ options:
   -d REFDB_DIR, --refdb_dir REFDB_DIR
                         also export and prepare the licensed MetaCyc reference in this MPDB after
                         building the SIF
+  --skip_pt_screen      Skip default reaction compatibility screening when building MetaCyc with
+                        -d
   -a {fast,blast}, --aligner {fast,blast}
                         MetaCyc reference index format with -d [fast]
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
@@ -459,6 +465,33 @@ Execution Resources:
   --keep_work           retain automatically allocated work/cache directories
 ```
 
+## screen_pt
+
+```text
+usage: metapathways [-h] -d REFDB_DIR -o OUTPUT_DIR [--image IMAGE] [--publish]
+                    [--reactions REACTIONS [REACTIONS ...]] [--batch_size BATCH_SIZE]
+                    [--max_tasks MAX_TASKS] [--confirm_runs CONFIRM_RUNS] [--timeout TIMEOUT]
+                    [--scratch_dir SCRATCH_DIR]
+
+Screen explicit MPDB reaction assignments against a licensed PTools SIF
+
+options:
+  -h, --help            show this help message and exit
+  -d REFDB_DIR, --refdb_dir REFDB_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  --image IMAGE         PTools SIF [registered build_pt image]
+  --publish             Save a completed full screen compatibility list in the MPDB
+  --reactions REACTIONS [REACTIONS ...]
+                        Optional reaction IDs for a targeted screen
+  --batch_size BATCH_SIZE
+  --max_tasks MAX_TASKS
+                        Concurrent isolated containers [1]
+  --confirm_runs CONFIRM_RUNS
+  --timeout TIMEOUT     Seconds per build [1800]; timeout is inconclusive
+  --scratch_dir SCRATCH_DIR
+                        Local temporary storage for private PGDB builds
+```
+
 ## ptools
 
 ```text
@@ -473,10 +506,11 @@ options:
                         path where MP output was saved [REQUIRED]
   --tag TAG             Custom name for ePGDB [optional]
   --container           Flag only used in containerized env [special flag]
-  --taxprune            Set taxonomic pruning in pathway tools to True
+  --taxprune            Enable taxonomic pruning [default]
+  --no_taxprune         Disable taxonomic pruning and perform unpruned rescoring
   --taxon_id TAXON_ID   Override PGDB NCBI taxon in private inputs; applies to every selected entity
   --taxonomic_scope {all,bacteria,archaea,eukaryotes}
-                        Named PGDB taxon override; all means cellular life; euks aliases eukaryotes. Use --taxprune to retain pruning and avoid unpruned rescoring. Omitting both options preserves the input taxon.
+                        Named PGDB taxon override; all means cellular life; euks aliases eukaryotes. Taxonomic pruning is enabled by default. Default: all (cellular life).
   --no_transport_inference
                         Disable TIP transport inference (SIF only)
   --entity ENTITY       Build only community or the specified MAG ID

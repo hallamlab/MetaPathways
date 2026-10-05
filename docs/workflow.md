@@ -181,8 +181,8 @@ Neither flag changes MP's gene taxonomic annotations.
 for taxon IDs 131567, 2, 2157, and 2759, respectively; `euks` is accepted as an
 alias for `eukaryotes`. It is mutually exclusive with `--taxon_id`. For example,
 `--taxprune --taxonomic_scope all` is equivalent to
-`--taxprune --taxon_id 131567`. No new default is imposed: omitting both retains
-the input taxon and the existing pruning setting. A `prokaryotes` scope is not
+`--taxprune --taxon_id 131567`. Omitting both defaults to taxonomic pruning with scope `all` (cellular life).
+Use `--no_taxprune` to disable pruning. A `prokaryotes` scope is not
 yet supported because it needs a union of Bacteria and Archaea; MP rejects it
 explicitly rather than silently substituting cellular life (which includes
 eukaryotes). Scope changes guide PGDB inference and do not filter input contigs.
