@@ -78,6 +78,9 @@ def extract_pwy(pt_outputs):
 	pt_id = os.path.basename(glob.glob(pt_outputs + '/*.tar.bz2')[0]).split('cyc', 1)[0]
 	flatpath = os.path.join(pt_outputs, '1.0/data')
 	pwy_outfile = os.path.join(pt_outputs, pt_id + '_pwy.tsv')
+	from metapathways.pt_exports import write_verified_empty_pathways
+	if write_verified_empty_pathways(flatpath, pwy_outfile):
+		return
 	verfile = os.path.join(flatpath.rsplit('/', 2)[0], 'default-version')
 	new_verfile = os.path.join(flatpath, 'version.dat')
 	shutil.copyfile(verfile, new_verfile)

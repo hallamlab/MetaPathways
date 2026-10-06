@@ -183,6 +183,7 @@ Look under `results/SampleA/results/pgdb/community/` and `.../MAGs/MAG_ID/` for 
 | Protein BLAST DB cannot be created | Check sequence staging and the internal log; installing BLAST alone cannot supply missing sequence |
 | `Done` followed by failure | Check the recorded phase and wrapper logs; `Done` is not a substitute for successful export/archive |
 | Provisional EC or ambiguous transport warning | Keep the evidence; a formatting change cannot establish a missing biological assignment |
+| Zero inferred pathways | A valid empty result produces header-only pathway and pathway-to-ORF tables. MP verifies the empty final pathway report and inference evidence list before handling the Pathway Tools empty-export message; raw PGDB files are preserved |
 | MAG lacks selected genes | The complete workflow can skip a bin with no generated PF input; distinguish this from zero inferred pathways |
 | Nonzero exit during export | Preserve the saved PGDB and diagnostics; do not label the result complete from build messages alone |
 
