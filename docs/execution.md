@@ -19,6 +19,14 @@ OUTPUT/logs/COMMAND/RUN_ID/
 
 Console output is displayed and saved. Reports link the retained Nextflow records. Original sample logs remain available as well. Historical workflows without trace files cannot retrospectively gain CPU/RAM measurements by generating a report.
 
+Pathway Tools containers place their private `/tmp` and `/var/tmp` on the disk
+backing the task state directory, rather than Apptainer's limited in-memory
+session filesystem. In compact mode this follows the selected task scratch
+location (normally `SLURM_TMPDIR` on Slurm). Each invocation remains isolated;
+this controller setting does not require rebuilding an existing SIF. Shared
+JSON receipts and image-digest caches use unique temporary files and atomic
+replacement, so concurrent publishers do not share a temporary filename.
+
 Default Nextflow work, session cache and Conda package/environment caches live under `OUTPUT/.metapathways/COMMAND/tmp/RUN_ID`. After a completed invocation, including an ordinary task failure, diagnostics are archived and these temporary directories are removed. Interrupted invocations retain them because cancellation may still be in progress.
 
 Use `--keep_work` to retain the defaults. Explicit `--work_dir` and `--conda_cache` paths are retained automatically; MP does not delete a user-provided shared cache. Nextflow's installed runtime and MP's Conda environment are not per-run caches and are retained.

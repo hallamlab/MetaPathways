@@ -66,6 +66,11 @@ class ContainerTests(unittest.TestCase):
         self.assertIn(str(self.root / 'private state') + ':/data', cmd)
         self.assertEqual(cmd[cmd.index('--home') + 1], str(self.root / 'private state') + ':/data')
         self.assertEqual(cmd[cmd.index('--pwd') + 1], '/data')
+        scratch = Path(cmd[cmd.index('--workdir') + 1])
+        self.assertEqual(scratch, self.root / 'private state' / 'container-work')
+        self.assertTrue(scratch.is_dir())
+        other = pt.exec_command(self.image, self.root / 'other state', ['true'])
+        self.assertNotEqual(other[other.index('--workdir') + 1], str(scratch))
         self.assertEqual(cmd[-3:], ['sh', '-c', 'echo hello'])
 
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')

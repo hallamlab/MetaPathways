@@ -186,7 +186,13 @@ def exec_command(image, state, command):
     executable = shutil.which('apptainer')
     if not executable:
         raise RuntimeError('Apptainer is required and must be on PATH')
+    # --containall otherwise puts /tmp and /var/tmp in the small session
+    # filesystem, not on the disk backing our task-private home directory.
+    # Keep scratch private per invocation, including Xvfb filesystem sockets.
+    scratch = state / 'container-work'
+    scratch.mkdir(mode=0o700, exist_ok=True)
     return [executable, 'exec', '--containall', '--cleanenv',
+            '--workdir', str(scratch),
             '--home', f'{state}:/data', '--pwd', '/data', str(image), *command]
 
 

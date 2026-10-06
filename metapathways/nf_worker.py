@@ -45,9 +45,20 @@ def available(paths):
 def atomic_json(p, obj):
     p = Path(p)
     p.parent.mkdir(parents=True, exist_ok=True)
-    temp = p.with_suffix('.tmp')
-    temp.write_text(json.dumps(obj, indent=2) + '\n')
-    temp.replace(p)
+    # Concurrent nodes must never share a staging filename, even when a
+    # filesystem does not provide cross-node advisory locking.
+    temp = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
+                                         prefix=f'.{p.name}.', suffix='.tmp',
+                                         dir=p.parent, delete=False) as handle:
+            temp = Path(handle.name)
+            json.dump(obj, handle, indent=2)
+            handle.write('\n')
+        temp.replace(p)
+    finally:
+        if temp is not None:
+            temp.unlink(missing_ok=True)
 
 
 def execute(t):
