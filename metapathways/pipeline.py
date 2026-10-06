@@ -254,7 +254,7 @@ def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
     parser.add_argument("--snakemake", nargs='*', required=False, default=[],
                         help="legacy compatibility flags; use the resource flags for new runs")
 
-    parser.add_argument("--test", action="store_true", help="build reviewer SwissProt/SILVA references; use -d for the prepared MPDB directory")
+    parser.add_argument("--test", action="store_true", help="build test SwissProt/SILVA references; use -d for the prepared MPDB directory")
 
     nextflow.add_resources(parser)
     return parser
@@ -844,8 +844,8 @@ def report():
 
 
 def prepare_test():
-    from metapathways.reviewer import main as reviewer_main
-    reviewer_main(sys.argv[2:])
+    from metapathways.test_data import main as test_main
+    test_main(sys.argv[2:])
 
 
 def analysis_wf():

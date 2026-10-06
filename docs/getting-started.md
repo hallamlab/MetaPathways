@@ -1,12 +1,12 @@
 # Getting started: from a terminal to your first result
 
-[Home and reading order](index.md) · Next: [reviewer walkthrough](reviewer-test.md)
+[Home and reading order](index.md) · Next: [test walkthrough](test.md)
 
 ## What you will do
 
 Install MP on a Linux computer, activate its software environment, run a small included example, and open a report. You do not need a Pathway Tools license for the first example. Add pathway inference after the example works.
 
-If you already have a working MP installation, go directly to the [reviewer walkthrough](reviewer-test.md). If your lab manages the software centrally, ask for the activation command and MPDB path rather than installing a second copy.
+If you already have a working MP installation, go directly to the [test walkthrough](test.md). If your lab manages the software centrally, ask for the activation command and MPDB path rather than installing a second copy.
 
 ## Before typing commands
 
@@ -47,9 +47,9 @@ magsplitter --help
 
 ## First installation check
 
-Follow the **[three-sample reviewer walkthrough](reviewer-test.md)**. It uses the same `analysis_wf` command as a real analysis, with small bundled references, assemblies, paired reads and genome maps. It exercises annotation, read abundance, genome splitting and the reports without requiring Pathway Tools. Database preparation downloads enzyme and taxonomy support records, so internet access is required.
+Follow the **[three-sample test walkthrough](test.md)**. It uses the same `analysis_wf` command as a real analysis, with small bundled references, assemblies, paired reads and genome maps. It exercises annotation, read abundance, genome splitting and the reports without requiring Pathway Tools. Database preparation downloads enzyme and taxonomy support records, so internet access is required.
 
-The older `run --test` K12 example remains available for compatibility, but it does not exercise the complete workflow and is not the reviewer acceptance test.
+The older `run --test` K12 example remains available for compatibility, but it does not exercise the complete workflow and is not the complete workflow test.
 
 ## Your first real assembly
 
@@ -63,7 +63,7 @@ metapathways run -i /path/to/sample.fasta -o ~/mp-results -d ~/MPDB \
 
 The assembly goes through quality control, gene/RNA prediction, reference searches, and annotation. Without reads, there is no measured read abundance. Without a separate `ptools` step, there are no inferred PGDB pathways. A single `analysis_wf` command can combine these steps once the inputs and licensed container are ready.
 
-Continue with the [reviewer walkthrough](reviewer-test.md), [command cookbook](commands.md), and [input organization](inputs.md).
+Continue with the [test walkthrough](test.md), [command cookbook](commands.md), and [input organization](inputs.md).
 
 ## Terms used in the guides
 

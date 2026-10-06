@@ -11,7 +11,7 @@ Use **3.5.1**, **3.5.2**, etc. for subsequent patch releases, or **3.5.1rc1**
 for a preview. Tags have a leading `v`; package versions do not.
 
 The supported release package targets **Linux x86-64 / Python 3.11**.
-It includes the annotation pipeline, bundled FAST/metacount executables, reviewer
+It includes the annotation pipeline, bundled FAST/metacount executables, test
 data, MAGSplitter and Camelot. Helper sources are pinned to exact commits with
 SHA256 checksums. Licensed Pathway Tools is obtained separately by the user.
 
@@ -19,7 +19,7 @@ SHA256 checksums. Licensed Pathway Tools is obtained separately by the user.
 
 Use the existing branches: **feature branch → `dev` → `master`**. `dev` is the integration branch; `master` is the production branch. A new `main` branch is unnecessary. GitHub's default branch and the Read the Docs `latest` version are separate settings; neither setting promotes a release.
 
-Open feature work as a draft PR targeting `dev` while benchmarks or reviewer checks are pending. Record the tested commit and outstanding checks in the PR. After benchmark review, independent tester sign-off and passing CI, mark it ready and merge into `dev`. Then open a separate promotion PR from `dev` into `master`, review the complete diff, and validate the resulting production commit before tagging. An older `master` can include changes accumulated on `dev` before the feature PR; review those too. Do not reset or force-push production to bypass that review.
+Open feature work as a draft PR targeting `dev` while benchmarks or test checks are pending. Record the tested commit and outstanding checks in the PR. After benchmark review, independent tester sign-off and passing CI, mark it ready and merge into `dev`. Then open a separate promotion PR from `dev` into `master`, review the complete diff, and validate the resulting production commit before tagging. An older `master` can include changes accumulated on `dev` before the feature PR; review those too. Do not reset or force-push production to bypass that review.
 
 Prepare any version changes on the feature branch before final PR review:
 
@@ -276,7 +276,7 @@ review; passing this gate does not mean the image has no vulnerabilities.
 
 ## Feature-branch review before publication
 
-The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to `dev` → promotion PR to `master` → production validation → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged reviewer/report assets.
+The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to `dev` → promotion PR to `master` → production validation → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged test/report assets.
 
 Use the [PR tester checklist](pr-testing.md) for independent installation, the single- and two-sample CAMI workflows, restart behavior, optional licensed Pathway Tools, and report exports. Record the tested Git commit. Record the source commit as well as the package version when testing a candidate.
 
@@ -284,7 +284,7 @@ The selected next release is **3.5.2**. Preparing this version does not publish 
 
 Before merging, manually dispatch the Release workflow on the feature branch with blank publication inputs. Select `test_containers` to test the exact Conda artifact inside Docker and its SIF conversion. Download `release-assets`, `container-assets`, and the security reports from Actions for review. Core integration uses explicit 2 GB task reservations, a 4 GB memory budget, and two CPUs so the small fixture fits CI runners. These limits are not production metagenome sizing recommendations.
 
-The Conda package includes the Nextflow controller, reporting assets, reviewer data, MAGSplitter and Camelot. Helper sources and SHA256 checksums are pinned in `requirements-workflow.txt` and fetched during the package build. The Quay image installs that same artifact; users do not install helpers separately. Source installations resolve the same pinned helpers through MP’s Python package metadata. The public build gate exercises the core K12 workflow; **passing that gate does not certify `analysis_wf` with MAGs, Slurm, nested Apptainer, or licensed Pathway Tools**. Those require the tester checks. A container containing Apptainer does not guarantee the host permits nested container execution. Test licensed inference with the recommended host Conda installation and your own image first.
+The Conda package includes the Nextflow controller, reporting assets, test data, MAGSplitter and Camelot. Helper sources and SHA256 checksums are pinned in `requirements-workflow.txt` and fetched during the package build. The Quay image installs that same artifact; users do not install helpers separately. Source installations resolve the same pinned helpers through MP’s Python package metadata. The public build gate exercises the core K12 workflow; **passing that gate does not certify `analysis_wf` with MAGs, Slurm, nested Apptainer, or licensed Pathway Tools**. Those require the tester checks. A container containing Apptainer does not guarantee the host permits nested container execution. Test licensed inference with the recommended host Conda installation and your own image first.
 
 ## Zenodo and software citation
 

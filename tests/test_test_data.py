@@ -1,15 +1,15 @@
 import tempfile
 from pathlib import Path
 import unittest
-from metapathways.reviewer import prepare, SEEDS
+from metapathways.test_data import prepare, SEEDS
 
 
-class ReviewerTests(unittest.TestCase):
+class TestTests(unittest.TestCase):
     def test_bundled_data_copies_idempotently_without_indexes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = prepare(directory)
-            self.assertEqual(len(list((root/'cami-reviewer/inputs').rglob('*.gz'))), 9)
-            self.assertEqual(len(list((root/'cami-reviewer/inputs/mag_maps').glob('*.tsv'))), 3)
+            self.assertEqual(len(list((root/'cami-test/inputs').rglob('*.gz'))), 9)
+            self.assertEqual(len(list((root/'cami-test/inputs/mag_maps').glob('*.tsv'))), 3)
             self.assertEqual(len(list((root/'MPDB').rglob('*.*'))), 1)
             self.assertTrue(all((root/'MPDB'/name).is_file() for name in SEEDS))
             file = root/'MPDB/functional/swissprot_test'
@@ -20,8 +20,8 @@ class ReviewerTests(unittest.TestCase):
     def test_modified_data_is_preserved_before_any_copy(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root/'cami-reviewer').mkdir()
-            file = root/'cami-reviewer/all.tsv'
+            (root/'cami-test').mkdir()
+            file = root/'cami-test/all.tsv'
             file.write_text('my manifest')
             with self.assertRaisesRegex(ValueError, 'differs'):
                 prepare(root)

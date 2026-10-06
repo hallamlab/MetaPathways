@@ -8,7 +8,7 @@ This page follows a nucleotide assembly through MetaPathways, from reference pre
 
 Cite [MetaPathways](#metapathways), [Nextflow](#nextflow), the biological tools used by your selected stages, and the reference databases you searched. Add [Pathway Tools](#pathway-tools), [MetaCyc](#metacyc), MAGSplitter and Camelot when those components are used. Cite the container runtime and Slurm when applicable. The tables below connect each component to its publication or official project; the [full references](#full-references) include DOI links and websites.
 
-Download {download}`the software and database bibliography <assets/workflow-tools.bib>`. Papers describe methods, not the precise software or database versions in your run: also record the MP version, environment, reference releases, image identity, settings and execution logs. See [reproducibility](reproducibility.md). For the bundled reviewer data, use the separate [CAMI and CAMI II citations](cami-references.md).
+Download {download}`the software and database bibliography <assets/workflow-tools.bib>`. Papers describe methods, not the precise software or database versions in your run: also record the MP version, environment, reference releases, image identity, settings and execution logs. See [reproducibility](reproducibility.md). For the bundled test data, use the separate [CAMI and CAMI II citations](cami-references.md).
 
 ## 1. Prepare references and the optional Pathway Tools image
 

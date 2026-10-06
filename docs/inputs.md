@@ -59,7 +59,7 @@ ln -s /data/original/anonymous_reads.fq.gz my_inputs/reads/SampleA_interleaved.f
 ln -s /data/original/contig_to_genome.tsv my_inputs/mag_maps/SampleA.tsv
 ```
 
-The original files must remain readable throughout the workflow. The same assembly or read file cannot be reused under multiple manifest samples via hard/symbolic aliases; this catches accidental duplicated inputs. Independent reviewer fixture copies are intentional and documented separately.
+The original files must remain readable throughout the workflow. The same assembly or read file cannot be reused under multiple manifest samples via hard/symbolic aliases; this catches accidental duplicated inputs. Independent test fixture copies are intentional and documented separately.
 
 ## Custom manifest: keep every file where it is
 

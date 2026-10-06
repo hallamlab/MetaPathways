@@ -93,14 +93,14 @@ The final supplementary table and figure still require extraction, joining and q
 
 ## Compare one server with a Slurm cluster
 
-Test the three small reviewer samples on the cluster before submitting the full benchmark. Install the same feature-branch revision on shared storage, and activate its environment before starting MP. Nextflow submits with the logged-in user's Slurm identity; there are no MP password flags. Confirm that `sbatch`, `squeue`, and `scancel` are available and that compute nodes can use the same software, database and input paths.
+Test the three small test samples on the cluster before submitting the full benchmark. Install the same feature-branch revision on shared storage, and activate its environment before starting MP. Nextflow submits with the logged-in user's Slurm identity; there are no MP password flags. Confirm that `sbatch`, `squeue`, and `scancel` are available and that compute nodes can use the same software, database and input paths.
 
 For a first three-sample cluster test, adapt the shared paths and allocation names:
 
 ```bash
 metapathways analysis_wf \
-  --manifest /shared/project/cami-reviewer/all.tsv \
-  -o /shared/project/mp-reviewer-slurm \
+  --manifest /shared/project/cami-test/all.tsv \
+  -o /shared/project/mp-test-slurm \
   -d /shared/project/MPDB \
   --annotation_dbs swissprot \
   --skip_ptools \
@@ -109,7 +109,7 @@ metapathways analysis_wf \
   --max_tasks 2 --submit_rate 6 --time_limit 2h
 ```
 
-The example uses the full public SwissProt/SILVA references in your MPDB. If using the bundled test references, select `swissprot_test` and `SILVA_SSU_test SILVA_LSU_test` as in the reviewer walkthrough. The two-hour limit is a small-input example, not a full CAMI II ([Meyer et al., 2022](#cami-references)) task limit. Follow your site's policy for keeping the Nextflow controller running: some sites permit a persistent headnode session, others require a controller allocation. MP preparation and report generation run in that controller, while scheduled biological stages run on compute nodes.
+The example uses the full public SwissProt/SILVA references in your MPDB. If using the bundled test references, select `swissprot_test` and `SILVA_SSU_test SILVA_LSU_test` as in the test walkthrough. The two-hour limit is a small-input example, not a full CAMI II ([Meyer et al., 2022](#cami-references)) task limit. Follow your site's policy for keeping the Nextflow controller running: some sites permit a persistent headnode session, others require a controller allocation. MP preparation and report generation run in that controller, while scheduled biological stages run on compute nodes.
 
 For the complete benchmark, copy the original assemblies, reads, CAMI genome maps, reference database and your licensed Pathway Tools SIF onto storage accessible to all selected nodes. Write an HPC-specific manifest pointing there; local server paths and symlinks are not portable. Use a new output directory. Supply the same analysis options, reference release, pruning scope, and image content as on the single server. Pass `--image /shared/project/pathway-tools.sif` explicitly if its user registration differs on the cluster.
 

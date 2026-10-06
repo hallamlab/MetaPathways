@@ -28,9 +28,9 @@ The environment specification in `docker/conda_base.yml` is not an exact lock. M
 
 ## Installation example versus biological validation
 
-`prepare_test -o WORKSPACE` copies the bundled three-sample inputs and reference FASTAs. From that workspace, `build_db --test -d MPDB` formats the fixtures and downloads current ExPASy/NCBI support records. The reviewer test is neither offline nor fully pinned; record the downloaded reference dates. Its default workflow skips Pathway Tools.
+`prepare_test -o WORKSPACE` copies the bundled three-sample inputs and reference FASTAs. From that workspace, `build_db --test -d MPDB` formats the fixtures and downloads current ExPASy/NCBI support records. The workflow test is neither offline nor fully pinned; record the downloaded reference dates. Its default workflow skips Pathway Tools.
 
-The test suite includes synthetic/unit checks for read-layout arguments, task ordering/resources, resume/cleanup, container isolation interfaces, report joins and export behavior. Real synthetic Nextflow tasks exercise scheduling and logging; concurrent Pathway Tools startup checks exercise private container state. These checks do not substitute for real annotations, PGDB construction, or execution on an actual Slurm cluster. The small reviewer walkthrough and any user-run benchmarks must be evaluated through their retained results and task records. Do not infer full biological validation from unit-test success. See the [reviewer protocol](reviewer-test.md) and [benchmark measurement guide](benchmarking.md).
+The test suite includes synthetic/unit checks for read-layout arguments, task ordering/resources, resume/cleanup, container isolation interfaces, report joins and export behavior. Real synthetic Nextflow tasks exercise scheduling and logging; concurrent Pathway Tools startup checks exercise private container state. These checks do not substitute for real annotations, PGDB construction, or execution on an actual Slurm cluster. The small test walkthrough and any user-run benchmarks must be evaluated through their retained results and task records. Do not infer full biological validation from unit-test success. See the [test protocol](test.md) and [benchmark measurement guide](benchmarking.md).
 
 Run the software checks from the checkout:
 

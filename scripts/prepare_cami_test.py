@@ -71,7 +71,7 @@ def main():
     with open(args.source_manifest) as handle:
         sources = {r['sample_id']: r for r in csv.DictReader(handle, delimiter='\t')}
     rows, stats = [], []
-    with tempfile.TemporaryDirectory(prefix='mp-cami-reviewer-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='mp-cami-test-') as tmp:
         tmp = Path(tmp)
         for sample in SAMPLES:
             source = sources[sample]

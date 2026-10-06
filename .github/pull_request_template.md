@@ -6,7 +6,7 @@ Describe the concrete change and any compatibility implications.
 
 - Tested commit:
 - Local tests and installed-package checks:
-- Single/two-sample reviewer workflow and checkpoint reuse:
+- Single/two-sample test workflow and checkpoint reuse:
 - Report/explorer and CSV export:
 - Optional Pathway Tools and Slurm checks (or explicitly untested):
 - Nonpublishing Release workflow/artifact links:

@@ -1,5 +1,5 @@
 {
-  "description": "Small interface-test reference: original K12 fixture plus genuine SwissProt best-hit targets from the three CAMI reviewer samples. Selection is deliberately biased to exercise annotation, taxonomy and MAG splitting; not for accuracy assessment.",
+  "description": "Small interface-test reference: original K12 fixture plus genuine SwissProt best-hit targets from the three CAMI test samples. Selection is deliberately biased to exercise annotation, taxonomy and MAG splitting; not for accuracy assessment.",
   "source": "MPDB_260131/functional/swissprot",
   "source_sha256": "987e9d468c2691008b8c7d9d3eea79dec207b5c892312f8d63d1fe6f5b01cead",
   "original_ids": [

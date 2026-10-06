@@ -42,7 +42,7 @@ jobs:
           metapathways version
           magsplitter --help
           python -c "import camelot_frs"
-          metapathways prepare_test -o reviewer
+          metapathways prepare_test -o test
           for command in prepare_test run analysis_wf build_db mag_split build_pt ptools report; do
             metapathways "$command" -h
           done

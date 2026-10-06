@@ -1,6 +1,6 @@
 # Pathway Tools: licensing, image builds, databases and inference
 
-[Home](index.md) · [Reviewer walkthrough](reviewer-test.md) · [Complete flags](cli-reference.md)
+[Home](index.md) · [Test walkthrough](test.md) · [Complete flags](cli-reference.md)
 
 ## Defaults and explicit choices
 

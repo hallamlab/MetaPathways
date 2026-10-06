@@ -1,16 +1,16 @@
 # Quay containers: Docker and Apptainer
 
-[Home and quick start](installation.md) · [Reviewer dataset](reviewer-test.md) · [Licensed Pathway Tools](pathway-tools.md)
+[Home and quick start](installation.md) · [Test dataset](test.md) · [Licensed Pathway Tools](pathway-tools.md)
 
-Use the versioned `quay.io/hallamlab/metapathways:3.5.2` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample reviewer dataset derived from CAMI II ([Meyer et al., 2022](#cami-references)). Production references and licensed Pathway Tools are supplied separately.
+Use the versioned `quay.io/hallamlab/metapathways:3.5.2` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample test dataset derived from CAMI II ([Meyer et al., 2022](#cami-references)). Production references and licensed Pathway Tools are supplied separately.
 
 ## Docker three-sample test
 
 Create a working directory and open a shell in the image. The mount keeps inputs, references and results on your host. Run these commands in your host terminal:
 
 ```bash
-mkdir -p ~/mp-reviewer-docker
-cd ~/mp-reviewer-docker
+mkdir -p ~/mp-test-docker
+cd ~/mp-test-docker
 docker pull quay.io/hallamlab/metapathways:3.5.2
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
   -v "$PWD:/work" -w /work quay.io/hallamlab/metapathways:3.5.2 bash
@@ -22,7 +22,7 @@ Inside the container, run:
 metapathways prepare_test -o .
 metapathways build_db --test -d MPDB
 metapathways analysis_wf \
-  --manifest cami-reviewer/all.tsv -o all -d MPDB \
+  --manifest cami-test/all.tsv -o all -d MPDB \
   --annotation_dbs swissprot_test \
   --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
   --skip_ptools --threads 4 --memory '4 GB' --max_tasks 2
@@ -38,8 +38,8 @@ To return later, repeat the `docker run` command from the same host directory, t
 Create a working directory and pull the image on an internet-connected host:
 
 ```bash
-mkdir -p ~/mp-reviewer-apptainer
-cd ~/mp-reviewer-apptainer
+mkdir -p ~/mp-test-apptainer
+cd ~/mp-test-apptainer
 apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
 apptainer exec --bind "$PWD:/work" --pwd /work metapathways.sif bash
 ```
@@ -50,7 +50,7 @@ Inside the container, run:
 metapathways prepare_test -o .
 metapathways build_db --test -d MPDB
 metapathways analysis_wf \
-  --manifest cami-reviewer/all.tsv -o all -d MPDB \
+  --manifest cami-test/all.tsv -o all -d MPDB \
   --annotation_dbs swissprot_test \
   --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
   --skip_ptools --threads 4 --memory '4 GB' --max_tasks 2
@@ -61,7 +61,7 @@ Open the printed URL, using an [SSH tunnel](reports-tutorial.md#view-a-remote-re
 
 ## From the test to your own data
 
-The reference build downloads enzyme and taxonomy support files. Complete reference preparation on an internet-connected host before using offline compute nodes. The tiny reviewer references are for testing only. Build production references with `metapathways build_db -d MPDB --func swissprot -a fast` in a separate project directory.
+The reference build downloads enzyme and taxonomy support files. Complete reference preparation on an internet-connected host before using offline compute nodes. The tiny test references are for testing only. Build production references with `metapathways build_db -d MPDB --func swissprot -a fast` in a separate project directory.
 
 Mount all inputs, references and outputs into the container and use their container-visible paths in manifests. For Slurm, use the [Mamba installation](installation.md#1-conda-package-with-mamba-preferred) on shared storage so the controller and compute jobs can use the same environment. Follow the [resource and Slurm guide](resources.md#resources-and-slurm) for submission limits.
 

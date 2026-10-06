@@ -1,9 +1,7 @@
-# Tiny CAMI II reviewer inputs
+---
+orphan: true
+---
 
-[Reviewer walkthrough](reviewer-test.md) · [Citation downloads](cami-references.md)
+# Test bundle
 
-This page includes the bundle README from the same repository revision as this documentation build.
-
-```{include} ../metapathways/regtests/cami_reviewer/README.md
-:start-after: <!-- bundle-content -->
-```
+See the [test bundle documentation](test-bundle.md).

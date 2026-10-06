@@ -13,11 +13,11 @@ conda activate metapathways
 This installs MP and its workflow dependencies, including MAGSplitter and Camelot. Prepare the included data, build the small reference database, and run all three samples:
 
 ```bash
-metapathways prepare_test -o ~/mp-reviewer
-cd ~/mp-reviewer
+metapathways prepare_test -o ~/mp-test
+cd ~/mp-test
 metapathways build_db --test -d MPDB
 metapathways analysis_wf \
-  --manifest cami-reviewer/all.tsv -o all -d MPDB \
+  --manifest cami-test/all.tsv -o all -d MPDB \
   --annotation_dbs swissprot_test \
   --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
   --skip_ptools --threads 4 --memory '4 GB' --max_tasks 2
@@ -36,7 +36,7 @@ docker pull quay.io/hallamlab/metapathways:3.5.2
 apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
 ```
 
-The image includes the same workflow dependencies and reviewer data. Follow the [Docker three-sample test](containers.md#docker-three-sample-test) or [Apptainer three-sample test](containers.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
+The image includes the same workflow dependencies and test data. Follow the [Docker three-sample test](containers.md#docker-three-sample-test) or [Apptainer three-sample test](containers.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
 
 ## 3. Local installation from GitHub
 
@@ -48,7 +48,7 @@ mamba run -n metapathways python -m pip install .
 conda activate metapathways
 ```
 
-Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-reviewer`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
+Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-test`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
 
 ## Try your own data
 
@@ -59,7 +59,7 @@ metapathways build_db -d ~/MPDB --func swissprot -a fast
 metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 ```
 
-For assemblies with reads and genome maps, follow the [complete workflow](inputs.md). **If you want PGDBs, complete the [Pathway Tools installation guide](pathway-tools.md) before starting that workflow.** The small reviewer references are for testing only.
+For assemblies with reads and genome maps, follow the [complete workflow](inputs.md). **If you want PGDBs, complete the [Pathway Tools installation guide](pathway-tools.md) before starting that workflow.** The small test references are for testing only.
 
 ```{include} includes/cami-references.md
 ```

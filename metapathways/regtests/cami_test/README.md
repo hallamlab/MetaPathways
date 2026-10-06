@@ -1,6 +1,6 @@
-# Tiny CAMI II reviewer inputs
+# Tiny CAMI II test inputs
 
-Use the [reviewer walkthrough](https://hallamlab-metapathways.readthedocs.io/en/latest/reviewer-test.html) for normal MP commands.
+Use the [test walkthrough](https://hallamlab-metapathways.readthedocs.io/en/latest/test.html) for normal MP commands.
 
 <!-- bundle-content -->
 
@@ -21,13 +21,13 @@ For each sample, the preparation script ranks contigs at least 20 kb long by sou
 Maintainers can reproduce the data from an MP manifest pointing at the original local CAMI downloads:
 
 ```bash
-python scripts/prepare_cami_reviewer.py \
+python scripts/prepare_cami_test.py \
   --source-manifest /path/to/full-cami-manifest.tsv \
-  --output /path/to/new-cami-reviewer \
+  --output /path/to/new-cami-test \
   --minimap2 /path/to/minimap2
 ```
 
-Run from the source checkout. The output directory must not already exist. Source assemblies must have a sibling `gsa_mapping.tsv`, and the selected sample read inputs must be the original interleaved FASTQs. Python and minimap2 are required. Temporary read subsets and alignments are cleaned up after preparation. Reproduction requires the original large CAMI files; reviewers use the bundled small files directly.
+Run from the source checkout. The output directory must not already exist. Source assemblies must have a sibling `gsa_mapping.tsv`, and the selected sample read inputs must be the original interleaved FASTQs. Python and minimap2 are required. Temporary read subsets and alignments are cleaned up after preparation. Reproduction requires the original large CAMI files; tests use the bundled small files directly.
 
 ## Source attribution
 
@@ -37,4 +37,4 @@ Cropping, read selection, mate separation and MP-format maps are the modificatio
 
 - **CAMI:** Sczyrba, A., Hofmann, P., Belmann, P., et al. (2017). *Critical Assessment of Metagenome Interpretation—a benchmark of metagenomics software*. **Nature Methods 14**(11), 1063–1071. [DOI: 10.1038/nmeth.4458](https://doi.org/10.1038/nmeth.4458). [CAMI project website](https://cami-challenge.org/).
 - **CAMI II:** Meyer, F., Fritz, A., Deng, Z.-L., et al. (2022). *Critical Assessment of Metagenome Interpretation: the second round of challenges*. **Nature Methods 19**(4), 429–440. [DOI: 10.1038/s41592-022-01431-4](https://doi.org/10.1038/s41592-022-01431-4). [CAMI project website](https://cami-challenge.org/).
-- **Source dataset for the MP reviewer subset:** CAMI II multi-sample human microbiome dataset. [Dataset DOI: 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). The bundled inputs are selected and cropped subsets of this collection; their exact transformations and file hashes are recorded in the bundle provenance.
+- **Source dataset for the MP test subset:** CAMI II multi-sample human microbiome dataset. [Dataset DOI: 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). The bundled inputs are selected and cropped subsets of this collection; their exact transformations and file hashes are recorded in the bundle provenance.

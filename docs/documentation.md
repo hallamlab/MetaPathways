@@ -1,6 +1,6 @@
 # Maintaining the documentation
 
-The Markdown files in `docs/` are the source for Read the Docs. Keep the README limited to the original abstract, installation/reviewer essentials, the conceptual diagram and links to the complete guide. Edit detailed instructions here; do not maintain separate copies on the website.
+The Markdown files in `docs/` are the source for Read the Docs. Keep the README limited to the original abstract, installation/test essentials, the conceptual diagram and links to the complete guide. Edit detailed instructions here; do not maintain separate copies on the website.
 
 ## Build and review locally
 

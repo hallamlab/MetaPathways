@@ -1,11 +1,11 @@
 # PR tester checklist
 
-[Home](index.md) · [Reviewer commands](reviewer-test.md) · [Release process](releasing.md)
+[Home](index.md) · [Test commands](test.md) · [Release process](releasing.md)
 
 Test the feature branch before merging to `dev`. Keep the PR in draft while benchmark review and tester sign-off are pending. Production promotion is a separate `dev` → `master` PR, as described in the [release process](releasing.md). Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
 
 1. Follow [source installation](getting-started.md). Check out the PR's exact commit after cloning; do not test an older editable installation by accident. Record the resolved dependency versions, including the pinned MAGSplitter and Camelot helpers installed with MP.
-2. Follow the [CAMI II reviewer walkthrough](reviewer-test.md) ([Meyer et al., 2022](#cami-references)), running its single-sample and two-sample commands with `--skip_ptools`. Check required task outcomes, nonempty abundance outputs, the three genome-bin assignments per sample, and distinct paired read paths.
+2. Follow the [CAMI II test walkthrough](test.md) ([Meyer et al., 2022](#cami-references)), running its single-sample and two-sample commands with `--skip_ptools`. Check required task outcomes, nonempty abundance outputs, the three genome-bin assignments per sample, and distinct paired read paths.
 3. Repeat the two-sample command unchanged. All successful workflow tasks, including `COMPUTE_TPM`, should report `ALREADY_COMPUTED`. Report rebuilding may still run. A repeat is not a fresh performance measurement.
 4. Run all three inputs through automatic discovery with a new output directory. Confirm the same sample IDs and input associations as `all.tsv`. Test an intentionally mismatched filename in a separate copy: planning must stop with an actionable input-layout error.
 5. Serve the report and open `EDA_portal.html`. Filter each sample, search annotations, and export a CSV. Confirm sample/entity IDs and absence of mixed sample records. Sparse annotations and empty RNA/pathway tables may be expected with the tiny reference fixture; skipped pathways must not appear as successful inference.

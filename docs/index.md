@@ -20,8 +20,8 @@ overview
 installation
 getting-started
 containers
-reviewer-test
-reviewer-bundle
+test
+test-bundle
 cami-references
 ```
 
