@@ -131,7 +131,8 @@ class ContainerTests(unittest.TestCase):
         self.assertEqual(record['status'], 'FAILED')
         self.assertFalse(list(self.root.glob('.pt-run-*')))
 
-    def test_build_with_mpdb_plans_export_after_image_without_running_it(self):
+    @patch('metapathways.nextflow.local_capacity', return_value=(4, '32 GB'))
+    def test_build_with_mpdb_plans_export_after_image_without_running_it(self, _):
         with patch.object(pt.nextflow, 'launch') as launch:
             pt.main(['-i', str(self.installer), '-o', str(self.root/'images'), '-d', str(self.root/'MPDB'), '-a', 'blast', '--dryrun'])
         tasks = launch.call_args.args[0]

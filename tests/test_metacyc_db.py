@@ -78,7 +78,8 @@ class MetaCycTests(unittest.TestCase):
         from metapathways.nextflow import memory_bytes
         self.assertEqual(memory_bytes(task['memory']), memory_bytes('32 GB'))
 
-    def test_metacyc_screen_default_and_opt_out(self):
+    @patch('metapathways.nextflow.local_capacity', return_value=(4, '32 GB'))
+    def test_metacyc_screen_default_and_opt_out(self, _):
         image = self.root/'pt.sif'
         image.write_bytes(b'licensed-image-fixture')
         tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, screen_image=image)
@@ -86,6 +87,12 @@ class MetaCycTests(unittest.TestCase):
         self.assertIn('--publish', tasks[-1]['commands'][0])
         tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
         self.assertEqual(len(tasks), 2)
+
+    def test_screen_rejects_insufficient_memory(self):
+        from metapathways.nf_databases import screen_resources
+        with patch('metapathways.nextflow.local_capacity', return_value=(2, '7 GB')):
+            with self.assertRaisesRegex(ValueError, 'available screening budget'):
+                screen_resources(None, '16 GB')
 
     def test_metacyc_only_plan_does_not_download_unrelated_references(self):
         tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
