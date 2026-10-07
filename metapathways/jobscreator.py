@@ -616,7 +616,7 @@ class ContextCreator:
 
             context = contextmod.Context()
             context.name = 'SCAN_rRNA:' + db
-            context.inputs = {  'rRNA_barout_seq':rRNA_barout_seq, 'dbsequences':dbsequences }
+            context.inputs = {  'rRNA_barout_seq':rRNA_barout_seq, 'rRNA_barout_gff':rRNA_barout_gff, 'dbsequences':dbsequences }
             context.inputs1 = { 'dbpath' : dbpath }
             context.outputs = { 'rRNA_blastout':rRNA_blastout, 'rRNA_stat_results': rRNA_stat_results }
 
@@ -634,6 +634,7 @@ class ContextCreator:
                   bscore_cutoff, eval_cutoff, identity_cutoff, subunit, context.inputs['rRNA_barout_seq'])
 
             scan_cmd = scan_cmd +  " -i "  + context.outputs['rRNA_blastout'] + " -d " + context.inputs['dbsequences']
+            scan_cmd += ' --query-gff ' + context.inputs['rRNA_barout_gff']
             context.commands = [scan_cmd, blast_cmd]
             context.status = self.params.get('Pipeline Step Arguments',
                                              'SCAN_rRNA')
@@ -1184,5 +1185,4 @@ class JobCreator():
         # block stages
         if block_mode == False:
             s.addContexts(contextBlock)
-
 
