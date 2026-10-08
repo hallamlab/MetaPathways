@@ -175,20 +175,18 @@
     <tspan x="1135" dy="0">Taxonomy</tspan>
     <tspan x="1135" dy="22">and LCA</tspan>
   </text>
-  <text x="1135" y="694" font-size="18" text-anchor="middle">
-    <tspan x="1135" dy="0">Per reference DB</tspan>
-  </text>
+  <text x="1135" y="694" font-size="18" text-anchor="middle"><tspan x="1135" dy="0">MP</tspan></text>
   <path d="M 1150.12 655 L 1336.5 655" class="wire" />
   <circle cx="1350" cy="655" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
   <text x="1350" y="593" font-size="20" text-anchor="middle">
     <tspan x="1350" dy="0">Annotation tables,</tspan>
     <tspan x="1350" dy="22">GFF / GenBank</tspan>
   </text>
-  <text x="270" y="815" font-size="27" text-anchor="middle">
+  <text x="270" y="800" font-size="27" text-anchor="middle">
     <tspan x="270" dy="0">Community &amp;</tspan>
     <tspan x="270" dy="31">genome pathway</tspan>
     <tspan x="270" dy="31">inference</tspan>
-  </text>
+  <tspan x="270" dy="30">(optional)</tspan></text>
   <rect x="407" y="832" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
   <text x="420" y="852" font-size="20" text-anchor="middle">
     <tspan x="420" dy="0">4</tspan>
@@ -243,9 +241,9 @@
     <tspan x="1350" dy="0">PGDB archives,</tspan>
     <tspan x="1350" dy="23.0">pathway tables</tspan>
   </text>
-  <text x="270" y="1060" font-size="27" text-anchor="middle">
+  <text x="270" y="1045" font-size="27" text-anchor="middle">
     <tspan x="270" dy="0">Read abundance</tspan>
-  </text>
+  <tspan x="270" dy="30">(optional)</tspan></text>
   <rect x="407" y="1047" width="26" height="26" fill="#F5F5F5" stroke="#111111" stroke-width="3" />
   <text x="420" y="1067" font-size="20" text-anchor="middle">
     <tspan x="420" dy="0">5</tspan>
@@ -328,18 +326,14 @@
     <tspan x="925" dy="0">Sample-first</tspan>
     <tspan x="925" dy="22">exploration</tspan>
   </text>
-  <text x="925" y="1259" font-size="18" text-anchor="middle">
-    <tspan x="925" dy="0">HTML report / portal</tspan>
-  </text>
+  <text x="925" y="1259" font-size="18" text-anchor="middle"><tspan x="925" dy="0">MP / JavaScript</tspan></text>
   <path d="M 940.121 1220 L 1119.88 1220" class="wire" />
   <path d="M 1135 1207 L 1148 1220 L 1135 1233 L 1122 1220 Z" fill="#F5F5F5" stroke="#666666" stroke-width="3" />
   <text x="1135" y="1160" font-size="20" text-anchor="middle">
     <tspan x="1135" dy="0">Search, subset</tspan>
     <tspan x="1135" dy="22">and export</tspan>
   </text>
-  <text x="1135" y="1259" font-size="18" text-anchor="middle">
-    <tspan x="1135" dy="0">EDA_portal.html</tspan>
-  </text>
+  <text x="1135" y="1259" font-size="18" text-anchor="middle"><tspan x="1135" dy="0">MP / JavaScript</tspan></text>
   <path d="M 1150.12 1220 L 1336.5 1220" class="wire" />
   <circle cx="1350" cy="1220" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3" />
   <text x="1350" y="1158" font-size="20" text-anchor="middle">
@@ -356,6 +350,4 @@
   <circle cx="590" cy="845" r="2.5" fill="#111111" />
   <circle cx="620" cy="889" r="2.5" fill="#111111" />
   <circle cx="770" cy="845" r="2.5" fill="#111111" />
-  <text x="270" y="907" font-size="17" text-anchor="middle">Optional • licensed Pathway Tools</text>
-  <text x="270" y="1122" font-size="17" text-anchor="middle">Optional • supplied reads</text>
-<path d="M 420 354 L 420 481" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 509 L 420 641" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 669 L 420 831" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 859 L 420 1046" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 1074 L 420 1206" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /></svg>
+  <path d="M 420 354 L 420 481" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 509 L 420 641" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 669 L 420 831" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 859 L 420 1046" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><path d="M 420 1074 L 420 1206" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)" class="module-flow" /><text x="680" y="379" font-size="20" text-anchor="middle"><tspan x="680" dy="0">MP</tspan></text><text x="835" y="379" font-size="20" text-anchor="middle"><tspan x="835" dy="0">MP</tspan></text><text x="990" y="379" font-size="20" text-anchor="middle"><tspan x="990" dy="0">MP</tspan></text><text x="1135" y="379" font-size="20" text-anchor="middle"><tspan x="1135" dy="0">MP</tspan></text><text x="835" y="694" font-size="20" text-anchor="middle"><tspan x="835" dy="0">MP</tspan></text><text x="990" y="694" font-size="20" text-anchor="middle"><tspan x="990" dy="0">MP</tspan></text><text x="990" y="884" font-size="20" text-anchor="middle"><tspan x="990" dy="0">Pathway Tools</tspan></text></svg>

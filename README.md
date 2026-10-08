@@ -47,7 +47,7 @@ metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 
 ## Workflow
 
-[![MetaPathways appnote-style workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.](docs/assets/workflow-main.svg?v=9cdcd4085eb3)](https://hallamlab-metapathways.readthedocs.io/en/latest/workflow.html)
+[![MetaPathways appnote-style workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.](docs/assets/workflow-main.svg?v=mp-tools-20261008)](https://hallamlab-metapathways.readthedocs.io/en/latest/workflow.html)
 
 The **[full user guide](https://hallamlab-metapathways.readthedocs.io/)** covers inputs, databases, Pathway Tools, local and Slurm resources, all commands, reporting and troubleshooting. [Detailed workflow and tool citations](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html).
 

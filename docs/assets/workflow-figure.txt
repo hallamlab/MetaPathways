@@ -9,7 +9,8 @@ It retains the serif typography, numbered module rows,
 blue inputs, green outputs, diamond compute symbols and thin black arrows.
 Updates: optional reads and contig-to-genome maps; per-database taxonomy;
 Nextflow/local/Slurm orchestration; read abundance; combined report and explorer.
-The vertical banner and footer notes are omitted; optional/licensing notes
-remain beside the relevant modules, and the symbol legend is compact.
+The vertical banner and footer notes are omitted; optional modules are marked in their titles, and the symbol legend is compact.
+Process labels sit above diamonds; concise tool/library names sit below every
+compute diamond. Licensing requirements remain in the inputs panel and guide.
 The numbered biological modules are conceptual, not the scheduler DAG.
 The source DOCX has not been modified.
