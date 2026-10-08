@@ -1,5 +1,16 @@
 # Detailed workflow and tool citations
 
+```{container} mp-primary-workflow
+[![Detailed MetaPathways nodal workflow from reference setup through annotation, abundance, pathway inference and reporting](assets/workflow-detailed.svg)](assets/workflow-detailed.svg)
+```
+
+[Open full-size SVG](assets/workflow-detailed.svg) · [Download PDF](assets/workflow-detailed.pdf) · [Brief overview](index.md)
+
+Process names appear above the diamonds; tools and major libraries appear below.
+The numbered modules group related work. Reference/image setup is reusable;
+read abundance and community/genome PGDB tasks follow their own dependencies.
+The three diagrams below expand those dependencies and their inputs.
+
 This page follows a nucleotide assembly through MetaPathways, from reference preparation to connected annotation, abundance and pathway tables. It identifies the software responsible for each calculation and explains how Nextflow schedules it. For a shorter introduction, see the [conceptual overview](overview.md), [local/HPC architecture](architecture.md) and [data-flow overview](data-flow.md).
 
 **If you want pathway/genome databases (PGDBs), complete the [Pathway Tools installation guide](pathway-tools.md) first.** Annotation, read abundance and reporting can run with `--skip_ptools`.

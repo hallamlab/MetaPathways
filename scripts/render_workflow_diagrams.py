@@ -21,6 +21,8 @@ def main():
     parser.add_argument("--mermaid-js", type=Path, help="Local Mermaid 11.12.1 bundle")
     args = parser.parse_args()
     config = json.loads((ROOT / 'docs/diagrams/figures.json').read_text())
+    from render_detailed_workflow import render
+    detailed_svg, detailed_width, detailed_height = render(ROOT)
     rendered = []
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -40,8 +42,10 @@ def main():
                 return new XMLSerializer().serializeToString(div.firstElementChild);
             }''', {'code': code, 'id': ROOT.name.lower() + '-' + item['name']})
             rendered.append((item['name'], ET.fromstring(svg), config['mermaid_scale']))
+        page.set_content('<html><head><style>html,body{margin:0;padding:0}svg{display:block}</style></head><body>' + detailed_svg.read_text() + '</body></html>')
+        page.pdf(path=str(detailed_svg.with_suffix('.pdf')), width=f'{detailed_width}px', height=f'{detailed_height}px', print_background=True, margin=dict(top='0', right='0', bottom='0', left='0'))
         browser.close()
-    for name in ['workflow', 'workflow-brief']:
+    for name in ['workflow', 'workflow-brief', 'workflow-detailed']:
         source_name = 'workflow-main' if name == 'workflow' else name
         source = ROOT / 'docs/assets' / (source_name + '.svg')
         if source.exists():

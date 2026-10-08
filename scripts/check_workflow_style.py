@@ -48,7 +48,7 @@ def check(path):
 
 def main():
     paths = [ROOT / 'docs/assets' / name for name in
-             ('workflow.svg', 'workflow-main.svg', 'workflow-brief.svg')]
+             ('workflow.svg', 'workflow-main.svg', 'workflow-brief.svg', 'workflow-detailed.svg')]
     paths = [p for p in paths if p.exists()]
     if not paths:
         print('No primary workflow SVGs in this checkout; apply docs/WORKFLOW_STYLE.md to new figures.')

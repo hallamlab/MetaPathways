@@ -1,0 +1,463 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="3450" viewBox="0 0 1720 3450" role="img" aria-labelledby="title desc">
+<title id="title">MetaPathways complete software workflow</title>
+<desc id="desc">Numbered conceptual modules with inputs, computational steps, data products and optional branches. See the workflow guide for source-code references and execution order.</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#111111"/></marker></defs>
+<g font-family="Times New Roman, Times, serif" fill="#111111">
+<rect x="20" y="20" width="1680" height="78" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5"/>
+<text x="860" y="53" font-size="28" text-anchor="middle">MetaPathways + Nextflow • Detailed nucleotide-assembly workflow</text>
+<text x="860" y="82" font-size="20" text-anchor="middle">Numbered modules group operations • Dependencies govern execution • Optional branches use additional inputs</text>
+<rect x="20" y="120" width="975" height="130" rx="16" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="1.5"/>
+<text x="45" y="151" font-size="28" text-anchor="start">Inputs</text>
+<text x="45" y="187" font-size="21" text-anchor="start">Assemblies, sample configuration and MPDB reference indexes</text>
+<text x="45" y="216" font-size="21" text-anchor="start">Optional: reads, contig-to-genome map and licensed Pathway Tools SIF</text>
+<rect x="1030" y="120" width="670" height="110" rx="16" fill="#CCCCCC" stroke="#666666" stroke-width="1.5"/>
+<text x="1090" y="152" font-size="21" text-anchor="middle">Module</text>
+<rect x="1078" y="177" width="24" height="24" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="1220" y="152" font-size="21" text-anchor="middle">Compute</text>
+<path d="M1207 189 L1220 176 L1233 189 L1220 202 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1350" y="152" font-size="21" text-anchor="middle">Data</text>
+<circle cx="1350" cy="189" r="12" fill="#F5F5F5" stroke="#666666" stroke-width="3"/>
+<text x="1480" y="152" font-size="21" text-anchor="middle">Input</text>
+<circle cx="1480" cy="189" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="1610" y="152" font-size="21" text-anchor="middle">Output</text>
+<circle cx="1610" cy="189" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="160" y="370.0" font-size="27" text-anchor="middle">Public references</text>
+<rect x="313" y="357.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="377.0" font-size="20" text-anchor="middle">1</text>
+<path d="M339 370.0 L448 370.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="370.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="320.0" font-size="22" text-anchor="middle">Selected public</text>
+<text x="460.0" y="345.0" font-size="22" text-anchor="middle">reference databases</text>
+<path d="M722.0 370.0 L735.0 357.0 L748.0 370.0 L735.0 383.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="320.0" font-size="22" text-anchor="middle">Download and normalize</text>
+<text x="735.0" y="345.0" font-size="22" text-anchor="middle">reference records</text>
+<text x="735.0" y="407.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 370.0 L1010.0 357.0 L1023.0 370.0 L1010.0 383.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="320.0" font-size="22" text-anchor="middle">Build protein / rRNA</text>
+<text x="1010.0" y="345.0" font-size="22" text-anchor="middle">search indexes</text>
+<text x="1010.0" y="407.0" font-size="19" text-anchor="middle">FAST / BLAST+</text>
+<path d="M1272.0 370.0 L1285.0 357.0 L1298.0 370.0 L1285.0 383.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="320.0" font-size="22" text-anchor="middle">Map identifiers,</text>
+<text x="1285.0" y="345.0" font-size="22" text-anchor="middle">taxonomy and ECs</text>
+<text x="1285.0" y="407.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="370.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="320.0" font-size="22" text-anchor="middle">MPDB indexes</text>
+<text x="1560.0" y="345.0" font-size="22" text-anchor="middle">and lookup tables</text>
+<path d="M473.0 370.0 L722.0 370.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 370.0 L997.0 370.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 370.0 L1272.0 370.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 370.0 L1547.0 370.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 384.0 L326 546.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="545.0" font-size="27" text-anchor="middle">Licensed image</text>
+<text x="160" y="575.0" font-size="27" text-anchor="middle">(optional)</text>
+<rect x="313" y="547.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="567.0" font-size="20" text-anchor="middle">2</text>
+<path d="M339 560.0 L448 560.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="560.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="510.0" font-size="22" text-anchor="middle">Licensed Pathway</text>
+<text x="460.0" y="535.0" font-size="22" text-anchor="middle">Tools installer</text>
+<path d="M722.0 560.0 L735.0 547.0 L748.0 560.0 L735.0 573.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="510.0" font-size="22" text-anchor="middle">Build private</text>
+<text x="735.0" y="535.0" font-size="22" text-anchor="middle">SIF image</text>
+<text x="735.0" y="597.0" font-size="19" text-anchor="middle">Apptainer</text>
+<path d="M997.0 560.0 L1010.0 547.0 L1023.0 560.0 L1010.0 573.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="510.0" font-size="22" text-anchor="middle">Validate startup</text>
+<text x="1010.0" y="535.0" font-size="22" text-anchor="middle">and sequence search</text>
+<text x="1010.0" y="597.0" font-size="19" text-anchor="middle">Pathway Tools</text>
+<path d="M1272.0 560.0 L1285.0 547.0 L1298.0 560.0 L1285.0 573.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="510.0" font-size="22" text-anchor="middle">Prepare matching</text>
+<text x="1285.0" y="535.0" font-size="22" text-anchor="middle">MetaCyc references</text>
+<text x="1285.0" y="597.0" font-size="19" text-anchor="middle">MP / Pathway Tools</text>
+<circle cx="1560.0" cy="560.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="510.0" font-size="22" text-anchor="middle">Registered SIF</text>
+<text x="1560.0" y="535.0" font-size="22" text-anchor="middle">and MetaCyc indexes</text>
+<path d="M473.0 560.0 L722.0 560.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 560.0 L997.0 560.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 560.0 L1272.0 560.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 560.0 L1547.0 560.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 574.0 L326 736.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="750.0" font-size="27" text-anchor="middle">Plan and schedule</text>
+<rect x="313" y="737.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="757.0" font-size="20" text-anchor="middle">3</text>
+<path d="M339 750.0 L448 750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="750.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="700.0" font-size="22" text-anchor="middle">Sample manifest,</text>
+<text x="460.0" y="725.0" font-size="22" text-anchor="middle">configuration and MPDB</text>
+<path d="M722.0 750.0 L735.0 737.0 L748.0 750.0 L735.0 763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="700.0" font-size="22" text-anchor="middle">Validate inputs;</text>
+<text x="735.0" y="725.0" font-size="22" text-anchor="middle">resolve sample IDs</text>
+<text x="735.0" y="787.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 750.0 L1010.0 737.0 L1023.0 750.0 L1010.0 763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="700.0" font-size="22" text-anchor="middle">Schedule dependency</text>
+<text x="1010.0" y="725.0" font-size="22" text-anchor="middle">graph and resources</text>
+<text x="1010.0" y="787.0" font-size="19" text-anchor="middle">Nextflow / Slurm</text>
+<path d="M1272.0 750.0 L1285.0 737.0 L1298.0 750.0 L1285.0 763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="700.0" font-size="22" text-anchor="middle">Check receipts;</text>
+<text x="1285.0" y="725.0" font-size="22" text-anchor="middle">reuse or run tasks</text>
+<text x="1285.0" y="787.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="750.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="700.0" font-size="22" text-anchor="middle">Per-sample tasks</text>
+<text x="1560.0" y="725.0" font-size="22" text-anchor="middle">and execution records</text>
+<path d="M473.0 750.0 L722.0 750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 750.0 L997.0 750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 750.0 L1272.0 750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 750.0 L1547.0 750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 764.0 L326 926.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="940.0" font-size="27" text-anchor="middle">Sequence preparation</text>
+<rect x="313" y="927.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="947.0" font-size="20" text-anchor="middle">4</text>
+<path d="M339 940.0 L448 940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="940.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="890.0" font-size="22" text-anchor="middle">Assembly</text>
+<text x="460.0" y="915.0" font-size="22" text-anchor="middle">FASTA sequences</text>
+<path d="M722.0 940.0 L735.0 927.0 L748.0 940.0 L735.0 953.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="890.0" font-size="22" text-anchor="middle">Validate format;</text>
+<text x="735.0" y="915.0" font-size="22" text-anchor="middle">normalize sequences</text>
+<text x="735.0" y="977.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 940.0 L1010.0 927.0 L1023.0 940.0 L1010.0 953.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="890.0" font-size="22" text-anchor="middle">Filter contigs</text>
+<text x="1010.0" y="915.0" font-size="22" text-anchor="middle">by configured criteria</text>
+<text x="1010.0" y="977.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1272.0 940.0 L1285.0 927.0 L1298.0 940.0 L1285.0 953.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="890.0" font-size="22" text-anchor="middle">Map identifiers;</text>
+<text x="1285.0" y="915.0" font-size="22" text-anchor="middle">calculate sequence stats</text>
+<text x="1285.0" y="977.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="940.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="890.0" font-size="22" text-anchor="middle">QCed contigs</text>
+<text x="1560.0" y="915.0" font-size="22" text-anchor="middle">and identifier map</text>
+<path d="M473.0 940.0 L722.0 940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 940.0 L997.0 940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 940.0 L1272.0 940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 940.0 L1547.0 940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 954.0 L326 1116.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="1130.0" font-size="27" text-anchor="middle">Coding features</text>
+<rect x="313" y="1117.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="1137.0" font-size="20" text-anchor="middle">5</text>
+<path d="M339 1130.0 L448 1130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="1130.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="1080.0" font-size="22" text-anchor="middle">QCed nucleotide</text>
+<text x="460.0" y="1105.0" font-size="22" text-anchor="middle">contigs</text>
+<path d="M722.0 1130.0 L735.0 1117.0 L748.0 1130.0 L735.0 1143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="1080.0" font-size="22" text-anchor="middle">Predict coding</text>
+<text x="735.0" y="1105.0" font-size="22" text-anchor="middle">regions and coordinates</text>
+<text x="735.0" y="1167.0" font-size="19" text-anchor="middle">pProdigal</text>
+<path d="M997.0 1130.0 L1010.0 1117.0 L1023.0 1130.0 L1010.0 1143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="1080.0" font-size="22" text-anchor="middle">Derive CDS and</text>
+<text x="1010.0" y="1105.0" font-size="22" text-anchor="middle">amino-acid sequences</text>
+<text x="1010.0" y="1167.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1272.0 1130.0 L1285.0 1117.0 L1298.0 1130.0 L1285.0 1143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="1080.0" font-size="22" text-anchor="middle">Filter predicted</text>
+<text x="1285.0" y="1105.0" font-size="22" text-anchor="middle">protein sequences</text>
+<text x="1285.0" y="1167.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="1130.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="1080.0" font-size="22" text-anchor="middle">CDS coordinates</text>
+<text x="1560.0" y="1105.0" font-size="22" text-anchor="middle">and filtered proteins</text>
+<path d="M473.0 1130.0 L722.0 1130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 1130.0 L997.0 1130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 1130.0 L1272.0 1130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 1130.0 L1547.0 1130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 1144.0 L326 1306.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="1320.0" font-size="27" text-anchor="middle">Functional search</text>
+<rect x="313" y="1307.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="1327.0" font-size="20" text-anchor="middle">6</text>
+<path d="M339 1320.0 L448 1320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="1320.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="1270.0" font-size="22" text-anchor="middle">Filtered proteins</text>
+<text x="460.0" y="1295.0" font-size="22" text-anchor="middle">and MPDB indexes</text>
+<path d="M722.0 1320.0 L735.0 1307.0 L748.0 1320.0 L735.0 1333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="1270.0" font-size="22" text-anchor="middle">Search selected</text>
+<text x="735.0" y="1295.0" font-size="22" text-anchor="middle">protein references</text>
+<text x="735.0" y="1357.0" font-size="19" text-anchor="middle">FAST / BLAST+</text>
+<path d="M997.0 1320.0 L1010.0 1307.0 L1023.0 1320.0 L1010.0 1333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="1270.0" font-size="22" text-anchor="middle">Compute sequence</text>
+<text x="1010.0" y="1295.0" font-size="22" text-anchor="middle">reference scores</text>
+<text x="1010.0" y="1357.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1272.0 1320.0 L1285.0 1307.0 L1298.0 1320.0 L1285.0 1333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="1270.0" font-size="22" text-anchor="middle">Apply thresholds;</text>
+<text x="1285.0" y="1295.0" font-size="22" text-anchor="middle">parse hits per database</text>
+<text x="1285.0" y="1357.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="1320.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="1270.0" font-size="22" text-anchor="middle">Database-specific</text>
+<text x="1560.0" y="1295.0" font-size="22" text-anchor="middle">functional evidence</text>
+<path d="M473.0 1320.0 L722.0 1320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 1320.0 L997.0 1320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 1320.0 L1272.0 1320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 1320.0 L1547.0 1320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 1334.0 L326 1496.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="1510.0" font-size="27" text-anchor="middle">RNA features</text>
+<rect x="313" y="1497.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="1517.0" font-size="20" text-anchor="middle">7</text>
+<path d="M339 1510.0 L448 1510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="1510.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="1460.0" font-size="22" text-anchor="middle">QCed contigs and</text>
+<text x="460.0" y="1485.0" font-size="22" text-anchor="middle">rRNA reference indexes</text>
+<path d="M722.0 1510.0 L735.0 1497.0 L748.0 1510.0 L735.0 1523.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="1460.0" font-size="22" text-anchor="middle">Predict rRNA</text>
+<text x="735.0" y="1485.0" font-size="22" text-anchor="middle">coordinates</text>
+<text x="735.0" y="1547.0" font-size="19" text-anchor="middle">barrnap</text>
+<path d="M997.0 1510.0 L1010.0 1497.0 L1023.0 1510.0 L1010.0 1523.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="1460.0" font-size="22" text-anchor="middle">Search rRNA</text>
+<text x="1010.0" y="1485.0" font-size="22" text-anchor="middle">reference sequences</text>
+<text x="1010.0" y="1547.0" font-size="19" text-anchor="middle">BLAST+</text>
+<path d="M1272.0 1510.0 L1285.0 1497.0 L1298.0 1510.0 L1285.0 1523.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="1460.0" font-size="22" text-anchor="middle">Predict tRNA</text>
+<text x="1285.0" y="1485.0" font-size="22" text-anchor="middle">coordinates and types</text>
+<text x="1285.0" y="1547.0" font-size="19" text-anchor="middle">ptRNAscan-SE</text>
+<circle cx="1560.0" cy="1510.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="1460.0" font-size="22" text-anchor="middle">rRNA / tRNA features</text>
+<text x="1560.0" y="1485.0" font-size="22" text-anchor="middle">and reference hits</text>
+<path d="M473.0 1510.0 L722.0 1510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 1510.0 L997.0 1510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 1510.0 L1272.0 1510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 1510.0 L1547.0 1510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 1524.0 L326 1686.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="1700.0" font-size="27" text-anchor="middle">Feature integration</text>
+<rect x="313" y="1687.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="1707.0" font-size="20" text-anchor="middle">8</text>
+<path d="M339 1700.0 L448 1700.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="1700.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="1650.0" font-size="22" text-anchor="middle">Protein evidence</text>
+<text x="460.0" y="1675.0" font-size="22" text-anchor="middle">and RNA features</text>
+<path d="M813.6666666666667 1700.0 L826.6666666666667 1687.0 L839.6666666666667 1700.0 L826.6666666666667 1713.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="826.6666666666667" y="1650.0" font-size="22" text-anchor="middle">Combine functional</text>
+<text x="826.6666666666667" y="1675.0" font-size="22" text-anchor="middle">and RNA annotations</text>
+<text x="826.6666666666667" y="1737.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1180.3333333333335 1700.0 L1193.3333333333335 1687.0 L1206.3333333333335 1700.0 L1193.3333333333335 1713.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1193.3333333333335" y="1650.0" font-size="22" text-anchor="middle">Resolve overlapping</text>
+<text x="1193.3333333333335" y="1675.0" font-size="22" text-anchor="middle">sequence features</text>
+<text x="1193.3333333333335" y="1737.0" font-size="19" text-anchor="middle">pybedtools / BEDTools</text>
+<circle cx="1560.0" cy="1700.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="1650.0" font-size="22" text-anchor="middle">Integrated features</text>
+<text x="1560.0" y="1675.0" font-size="22" text-anchor="middle">and annotated GFF</text>
+<path d="M473.0 1700.0 L813.6666666666667 1700.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M839.6666666666667 1700.0 L1180.3333333333335 1700.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1206.3333333333335 1700.0 L1547.0 1700.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 1714.0 L326 1876.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="1890.0" font-size="27" text-anchor="middle">Annotation tables</text>
+<rect x="313" y="1877.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="1897.0" font-size="20" text-anchor="middle">9</text>
+<path d="M339 1890.0 L448 1890.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="1890.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="1840.0" font-size="22" text-anchor="middle">Integrated features</text>
+<text x="460.0" y="1865.0" font-size="22" text-anchor="middle">and reference taxonomy</text>
+<path d="M722.0 1890.0 L735.0 1877.0 L748.0 1890.0 L735.0 1903.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="1840.0" font-size="22" text-anchor="middle">Map functional</text>
+<text x="735.0" y="1865.0" font-size="22" text-anchor="middle">identifiers and names</text>
+<text x="735.0" y="1927.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 1890.0 L1010.0 1877.0 L1023.0 1890.0 L1010.0 1903.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="1840.0" font-size="22" text-anchor="middle">Assign per-database</text>
+<text x="1010.0" y="1865.0" font-size="22" text-anchor="middle">hit taxonomy / LCA</text>
+<text x="1010.0" y="1927.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1272.0 1890.0 L1285.0 1877.0 L1298.0 1890.0 L1285.0 1903.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="1840.0" font-size="22" text-anchor="middle">Write annotation</text>
+<text x="1285.0" y="1865.0" font-size="22" text-anchor="middle">and reference tables</text>
+<text x="1285.0" y="1927.0" font-size="19" text-anchor="middle">MP / pandas</text>
+<circle cx="1560.0" cy="1890.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="1840.0" font-size="22" text-anchor="middle">Functional / taxonomic</text>
+<text x="1560.0" y="1865.0" font-size="22" text-anchor="middle">annotation tables</text>
+<path d="M473.0 1890.0 L722.0 1890.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 1890.0 L997.0 1890.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 1890.0 L1272.0 1890.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 1890.0 L1547.0 1890.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 1904.0 L326 2066.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="2080.0" font-size="27" text-anchor="middle">Annotated exports</text>
+<rect x="313" y="2067.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="2087.0" font-size="20" text-anchor="middle">10</text>
+<path d="M339 2080.0 L448 2080.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="2080.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="2030.0" font-size="22" text-anchor="middle">Contigs, features</text>
+<text x="460.0" y="2055.0" font-size="22" text-anchor="middle">and annotation tables</text>
+<path d="M722.0 2080.0 L735.0 2067.0 L748.0 2080.0 L735.0 2093.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="2030.0" font-size="22" text-anchor="middle">Export annotated</text>
+<text x="735.0" y="2055.0" font-size="22" text-anchor="middle">sequence records</text>
+<text x="735.0" y="2117.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 2080.0 L1010.0 2067.0 L1023.0 2080.0 L1010.0 2093.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="2030.0" font-size="22" text-anchor="middle">Prepare PF features</text>
+<text x="1010.0" y="2055.0" font-size="22" text-anchor="middle">and coordinate maps</text>
+<text x="1010.0" y="2117.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M1272.0 2080.0 L1285.0 2067.0 L1298.0 2080.0 L1285.0 2093.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="2030.0" font-size="22" text-anchor="middle">Build EC / reaction</text>
+<text x="1285.0" y="2055.0" font-size="22" text-anchor="middle">and ORF mappings</text>
+<text x="1285.0" y="2117.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="2080.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="2030.0" font-size="22" text-anchor="middle">GenBank and</text>
+<text x="1560.0" y="2055.0" font-size="22" text-anchor="middle">Pathway Tools inputs</text>
+<path d="M473.0 2080.0 L722.0 2080.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 2080.0 L997.0 2080.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 2080.0 L1272.0 2080.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 2080.0 L1547.0 2080.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 2094.0 L326 2256.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="2255.0" font-size="27" text-anchor="middle">Read abundance</text>
+<text x="160" y="2285.0" font-size="27" text-anchor="middle">(optional)</text>
+<rect x="313" y="2257.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="2277.0" font-size="20" text-anchor="middle">11</text>
+<path d="M339 2270.0 L448 2270.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="2270.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="2220.0" font-size="22" text-anchor="middle">Reads, contigs</text>
+<text x="460.0" y="2245.0" font-size="22" text-anchor="middle">and annotated features</text>
+<path d="M722.0 2270.0 L735.0 2257.0 L748.0 2270.0 L735.0 2283.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="2220.0" font-size="22" text-anchor="middle">Map reads;</text>
+<text x="735.0" y="2245.0" font-size="22" text-anchor="middle">measure contig coverage</text>
+<text x="735.0" y="2307.0" font-size="19" text-anchor="middle">CoverM</text>
+<path d="M997.0 2270.0 L1010.0 2257.0 L1023.0 2270.0 L1010.0 2283.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="2220.0" font-size="22" text-anchor="middle">Name-sort the</text>
+<text x="1010.0" y="2245.0" font-size="22" text-anchor="middle">exact mapping BAM</text>
+<text x="1010.0" y="2307.0" font-size="19" text-anchor="middle">SAMtools</text>
+<path d="M1272.0 2270.0 L1285.0 2257.0 L1298.0 2270.0 L1285.0 2283.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="2220.0" font-size="22" text-anchor="middle">Count features;</text>
+<text x="1285.0" y="2245.0" font-size="22" text-anchor="middle">normalize abundances</text>
+<text x="1285.0" y="2307.0" font-size="19" text-anchor="middle">featureCounts / MP</text>
+<circle cx="1560.0" cy="2270.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="2220.0" font-size="22" text-anchor="middle">Contig coverage, counts</text>
+<text x="1560.0" y="2245.0" font-size="22" text-anchor="middle">and RPKM / TPM</text>
+<path d="M473.0 2270.0 L722.0 2270.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 2270.0 L997.0 2270.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 2270.0 L1272.0 2270.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 2270.0 L1547.0 2270.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 2284.0 L326 2496.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="2495.0" font-size="27" text-anchor="middle">Community / MAG inputs</text>
+<text x="160" y="2525.0" font-size="27" text-anchor="middle">(optional)</text>
+<rect x="313" y="2497.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="2517.0" font-size="20" text-anchor="middle">12</text>
+<path d="M339 2510.0 L350 2510.0" fill="none" stroke="#111111" stroke-width="1.5"/>
+<path d="M350 2510.0 L350 2446.0 L448 2446.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460" cy="2446.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460" y="2396.0" font-size="22" text-anchor="middle">Community features</text>
+<text x="460" y="2421.0" font-size="22" text-anchor="middle">and contig sequences</text>
+<path d="M807 2446.0 L820 2433.0 L833 2446.0 L820 2459.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="820" y="2396.0" font-size="22" text-anchor="middle">Stage sequence-backed</text>
+<text x="820" y="2421.0" font-size="22" text-anchor="middle">community inputs</text>
+<text x="820" y="2483.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1160" cy="2446.0" r="12" fill="#F5F5F5" stroke="#666666" stroke-width="3"/>
+<text x="1160" y="2396.0" font-size="22" text-anchor="middle">Community</text>
+<text x="1160" y="2421.0" font-size="22" text-anchor="middle">entity input files</text>
+<path d="M473 2446.0 L807 2446.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M833 2446.0 L1147 2446.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1173 2446.0 L1370 2446.0 L1370 2510.0" fill="none" stroke="#111111" stroke-width="1.5"/>
+<path d="M350 2510.0 L350 2574.0 L448 2574.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460" cy="2574.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460" y="2524.0" font-size="22" text-anchor="middle">Existing annotations</text>
+<text x="460" y="2549.0" font-size="22" text-anchor="middle">and contig-to-MAG map</text>
+<path d="M807 2574.0 L820 2561.0 L833 2574.0 L820 2587.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="820" y="2524.0" font-size="22" text-anchor="middle">Partition existing</text>
+<text x="820" y="2549.0" font-size="22" text-anchor="middle">features by genome</text>
+<text x="820" y="2611.0" font-size="19" text-anchor="middle">MAGSplitter</text>
+<path d="M1147 2574.0 L1160 2561.0 L1173 2574.0 L1160 2587.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1160" y="2524.0" font-size="22" text-anchor="middle">Stage genome sequences</text>
+<text x="1160" y="2549.0" font-size="22" text-anchor="middle">and coordinate maps</text>
+<text x="1160" y="2611.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M473 2574.0 L807 2574.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M833 2574.0 L1147 2574.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1173 2574.0 L1370 2574.0 L1370 2510.0" fill="none" stroke="#111111" stroke-width="1.5"/>
+<path d="M1370 2510.0 L1548 2510.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="1560" cy="2510.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560" y="2460.0" font-size="22" text-anchor="middle">Prepared community</text>
+<text x="1560" y="2485.0" font-size="22" text-anchor="middle">and genome entities</text>
+<path d="M326 2524.0 L326 2736.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="2750.0" font-size="27" text-anchor="middle">Build PGDBs (optional)</text>
+<rect x="313" y="2737.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="2757.0" font-size="20" text-anchor="middle">13</text>
+<path d="M339 2750.0 L448 2750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="2750.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="2700.0" font-size="22" text-anchor="middle">Prepared entities</text>
+<text x="460.0" y="2725.0" font-size="22" text-anchor="middle">and licensed SIF</text>
+<path d="M722.0 2750.0 L735.0 2737.0 L748.0 2750.0 L735.0 2763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="2700.0" font-size="22" text-anchor="middle">Start private</text>
+<text x="735.0" y="2725.0" font-size="22" text-anchor="middle">instance per entity</text>
+<text x="735.0" y="2787.0" font-size="19" text-anchor="middle">Pathway Tools</text>
+<path d="M997.0 2750.0 L1010.0 2737.0 L1023.0 2750.0 L1010.0 2763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="2700.0" font-size="22" text-anchor="middle">Infer metabolic</text>
+<text x="1010.0" y="2725.0" font-size="22" text-anchor="middle">pathways</text>
+<text x="1010.0" y="2787.0" font-size="19" text-anchor="middle">PathoLogic</text>
+<path d="M1272.0 2750.0 L1285.0 2737.0 L1298.0 2750.0 L1285.0 2763.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="2700.0" font-size="22" text-anchor="middle">Save / export</text>
+<text x="1285.0" y="2725.0" font-size="22" text-anchor="middle">pathway databases</text>
+<text x="1285.0" y="2787.0" font-size="19" text-anchor="middle">Pathway Tools</text>
+<circle cx="1560.0" cy="2750.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="2700.0" font-size="22" text-anchor="middle">Community / genome</text>
+<text x="1560.0" y="2725.0" font-size="22" text-anchor="middle">PGDB archives</text>
+<path d="M473.0 2750.0 L722.0 2750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 2750.0 L997.0 2750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 2750.0 L1272.0 2750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 2750.0 L1547.0 2750.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 2764.0 L326 2926.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="2925.0" font-size="27" text-anchor="middle">Pathway extraction</text>
+<text x="160" y="2955.0" font-size="27" text-anchor="middle">(optional)</text>
+<rect x="313" y="2927.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="2947.0" font-size="20" text-anchor="middle">14</text>
+<path d="M339 2940.0 L448 2940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="2940.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="2890.0" font-size="22" text-anchor="middle">Exported PGDB</text>
+<text x="460.0" y="2915.0" font-size="22" text-anchor="middle">flat files</text>
+<path d="M813.6666666666667 2940.0 L826.6666666666667 2927.0 L839.6666666666667 2940.0 L826.6666666666667 2953.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="826.6666666666667" y="2890.0" font-size="22" text-anchor="middle">Extract pathways</text>
+<text x="826.6666666666667" y="2915.0" font-size="22" text-anchor="middle">and gene associations</text>
+<text x="826.6666666666667" y="2977.0" font-size="19" text-anchor="middle">Camelot / MP</text>
+<path d="M1180.3333333333335 2940.0 L1193.3333333333335 2927.0 L1206.3333333333335 2940.0 L1193.3333333333335 2953.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1193.3333333333335" y="2890.0" font-size="22" text-anchor="middle">Preserve feature IDs;</text>
+<text x="1193.3333333333335" y="2915.0" font-size="22" text-anchor="middle">write linked tables</text>
+<text x="1193.3333333333335" y="2977.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="2940.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="2890.0" font-size="22" text-anchor="middle">Pathway and</text>
+<text x="1560.0" y="2915.0" font-size="22" text-anchor="middle">pathway-to-ORF tables</text>
+<path d="M473.0 2940.0 L813.6666666666667 2940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M839.6666666666667 2940.0 L1180.3333333333335 2940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1206.3333333333335 2940.0 L1547.0 2940.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 2954.0 L326 3116.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="3130.0" font-size="27" text-anchor="middle">Results integration</text>
+<rect x="313" y="3117.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="3137.0" font-size="20" text-anchor="middle">15</text>
+<path d="M339 3130.0 L448 3130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="3130.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="3055.0" font-size="22" text-anchor="middle">Available annotation,</text>
+<text x="460.0" y="3080.0" font-size="22" text-anchor="middle">abundance and</text>
+<text x="460.0" y="3105.0" font-size="22" text-anchor="middle">pathway tables</text>
+<path d="M722.0 3130.0 L735.0 3117.0 L748.0 3130.0 L735.0 3143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="3080.0" font-size="22" text-anchor="middle">Join scoped sample,</text>
+<text x="735.0" y="3105.0" font-size="22" text-anchor="middle">feature and genome IDs</text>
+<text x="735.0" y="3167.0" font-size="19" text-anchor="middle">MP / SQLite</text>
+<path d="M997.0 3130.0 L1010.0 3117.0 L1023.0 3130.0 L1010.0 3143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="3080.0" font-size="22" text-anchor="middle">Record task outcomes</text>
+<text x="1010.0" y="3105.0" font-size="22" text-anchor="middle">and resource summaries</text>
+<text x="1010.0" y="3167.0" font-size="19" text-anchor="middle">MP / Nextflow</text>
+<path d="M1272.0 3130.0 L1285.0 3117.0 L1298.0 3130.0 L1285.0 3143.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="3080.0" font-size="22" text-anchor="middle">Build run report</text>
+<text x="1285.0" y="3105.0" font-size="22" text-anchor="middle">and results index</text>
+<text x="1285.0" y="3167.0" font-size="19" text-anchor="middle">MP</text>
+<circle cx="1560.0" cy="3130.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="3080.0" font-size="22" text-anchor="middle">Run report and</text>
+<text x="1560.0" y="3105.0" font-size="22" text-anchor="middle">SQLite results index</text>
+<path d="M473.0 3130.0 L722.0 3130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 3130.0 L997.0 3130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 3130.0 L1272.0 3130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 3130.0 L1547.0 3130.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M326 3144.0 L326 3306.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="160" y="3320.0" font-size="27" text-anchor="middle">Explore and export</text>
+<rect x="313" y="3307.0" width="26" height="26" rx="0" fill="#F5F5F5" stroke="#111111" stroke-width="1.5"/>
+<text x="326" y="3327.0" font-size="20" text-anchor="middle">16</text>
+<path d="M339 3320.0 L448 3320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="460.0" cy="3320.0" r="12" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="3"/>
+<text x="460.0" y="3270.0" font-size="22" text-anchor="middle">Results index</text>
+<text x="460.0" y="3295.0" font-size="22" text-anchor="middle">and linked tables</text>
+<path d="M722.0 3320.0 L735.0 3307.0 L748.0 3320.0 L735.0 3333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="735.0" y="3270.0" font-size="22" text-anchor="middle">Browse samples, features</text>
+<text x="735.0" y="3295.0" font-size="22" text-anchor="middle">and pathways</text>
+<text x="735.0" y="3357.0" font-size="19" text-anchor="middle">MP</text>
+<path d="M997.0 3320.0 L1010.0 3307.0 L1023.0 3320.0 L1010.0 3333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1010.0" y="3270.0" font-size="22" text-anchor="middle">Search, filter</text>
+<text x="1010.0" y="3295.0" font-size="22" text-anchor="middle">and select records</text>
+<text x="1010.0" y="3357.0" font-size="19" text-anchor="middle">MP / JavaScript</text>
+<path d="M1272.0 3320.0 L1285.0 3307.0 L1298.0 3320.0 L1285.0 3333.0 Z" fill="#f5f5f5" stroke="#666666" stroke-width="3"/>
+<text x="1285.0" y="3270.0" font-size="22" text-anchor="middle">Export selected</text>
+<text x="1285.0" y="3295.0" font-size="22" text-anchor="middle">result tables</text>
+<text x="1285.0" y="3357.0" font-size="19" text-anchor="middle">MP / SQLite</text>
+<circle cx="1560.0" cy="3320.0" r="12" fill="#D5E8D4" stroke="#82B366" stroke-width="3"/>
+<text x="1560.0" y="3270.0" font-size="22" text-anchor="middle">EDA portal</text>
+<text x="1560.0" y="3295.0" font-size="22" text-anchor="middle">and selected CSVs</text>
+<path d="M473.0 3320.0 L722.0 3320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M748.0 3320.0 L997.0 3320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1023.0 3320.0 L1272.0 3320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M1298.0 3320.0 L1547.0 3320.0" fill="none" stroke="#111111" stroke-width="1.5" marker-end="url(#arrow)"/>
+</g>
+</svg>

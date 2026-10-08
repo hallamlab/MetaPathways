@@ -1,0 +1,491 @@
+{
+  "title": "MetaPathways",
+  "controller": "MetaPathways + Nextflow • Detailed nucleotide-assembly workflow",
+  "execution": "Numbered modules group operations • Dependencies govern execution • Optional branches use additional inputs",
+  "inputs": [
+    "Assemblies, sample configuration and MPDB reference indexes",
+    "Optional: reads, contig-to-genome map and licensed Pathway Tools SIF"
+  ],
+  "rows": [
+    {
+      "title": "Public references",
+      "nodes": [
+        {
+          "label": "Selected public\nreference databases",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Download and normalize\nreference records",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Build protein / rRNA\nsearch indexes",
+          "tool": "FAST / BLAST+",
+          "kind": "compute"
+        },
+        {
+          "label": "Map identifiers,\ntaxonomy and ECs",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "MPDB indexes\nand lookup tables",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Licensed image (optional)",
+      "nodes": [
+        {
+          "label": "Licensed Pathway\nTools installer",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Build private\nSIF image",
+          "tool": "Apptainer",
+          "kind": "compute"
+        },
+        {
+          "label": "Validate startup\nand sequence search",
+          "tool": "Pathway Tools",
+          "kind": "compute"
+        },
+        {
+          "label": "Prepare matching\nMetaCyc references",
+          "tool": "MP / Pathway Tools",
+          "kind": "compute"
+        },
+        {
+          "label": "Registered SIF\nand MetaCyc indexes",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Plan and schedule",
+      "nodes": [
+        {
+          "label": "Sample manifest,\nconfiguration and MPDB",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Validate inputs;\nresolve sample IDs",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Schedule dependency\ngraph and resources",
+          "tool": "Nextflow / Slurm",
+          "kind": "compute"
+        },
+        {
+          "label": "Check receipts;\nreuse or run tasks",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Per-sample tasks\nand execution records",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Sequence preparation",
+      "nodes": [
+        {
+          "label": "Assembly\nFASTA sequences",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Validate format;\nnormalize sequences",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Filter contigs\nby configured criteria",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Map identifiers;\ncalculate sequence stats",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "QCed contigs\nand identifier map",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Coding features",
+      "nodes": [
+        {
+          "label": "QCed nucleotide\ncontigs",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Predict coding\nregions and coordinates",
+          "tool": "pProdigal",
+          "kind": "compute"
+        },
+        {
+          "label": "Derive CDS and\namino-acid sequences",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Filter predicted\nprotein sequences",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "CDS coordinates\nand filtered proteins",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Functional search",
+      "nodes": [
+        {
+          "label": "Filtered proteins\nand MPDB indexes",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Search selected\nprotein references",
+          "tool": "FAST / BLAST+",
+          "kind": "compute"
+        },
+        {
+          "label": "Compute sequence\nreference scores",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Apply thresholds;\nparse hits per database",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Database-specific\nfunctional evidence",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "RNA features",
+      "nodes": [
+        {
+          "label": "QCed contigs and\nrRNA reference indexes",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Predict rRNA\ncoordinates",
+          "tool": "barrnap",
+          "kind": "compute"
+        },
+        {
+          "label": "Search rRNA\nreference sequences",
+          "tool": "BLAST+",
+          "kind": "compute"
+        },
+        {
+          "label": "Predict tRNA\ncoordinates and types",
+          "tool": "ptRNAscan-SE",
+          "kind": "compute"
+        },
+        {
+          "label": "rRNA / tRNA features\nand reference hits",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Feature integration",
+      "nodes": [
+        {
+          "label": "Protein evidence\nand RNA features",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Combine functional\nand RNA annotations",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Resolve overlapping\nsequence features",
+          "tool": "pybedtools / BEDTools",
+          "kind": "compute"
+        },
+        {
+          "label": "Integrated features\nand annotated GFF",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Annotation tables",
+      "nodes": [
+        {
+          "label": "Integrated features\nand reference taxonomy",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Map functional\nidentifiers and names",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Assign per-database\nhit taxonomy / LCA",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Write annotation\nand reference tables",
+          "tool": "MP / pandas",
+          "kind": "compute"
+        },
+        {
+          "label": "Functional / taxonomic\nannotation tables",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Annotated exports",
+      "nodes": [
+        {
+          "label": "Contigs, features\nand annotation tables",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Export annotated\nsequence records",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Prepare PF features\nand coordinate maps",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Build EC / reaction\nand ORF mappings",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "GenBank and\nPathway Tools inputs",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Read abundance (optional)",
+      "nodes": [
+        {
+          "label": "Reads, contigs\nand annotated features",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Map reads;\nmeasure contig coverage",
+          "tool": "CoverM",
+          "kind": "compute"
+        },
+        {
+          "label": "Name-sort the\nexact mapping BAM",
+          "tool": "SAMtools",
+          "kind": "compute"
+        },
+        {
+          "label": "Count features;\nnormalize abundances",
+          "tool": "featureCounts / MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Contig coverage, counts\nand RPKM / TPM",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Community / MAG inputs (optional)",
+      "lanes": [
+        [
+          {
+            "label": "Community features\nand contig sequences",
+            "tool": "",
+            "kind": "input"
+          },
+          {
+            "label": "Stage sequence-backed\ncommunity inputs",
+            "tool": "MP",
+            "kind": "compute"
+          },
+          {
+            "label": "Community\nentity input files",
+            "tool": "",
+            "kind": "data"
+          }
+        ],
+        [
+          {
+            "label": "Existing annotations\nand contig-to-MAG map",
+            "tool": "",
+            "kind": "input"
+          },
+          {
+            "label": "Partition existing\nfeatures by genome",
+            "tool": "MAGSplitter",
+            "kind": "compute"
+          },
+          {
+            "label": "Stage genome sequences\nand coordinate maps",
+            "tool": "MP",
+            "kind": "compute"
+          }
+        ]
+      ],
+      "result": "Prepared community\nand genome entities"
+    },
+    {
+      "title": "Build PGDBs (optional)",
+      "nodes": [
+        {
+          "label": "Prepared entities\nand licensed SIF",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Start private\ninstance per entity",
+          "tool": "Pathway Tools",
+          "kind": "compute"
+        },
+        {
+          "label": "Infer metabolic\npathways",
+          "tool": "PathoLogic",
+          "kind": "compute"
+        },
+        {
+          "label": "Save / export\npathway databases",
+          "tool": "Pathway Tools",
+          "kind": "compute"
+        },
+        {
+          "label": "Community / genome\nPGDB archives",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Pathway extraction (optional)",
+      "nodes": [
+        {
+          "label": "Exported PGDB\nflat files",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Extract pathways\nand gene associations",
+          "tool": "Camelot / MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Preserve feature IDs;\nwrite linked tables",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Pathway and\npathway-to-ORF tables",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Results integration",
+      "nodes": [
+        {
+          "label": "Available annotation,\nabundance and\npathway tables",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Join scoped sample,\nfeature and genome IDs",
+          "tool": "MP / SQLite",
+          "kind": "compute"
+        },
+        {
+          "label": "Record task outcomes\nand resource summaries",
+          "tool": "MP / Nextflow",
+          "kind": "compute"
+        },
+        {
+          "label": "Build run report\nand results index",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Run report and\nSQLite results index",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    },
+    {
+      "title": "Explore and export",
+      "nodes": [
+        {
+          "label": "Results index\nand linked tables",
+          "tool": "",
+          "kind": "input"
+        },
+        {
+          "label": "Browse samples, features\nand pathways",
+          "tool": "MP",
+          "kind": "compute"
+        },
+        {
+          "label": "Search, filter\nand select records",
+          "tool": "MP / JavaScript",
+          "kind": "compute"
+        },
+        {
+          "label": "Export selected\nresult tables",
+          "tool": "MP / SQLite",
+          "kind": "compute"
+        },
+        {
+          "label": "EDA portal\nand selected CSVs",
+          "tool": "",
+          "kind": "output"
+        }
+      ]
+    }
+  ]
+}

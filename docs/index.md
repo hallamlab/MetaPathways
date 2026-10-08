@@ -8,7 +8,7 @@ Annotate metagenomes, measure read abundance, infer community and genome pathway
 [![MetaPathways workflow: six conceptual modules for preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer, orchestrated by Nextflow locally or on Slurm.](assets/workflow-main.svg)](assets/workflow-main.svg)
 ```
 
-Arrows between numbered modules trace the conceptual flow of results; independent tasks and optional branches follow the dependencies in the detailed workflow. Optional reads add abundance; genome maps add genome-specific analysis. The report and explorer connect available results for searching, subsetting and CSV export. [View the SVG](assets/workflow-main.svg) · [Detailed workflow and citations](detailed-workflow.md).
+Arrows between numbered modules trace the conceptual flow of results; independent tasks and optional branches follow the dependencies in the detailed workflow. Optional reads add abundance; genome maps add genome-specific analysis. The report and explorer connect available results for searching, subsetting and CSV export. [View the SVG](assets/workflow-main.svg) · [Detailed nodal workflow and citations](detailed-workflow.md).
 
 ## Start simple
 
