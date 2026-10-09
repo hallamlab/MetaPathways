@@ -242,10 +242,10 @@ def build(args):
                 cwd=testdir, log=output / "version-check.log")
             run(*runner, "python", "-c",
                 "import sys; from importlib.metadata import version; from packaging.version import Version; "
-                "import importlib.util; assert importlib.util.find_spec('pip') is None; "
-                "assert sys.version_info >= (3, 11); "
-                "assert Version(version('urllib3')) >= Version('2.8.0'); "
-                "assert Version(version('setuptools')) >= Version('83.0.0'); "
+                "import importlib.util; assert importlib.util.find_spec('pip') is None, 'pip must remain build-time only in the Conda package'; "
+                "assert sys.version_info >= (3, 11), 'Python >=3.11 required'; "
+                "assert Version(version('urllib3')) >= Version('2.8.0'), 'urllib3 >=2.8.0 required'; "
+                "assert Version(version('setuptools')) >= Version('83.0.0'), 'setuptools >=83.0.0 required'; "
                 "print({n: version(n) for n in ['urllib3', 'setuptools']})",
                 cwd=testdir, log=output / "security-dependencies.log")
             run(*runner, "magsplitter", "--help", cwd=testdir, log=output / "magsplitter.log")

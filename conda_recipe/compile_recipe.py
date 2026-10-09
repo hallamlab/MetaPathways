@@ -1,6 +1,7 @@
 """Render the Conda recipe from the exact source archive and runtime environment."""
 import argparse
 import hashlib
+import re
 from pathlib import Path
 import shlex
 import sys
@@ -12,6 +13,14 @@ sys.path.insert(0, str(ROOT))
 from setup import NAME, VERSION, ENTRY_POINTS
 
 
+def runtime_dependencies(dependencies):
+    """Keep source-install tooling out of the packaged runtime."""
+    if not isinstance(dependencies, list) or not all(isinstance(d, str) for d in dependencies):
+        raise ValueError("Conda runtime dependencies must be explicit package strings, not pip/VCS entries.")
+    return [d for d in dependencies
+            if re.split(r"[<>=!~\s\[]", d.split("::")[-1], maxsplit=1)[0] != "pip"]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sdist", type=Path, default=ROOT / "dist" / f"{NAME}-{VERSION}.tar.gz")
@@ -21,8 +30,10 @@ def main():
     if archive.name != f"{NAME}-{VERSION}.tar.gz" or not archive.is_file():
         parser.error(f"Expected source archive {NAME}-{VERSION}.tar.gz; got {archive}")
     deps = yaml.safe_load((ROOT / "docker/conda_base.yml").read_text())
-    if not all(isinstance(d, str) for d in deps["dependencies"]):
-        parser.error("Conda runtime dependencies must be explicit package strings, not pip/VCS entries.")
+    try:
+        runtime = runtime_dependencies(deps["dependencies"])
+    except ValueError as error:
+        parser.error(str(error))
     helper_sources = []
     for line in (ROOT / "requirements-workflow.txt").read_text().splitlines():
         if not line.strip() or line.startswith("#"):
@@ -35,7 +46,7 @@ def main():
         "<NAME>": NAME,
         "<VERSION>": VERSION,
         "<ENTRY>": "\n".join(f"    - {e}" for e in ENTRY_POINTS),
-        "<REQUIREMENTS>": "\n".join(f"    - {d}" for d in deps["dependencies"]),
+        "<REQUIREMENTS>": "\n".join(f"    - {d}" for d in runtime),
         "<TAR>": archive.as_uri(),
         "<SHA256>": hashlib.sha256(archive.read_bytes()).hexdigest(),
     }
