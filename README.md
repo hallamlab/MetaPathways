@@ -14,7 +14,7 @@ On Linux x86-64, install MetaPathways and its workflow dependencies with Mamba:
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=3.5.2
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.0
 conda activate metapathways
 ```
 

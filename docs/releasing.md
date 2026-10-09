@@ -2,13 +2,14 @@
 
 [User documentation](index.md) · [Reproducibility](reproducibility.md)
 
-This chapter is for maintainers publishing packages, not users installing or running MP. Its release examples describe the existing 3.5.x release process. Every release candidate must pass package and workflow validation before publication.
+This chapter is for maintainers preparing and publishing packages. Every release
+must pass package and workflow validation before publication.
 
-The source version in `metapathways/_version.py` is authoritative. An installed
-`3.5.0.dev64` package is an older distribution; changing GitHub does not upgrade
-that environment. The original stable release in this release series was **3.5.0**.
-Use **3.5.1**, **3.5.2**, etc. for subsequent patch releases, or **3.5.1rc1**
-for a preview. Tags have a leading `v`; package versions do not.
+The source version in `metapathways/_version.py` is authoritative. The current
+release series is **4.0**, with package version **4.0.0** and tag **v4.0.0**.
+Use subsequent patch versions such as **4.0.1**, or **4.0.1rc1** for a preview.
+Tags have a leading `v`; package versions do not. Updating a repository does not
+upgrade an already installed environment.
 
 The supported release package targets **Linux x86-64 / Python 3.11**.
 It includes the annotation pipeline, bundled FAST/metacount executables, test
@@ -17,28 +18,28 @@ SHA256 checksums. Licensed Pathway Tools is obtained separately by the user.
 
 ## Normal release using GitHub CI
 
-Use the existing branches: **feature branch → `dev` → `master`**. `dev` is the integration branch; `master` is the production branch. A new `main` branch is unnecessary. GitHub's default branch and the Read the Docs `latest` version are separate settings; neither setting promotes a release.
+Use the branch sequence: **feature branch → `dev` → `main`**. `dev` is the integration branch; `main` is the production branch. GitHub's default branch and the Read the Docs `latest` version are separate settings; neither setting promotes a release.
 
-Open feature work as a draft PR targeting `dev` while benchmarks or test checks are pending. Record the tested commit and outstanding checks in the PR. After benchmark review, independent tester sign-off and passing CI, mark it ready and merge into `dev`. Then open a separate promotion PR from `dev` into `master`, review the complete diff, and validate the resulting production commit before tagging. An older `master` can include changes accumulated on `dev` before the feature PR; review those too. Do not reset or force-push production to bypass that review.
+Open feature work as a draft PR targeting `dev` while benchmarks or test checks are pending. Record the tested commit and outstanding checks in the PR. After benchmark review, independent tester sign-off and passing CI, mark it ready and merge into `dev`. Then open a separate promotion PR from `dev` into `main`, review the complete diff, and validate the resulting production commit before tagging. An older `main` can include changes accumulated on `dev` before the feature PR; review those too. Do not reset or force-push production to bypass that review.
 
 Prepare any version changes on the feature branch before final PR review:
 
 ```bash
-python scripts/release.py prepare 3.5.2
+python scripts/release.py prepare 4.0.0
 git diff
 git add README.md CITATION.cff metapathways/_version.py conda_recipe/meta_template.yaml
-git commit -m "Prepare MetaPathways 3.5.2"
+git commit -m "Prepare MetaPathways 4.0.0"
 ```
 
 Commit the release script, workflow, tests, and other implementation files as well
 when installing this workflow for the first time. If `prepare` changes nothing,
-there is no version-only commit to make. After the promotion PR is merged, the production commit is validated and release approval is given, use a clean, up-to-date checkout of `master` with your existing Git SSH/HTTPS credentials:
+there is no version-only commit to make. After the promotion PR is merged, the production commit is validated and release approval is given, use a clean, up-to-date checkout of `main` with your existing Git SSH/HTTPS credentials:
 
 ```bash
-python scripts/release.py publish --branch master
+python scripts/release.py publish --branch main
 ```
 
-`publish` requires a clean checkout on the selected release branch. Always pass `--branch master` for production publication; the helper also accepts `dev` and retains it as its historical default. It creates an annotated tag and
+`publish` requires a clean checkout on the selected release branch. Always pass `--branch main` for production publication; the helper defaults to `main` and also accepts `dev` for explicitly selected integration releases. It creates an annotated tag and
 pushes the branch and tag atomically to `hallamlab/MetaPathways`. It never force
 pushes, moves a published tag, or automatically commits your work. GitHub CLI
 login is unnecessary on your machine.
@@ -66,7 +67,7 @@ GitHub prereleases and use the `hallamlab/label/rc` Conda channel; stable versio
 use `hallamlab` / label `main`. No wheel is advertised as platform-independent.
 
 To test CI without publishing, select **Actions → Release → Run workflow** on
-the feature branch (or the reviewed `dev`/`master` branch). Leave `release_tag` and `source_run_id` blank; optionally enable `test_containers` to build and scan Docker/SIF artifacts too. This does not publish packages, registry images, a GitHub release, or a DOI. Assets are retained as an Actions artifact. Selecting a tag alone does not enable publishing; destination checkboxes must be selected explicitly.
+a reviewed `dev` or `main` commit. Leave `release_tag` and `source_run_id` blank; optionally enable `test_containers` to build and scan Docker/SIF artifacts too. This does not publish packages, registry images, a GitHub release, or a DOI. Assets are retained as an Actions artifact. Selecting a tag alone does not enable publishing; destination checkboxes must be selected explicitly.
 
 ## Shared release controls (MetaPathways and SCARAB)
 
@@ -255,7 +256,7 @@ original tag and published files. Prepare it with:
 ```bash
 python scripts/release.py prepare 3.5.1 --build-number 1
 # Commit the reviewed changes, then:
-python scripts/release.py publish --branch dev
+python scripts/release.py publish --branch main
 ```
 
 Quay receives `3.5.1-build1` and `v3.5.1-build1` tags as well as updated `3.5.1`,
@@ -276,11 +277,11 @@ review; passing this gate does not mean the image has no vulnerabilities.
 
 ## Feature-branch review before publication
 
-The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to `dev` → promotion PR to `master` → production validation → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `master`, `dev`, or a future `main`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged test/report assets.
+The intended sequence is **feature branch → single-server and HPC benchmarks plus tester review → PR merge to `dev` → promotion PR to `main` → production validation → release tag → publication**. Pushing a branch or opening a PR does not publish a release. Smoke checks run for PRs targeting `main` or `dev`, and pushes to those branches or `feat/**`. They validate the citation file, unit tests, docs, source/wheel builds, installed CLI entry points, and packaged test/report assets.
 
 Use the [PR tester checklist](pr-testing.md) for independent installation, the single- and two-sample CAMI workflows, restart behavior, optional licensed Pathway Tools, and report exports. Record the tested Git commit. Record the source commit as well as the package version when testing a candidate.
 
-The selected next release is **3.5.2**. Preparing this version does not publish it; branch and PR testing still happen before a release tag is pushed. Do not reuse 3.5.1 or its existing tags. Change the version with `prepare` only at the release step; it also updates the citation version and resets the Conda build number for a new version. Avoid editing runtime code/version files while a benchmark is executing from an editable checkout.
+The release version is **4.0.0**. Preparing this version does not publish it; branch and PR testing still happen before a release tag is pushed. Do not reuse 3.5.1 or its existing tags. Change the version with `prepare` before final release validation; it also updates the citation version and resets the Conda build number for a new version. Avoid editing runtime code/version files while a benchmark is executing from an editable checkout.
 
 Before merging, manually dispatch the Release workflow on the feature branch with blank publication inputs. Select `test_containers` to test the exact Conda artifact inside Docker and its SIF conversion. Download `release-assets`, `container-assets`, and the security reports from Actions for review. Core integration uses explicit 2 GB task reservations, a 4 GB memory budget, and two CPUs so the small fixture fits CI runners. These limits are not production metagenome sizing recommendations.
 

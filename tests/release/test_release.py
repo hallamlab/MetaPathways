@@ -107,7 +107,7 @@ class ReleaseTests(unittest.TestCase):
                 release.build(SimpleNamespace())
 
     def test_existing_remote_tag_never_overwritten(self):
-        responses = ["", "dev", "git@github.com:hallamlab/MetaPathways.git",
+        responses = ["", "main", "git@github.com:hallamlab/MetaPathways.git",
                      "abc refs/tags/v3.5.0"]
         with patch.object(release, "recipe_build", return_value=0), patch.object(release, "version", return_value="3.5.0"), patch.object(
             release, "run", side_effect=responses
@@ -118,9 +118,9 @@ class ReleaseTests(unittest.TestCase):
 
     def test_feature_branch_cannot_publish(self):
         with patch.object(release, "version", return_value="3.5.2"), patch.object(
-            release, "run", side_effect=["", "feat/nextflow-controller-db-build"]
+            release, "run", side_effect=["", "feat/example"]
         ) as run:
-            with self.assertRaisesRegex(ValueError, "dev branch"):
+            with self.assertRaisesRegex(ValueError, "main branch"):
                 release.publish(SimpleNamespace(remote="origin"))
             self.assertFalse(any("push" in c.args or "tag" in c.args for c in run.call_args_list))
 
@@ -130,7 +130,7 @@ class ReleaseTests(unittest.TestCase):
             remote, checkout = root / "remote.git", root / "checkout"
             subprocess.run(["git", "init", "--bare", str(remote)], check=True,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["git", "init", "-b", "dev", str(checkout)], check=True,
+            subprocess.run(["git", "init", "-b", "main", str(checkout)], check=True,
                            stdout=subprocess.DEVNULL)
             (checkout / "README.md").write_text("Release fixture\n")
             (checkout / "conda_recipe").mkdir()
@@ -161,7 +161,7 @@ class ReleaseTests(unittest.TestCase):
                 ["git", "cat-file", "-t", "v3.5.0"], cwd=remote, text=True).strip()
             self.assertEqual(kind, "tag")
             branch = subprocess.check_output(
-                ["git", "rev-parse", "dev"], cwd=remote, text=True).strip()
+                ["git", "rev-parse", "main"], cwd=remote, text=True).strip()
             tagged = subprocess.check_output(
                 ["git", "rev-parse", "v3.5.0^{commit}"], cwd=remote, text=True).strip()
             self.assertEqual(branch, tagged)

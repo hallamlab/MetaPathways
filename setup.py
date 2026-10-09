@@ -23,7 +23,7 @@ with open(os.path.join(PACKAGE_ROOT, "metapathways", "_version.py")) as fp:
                 }
 VERSION = ver_dict['version'].strip('"')
 CLASSIFIERS = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Natural Language :: English",

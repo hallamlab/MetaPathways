@@ -1,12 +1,14 @@
 # Changelog
 
-## 3.5.2 — feature candidate
+## 4.0.0
 
 - Nextflow controllers for local and Slurm workflows, multi-sample manifests, resource budgets, database builds and licensed Pathway Tools container preparation.
-- Read-mapping/checkpoint fixes and sequence-backed PGDB staging.
+- Read-mapping/checkpoint fixes and sequence-backed PGDB staging, including valid zero-pathway exports.
+- Compact results with node-local execution, archived diagnostics and resumable checkpoints.
+- Licensed MetaCyc preparation, reaction compatibility screening and explicit taxonomic-scope controls.
 - SwissProt, UniRef and eggNOG taxonomy scoped to each annotation database and target; independent within-database LCA.
 - Searchable reports with a sample-level landing page, wide abundance tables, source provenance, CSV exports and GitHub feedback links.
-- Bundled three-sample CAMI reviewer inputs and documented local validation.
+- Bundled three-sample CAMI test inputs and documented local validation.
 
 ### Updates
 

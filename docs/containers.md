@@ -2,7 +2,7 @@
 
 [Home and quick start](installation.md) · [Test dataset](test.md) · [Licensed Pathway Tools](pathway-tools.md)
 
-Use the versioned `quay.io/hallamlab/metapathways:3.5.2` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample test dataset derived from CAMI II ([Meyer et al., 2022](#cami-references)). Production references and licensed Pathway Tools are supplied separately.
+Use the versioned `quay.io/hallamlab/metapathways:4.0.0` image on Linux x86-64. It includes MP, its workflow dependencies (including MAGSplitter and Camelot), and the three-sample test dataset derived from CAMI II ([Meyer et al., 2022](#cami-references)). Production references and licensed Pathway Tools are supplied separately.
 
 ## Docker three-sample test
 
@@ -11,9 +11,9 @@ Create a working directory and open a shell in the image. The mount keeps inputs
 ```bash
 mkdir -p ~/mp-test-docker
 cd ~/mp-test-docker
-docker pull quay.io/hallamlab/metapathways:3.5.2
+docker pull quay.io/hallamlab/metapathways:4.0.0
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
-  -v "$PWD:/work" -w /work quay.io/hallamlab/metapathways:3.5.2 bash
+  -v "$PWD:/work" -w /work quay.io/hallamlab/metapathways:4.0.0 bash
 ```
 
 Inside the container, run:
@@ -40,7 +40,7 @@ Create a working directory and pull the image on an internet-connected host:
 ```bash
 mkdir -p ~/mp-test-apptainer
 cd ~/mp-test-apptainer
-apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
+apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.0
 apptainer exec --bind "$PWD:/work" --pwd /work metapathways.sif bash
 ```
 

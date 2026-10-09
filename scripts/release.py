@@ -408,8 +408,8 @@ def publish(args):
     clean()
     value = version()
     branch = run("git", "branch", "--show-current", capture=True)
-    target_branch = getattr(args, "branch", "dev")
-    if target_branch not in ("master", "dev") or branch != target_branch:
+    target_branch = getattr(args, "branch", "main")
+    if target_branch not in ("main", "dev") or branch != target_branch:
         raise ValueError(f"Publish from the {target_branch} branch after PR review and testing.")
     url = run("git", "remote", "get-url", "--push", args.remote, capture=True)
     if url.removesuffix(".git").rstrip("/") not in (
@@ -429,7 +429,7 @@ def publish(args):
     else:
         run("git", "tag", "-a", tag, "-m", f"MetaPathways {value}")
     run("git", "push", "--atomic", args.remote, f"HEAD:refs/heads/{target_branch}", f"refs/tags/{tag}")
-    print(f"CI will build, test, and publish {tag}: https://github.com/{REPOSITORY}/actions")
+    print(f"CI will build and test {tag}; publication requires manual selection: https://github.com/{REPOSITORY}/actions")
 
 
 def upload_conda(args):
@@ -469,10 +469,10 @@ def main():
     p.add_argument("tag")
     p.add_argument("--output", default=str(ROOT / "dist/release"))
     p.set_defaults(func=github_release)
-    p = commands.add_parser("publish", help="Push the reviewed master/dev branch and its release tag using existing Git credentials.")
+    p = commands.add_parser("publish", help="Push the reviewed main/dev branch and its release tag using existing Git credentials.")
     p.add_argument("--remote", default="origin")
-    p.add_argument("--branch", choices=("master", "dev"), default="dev",
-                   help="Reviewed release branch [dev]; never a feature branch.")
+    p.add_argument("--branch", choices=("main", "dev"), default="main",
+                   help="Reviewed release branch [main]; never a feature branch.")
     p.set_defaults(func=publish)
     for command, action in [("container-build", "build"), ("container-push", "push"),
                             ("container-verify", "verify"), ("container-attach", "attach"), ("quay-description", "description")]:

@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Test commands](test.md) · [Release process](releasing.md)
 
-Test the feature branch before merging to `dev`. Keep the PR in draft while benchmark review and tester sign-off are pending. Production promotion is a separate `dev` → `master` PR, as described in the [release process](releasing.md). Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
+Test the exact proposed commit before merging to `dev`. Record outstanding checks in the PR. Production promotion is a separate `dev` → `main` PR, as described in the [release process](releasing.md). Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
 
 1. Follow [source installation](getting-started.md). Check out the PR's exact commit after cloning; do not test an older editable installation by accident. Record the resolved dependency versions, including the pinned MAGSplitter and Camelot helpers installed with MP.
 2. Follow the [CAMI II test walkthrough](test.md) ([Meyer et al., 2022](#cami-references)), running its single-sample and two-sample commands with `--skip_ptools`. Check required task outcomes, nonempty abundance outputs, the three genome-bin assignments per sample, and distinct paired read paths.

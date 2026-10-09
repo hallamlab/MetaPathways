@@ -6,7 +6,7 @@ Install MetaPathways, try the included three-sample dataset, then use your own d
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=3.5.2
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.0
 conda activate metapathways
 ```
 
@@ -30,10 +30,10 @@ Open the URL printed by the report server. On a remote server, use an [SSH tunne
 
 ```bash
 # Docker
-docker pull quay.io/hallamlab/metapathways:3.5.2
+docker pull quay.io/hallamlab/metapathways:4.0.0
 
 # Or Apptainer
-apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:3.5.2
+apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.0
 ```
 
 The image includes the same workflow dependencies and test data. Follow the [Docker three-sample test](containers.md#docker-three-sample-test) or [Apptainer three-sample test](containers.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
