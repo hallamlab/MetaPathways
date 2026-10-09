@@ -52,6 +52,19 @@ def run(*args, cwd=ROOT, capture=False, log=None, env=None):
     return result.stdout.strip() if capture else ""
 
 
+def validate_runtime_dependencies(metadata):
+    """Compare runtime metadata using tooling from the release environment."""
+    from packaging.version import Version
+
+    if metadata["pip_present"]:
+        raise ValueError("pip must remain build-time only in the Conda package")
+    if tuple(metadata["python"]) < (3, 11):
+        raise ValueError("Python >=3.11 required")
+    for package, minimum in (("urllib3", "2.8.0"), ("setuptools", "83.0.0")):
+        if Version(metadata["versions"][package]) < Version(minimum):
+            raise ValueError(f"{package} >={minimum} required")
+
+
 def version(root=ROOT):
     return version_from_text((root / "metapathways/_version.py").read_text())
 
@@ -240,14 +253,14 @@ def build(args):
                 "from metapathways._version import __version__; "
                 f"assert __version__ == {value!r}, __version__",
                 cwd=testdir, log=output / "version-check.log")
+            security_log = output / "security-dependencies.log"
             run(*runner, "python", "-c",
-                "import sys; from importlib.metadata import version; from packaging.version import Version; "
-                "import importlib.util; assert importlib.util.find_spec('pip') is None, 'pip must remain build-time only in the Conda package'; "
-                "assert sys.version_info >= (3, 11), 'Python >=3.11 required'; "
-                "assert Version(version('urllib3')) >= Version('2.8.0'), 'urllib3 >=2.8.0 required'; "
-                "assert Version(version('setuptools')) >= Version('83.0.0'), 'setuptools >=83.0.0 required'; "
-                "print({n: version(n) for n in ['urllib3', 'setuptools']})",
-                cwd=testdir, log=output / "security-dependencies.log")
+                "import sys, json, importlib.util; from importlib.metadata import version; "
+                "print(json.dumps({'python': list(sys.version_info[:3]), "
+                "'pip_present': importlib.util.find_spec('pip') is not None, "
+                "'versions': {n: version(n) for n in ['urllib3', 'setuptools']}}))",
+                cwd=testdir, log=security_log)
+            validate_runtime_dependencies(json.loads(security_log.read_text()))
             run(*runner, "magsplitter", "--help", cwd=testdir, log=output / "magsplitter.log")
             run(*runner, "python", "-c", "import camelot_frs", cwd=testdir, log=output / "camelot.log")
             run(*runner, "metapathways", "prepare_test", "-o", "test", cwd=testdir, log=output / "test-inputs.log")
