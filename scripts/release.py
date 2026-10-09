@@ -125,6 +125,10 @@ def prepare(args):
     readme.write_text(re.sub(r"https://img.shields.io/badge/Version-[^)]*",
                             f"https://img.shields.io/badge/Version-{value}-blue.svg",
                             readme.read_text()))
+    citation = ROOT / "CITATION.cff"
+    if citation.exists():
+        text = re.sub(r"^version:.*\n?", "", citation.read_text(), flags=re.M)
+        citation.write_text(text.rstrip() + f'\nversion: "{value}"\n')
     print(f"Prepared {value}, Conda build {build_number}. Review and commit before publishing.")
 
 
@@ -147,9 +151,33 @@ def validate_run(directory):
     return {"successful_stages": sorted(STAGES), "nonempty_outputs": OUTPUTS}
 
 
+def validate_citation(data, value):
+    if not isinstance(data, dict) or data.get('version') != value:
+        raise ValueError('CITATION.cff must match the release version.')
+    authors = data.get('authors')
+    if not isinstance(authors, list) or not authors:
+        raise ValueError('CITATION.cff must contain the reviewed manuscript authors.')
+    names = set()
+    for author in authors:
+        if not isinstance(author, dict) or not all(
+            isinstance(author.get(key), str) and author[key].strip()
+            for key in ('family-names', 'given-names', 'affiliation')
+        ):
+            raise ValueError('Each citation author needs a name and reviewed affiliation.')
+        name = (author['family-names'].strip().casefold(), author['given-names'].strip().casefold())
+        if name in names:
+            raise ValueError('Duplicate citation author; review CITATION.cff.')
+        names.add(name)
+
+
 def build(args):
     clean()
     value = version()
+    import yaml
+    citation = ROOT / 'CITATION.cff'
+    if not citation.is_file() or (ROOT / '.zenodo.json').exists():
+        raise ValueError('Release requires CITATION.cff without an overriding .zenodo.json.')
+    validate_citation(yaml.safe_load(citation.read_text()), value)
     number = recipe_build((ROOT / "conda_recipe/meta_template.yaml").read_text())
     tag = release_tag(value, number)
     if args.tag and args.tag != tag:
@@ -220,11 +248,16 @@ def build(args):
                 "assert Version(version('setuptools')) >= Version('83.0.0'); "
                 "print({n: version(n) for n in ['urllib3', 'setuptools']})",
                 cwd=testdir, log=output / "security-dependencies.log")
+            run(*runner, "magsplitter", "--help", cwd=testdir, log=output / "magsplitter.log")
+            run(*runner, "python", "-c", "import camelot_frs", cwd=testdir, log=output / "camelot.log")
+            run(*runner, "metapathways", "prepare_test", "-o", "test", cwd=testdir, log=output / "test-inputs.log")
             run(*runner, "metapathways", "version", cwd=testdir,
                 log=output / "cli-version.log")
-            run(*runner, "metapathways", "build_db", "--test", cwd=testdir,
+            run(*runner, "python", snapshot / "scripts/check_installed_assets.py",
+                cwd=testdir, log=output / "installed-assets.log")
+            run(*runner, "metapathways", "build_db", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "build-db.log")
-            run(*runner, "metapathways", "run", "--test", cwd=testdir,
+            run(*runner, "metapathways", "run", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "pipeline.log")
             validation.update(validate_run(testdir), scope="core-integration")
             for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:
@@ -375,8 +408,9 @@ def publish(args):
     clean()
     value = version()
     branch = run("git", "branch", "--show-current", capture=True)
-    if branch != "dev":
-        raise ValueError("Publish from the dev branch.")
+    target_branch = getattr(args, "branch", "main")
+    if target_branch not in ("main", "dev") or branch != target_branch:
+        raise ValueError(f"Publish from the {target_branch} branch after PR review and testing.")
     url = run("git", "remote", "get-url", "--push", args.remote, capture=True)
     if url.removesuffix(".git").rstrip("/") not in (
         f"git@github.com:{REPOSITORY}", f"https://github.com/{REPOSITORY}",
@@ -394,8 +428,8 @@ def publish(args):
             raise ValueError(f"Local {tag} must be an annotated tag.")
     else:
         run("git", "tag", "-a", tag, "-m", f"MetaPathways {value}")
-    run("git", "push", "--atomic", args.remote, "HEAD:refs/heads/dev", f"refs/tags/{tag}")
-    print(f"CI will build, test, and publish {tag}: https://github.com/{REPOSITORY}/actions")
+    run("git", "push", "--atomic", args.remote, f"HEAD:refs/heads/{target_branch}", f"refs/tags/{tag}")
+    print(f"CI will build and test {tag}; publication requires manual selection: https://github.com/{REPOSITORY}/actions")
 
 
 def upload_conda(args):
@@ -405,7 +439,7 @@ def upload_conda(args):
         raise ValueError("Expected exactly one validated Conda package.")
     label = "rc" if "rc" in manifest["version"] else "main"
     # anaconda-client reads BINSTAR_API_TOKEN; never put credentials on the command line.
-    run("anaconda", "upload", "--user", "hallamlab", "--label", label, packages[0])
+    run("anaconda", "upload", "--user", os.environ.get("ANACONDA_OWNER", "hallamlab"), "--label", label, packages[0])
 
 
 def container_command(args):
@@ -435,11 +469,13 @@ def main():
     p.add_argument("tag")
     p.add_argument("--output", default=str(ROOT / "dist/release"))
     p.set_defaults(func=github_release)
-    p = commands.add_parser("publish", help="Push dev and its release tag using existing Git credentials.")
+    p = commands.add_parser("publish", help="Push the reviewed main/dev branch and its release tag using existing Git credentials.")
     p.add_argument("--remote", default="origin")
+    p.add_argument("--branch", choices=("main", "dev"), default="main",
+                   help="Reviewed release branch [main]; never a feature branch.")
     p.set_defaults(func=publish)
     for command, action in [("container-build", "build"), ("container-push", "push"),
-                            ("container-attach", "attach"), ("quay-description", "description")]:
+                            ("container-verify", "verify"), ("container-attach", "attach"), ("quay-description", "description")]:
         p = commands.add_parser(command)
         p.add_argument("--output", default=str(ROOT / "dist/release"))
         p.add_argument("--container-output", default=str(ROOT / "dist/containers"))

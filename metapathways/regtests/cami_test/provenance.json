@@ -1,0 +1,170 @@
+{
+  "source_dataset": "CAMI II human-associated short-read gold-standard assemblies and simulated reads",
+  "source_doi": "10.4126/FRL01-006425518",
+  "selection": "Prepare tiny real CAMI inputs; requires minimap2, not MetaPathways or Pathway Tools.\n\nSelect three abundant genomes per sample, retain up to 50 kb of one contig each,\nthen retain intact original read pairs with a primary MAPQ >=20 alignment to\nthose regions from the first 250,000 pairs. This is deliberately coverage-biased\ninterface test data, never an abundance or accuracy benchmark.\n",
+  "minimap2_version": "2.31-r1302",
+  "samples": [
+    {
+      "sample_id": "Urogenital_22",
+      "source_assembly": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Urogenital/short_read/2017.12.04_18.56.22_sample_22/contigs/anonymous_gsa.fasta",
+      "source_reads": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Urogenital/short_read/2017.12.04_18.56.22_sample_22/reads/anonymous_reads.fq.gz",
+      "source_mapping": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Urogenital/short_read/2017.12.04_18.56.22_sample_22/contigs/gsa_mapping.tsv",
+      "scanned_pairs": 250000,
+      "retained_pairs": 3000,
+      "assembly_bases": 150000,
+      "regions": [
+        {
+          "#anonymous_contig_id": "S22C5358",
+          "genome_id": "OTU_97.19349.0",
+          "tax_id": "1578",
+          "contig_id": "CP002341.1",
+          "number_reads": "2550346",
+          "start_position": "2",
+          "end_position": "2125751",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 1460
+        },
+        {
+          "#anonymous_contig_id": "S22C8829",
+          "genome_id": "OTU_97.578.0",
+          "tax_id": "1763",
+          "contig_id": "CP018363.1",
+          "number_reads": "5712090",
+          "start_position": "1",
+          "end_position": "5626623",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 299
+        },
+        {
+          "#anonymous_contig_id": "S22C9504",
+          "genome_id": "OTU_97.39620.0",
+          "tax_id": "1578",
+          "contig_id": "CP011403.1",
+          "number_reads": "10184206",
+          "start_position": "1",
+          "end_position": "1751564",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 1241
+        }
+      ]
+    },
+    {
+      "sample_id": "Gastrointestinal_5",
+      "source_assembly": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Gastrointestinal/short_read/2017.12.04_18.45.54_sample_5/contigs/anonymous_gsa.fasta",
+      "source_reads": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Gastrointestinal/short_read/2017.12.04_18.45.54_sample_5/reads/anonymous_reads.fq.gz",
+      "source_mapping": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Gastrointestinal/short_read/2017.12.04_18.45.54_sample_5/contigs/gsa_mapping.tsv",
+      "scanned_pairs": 250000,
+      "retained_pairs": 2326,
+      "assembly_bases": 150000,
+      "regions": [
+        {
+          "#anonymous_contig_id": "S5C2519",
+          "genome_id": "OTU_97.1154.0",
+          "tax_id": "506",
+          "contig_id": "HE965803.1",
+          "number_reads": "5485844",
+          "start_position": "2",
+          "end_position": "4887378",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 951
+        },
+        {
+          "#anonymous_contig_id": "S5C5928",
+          "genome_id": "OTU_97.68.0",
+          "tax_id": "841",
+          "contig_id": "CP003040.1",
+          "number_reads": "3359972",
+          "start_position": "6",
+          "end_position": "3592124",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 731
+        },
+        {
+          "#anonymous_contig_id": "S5C5950",
+          "genome_id": "OTU_97.44483.0",
+          "tax_id": "541000",
+          "contig_id": "CP004044.1",
+          "number_reads": "1411892",
+          "start_position": "2",
+          "end_position": "905459",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 644
+        }
+      ]
+    },
+    {
+      "sample_id": "Skin_28",
+      "source_assembly": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Skin/short_read/2017.12.04_18.56.22_sample_28/contigs/anonymous_gsa.fasta",
+      "source_reads": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Skin/short_read/2017.12.04_18.56.22_sample_28/reads/anonymous_reads.fq.gz",
+      "source_mapping": "/data/home/ryan/data/mock_2022/MetaGs/CAMI_II_Skin/short_read/2017.12.04_18.56.22_sample_28/contigs/gsa_mapping.tsv",
+      "scanned_pairs": 250000,
+      "retained_pairs": 3000,
+      "assembly_bases": 150000,
+      "regions": [
+        {
+          "#anonymous_contig_id": "S28C1233",
+          "genome_id": "OTU_97.44585.0",
+          "tax_id": "1279",
+          "contig_id": "BA000018.3",
+          "number_reads": "5213080",
+          "start_position": "1",
+          "end_position": "2814815",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 764
+        },
+        {
+          "#anonymous_contig_id": "S28C1662",
+          "genome_id": "OTU_97.34494.0",
+          "tax_id": "1279",
+          "contig_id": "AP009351.1",
+          "number_reads": "2665852",
+          "start_position": "2",
+          "end_position": "2878897",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 565
+        },
+        {
+          "#anonymous_contig_id": "S28C1722",
+          "genome_id": "OTU_97.37297.0",
+          "tax_id": "1279",
+          "contig_id": "CP012978.1",
+          "number_reads": "446618",
+          "start_position": "1722189",
+          "end_position": "2678868",
+          "retained_contig_start_1based": 1,
+          "retained_contig_end_1based": 50000,
+          "aligned_pairs": 1673
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "Gastrointestinal_5.selection.log": "733392ec9acbe4badfb2b9b7fe2170091a6aa0ef99ce796a8dc2308b8af5e619",
+    "Skin_28.selection.log": "3cc86f1d32e15923615670bf5393003e36e668b61a0398e44992182f95e01e93",
+    "Urogenital_22.selection.log": "84d33e12363026ba9ea8568ab3ee204ab735b8020d057e5c56a8ace101ca174b",
+    "all.tsv": "fa581491d87c5e2c9bd08edc6965e1c7febc064c14555c9b4df79661c4ca5f73",
+    "inputs/assemblies/Gastrointestinal_5.fasta.gz": "dc0fad0125cfc3670ed488a63af71b76289aae92089c29843a5263b96d714e80",
+    "inputs/assemblies/Skin_28.fasta.gz": "978efa7285eeda349ce1ad4e1b5155a635b4d9de89f2565105212a35f9a7d8fb",
+    "inputs/assemblies/Urogenital_22.fasta.gz": "c62ccf9a276bd1252cc5c4e3bbccb922b502653f53d204a8ea865c2b633fa3c9",
+    "inputs/mag_maps/Gastrointestinal_5.tsv": "5f41303fab5804bee022edfaa56b06ba6d0b51c4148b41f985b943ef2cbbb72a",
+    "inputs/mag_maps/Skin_28.tsv": "5eb47bf6ab2981b0001e5a4653cf60669c32c461f25964ac4837b0223901cdde",
+    "inputs/mag_maps/Urogenital_22.tsv": "65c77d5a48b13448b8c71d51aa63b6f6260da9ff5cb69385c3eaa9cd182977fe",
+    "inputs/reads/Gastrointestinal_5_R1.fastq.gz": "adafa12f02a0d89da29340df2797d6f23c7ff0e02f78ab55b5fb952a06f92ae6",
+    "inputs/reads/Gastrointestinal_5_R2.fastq.gz": "1a7ccdcb55985d473523ea3c8cf3462c8054d9ceb2d85a76feac8cf1d9c67b00",
+    "inputs/reads/Skin_28_R1.fastq.gz": "edf96bd449b83ca39e09b45876d5db51a7d93fb37848ec21cb2e5696c16b045f",
+    "inputs/reads/Skin_28_R2.fastq.gz": "46a1340c46ec1de1e18cdcb8ca355d1f6eff4ee481bf0d47b1bbe503b018df91",
+    "inputs/reads/Urogenital_22_R1.fastq.gz": "963a2ef3bb53aa8e38a171f4550b88677c8a1650e0b7efc3e964e7cca161b827",
+    "inputs/reads/Urogenital_22_R2.fastq.gz": "4a4d8dad32aff87ae14d3faccf43c47cb40ba323bae697660f0b8f9a6f9ef7dc",
+    "pair.tsv": "e788c33a7887f68ffd0dcfdab843200bbe87f783082ff0c0854a976683add49a",
+    "single.tsv": "e883b3f23e280841da0ce02be61287611c9e34e2d6b81ffc168611dcd8621f6d"
+  },
+  "preparation_script_sha256": "874a64ae1c53978e9eb087108ae1dd25ac1b02fc9add137d95962f85eee0ff16"
+}

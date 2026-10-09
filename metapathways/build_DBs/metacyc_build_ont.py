@@ -56,8 +56,8 @@ for frame in data:
 print('Building MetaCyc Ontology...')
 ont_ids = {}
 ont_common = {}
-stop_list = []
-for k in tqdm(class2types):
+stop_list = set()
+for k in tqdm(class2types, disable=not sys.stderr.isatty()):
 	while k not in stop_list:
 		if k in class2common:
 			if k in ont_ids:
@@ -80,11 +80,11 @@ for k in tqdm(class2types):
 						else:
 							new_maps.append(m)
 							new_com_maps.append(com_m)
-							p_cnt =+ 1
+							p_cnt += 1
 					ont_ids[k] = new_maps
 					ont_common[k] = new_com_maps
 				if ((map_cnt == p_cnt) | ('FRAMES' in parents)):
-					stop_list.append(k)
+					stop_list.add(k)
 			else:
 				parents = class2types[k]
 				ont_ids[k] = []
@@ -96,9 +96,9 @@ for k in tqdm(class2types):
 											   class2common[k]
 											   ])
 					else:
-						stop_list.append(k)
+						stop_list.add(k)
 		else:
-			stop_list.append(k)
+			stop_list.add(k)
 
 print('Saving MetaCyc Ontology...')
 path_ont_list = []
@@ -107,12 +107,13 @@ c_prune_list = ['All Pathways and Reactions', 'Pathways']
 for path in path2types:
 	for t in path2types[path]:
 		for i,h in enumerate(ont_ids[t]):
-			c = ont_common[t][i]
+			h = list(h)
+			c = list(ont_common[t][i])
 			for p in h_prune_list:
 				if p in h:
 					h.remove(p)
 			for p in c_prune_list:
-				if p in h:
+				if p in c:
 					c.remove(p)
 			common_name = path2common[path]
 			path_ont_list.append([path, common_name,

@@ -70,8 +70,15 @@ def pathDelim():
 
 def getstatusoutput(cmd):
     """Return (status, output) of executing cmd in a shell."""
-    pipe = os.popen(cmd + " 2>&1", "r")
-    text = pipe.read()
+    pipe = os.popen("{ " + cmd + "\n} 2>&1", "r")
+    if os.environ.get('METAPATHWAYS_STREAM_TOOLS') == '1':
+        chunks = []
+        for line in pipe:
+            print(line, end='', flush=True)
+            chunks.append(line)
+        text = ''.join(chunks)
+    else:
+        text = pipe.read()
     sts = pipe.close()
     if sts is None:
         sts = 0

@@ -12,7 +12,7 @@ Options:
 	--sif=FILE	Path to the Ptools SIF file.
 	--tmp_dir=DIR	TMP working dir for Ptools to save intermediates.
 	--tag=STR	Tag for metagenome PGDB.
-	--taxprune	Use taxonomic pruning when building PGDBs [True or False; default: False]
+	--taxprune	Use taxonomic pruning when building PGDBs [enabled by default; --no_taxprune disables]
 """
 
 
@@ -78,6 +78,9 @@ def extract_pwy(pt_outputs):
 	pt_id = os.path.basename(glob.glob(pt_outputs + '/*.tar.bz2')[0]).split('cyc', 1)[0]
 	flatpath = os.path.join(pt_outputs, '1.0/data')
 	pwy_outfile = os.path.join(pt_outputs, pt_id + '_pwy.tsv')
+	from metapathways.pt_exports import write_verified_empty_pathways
+	if write_verified_empty_pathways(flatpath, pwy_outfile):
+		return
 	verfile = os.path.join(flatpath.rsplit('/', 2)[0], 'default-version')
 	new_verfile = os.path.join(flatpath, 'version.dat')
 	shutil.copyfile(verfile, new_verfile)
@@ -298,10 +301,8 @@ parser.add_argument("--mpout_dir", type=str, help="MetaPathways output directory
 parser.add_argument("--input_dir", type=str, help="input directory.", required=True)
 parser.add_argument("--ptout_dir", type=str, help="output directory.", required=True)
 parser.add_argument("--tag", type=str, help="Tag for metagenome PGDB.", required=True)
-parser.add_argument("--taxprune", action='store_true',
-					help="Use taxonomic pruning when building PGDBs [True or False; default: False]",
-					required=False
-					)
+from metapathways.pt_taxonomy import add_pruning_options
+add_pruning_options(parser)
 parser.add_argument("--container", action='store_true', dest="container", default=False, required=False,
 					help="Use when using containerized env",
 					)

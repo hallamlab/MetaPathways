@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "Please cite this software and record the release version or Git commit used in your analysis."
+type: software
+title: MetaPathways
+abstract: "A metagenomic analysis pipeline for functional and taxonomic annotation, abundance estimation, genome-bin splitting, pathway inference, and interactive exploration of linked result tables."
+repository-code: "https://github.com/hallamlab/MetaPathways"
+url: "https://github.com/hallamlab/MetaPathways"
+license: MIT
+# Authors and affiliations follow the MetaPathways v3.5 application note.
+# Preserve manuscript order; do not substitute GitHub contributor profiles.
+authors:
+  - family-names: McLaughlin
+    given-names: Ryan J.
+    affiliation: "Graduate Program in Bioinformatics, University of British Columbia, Vancouver, BC, Canada V6T 1Z4"
+  - family-names: Liu
+    given-names: Tony X.
+    affiliation: "Graduate Program in Bioinformatics, University of British Columbia, Vancouver, BC, Canada V6T 1Z4"
+  - family-names: Altman
+    given-names: Tomer
+    affiliation: "Altman Analytics LLC, Piedmont, CA 94611, USA"
+  - family-names: Nallan
+    given-names: Aditi N.
+    affiliation: "Graduate Program in Bioinformatics, University of British Columbia, Vancouver, BC, Canada V6T 1Z4"
+  - family-names: Hahn
+    given-names: Aria S.
+    affiliation: "Department of Microbiology & Immunology, University of British Columbia, Vancouver, BC, Canada V6T 1Z3; Ecosystem Services, Commercialization and Entrepreneurship (ECOSCOPE), University of British Columbia, Vancouver, BC. Canada V6T 1Z3"
+  - family-names: Anstett
+    given-names: Julia
+    affiliation: "Genome Sciences and Technology Training Program, University of British Columbia, Vancouver, BC, Canada V6T 1Z3"
+  - family-names: Morgan-Lang
+    given-names: Connor
+    affiliation: "Graduate Program in Bioinformatics, University of British Columbia, Vancouver, BC, Canada V6T 1Z4; Department of Microbiology & Immunology, University of British Columbia, Vancouver, BC, Canada V6T 1Z3"
+  - family-names: Konwar
+    given-names: Kishori M.
+    affiliation: "Computer Science and Artificial Intelligence Laboratory, Massachusetts Institute of Technology, Cambridge, MA 02139, USA; Meta, Cambridge, MA 02142, USA"
+  - family-names: Hallam
+    given-names: Steven J.
+    affiliation: "Graduate Program in Bioinformatics, University of British Columbia, Vancouver, BC, Canada V6T 1Z4; Department of Microbiology & Immunology, University of British Columbia, Vancouver, BC, Canada V6T 1Z3; Ecosystem Services, Commercialization and Entrepreneurship (ECOSCOPE), University of British Columbia, Vancouver, BC. Canada V6T 1Z3; Genome Sciences and Technology Training Program, University of British Columbia, Vancouver, BC, Canada V6T 1Z3; Bradshaw Research Institute for Minerals and Mining (BRIMM), University of British Columbia, Vancouver, BC, Canada V6T 1Z4; Life Sciences Institute, University of British Columbia, Vancouver, BC, Canada V6T 1Z3"
+keywords:
+  - metagenomics
+  - functional annotation
+  - pathways
+  - Nextflow
+version: "4.0.0"

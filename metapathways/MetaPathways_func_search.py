@@ -13,6 +13,8 @@ try:
     import glob
     import os
     import pandas as pd
+    import tempfile
+    import shlex
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -209,71 +211,51 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
 
 def _execute_FAST(options, logger=None):
-    
-    volumes = 0
-    if options.run_mode == 'pervol':
-        # open *.prj file to check if there are multiple volumes
-        # if there are then use the per-volume function
-        with open(options.last_db + '.prj', 'r') as prj_in:
-            dat_rl = prj_in.readlines()
-            for line in dat_rl:
-                if 'volumes=' in line:
-                    volumes = int(line.split('=')[1].strip('\n'))
-
-    # create argument list(s), depending on the number of volumes
-    args_list = []
-    if volumes > 0:
-        for v in list(range(volumes)):
-            args = []
-            args.append(options.last_executable)
-            args += ["-f", options.last_f]
-            args += ["-o", options.last_o + str(v) + ".tmp"]
-            args += ["-P", options.num_threads]
-            args += [" -K", options.num_hits]
-            args += [options.last_db + str(v)]
-            args += [options.last_query]   
-            args_list.append(args)
-    else: # if only one volume OR running in default mode
-        args = []
-        args.append(options.last_executable)
-        args += ["-f", options.last_f]
-        args += ["-o", options.last_o + ".tmp"]
-        args += ["-P", options.num_threads]
-        args += [" -K", options.num_hits]
-        args += [options.last_db]
-        args += [options.last_query]
-        args_list.append(args)
-
-    result = None
+    """FAST's time-seeded sort filenames must live in an invocation-private root."""
+    output = os.path.abspath(options.last_o)
     try:
-        if len(args_list) == 1:
-            a = args_list[0]
-            result = sysutils.getstatusoutput(" ".join(a))
-            rename(a[4], a[4].rsplit('.', 1)[0])
-        else:
-            for a in args_list:
-                result = sysutils.getstatusoutput(" ".join(a))
-                rename(a[4], a[4].rsplit('.', 1)[0])
-            out_list = glob.glob(options.last_o + '*')
-            with open(options.last_o, 'w') as outfile:
-                for fname in out_list:
-                    with open(fname) as infile:
-                        for line in infile:
-                            outfile.write(line)
-                    os.remove(fname)
-            # sort the final table on ORF and Bitscore
-            last_df = pd.read_csv(options.last_o, sep='\t', header=None)
-            last_df.sort_values(by = [0, 11], ascending = [True, False], inplace=True)
-            last_df.to_csv(options.last_o, sep='\t', header=False, index=False)
-    except:
-        message = "Could not run FAST correctly"
-        if result and len(result) > 1:
-            message = result[1]
+        volumes = 0
+        if options.run_mode == 'pervol':
+            with open(options.last_db + '.prj') as stream:
+                for line in stream:
+                    if line.startswith('volumes='):
+                        volumes = int(line.split('=', 1)[1])
+        with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.environ.get('METAPATHWAYS_COMPACT_SCRATCH') or os.path.dirname(output)) as work:
+            parts = []
+            for v in range(volumes or 1):
+                part = os.path.join(work, f'hits-{v}.tsv')
+                db = options.last_db + str(v) if volumes else options.last_db
+                args = [options.last_executable, '-f', str(options.last_f), '-o', part,
+                        '-P', str(options.num_threads), '-K', str(options.num_hits),
+                        '-X', work, db, options.last_query]
+                result = sysutils.getstatusoutput(shlex.join(args))
+                if result[0]:
+                    return result
+                if not os.path.isfile(part):
+                    raise RuntimeError('FAST returned success without producing its output')
+                parts.append(part)
+            if len(parts) == 1:
+                from metapathways.compact_storage import publish_file
+                publish_file(parts[0], output)
+            else:
+                merged = os.path.join(work, 'merged.tsv')
+                with open(merged, 'w') as destination:
+                    for part in parts:
+                        with open(part) as source:
+                            for line in source:
+                                destination.write(line)
+                if os.path.getsize(merged):
+                    table = pd.read_csv(merged, sep='\t', header=None)
+                    table.sort_values(by=[0, 11], ascending=[True, False], inplace=True)
+                    table.to_csv(merged, sep='\t', header=False, index=False)
+                from metapathways.compact_storage import publish_file
+                publish_file(merged, output)
+        return (0, '')
+    except Exception as exc:
+        message = 'Could not run FAST correctly: ' + str(exc)
         if logger:
-            logger.printf("ERROR\t%s\n", message)
+            logger.printf('ERROR\t%s\n', message)
         return (1, message)
-
-    return (result[0], result[1])
 
 
 def _execute_BLAST(options, logger=None):

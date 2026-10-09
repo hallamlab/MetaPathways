@@ -131,7 +131,7 @@ def append_taxonomic_information(databaseSequences, table, params):
         for key in table:
             key = str(key)
             if (
-                int(table[key][5] - table[key][4]) > params["length"]
+                abs(table[key][5] - table[key][4]) + 1 >= params["length"]
                 and table[key][0] > params["similarity"]
                 and table[key][1] < params["evalue"]
                 and table[key][2] > params["bitscore"]
@@ -144,7 +144,25 @@ def append_taxonomic_information(databaseSequences, table, params):
                 table[key].append("-")
 
 
-def process_blastout_file(blast_file, database, table, subunit, query_fna, errorlogger=None):
+def rrna_feature_names(query_gff):
+    """Map bedtools zero-based coordinate IDs to authoritative GFF features."""
+    features = {}
+    if query_gff:
+        with open(query_gff) as handle:
+            for line in handle:
+                if line.startswith('#') or not line.strip():
+                    continue
+                fields = line.rstrip('\n').split('\t')
+                if len(fields) != 9:
+                    raise ValueError('Malformed rRNA GFF record')
+                if fields[2] == 'rRNA':
+                    key = '{}:{}-{}({})'.format(fields[0], int(fields[3])-1,
+                                               int(fields[4]), fields[6])
+                    features[key] = fields[8]
+    return features
+
+
+def process_blastout_file(blast_file, database, table, subunit, query_fna, errorlogger=None, query_gff=None):
     try:
         blastfile = open(blast_file, "r")
     except IOError:
@@ -175,6 +193,7 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
                  for x in queryseqs.readlines() if x[0] == '>'
                  }
     queryseqs.close()
+    features = rrna_feature_names(query_gff)
 
     for line in blastLines:
         line = line.strip()
@@ -190,13 +209,16 @@ def process_blastout_file(blast_file, database, table, subunit, query_fna, error
             end_pos = int(fields[7].strip())
             e_value = float(fields[10].strip())
             bitscore = float(fields[11].strip())
-            length = end_pos - start_pos + 1
-            if subunit in query_id: # check subunit
+            length = abs(end_pos - start_pos) + 1
+            # Recent bedtools headers omit the gene name. Resolve their exact
+            # coordinates against barrnap's GFF; retain legacy named headers.
+            feature = features.get(query_key.split('::')[-1], query_id)
+            if re.search(r'(?<![A-Za-z0-9])' + re.escape(subunit) + r'(?![A-Za-z0-9])', feature):
                 if query_key in table: # compare blast stats for queries
                     t_percent_id = table[query_key][0]
                     t_e_value = table[query_key][1]
                     t_bitscore = table[query_key][2]
-                    t_length = table[query_key][5] - table[query_key][4] + 1
+                    t_length = abs(table[query_key][5] - table[query_key][4]) + 1
                     if ((bitscore >= t_bitscore) &
                         (length > t_length)): # only replace if bitscore is better AND alignment is longer
                         table[query_key] = [percent_id,
@@ -281,6 +303,8 @@ def createParser():
         metavar="NUC_SEQUENCES",
         help="Query nucleotide sequences",
     )
+    input_group.add_option('--query-gff', dest='query_gff',
+                           help='Barrnap GFF defining query rRNA subunits')
 
     parser.add_option_group(input_group)
 
@@ -395,6 +419,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.subunit,
             options.query,
             errorlogger=errorlogger,
+            query_gff=options.query_gff,
         )
 
     priority = 7000

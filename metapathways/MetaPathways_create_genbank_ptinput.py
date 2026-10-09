@@ -22,6 +22,7 @@ try:
 
     from os import makedirs, path, listdir, remove, rename
 
+    from metapathways.pt_ec import normalize_ecs
     from metapathways import errorcodes as errormod
     from metapathways import general_utils as gutils
     from metapathways import metapathways_utils as mputils
@@ -229,6 +230,16 @@ def process_gff_file(gff_file_name, output_filenames, nucleotide_seq_dict, \
           )
 
 # this function creates the pathway tools input files
+def ptinput_dataframe(features, nucleotide_sequences):
+    """Keep the coordinate schema valid for protein, RNA-only and empty inputs."""
+    frame = pd.DataFrame.from_dict(features, orient='index')
+    for column in ('id', 'seqname', 'start', 'end', 'strand'):
+        if column not in frame:
+            frame[column] = pd.Series(index=frame.index, dtype=object)
+    frame['contig_length'] = [len(nucleotide_sequences[name]) for name in frame['seqname']]
+    return frame
+
+
 def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict, \
         protein_seq_dict, compact_output, orf_to_taxonid={}):
      
@@ -427,6 +438,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                             else:
                                 attrib['ec'] = [attrib['ec']]
                         
+                        attrib['ec'] = normalize_ecs(attrib['ec'])
                         # keep all ORFs used for Ptools
                         pt_attrib_dict[shortid] = attrib
                         
@@ -491,7 +503,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
                 write_input_sequence_file(output_dir_name, shortid, fastaStr)
             '''
         #endif
-    pt_attrib_df = pd.DataFrame.from_dict(pt_attrib_dict, orient='index')
+    pt_attrib_df = ptinput_dataframe(pt_attrib_dict, nucleotide_seq_dict)
     if 'ec' in pt_attrib_df.columns:
         pt_attrib_df['ec'] = ['|'.join(x) if isinstance(x, list) else '' for x in pt_attrib_df['ec']]
     if 'rxn' in pt_attrib_df.columns:
@@ -556,11 +568,7 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
             gutils.fprintf(pfFile, "METACYC\t%s\n", rxn_val)
 
     if 'ec' in attrib:
-        ec_val = attrib['ec']
-        #if ec_val:
-        #    gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
-        ec_list = list(set(attrib['ec']))
-        for ec_val in ec_list:
+        for ec_val in normalize_ecs(attrib['ec']):
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
 
     if 'taxon' in attrib:
@@ -967,5 +975,4 @@ def MetaPathways_create_genbank_ptinput(argv, errorlogger = None, runstatslogger
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         main(sys.argv[1:])
-
 

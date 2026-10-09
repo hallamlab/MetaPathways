@@ -1,0 +1,30 @@
+%%{init: {"theme":"base","fontFamily":"Times New Roman, Times, serif","themeVariables":{"fontFamily":"Times New Roman, Times, serif","fontSize":"16px","primaryColor":"#CCCCCC","primaryTextColor":"#111111","primaryBorderColor":"#666666","secondaryColor":"#DAE8FC","tertiaryColor":"#F5F5F5","lineColor":"#808080","edgeLabelBackground":"#FFFFFF","background":"#FFFFFF","defaultLinkColor":"#808080","textColor":"#111111"},"flowchart":{"htmlLabels":false,"curve":"linear"}}}%%
+flowchart TB
+    ASM["Assembly FASTA<br/>Original contig identifiers"] --> QC["PREPROCESS_INPUT - MP<br/>Sequence filtering and identifier map"]
+    QC --> ORF["ORF_PREDICTION<br/>pProdigal wrapping Prodigal"]
+    ORF --> AA["ORF_TO_AMINO and FILTER_AMINOS - MP<br/>CDS coordinates, nucleotide and protein sequences"]
+    AA --> SEARCH["FUNC_SEARCH - one task per selected database<br/>FAST fastal or BLAST+ blastp"]
+    DB["MPDB protein indexes"] -. reference input .-> SEARCH
+    SEARCH --> SCORE["COMPUTE_REFSCORES - MP<br/>Sequence-based reference scores for hit filtering"]
+    SCORE --> PARSE["PARSE_FUNC_SEARCH - MP<br/>Per-database thresholds and parsed hits"]
+    PARSE --> RRNA["SCAN_rRNA - barrnap<br/>rRNA coordinates and sequences"]
+    QC -. contig sequences .-> RRNA
+    RRNA --> SILVA["SCAN_rRNA - BLAST+ blastn and MP<br/>Search selected rRNA references and summarize"]
+    RDB["MPDB rRNA indexes<br/>For example SILVA SSU and LSU"] -. reference input .-> SILVA
+    SILVA --> TRNA["SCAN_tRNA - ptRNAscan wrapping tRNAscan-SE<br/>tRNA coordinates and identities"]
+    QC -. contig sequences .-> TRNA
+    TRNA --> ANN["ANNOTATE_ORFS - MP<br/>Combine protein hits and RNA features<br/>pybedtools / BEDTools overlap processing"]
+    ANN --> REPORTS["CREATE_ANNOT_REPORTS - MP<br/>Functional assignments and per-database taxonomy / LCA"]
+    TAX["Reference taxon identifiers<br/>and NCBI taxonomy tree"] -. lookup data .-> REPORTS
+    REPORTS --> GBK["GENBANK_FILE - MP<br/>Annotated sequence export"]
+    GBK --> PI["PATHOLOGIC_INPUT - MP<br/>PF features, feature coordinates, ORF map and EC / reaction map"]
+    PI --> NEXT["Continue to abundance and optional PGDBs"]
+    classDef module fill:#CCCCCC,stroke:#111111,stroke-width:1.5px,color:#111111;
+    classDef compute fill:#F5F5F5,stroke:#666666,stroke-width:2px,color:#111111;
+    classDef input fill:#DAE8FC,stroke:#6C8EBF,stroke-width:2px,color:#111111;
+    classDef output fill:#D5E8D4,stroke:#82B366,stroke-width:2px,color:#111111;
+    classDef data fill:#FFFFFF,stroke:#666666,stroke-width:1.5px,color:#111111;
+    class ASM,DB,RDB,TAX input;
+    class QC,AA,SCORE,PARSE,ANN,REPORTS,GBK,PI module;
+    class ORF,SEARCH,RRNA,SILVA,TRNA compute;
+    class NEXT output;

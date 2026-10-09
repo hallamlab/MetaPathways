@@ -42,60 +42,58 @@ def calculate_tpm(counts, gene_lengths):
     return tpm_values
 
 
+def abundance_table(counts_file, gtf_file, gene_lengths_file=None):
+    """One abundance row per featureCounts gene ID, using its union feature length."""
+    counts_df = pd.read_csv(counts_file, sep="\t", index_col=0, comment="#")
+    if counts_df.index.has_duplicates:
+        raise ValueError("featureCounts contains duplicate gene IDs")
+    if 'Length' in counts_df:
+        lengths = pd.to_numeric(counts_df['Length'], errors='raise')
+    elif gene_lengths_file:
+        legacy = pd.read_csv(gene_lengths_file, sep="\t", index_col=0, header=None)
+        if legacy.index.has_duplicates or set(legacy.index) != set(counts_df.index):
+            raise ValueError("Legacy gene lengths must contain each counted gene ID exactly once")
+        lengths = pd.to_numeric(legacy.iloc[:, 0].reindex(counts_df.index), errors='raise')
+    else:
+        raise ValueError("Missing featureCounts Length column")
+    counts = pd.to_numeric(counts_df.iloc[:, -1], errors='raise')
+    if not np.isfinite(lengths).all() or (lengths <= 0).any():
+        raise ValueError("Gene lengths must be finite and positive")
+    if not np.isfinite(counts).all() or (counts < 0).any():
+        raise ValueError("Counts must be finite and nonnegative")
+    results = pd.DataFrame({
+        'Gene_ID': counts_df.index, 'Count': counts.to_numpy(),
+        'Length': lengths.to_numpy(),
+        'RPKM': calculate_rpkm(counts, lengths) if counts.sum() else np.zeros(len(counts)),
+        'TPM': calculate_tpm(counts, lengths) if counts.sum() else np.zeros(len(counts)),
+    })
+    columns = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attributes']
+    gtf = pd.read_csv(gtf_file, sep="\t", comment="#", header=None, names=columns,
+                      dtype=str, keep_default_na=False)
+    gtf['Gene_ID'] = gtf['attributes'].str.extract(r'(?:^|;)\s*gene_id "([^"]+)"')
+    if gtf['Gene_ID'].isna().any():
+        raise ValueError("GTF row is missing gene_id")
+    missing = set(counts_df.index) - set(gtf['Gene_ID'])
+    uncounted = set(gtf['Gene_ID']) - set(counts_df.index)
+    if missing or uncounted:
+        raise ValueError(f'Gene IDs differ between counts and GTF: missing from GTF={sorted(missing)[:5]}, missing from counts={sorted(uncounted)[:5]}')
+    if gtf['Gene_ID'].duplicated().any():
+        duplicates = gtf.loc[gtf['Gene_ID'].duplicated(), 'Gene_ID'].unique()[:5]
+        raise ValueError(f"GTF contains duplicate gene IDs: {list(duplicates)}. Regenerate annotations with corrected RNA IDs; do not pool distinct loci.")
+    return results.merge(gtf, on='Gene_ID', how='left', validate='one_to_one')
+
+
+
 def main():
     parser = argparse.ArgumentParser(description="Calculate RPKM and TPM values for gene expression data.")
     parser.add_argument("--output", type=str, help="Output file name", required=True)
     parser.add_argument("--counts-file", type=str, help="Path to the file containing read counts in TSV format", required=True)
-    parser.add_argument("--gene-lengths-file", type=str, help="Path to the file containing gene lengths in TSV format", required=True)
+    parser.add_argument("--gene-lengths-file", type=str, help="Legacy length table (optional); featureCounts Length is preferred", required=False)
     parser.add_argument("--gtf-file", type=str, help="Path to the GTF file", required=True)
 
     args = parser.parse_args()
 
-    # Read counts and gene lengths from input files using pandas
-    counts_df = pd.read_csv(args.counts_file, sep="\t", index_col=0, comment="#")
-    gene_lengths_df = pd.read_csv(args.gene_lengths_file, sep="\t", index_col=0, header=None)
-    gene_lengths_df.columns = ['counts']
-    # Make sure the input DataFrames have the same index (gene IDs)
-    if not counts_df.index.equals(gene_lengths_df.index):
-        raise ValueError("Gene IDs in the input files do not match.")
-
-    # Get the read counts from the last column
-    counts = counts_df.iloc[:, -1].tolist()
-    # Get the gene lengths as lists
-    gene_lengths = gene_lengths_df.iloc[:, 0].tolist()
-
-    # Calculate RPKM and TPM values
-    rpkm_values = calculate_rpkm(counts, gene_lengths)
-    tpm_values = calculate_tpm(counts, gene_lengths)
-
-    # Create a pandas DataFrame with the results
-    data = {
-        "Gene_ID": counts_df.index,
-        "Count": counts,
-        "RPKM": rpkm_values,
-        "TPM": tpm_values
-    }
-    results_df = pd.DataFrame(data)
-
-    # Read the GTF file using pandas with specified column names
-    gtf_columns = ["seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attributes", "gene_id"]
-    gtf_df = pd.read_csv(args.gtf_file, sep="\t", comment="#", header=None, names=gtf_columns)
-
-    # Extract gene ID information from the GTF file
-    attributes = gtf_df["attributes"].str.split(';', expand=True)
-    gtf_df["gene_id"] = attributes[attributes[0].str.contains('gene_id')][0].str.extract(r'gene_id "([^"]+)"')
-
-    # Rename the columns of the GTF DataFrame
-    gtf_df.rename(columns={0: "seqname", 1: "source", 2: "feature", 3: "start", 4: "end", 5: "score",
-                           6: "strand", 7: "frame", 8: "attributes"}, inplace=True)
-
-
-    # Merge the results table with the GTF information based on gene ID
-    merged_df = pd.merge(results_df, gtf_df, left_on="Gene_ID", right_on="gene_id", how="left")
-    merged_df.drop(columns=["gene_id"], inplace=True)
-
-    # Clean up the Gene_ID now that all the merging is done
-    #merged_df['Gene_ID'] = merged_df.apply(clean_gene_id, axis=1)
+    merged_df = abundance_table(args.counts_file, args.gtf_file, args.gene_lengths_file)
 
     # Save the merged results to a tab-separated file using pandas
     merged_df.to_csv(args.output, sep="\t", index=False)

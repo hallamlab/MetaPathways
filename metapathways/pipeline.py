@@ -27,6 +27,7 @@ try:
     from metapathways import sampledata as sampledata
     from metapathways import general_utils as gutils
     from metapathways import _version
+    from metapathways import nextflow
 except:
    print("""Could not load some user defined  module functions""")
    print(traceback.print_exc(10))
@@ -58,14 +59,14 @@ script_info['script_usage'] = []
 
 
 
-def runParser():
+def runParser(command='run'):
     parser = argparse.ArgumentParser(description='MetaPathways command-line tool for annotation of contigs.')
     subparsers = parser.add_subparsers(dest="command")
     run_parser = subparsers.add_parser(
-        'run',
+        command,
         description='Minimum REQUIRED Command:\n'
                     'MetaPathways run -i INPUT_FILE -o OUTPUT_DIR -d REFDB_DIR\n\n',
-        usage='Metapathways run [options]', formatter_class=argparse.RawTextHelpFormatter)
+        usage=f'Metapathways {command} [options]', formatter_class=argparse.RawTextHelpFormatter)
     
     # Minimum required args
     req_args = run_parser.add_argument_group('Minimum Required Arguments')
@@ -171,12 +172,15 @@ def runParser():
     pipe_args.add_argument('--force_redo', action="store_true", default=False,
                            help="Redo all steps [False]")
 
+    nextflow.add_resources(run_parser)
+    run_parser.add_argument('--dryrun', action='store_true', help='show the execution plan without running tasks')
+
     # Other arguments
     misc_args = run_parser.add_argument_group('Miscellaneous Arguments')
     misc_args.add_argument("-s", "--samples", nargs='+', action="append", default=[],
                         help="process only specific samples, space-separated list")
-    misc_args.add_argument("-t", "--threads", default=1, type=int,
-                        help="max number of cores to use in multithreaded steps [1]")
+    misc_args.add_argument("-t", "--threads", default=8, type=nextflow.positive,
+                        help="threads per capable tool [8], capped by --max_cpus; serial stages use one CPU")
     misc_args.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="print more information on the stdout")
     misc_args.add_argument("--test", action="store_true", help="use test values for all arguments")
@@ -198,6 +202,7 @@ def msParser():
     mag_parser.add_argument("-m", "--contig_mag_map", dest="mag_map", required=True,
                         help="TSV file that contains contig-to-MAG mapping [REQUIRED]")
 
+    nextflow.add_resources(mag_parser)
     return parser
 
 
@@ -216,31 +221,42 @@ def ptParser():
                         help="Custom name for ePGDB [optional]")
     ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
                         help="Flag only used in containerized env [special flag]")
-    ptools_parser.add_argument('--taxprune', action="store_true", dest="taxprune", default=False,
-                             help='Set taxonomic pruning in pathway tools to True')
+    from metapathways.pt_taxonomy import add_pruning_options
+    add_pruning_options(ptools_parser)
+    from metapathways.pt_taxonomy import add_taxonomy_options
+    add_taxonomy_options(ptools_parser)
+    ptools_parser.add_argument('--no_transport_inference', action='store_true', help='Disable TIP transport inference (SIF only)')
+    ptools_parser.add_argument('--entity', help='Build only community or the specified MAG ID')
+    ptools_parser.add_argument('--image', help='Pathway Tools SIF [registered by build_pt]')
+    from metapathways.nextflow import add_resources
+    add_resources(ptools_parser, task_memory='4 GB')
     return parser
 
 
 def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
     parser = argparse.ArgumentParser(description='automated database install')
     db = parser.add_argument_group(title="database arguments")
-    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=False, default='./',
+    db.add_argument("-d", "--refdb_dir", metavar="PATH", required=False, default=None,
                     help="path to save the reference DB, [DEFAULT \"./\"]")
     db.add_argument("--func", metavar="CATEGORICAL", nargs='*', required=False, default=DBS_FUNC_DEFAULT,
                     help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
     db.add_argument("-a", "--aligner", required=False, default="fast",
                     help=f"local aligner to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    db.add_argument('--skip_pt_screen', action='store_true', help='Skip default PTools reaction compatibility screening for MetaCyc')
+    db.add_argument('--screen_image', help='PTools SIF for screening a MetaCyc directory [registered SIF]')
+    db.add_argument('--metacyc_source', help='licensed MetaCyc data directory or Pathway Tools SIF [registered SIF when --func includes metacyc]')
 
     # "options" group
-    parser.add_argument("-t", "--threads", metavar="INT", type=int, required=False, default=1,
-                        help="max number of cores to use in multithreaded steps [1]")
+    parser.add_argument("-t", "--threads", metavar="INT", type=nextflow.positive, required=False, default=None,
+                        help="total database-build CPU budget [available CPUs]")
     parser.add_argument("--dryrun", action="store_true", default=False, required=False,
-                        help="dry run snakemake")
+                        help="show the database execution plan without running tasks")
     parser.add_argument("--snakemake", nargs='*', required=False, default=[],
-                        help="additional snakemake cli args in the form of KEY=\"VALUE\" or KEY (no leading dashes)")
+                        help="legacy compatibility flags; use the resource flags for new runs")
 
-    parser.add_argument("--test", action="store_true", help="use test values for all arguments")
+    parser.add_argument("--test", action="store_true", help="build test SwissProt/SILVA references; use -d for the prepared MPDB directory")
 
+    nextflow.add_resources(parser)
     return parser
 
 
@@ -284,7 +300,7 @@ def check_for_error_in_input_file_name(shortname, globalerrorlogger=None):
     gutils.eprintf("ERROR\t%s\n",errmessage)
     if globalerrorlogger:
         globalerrorlogger.printf("ERROR\t%s\n",errmessage)
-        mputils.exit_process()
+        raise ValueError(errmessage)
     return False
 
 
@@ -399,10 +415,15 @@ def create_arg_dict(parser):
 
 def run():
     argv = sys.argv
-    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = runParser()
     args = parser.parse_args()
-    # Check for the --test flag and set test values if present
+    tasks, output_dir = prepare_annotation(args, parser)
+    nextflow.launch(tasks, output_dir, args, 'run', dryrun=args.dryrun)
+    print('MetaPathways processing complete.')
+
+
+def prepare_annotation(args, parser):
+    # Shared planner: creates tasks without starting any tools.
     if args.test:
         args.refdb_dir = str(pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db"))
         args.rRNA_refdbs = ["SILVA_SSU_test", "SILVA_LSU_test"]
@@ -427,6 +448,12 @@ def run():
         elif args.refdb_dir == None:
             parser.error(f"Reference DB is a required argument: \"-d\", \"--refdb_dir\"")
 
+    for key in ('input_file', 'output_dir', 'refdb_dir', 'fwd_fastq', 'rev_fastq'):
+        value = getattr(args, key, None)
+        if value and value != 'None':
+            setattr(args, key, str(pathlib.Path(value).expanduser().absolute()))
+    budget = args.max_cpus or (args.threads if args.executor == 'slurm' else nextflow.local_capacity()[0])
+    args.threads = min(args.threads, budget)
     if args.force_redo:
         steps_list = ['PREPROCESS_INPUT', 'ORF_PREDICTION', 'FILTER_AMINOS', 'SCAN_rRNA',
                       'SCAN_tRNA', 'FUNC_SEARCH', 'PARSE_FUNC_SEARCH', 'ANNOTATE_ORFS',
@@ -461,8 +488,9 @@ def run():
     """ load the sample inputs  it expects either a fasta
         file or  a directory containing fasta and yaml file pairs
     """
-    print("output dir", output_dir)
-    globalerrorlogger = mputils.WorkflowLogger(mputils.generate_log_fp(output_dir, basefile_name = 'global_errors_warnings'), open_mode='w')
+    if not getattr(args, '_analysis_planning', False):
+        print(f"Output directory: {output_dir}", flush=True)
+    globalerrorlogger = mputils.WorkflowLogger(mputils.generate_log_fp(output_dir, basefile_name = 'global_errors_warnings'), open_mode='a')
     input_output_list = {}
     if path.isfile(input_fp):
        """ check if it is a file """
@@ -475,7 +503,7 @@ def run():
           """ must be an error """
           gutils.eprintf("ERROR\tNo valid input sample file or directory containing samples exists .!")
           gutils.eprintf("ERROR\tAs provided as arguments in the -in option.!\n")
-          mputils.exit_process("ERROR\tAs provided as arguments in the -in option.!\n")
+          parser.error(f'Input path does not exist: {input_fp}')
 
     """ these are the subset of sample to process if specified
         in case of an empty subset process all the sample """
@@ -489,7 +517,7 @@ def run():
 
     #stop on invalid samples
     if not halt_on_invalid_input(input_output_list, filetypes, sample_subset):
-       globalerrorlogger.printf("ERROR\tInvalid inputs found. Check for file with bad format or characters!\n")
+       parser.error('Invalid input sequence format; see the error log.')
 
     # make sure the sample files are found
     report_missing_filenames(input_output_list, sample_subset, logger=globalerrorlogger)
@@ -501,7 +529,7 @@ def run():
     if not diagnoze.staticDiagnose(params, config,  logger = globalerrorlogger):
         gutils.eprintf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
         globalerrorlogger.printf("ERROR\tFailed to pass the test for required scripts and inputs before run\n")
-        return
+        parser.exit(1, "Input or dependency checks failed; see the error log.\n")
 
     samplesData = {}
     # PART1 before the blast
@@ -537,7 +565,8 @@ def run():
 
     try:
          # load the sample information
-         print(f"RUNNING MetaPathways: v{__version__}")
+         if not getattr(args, '_analysis_planning', False):
+              print(f"RUNNING MetaPathways: v{__version__}", flush=True)
          if len(input_output_list):
               for input_file in sorted_input_output_list:
                 sample_output_dir = input_output_list[input_file]
@@ -566,51 +595,32 @@ def run():
                 s.prepareToRun()
                 samplesData[input_file] = s
 
-              # load the sample information
-              mpsteps.run_metapathways(
-                   samplesData,
-                   sample_output_dir,
-                   output_dir,
-                   globallogger = globalerrorlogger,
-                   command_line_params = command_line_params,
-                   params = params,
-                   status_update_callback = status_update_callback,
-                   config_settings = configs,
-                   run_type = run_type,
-                   block_mode = block_mode
-              )
+              tasks = nextflow.annotation_tasks(samplesData, params, configs, args.memory)
+              return tasks, output_dir
          else:
               gutils.eprintf("ERROR\tNo valid input files/Or no files specified  to process in folder %s!\n",gutils.sQuote(input_fp) )
-              globalerrorlogger.printf("ERROR\tNo valid input files to process in folder %s!\n",gutils.sQuote(input_fp) )
+              raise ValueError(f'No valid inputs in {input_fp}')
 
-    except:
-       mputils.exit_process(str(traceback.format_exc(10)), logger= globalerrorlogger )
+    except Exception as exc:
+       parser.exit(1, f"MetaPathways run failed: {exc}\n")
 
-
-
-    gutils.eprintf("            ***********                \n")
-    gutils.eprintf("INFO : FINISHED PROCESSING THE SAMPLES \n")
-    gutils.eprintf("             THE END                   \n")
-    gutils.eprintf("            ***********                \n")
 
 
 def build_db():
     argv = sys.argv
-    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
-    DBS_FUNC = "swissprot cazy eggnog uniref50 uniref90".split(" ")
+    DBS_FUNC = "swissprot cazy eggnog uniref50 uniref90 metacyc".split(" ")
     DBS_FUNC_DEFAULT = "swissprot".split(" ")
     ALIGNERS = "fast blast".split(" ")
     parser = blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS)
     args = parser.parse_args(argv[2:])
-    build_dbs_src = pathlib.Path(path.abspath(__file__)).parent.joinpath("build_DBs")
 
     # Check for the --test flag and set test values if present
     if args.test:
-        args.refdb_dir = pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db")
+        args.refdb_dir = args.refdb_dir or pathlib.Path(path.abspath(__file__)).parent.joinpath("regtests/test_db")
         args.func = ["swissprot_test"]
         args.aligner = "fast"
         args.threads = 1
-        snakefile = f"""{build_dbs_src}/Snakefile_test"""
+
 
         # Set required arguments to False when --test is used
         for action in parser._actions:
@@ -619,7 +629,7 @@ def build_db():
 
     # Validate required arguments if --test is not used
     else:
-        snakefile = f"""{build_dbs_src}/Snakefile"""
+
         missing_required = []
         for action in parser._actions:
             if action.required and getattr(args, action.dest, None) is None:
@@ -628,6 +638,7 @@ def build_db():
         if missing_required:
             parser.error(f"The following arguments are required: {', '.join(missing_required)}")
 
+    args.refdb_dir = args.refdb_dir or "./"
     input_error = False
     help_printed = False
 
@@ -652,90 +663,36 @@ def build_db():
 
     if input_error: sys.exit(1)
 
-    # ---------------------------------------------------------------------------
-    # setup folders, params, and wget passwords for snakemake
-
-    ref_db_dir = pathlib.Path(args.refdb_dir).absolute()
-    if not ref_db_dir.exists(): makedirs(ref_db_dir)
-    smk_temp_dir = ref_db_dir.joinpath("temp_cache")
-
-    smk_args = [
-        "--latency-wait 0",
-        "--keep-going",
-        "--rerun-incomplete",
-    ]
-    if args.dryrun: smk_args.append("--dryrun")
-    for smk_arg in args.snakemake:
-        if "=" in smk_arg:
-            smk_arg_tokens = smk_arg.split("=")
-            parsed_smk_arg = f"--{smk_arg_tokens[0]} {'='.join(smk_arg_tokens[1:])}"
-        else:
-            parsed_smk_arg = f"--{smk_arg}"
-        smk_args.append(parsed_smk_arg)
-
-    smk_config = dict(
-        ref_db_dir=ref_db_dir,
-        script_path=build_dbs_src,
-        aligner=alinger,
-        functional_db_names=','.join(selected_dbs_functional)
-    )
-
-    #if "metacyc" in selected_dbs_functional:
-    #    gutils.eprintf("Your selected database type requires a MetaCyc download...\n")
-    #    # Get the username and password securely
-    #    metacyc_user = input("Enter your MetaCyc username: ")
-    #    metacyc_pswd = getpass.getpass("Enter your MetaCyc password: ")
-    #    add_netrc_entry("brg-files.ai.sri.com", f"{metacyc_user}", f"{metacyc_pswd}")
-
-    # ---------------------------------------------------------------------------
-    # run snakemake
-
-    # set $XDG_CACHE_HOME so that snakemake doesn't polute $HOME
-    cmd = f"""\
-    mkdir -p {smk_temp_dir}
-    export XDG_CACHE_HOME={smk_temp_dir}
-    snakemake -p -s "{snakefile}" \
-        -d {ref_db_dir} \
-        --cores {args.threads} \
-        --config {' '.join([f'{k}="{v}"' for k, v in smk_config.items()])} \
-        {' '.join(smk_args)} \
-    && rm -r {smk_temp_dir}
-    """
-    cmd = " ".join(l for l in cmd.split("    ") if l != "").strip() # remove indetation
-    gutils.eprintf("-"*30+"\n")
-    gutils.eprintf(cmd)
-    gutils.eprintf("\n"+"-"*30+"\n")
-    system(cmd)
-
-def add_netrc_entry(machine, login, password):
-    # Get the user's home directory
-    home_directory = path.expanduser("~")
-
-    # Define the path to the .netrc file
-    netrc_path = path.join(home_directory, ".netrc")
-
-    # todo: overwrite previous, otherwise may be stuck with wrong password
-    # Check if the .netrc file already exists
-    if path.exists(netrc_path):
-        # Read the existing .netrc file
-        with open(netrc_path, 'r') as netrc_file:
-            existing_entries = netrc_file.read()
-            # Check if an entry for the specified machine already exists
-            if f"machine {machine}" in existing_entries:
-                print(f"An entry for '{machine}' already exists in .netrc. Not adding a duplicate entry.")
-                return
-
-    # If it doesn't exist or the entry doesn't exist, open the .netrc file in append mode
-    with open(netrc_path, 'a') as netrc_file:
-        # Write the new entry to the file
-        netrc_file.write(f"machine {machine}\n")
-        netrc_file.write(f"login {login}\n")
-        netrc_file.write(f"password {password}\n")
+    from metapathways.nf_databases import plan
+    # Preserve the old build_db -t total-core limit, while run -t controls searches.
+    if args.max_cpus is None and args.threads is not None:
+        args.max_cpus = args.threads
+    force = False
+    for item in args.snakemake:
+        key, _, value = item.partition('=')
+        if key in ('cores', 'jobs') and value:
+            args.max_cpus = nextflow.positive(value)
+        elif key in ('dryrun', 'dry-run'):
+            args.dryrun = True
+        elif key == 'forceall':
+            force = True
+        elif key not in ('keep-going', 'rerun-incomplete', 'printshellcmds', 'latency-wait'):
+            parser.error(f'Legacy --snakemake option {key!r} has no supported Nextflow equivalent; use resource flags')
+    try:
+        if args.metacyc_source and 'metacyc' not in args.func:
+            parser.error('--metacyc_source requires --func metacyc (optionally alongside other databases)')
+        tasks = plan(args.refdb_dir, args.func, args.aligner, test=args.test, memory=args.memory,
+                     metacyc_source=args.metacyc_source, skip_pt_screen=args.skip_pt_screen, screen_image=args.screen_image, resources=args)
+        if force:
+            for t in tasks:
+                t['status'] = 'redo'
+        nextflow.launch(tasks, args.refdb_dir, args, 'build_db', dryrun=args.dryrun)
+    except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+        parser.exit(1, f'build_db: {exc}\n')
 
 
 def mag_split():
     argv = sys.argv
-    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = msParser()
     args = parser.parse_args()
 
@@ -743,6 +700,7 @@ def mag_split():
     pf_file = path.join(args.output_dir, 'ptools/0.pf')
     orf_map = path.join(args.output_dir, 'ptools/orf_map.txt')
     orf_contig_map = glob.glob(path.join(args.output_dir, 'results/annotation_table/*.ORF_annotation_table.txt'))[0]
+    feature_table = orf_contig_map.removesuffix('.ORF_annotation_table.txt') + '.ptinput.tsv'
     contig_map = glob.glob(path.join(args.output_dir, 'preprocessed/*.mapping.txt'))[0]
     mag_map = args.mag_map
     ms_outdir = path.join(args.output_dir, 'magsplitter')
@@ -754,56 +712,93 @@ def mag_split():
     cmd_str = f' magsplitter -p {pf_file} -r {orf_map} -c {orf_contig_map} -m {mag_map} -i {contig_map} -o {ms_outdir}'
     gutils.eprintf(cmd_str + '\n')
 
-    run_command_with_realtime_output(cmd)
+    import shlex
+    cmd = [str(pathlib.Path(v).resolve()) if i in (2, 4, 6, 8, 10, 12) else v for i, v in enumerate(cmd)]
+    saved_map = str(pathlib.Path(ms_outdir).resolve() / 'contig_to_mag.tsv')
+    copy_map = shlex.join([sys.executable, '-c', 'import shutil,sys; from pathlib import Path; a,b=map(Path,sys.argv[1:]); shutil.copyfile(a,b) if a.resolve()!=b.resolve() else None', str(pathlib.Path(mag_map).resolve()), saved_map])
+    tasks = [nextflow.task('mag-split', 'Split annotations into MAGs', [shlex.join(cmd), copy_map],
+                          [str(pathlib.Path(p).resolve()) for p in (pf_file, orf_map, orf_contig_map, mag_map, contig_map, feature_table)],
+                          [str(pathlib.Path(ms_outdir).resolve() / 'results'), saved_map],
+                          cpus=1, memory=args.memory, adopt_existing=False,
+                          cache_version='authoritative-mag-coordinates-v1')]
+    try:
+        nextflow.launch(tasks, args.output_dir, args, 'mag_split')
+    except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+        parser.exit(1, f'mag_split: {exc}\n')
+
     
 
 def ptools():
     argv = sys.argv
-    gutils.eprintf("%-10s:%s\n" % ('COMMAND', ' '.join(argv)))
     parser = ptParser()
     args = parser.parse_args()
-    if args.tag:
-        tag = args.tag
-    else:
-        tag = path.basename(args.output_dir.rstrip('/'))
-    cmd = ['pgdb_build_wf.py', '--mp_out', args.output_dir, '--tag', tag]    
-    if args.container:
-        container = args.container
-        cmd.append('--container')
-    if args.taxprune:
-        taxprune = args.taxprune
-        cmd.append('--taxprune')
-        
-    cmd_str = ' '.join(cmd)
-    gutils.eprintf("Building ePGDBs:")
-    gutils.eprintf(cmd_str + '\n')
-    
-    run_command_with_realtime_output(cmd)
-    
-
-def run_command_with_realtime_output(command):
-    """Runs a command and prints its output in real-time."""
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-    # Read and print the output as it is produced
-    while True:
-        output_bytes = process.stdout.readline()
-        if output_bytes:
-            print(output_bytes.decode('utf-8', 'replace').strip())
-        else:
-            break  # Exit the loop if no more output
-
-    # Wait for the subprocess to complete
-    process.wait()
-
-    if process.returncode != 0:
-        print("\nThe command ended with an error.")
-
+    from metapathways.pt_container import registered_image
+    from metapathways import nextflow
+    image = args.image or (None if args.container else registered_image())
+    if args.executor == 'slurm' and not image:
+        parser.error('Slurm Pathway Tools tasks require a SIF; run build_pt or pass --image')
+    if image:
+        image = str(pathlib.Path(image).expanduser().resolve())
+    if image and not pathlib.Path(image).is_file():
+        parser.error(f'Pathway Tools image does not exist: {image}')
+    output = pathlib.Path(args.output_dir).resolve()
+    tag = args.tag or output.name
+    script = shutil.which('pgdb_build_wf.py')
+    if not script:
+        candidate = pathlib.Path(__file__).resolve().parent.parent / 'dev/pgdb_build_wf.py'
+        if not candidate.is_file():
+            parser.error('pgdb_build_wf.py is missing; reinstall MetaPathways')
+        script = str(candidate)
+    import shlex
+    tasks = []
+    entities = [('community', tag, output / 'ptools', output / 'results/pgdb/community')]
+    entities += [(p.name, p.name, p, output / 'results/pgdb/MAGs' / p.name)
+                 for p in sorted((output / 'magsplitter/results').glob('*'))
+                 if p.is_dir() and 'non_binned' not in p.name]
+    if args.no_transport_inference and not image:
+        parser.error('--no_transport_inference requires a Pathway Tools SIF')
+    if args.entity:
+        entities = [entry for entry in entities if entry[0] == args.entity]
+        if not entities:
+            parser.error('Unknown PGDB entity: ' + args.entity)
+    for entity, entity_tag, inputs, results in entities:
+        cmd = [sys.executable, script, '--mp_out', str(output), '--tag', tag,
+               '--entity', entity]
+        if image:
+            cmd += ['--image', image]
+        elif args.container:
+            cmd.append('--container')
+        cmd.append('--taxprune' if args.taxprune else '--no_taxprune')
+        if args.no_transport_inference:
+            cmd.append('--no_transport_inference')
+        from metapathways.pt_taxonomy import resolve_taxon
+        taxon_id = resolve_taxon(args)
+        if taxon_id is not None:
+            cmd += ['--taxon_id', str(taxon_id)]
+        tasks.append(nextflow.task('pgdb-' + entity, entity, [shlex.join(cmd)],
+            ([image] if image else []) + [str(inputs), str(output / 'results/annotation_table'),
+                str(output / 'preprocessed' / (output.name + '.fasta'))],
+            [str(results / (entity_tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
+            cpus=1, memory=args.memory, allow_failure=entity != 'community', adopt_existing=False,
+            cache_version='sequence-backed-pgdb-compatibility-v5', host_serial=not bool(image)))
+        from metapathways.pt_reactions import BLACKLIST
+        tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(output / 'orf_prediction' / (output.name + '.cds.gff'))]
+        from metapathways.pt_reactions import compatibility_path
+        compatibility = compatibility_path(output)
+        if compatibility and compatibility.is_file():
+            tasks[-1]['fingerprint_inputs'].append(str(compatibility))
+    if not image:
+        args.max_tasks = 1
+        print('Native Pathway Tools tasks are serialized; build_pt enables isolated parallel runs.')
+    try:
+        nextflow.launch(tasks, output, args, 'ptools')
+    except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+        parser.exit(1, f'ptools: {exc}\n')
+    return
 
 def help():
     print(f"""\
         MetaPathways: v{__version__}
-        https://metapathways.readthedocs.io
         https://github.com/hallamlab/MetaPathways
 
         Syntax: MetaPathways COMMAND [OPTIONS]
@@ -811,10 +806,15 @@ def help():
         Where COMMAND is one of :
             help
             version
+            prepare_test
             build_db
+            build_pt
+            screen_pt
             run
+            analysis_wf
             mag_split
             ptools
+            report
 
         for addional help, use:
             MetaPathways COMMAND -h
@@ -824,21 +824,83 @@ def version():
     print(f"MetaPathways v{__version__}")
 
 
+def build_pt():
+    from metapathways.pt_container import main as build_image
+    try:
+        build_image(sys.argv[2:])
+    except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+        print(f'build_pt: {exc}', file=sys.stderr)
+        sys.exit(1)
+
+
+def screen_pt():
+    from metapathways.pt_screen import main as screen_main
+    screen_main(sys.argv[2:])
+
+
+def report():
+    from metapathways.report_server import main as report_main
+    report_main(sys.argv[2:])
+
+
+def prepare_test():
+    from metapathways.test_data import main as test_main
+    test_main(sys.argv[2:])
+
+
+def analysis_wf():
+    from metapathways.analysis_workflow import main as analysis_main
+    analysis_main(sys.argv[2:])
+
+
 def main():
     if len(sys.argv) <= 1:
         help()
         return
-    {
-        "help": help,
-        "version": version,
-        "build_db" : build_db,
-        "run": run,
-        "mag_split": mag_split,
-        "ptools": ptools
-    }.get(
-        sys.argv[1],
-        help # default
-    )()
+    command = sys.argv[1]
+    fn = {'prepare_test': prepare_test, 'help': help, 'version': version, 'build_db': build_db, 'build_pt': build_pt,
+          'screen_pt': screen_pt, 'run': run, 'analysis_wf': analysis_wf, 'mag_split': mag_split, 'ptools': ptools, 'report': report}.get(command, help)
+    log_dir = None
+    if command in ('run', 'analysis_wf', 'mag_split', 'ptools', 'build_db', 'build_pt', 'screen_pt', 'report') and not any(x in sys.argv for x in ('-h', '--help')):
+        probe = argparse.ArgumentParser(add_help=False)
+        probe.add_argument('-o', '--output_dir')
+        probe.add_argument('-d', '--refdb_dir')
+        probe.add_argument('--test', action='store_true')
+        options, _ = probe.parse_known_args(sys.argv[2:])
+        log_dir = options.refdb_dir or '.' if command == 'build_db' else options.output_dir
+        if options.test and command in ('run', 'build_db'):
+            log_dir = './test' if command == 'run' else options.refdb_dir or pathlib.Path(__file__).parent / 'regtests/test_db'
+        if command == 'build_pt' and not log_dir:
+            from metapathways.pt_container import parser as pt_parser
+            log_dir = pt_parser().get_default('output_dir')
+    def invoke():
+        try:
+            fn()
+            if command in ('run', 'analysis_wf', 'mag_split', 'ptools') and log_dir and '--dryrun' not in sys.argv:
+                from metapathways.reporting import build_report
+                report_root = pathlib.Path(log_dir).resolve()
+                parent_report = report_root.parent / 'reports/schema.json'
+                if parent_report.is_file():
+                    import json
+                    if str(report_root) in json.loads(parent_report.read_text()).get('sample_paths', []):
+                        report_root = report_root.parent
+                build_report(report_root)
+        except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
+            print(f'MetaPathways: {exc}', file=sys.stderr)
+            sys.exit(1)
+        except KeyboardInterrupt:
+            print('MetaPathways interrupted; see the retained logs and work directory.', file=sys.stderr)
+            sys.exit(130)
+        except Exception:
+            traceback.print_exc()
+            sys.exit(1)
+    if log_dir:
+        from metapathways.cli_logging import transcript
+        with transcript(log_dir, sys.argv):
+            invoke()
+    else:
+        invoke()
+
 
 # the main function of metapaths
 if __name__ == "__main__":

@@ -64,7 +64,7 @@ def build(args):
         integration.chmod(0o777)
         release.run("docker", "run", "--rm", "--volume", f"{integration}:/work", image,
                     "bash", "-c", "umask 0000; trap 'find /work -mindepth 1 -exec chmod a+rwX {} +' EXIT; "
-                    "metapathways build_db --test && metapathways run --test",
+                    "metapathways build_db --test --memory '2 GB' --max_memory '4 GB' --max_cpus 2 && metapathways run --test --memory '2 GB' --max_memory '4 GB' --max_cpus 2",
                     log=output / "docker-integration.log")
         receipt = release.validate_run(integration)
         for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:
@@ -132,7 +132,7 @@ def push(args):
     tags = list(dict.fromkeys([tag.removeprefix("v"), tag, value, f"v{value}"]))
     tags += [] if "rc" in value else ["latest"]
     for tag in tags:
-        target = f"{IMAGE}:{tag}"
+        target = f"{os.environ.get('QUAY_REPOSITORY', IMAGE)}:{tag}"
         release.run("docker", "tag", image, target)
         release.run("docker", "push", target)
 
@@ -150,7 +150,7 @@ def attach(args):
         bundle = Path(temp) / f"metapathways-{receipt['version']}-container-validation.zip"
         with release.zipfile.ZipFile(bundle, "w", release.zipfile.ZIP_DEFLATED) as archive:
             for path in sorted(output.iterdir()):
-                if path.suffix != ".sif":
+                if path.suffix != ".sif" and path.name != "docker-image.tar.gz":
                     info = release.zipfile.ZipInfo(path.name, (1980, 1, 1, 0, 0, 0))
                     archive.writestr(info, path.read_bytes())
         for path in [output / receipt["sif"], output / "container-SHA256SUMS", bundle]:

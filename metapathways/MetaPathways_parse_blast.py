@@ -770,20 +770,17 @@ def process_blastoutput(
         gutils.fprintf(outputfile, "\t%s", field)
     gutils.fprintf(outputfile, "\n")
 
-    pattern = re.compile(r"" + "(\d+_\d+)$")
-
     count = 0
-    uniques = {}
+    uniques = set()
     for data in blastparser:
         if not data:
             continue
         try:
             gutils.fprintf(outputfile, "%s", data["query"])
 
-            result = pattern.search(data["query"])
-            if result:
-                name = result.group(1)
-                uniques[name] = True
+            # Query identifiers are opaque: current C1-G1 identifiers and
+            # historical/custom identifiers must be counted without rewriting.
+            uniques.add(data["query"])
         except:
             print("data is : ", data, "\n")
             return count, len(uniques)

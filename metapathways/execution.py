@@ -13,6 +13,8 @@ try:
     import os
     import re
     import time
+    import importlib
+    import shlex
 
     from subprocess import Popen, PIPE, STDOUT
     from os import makedirs, listdir, _exit
@@ -23,7 +25,6 @@ try:
 
     from metapathways import sysutil as sysutils
     from metapathways import general_utils as gutils
-    from metapathways import scripts as python_scripts
 
 except:
     print(""" Could not load some user defined  module functions""")
@@ -33,13 +34,13 @@ except:
 def execute_pipeline_stage(pipeline_command, \
      extra_command=None, errorlogger=None, runstatslogger=None):
 
-    argv = [x.strip() for x in pipeline_command.split()]
+    argv = shlex.split(pipeline_command)
 
     funcname = re.sub(r".py$", "", argv[0])
     funcname = re.sub(r"^.*/", "", funcname)
     args = argv[1:]
-    if hasattr(python_scripts, funcname):
-        methodtocall = getattr(getattr(python_scripts, funcname), funcname)
+    if funcname.startswith('MetaPathways_'):
+        methodtocall = getattr(importlib.import_module('metapathways.' + funcname), funcname)
         if extra_command == None:
             result = methodtocall(
                 args, errorlogger=errorlogger, runstatslogger=runstatslogger)

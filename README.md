@@ -1,104 +1,68 @@
 # MetaPathways
 
-Functional and taxonomic annotation of environmental genomes, with community- and population-level pathway inference.
-
-## Quickstart
-
-**Linux x86-64 · Conda/Mamba · included K12 example.** Install and run in a writable environment with internet access:
-
-```bash
-mamba create -n metapathways_env --override-channels \
-  -c hallamlab -c conda-forge -c bioconda metapathways=3.5.1
-mamba activate metapathways_env
-metapathways --version
-
-mkdir -p ~/metapathways-review
-cd ~/metapathways-review
-metapathways build_db --test
-metapathways run --test
-```
-
-**Check the result:** outputs are in `test/k12_test/`. Inspect
-`metapathways_steps_log.txt` for successful stages and `errors_warnings_log.txt`
-for problems; do not rely on the exit code alone. Key outputs are
-`results/annotation_table/k12_test.functional_and_taxonomic_table.txt`,
-`genbank/k12_test.gbk`, and `results/rpkm/k12_test.contig_counts.tsv`.
-
-The example includes small K12 FASTA/FASTQ and SwissProt/SILVA fixtures. Database
-preparation downloads ExPASy enzyme records and NCBI taxonomy and writes indexes
-inside the installed package. This is an installation test; it does not reproduce
-the manuscript's CAMI2 benchmark or run Pathway Tools.
-
-[Docker / Apptainer instructions](docker/README.quay.md) ·
-[Release downloads](https://github.com/hallamlab/MetaPathways/releases) ·
-[Full usage](https://metapathways.readthedocs.io/en/latest/usage.html) ·
-[Benchmark provenance](docs/src/reproducibility.rst)
-
-[![Version 3.5.1](https://img.shields.io/badge/Version-3.5.1-blue.svg)](https://github.com/hallamlab/MetaPathways/releases)
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
-[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-## Install this source revision
-
-For development on Linux x86-64 with Python 3.11:
-
-```bash
-git clone https://github.com/hallamlab/MetaPathways.git
-cd MetaPathways
-mamba env create -f docker/conda_base.yml
-mamba activate metapathways
-mamba install -c conda-forge pip wheel 'setuptools>=83,<85'
-python -m pip install --no-deps --no-build-isolation .
-```
-
-Tagged releases validate packages and containers through the
-[release workflow](docs/releasing.md). Record the release build or container digest
-used for a review. Optional MAG splitting and Pathway Tools commands require
-additional dependencies; see the [full usage documentation](https://metapathways.readthedocs.io/en/latest/usage.html).
-
-## Inputs, outputs, and reproducibility
-
-`metapathways run` accepts nucleotide FASTA or amino-acid FASTA (`--input_format
-fasta-amino`). Paired or interleaved FASTQ reads can be supplied for abundance
-estimation. The current CLI does not accept GFF or GenBank as primary inputs.
-
-Results include annotation tables, annotated GFF/GenBank files, predicted
-sequences, abundance tables when reads are supplied, run statistics, and Pathway
-Tools input files. Reference databases are prepared separately with
-`metapathways build_db`; see [reproducibility notes](docs/src/reproducibility.rst)
-for dependency versions, output locations, and the manuscript benchmark provenance.
-The small included example is an installation test, not a reproduction of the
-manuscript's CAMI2 performance benchmark.
-
 ## Abstract
 
 The development of high-throughput sequencing technologies over the past decade has generated a tidal wave of environmental sequence information from a variety of natural and human engineered ecosystems. The resulting flood of information into public databases and archived sequencing projects has exponentially expanded computational resource requirements rendering most local homology-based search methods inefficient. MetaPathways v1.0 is a modular annotation and analysis pipeline for constructing environmental Pathway/Genome Databases (ePGDBs) from environmental sequence information capable of using the Sun Grid engine for external resource partitioning. However, a command-line interface and facile task management introduced user activation barriers with concomitant decrease in fault tolerance.
 
 MetaPathways has since advanced as a modular tool, deepening our understanding of microbial metabolism at various biological levels. With this release, we have addressed previous challenges in modularity and database management. v3.5 enhances user accessibility through streamlined installation via package indexes or containers, refined modules, and interface upgrades. It boasts updated algorithm support for sequence feature prediction, annotation, metabolic inference, and coverage metrics. Tested on mock community data, Metapathways v3.5 demonstrates improved performance and usability. With automated installation and database management, this open-source tool makes advanced metagenomic analysis more accessible. Metapathways v3.5 represents a significant step forward in automated, comprehensive metagenomic analysis, facilitating a deeper exploration of microbial interactions and metabolic functions in environmental genomics.
 
-## Team and repository
+**[Full user guide](https://hallamlab-metapathways.readthedocs.io/en/latest/index.html)** · [Workflow test](https://hallamlab-metapathways.readthedocs.io/en/latest/test.html) · [Issues and feature requests](https://github.com/hallamlab/MetaPathways/issues)
 
-**Current Team:** Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar, and Steven J. Hallam
+## Quick start
 
-**Previous Team Members:** Niels W. Hanson and Shang-Ju Wu
+On Linux x86-64, install MetaPathways and its workflow dependencies with Mamba:
 
-The canonical source is [hallamlab/MetaPathways](https://github.com/hallamlab/MetaPathways). Earlier code is preserved separately in [MetaPathways-legacy](https://github.com/hallamlab/MetaPathways-legacy).
+```bash
+mamba create -n metapathways --override-channels --strict-channel-priority \
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.0
+conda activate metapathways
+```
 
-## [Documentation](https://metapathways.readthedocs.io/en/latest/)
+Prefer a container or a source checkout? Follow the [Docker / Apptainer guide](https://hallamlab-metapathways.readthedocs.io/en/latest/containers.html) or [GitHub installation guide](https://hallamlab-metapathways.readthedocs.io/en/latest/installation.html).
 
-## Support
+## Try the bundled three-sample dataset
 
-[Technical questions, bug reports, and general inquires can be made here.](https://github.com/hallamlab/MetaPathways/issues)
+```bash
+metapathways prepare_test -o ~/mp-test
+cd ~/mp-test
+metapathways build_db --test -d MPDB
+metapathways analysis_wf \
+  --manifest cami-test/all.tsv -o all -d MPDB \
+  --annotation_dbs swissprot_test \
+  --rRNA_refdbs SILVA_SSU_test SILVA_LSU_test \
+  --skip_ptools --threads 4 --memory '4 GB' --max_tasks 2
+metapathways report -o all --serve --no-browser --port 8765
+```
 
-## Citation
+Open the report server's printed URL; for remote runs, follow the [SSH viewing guide](https://hallamlab-metapathways.readthedocs.io/en/latest/reports-tutorial.html#view-a-remote-report-through-ssh). The bundled 2.4 MiB CAMI II subset ([Meyer et al., 2022](#cami-references)) exercises annotation, read abundance, genome splitting, reports and exploration. Database preparation downloads supporting reference records. Pathway inference requires your own license and is skipped in this test. See the [test walkthrough](https://hallamlab-metapathways.readthedocs.io/en/latest/test.html) for validation and expected results.
 
-If you use MetaPathways in your research, please cite the following article:
+## Run your own data
 
-> Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar, Steven J. Hallam. *MetaPathways v3.5: Modularity and Scalability Improvements for Pathway Inference from Environmental Genomes* bioRxiv (2024): 2024-06. [doi: https://doi.org/10.1101/2024.06.04.597460](https://doi.org/10.1101/2024.06.04.597460)
+```bash
+metapathways build_db -d ~/MPDB --func swissprot -a fast
+metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
+```
 
+**For PGDBs, follow the [Pathway Tools installation guide](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html) first.** Then follow the [complete workflow guide](https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html) to include reads and genome maps. Test references are for testing only.
 
-## Maintainer releases
+## Workflow
 
-Use [the release controller and CI workflow](docs/releasing.md) to set a version,
-build and test packages, and publish downloadable GitHub releases and optional
-Anaconda.org packages. The source version is declared in `metapathways/_version.py`.
+[![MetaPathways appnote-style workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.](docs/assets/workflow-main.svg?v=mp-tools-20261008)](https://hallamlab-metapathways.readthedocs.io/en/latest/workflow.html)
+
+The **[full user guide](https://hallamlab-metapathways.readthedocs.io/)** covers inputs, databases, Pathway Tools, local and Slurm resources, all commands, reporting and troubleshooting. [Detailed workflow and tool citations](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html).
+
+## Team, support and citation
+
+Current team: Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar and Steven J. Hallam. Previous contributors include Niels W. Hanson and Shang-Ju Wu.
+
+Source: [hallamlab/MetaPathways](https://github.com/hallamlab/MetaPathways). Historical code: [MetaPathways-legacy](https://github.com/hallamlab/MetaPathways-legacy). Questions and bug reports: [GitHub issues](https://github.com/hallamlab/MetaPathways/issues). License: [MIT](LICENSE), with bundled third-party license notices retained.
+
+Please cite:
+
+> McLaughlin RJ, Liu TX, Altman T, Nallan AN, Hahn AS, Anstett J, Morgan-Lang C, Konwar KM, Hallam SJ. *MetaPathways v3.5: Modularity and Scalability Improvements for Pathway Inference from Environmental Genomes*. bioRxiv (2024). [doi:10.1101/2024.06.04.597460](https://doi.org/10.1101/2024.06.04.597460).
+
+## CAMI references
+
+- **CAMI:** Sczyrba, A., Hofmann, P., Belmann, P., et al. (2017). *Critical Assessment of Metagenome Interpretation—a benchmark of metagenomics software*. **Nature Methods 14**(11), 1063–1071. [DOI: 10.1038/nmeth.4458](https://doi.org/10.1038/nmeth.4458). [CAMI project website](https://cami-challenge.org/).
+- **CAMI II:** Meyer, F., Fritz, A., Deng, Z.-L., et al. (2022). *Critical Assessment of Metagenome Interpretation: the second round of challenges*. **Nature Methods 19**(4), 429–440. [DOI: 10.1038/s41592-022-01431-4](https://doi.org/10.1038/s41592-022-01431-4). [CAMI project website](https://cami-challenge.org/).
+- **Source dataset for the MP test subset:** CAMI II multi-sample human microbiome dataset. [Dataset DOI: 10.4126/FRL01-006425518](https://doi.org/10.4126/FRL01-006425518). The bundled inputs are selected and cropped subsets of this collection; their exact transformations and file hashes are recorded in the bundle provenance.

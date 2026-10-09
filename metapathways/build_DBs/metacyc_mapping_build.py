@@ -228,7 +228,7 @@ for m in mono_list:
 
         c_enz_list = []
         for c_tmp in com_flatlist_tmp:
-            e = prot2cat_dict[c][0]
+            e = prot2cat_dict[c_tmp][0]
             c_enz_list.extend(e)
         prot2enz_dict[m].extend(c_enz_list)
 
@@ -245,6 +245,7 @@ for m in prot2enz_dict:
             enzrxn_list.append([m, r])
 
 enzrxns_df = pd.DataFrame(enzrxn_list, columns=['MC', 'RXN'])
+enzrxns_df.drop_duplicates(inplace=True)
 enzrxns_df.to_csv(os.path.join(mc_dir, 'MetaCyc-monomer-rxn-pairs.tsv'),
                   sep='\t', index=False
                   )
@@ -263,8 +264,6 @@ enz_dict, rxn2enz_dict = build_rxnenz_dict(enzrxns_file)
 # Build Pathway to Compounds dictionary
 pwy_dict, pwy2cmp_dict = build_pwycmp_dict(pwy_dat, cmp_dict)
 
-print(pwy_dict['METH-ACETATE-PWY'])
-print(pwy2cmp_dict['METH-ACETATE-PWY'])
 
 # Create Pathway -> Reactions -> Compounds
 pwy_rxn_cmp_list = []
@@ -288,4 +287,3 @@ pwy_rxn_cmp_df = pd.DataFrame(pwy_rxn_cmp_list,
 pwy_rxn_cmp_df.to_csv(os.path.join(mc_dir, 'MetaCyc-PWY-RXN-CMP-map.tsv'),
                       sep='\t', index=False
                       )
-

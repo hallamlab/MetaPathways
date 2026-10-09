@@ -1,0 +1,4 @@
+# Workflow dependencies installed automatically by the source package.
+# Conda builds bundle these same immutable sources into the release artifact.
+magsplitter @ https://github.com/hallamlab/MAGSplitter/archive/a83bcd0c6479d3fda15025262b981e348c082bc9.tar.gz#sha256=4a7a6a6936e4edc6d4a6b27de1acff29f32156ac181901c83babc1bbd9da8ee6
+camelot-frs @ https://bitbucket.org/tomeraltman/camelot-frs/get/30a774c7fe7bb8a88b5cd6cadfac1c6d258efc96.tar.gz#sha256=eba9efcc91b897dd3bc70ccc7bcb7d26494e8d1b023743498dff0dc00133600d

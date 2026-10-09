@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a problem running MetaPathways or using its reports.
+title: "[Bug]: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: MetaPathways version
+      description: Shown at the bottom of the explorer or by metapathways version.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Installation and execution environment
+      description: For example, Mamba installation on Linux; local execution or Slurm.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: What happened?
+      description: Include the command or explorer steps, expected result, and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Paste relevant error messages or attach a small example.
