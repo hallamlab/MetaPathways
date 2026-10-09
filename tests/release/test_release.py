@@ -15,6 +15,17 @@ spec.loader.exec_module(release)
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_runtime_security_checks(self):
+        metadata = {"python": [3, 11, 15], "pip_present": False,
+                    "versions": {"urllib3": "2.8.0", "setuptools": "84.0.0"}}
+        release.validate_runtime_dependencies(metadata)
+        for changes, message in (({"pip_present": True}, "pip must"),
+                                 ({"python": [3, 10, 19]}, "Python"),
+                                 ({"versions": {"urllib3": "2.7.0", "setuptools": "84.0.0"}}, "urllib3"),
+                                 ({"versions": {"urllib3": "2.8.0", "setuptools": "82.0.0"}}, "setuptools")):
+            with self.assertRaisesRegex(ValueError, message):
+                release.validate_runtime_dependencies({**metadata, **changes})
+
     def test_citation_requires_reviewed_unambiguous_authors(self):
         author = {'given-names': 'Example', 'family-names': 'Author', 'affiliation': 'Reviewed institution'}
         release.validate_citation({'version': '3.5.2', 'authors': [author]}, '3.5.2')

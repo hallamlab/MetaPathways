@@ -86,7 +86,7 @@ jobs:
       - name: Install packaging tools
         if: inputs.source_run_id == ''
         run: |
-          conda install --yes --override-channels -c conda-forge conda-build conda-index pyyaml 'setuptools>=83,<85' wheel
+          conda install --yes --override-channels -c conda-forge conda-build conda-index pyyaml packaging 'setuptools>=83,<85' wheel
           python -m pip install build pandas pybedtools pyfastx tqdm scipy
       - name: Test release controls
         if: inputs.source_run_id == ''
