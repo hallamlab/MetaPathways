@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.1
+
+- Bundle an unlicensed Pathway Tools dependency rootfs in release containers so nested licensed builds do not need APT user-switching privileges.
+- Clear inherited outer binds only for the inner image build; retain package provenance and blocking image validation.
+- Retry transient official-patch HTTP failures with bounded delays.
+- Add optional outer-image extraction and isolated configuration to the licensed nested test helper.
+
+
 ## 4.0.0
 
 - Nextflow controllers for local and Slurm workflows, multi-sample manifests, resource budgets, database builds and licensed Pathway Tools container preparation.

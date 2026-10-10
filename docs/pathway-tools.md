@@ -18,6 +18,15 @@ The compatibility list removes only unsafe **explicit reaction assignments**,
 not genes, annotations or sequences; the same reaction may still be inferred
 later. The sections below explain the evidence, limits and diagnostic records.
 
+## Building from the MP Apptainer container
+
+The release container includes an unlicensed Ubuntu dependency base. `build_pt`
+selects it automatically, avoiding package installation inside the restricted
+nested build. Your licensed installer and official patches are still required
+and remain private. See [nested containers](containers.md#nested-pathway-tools-containers)
+for tested behavior and host limitations. On hosts affected by Java/FUSE stalls,
+launch the outer MP SIF with `--unsquash`; this needs temporary extraction space.
+
 ## Understand the three different databases
 
 | Name | What it contains | How you use it |

@@ -58,6 +58,32 @@ class ContainerTests(unittest.TestCase):
                 pt.build(self.installer, self.image, 'wrong-checksum', 2)
         run.assert_not_called()
 
+    def test_bundled_base_avoids_package_installation_and_records_provenance(self):
+        base = self.root / 'base'
+        (base / 'opt').mkdir(parents=True)
+        manifest = base / 'opt/mp-base-packages.tsv'
+        manifest.write_text('ncbi-blast+\t2.12.0\n')
+        with patch.object(pt, 'PREPARED_BASE', base):
+            recipe, provenance = pt.build_recipe()
+        self.assertIn('Bootstrap: localimage', recipe)
+        self.assertNotIn('apt-get', recipe)
+        self.assertEqual(provenance['packages_sha256'], pt.digest(manifest))
+
+    def test_bundled_base_without_provenance_is_rejected(self):
+        with patch.object(pt, 'PREPARED_BASE', self.root):
+            with self.assertRaisesRegex(RuntimeError, 'lacks provenance'):
+                pt.build_recipe()
+
+    def test_inner_build_drops_inherited_binds_without_mutating_parent(self):
+        with patch.dict(os.environ, {'APPTAINER_BIND': '/work:/work',
+                                     'SINGULARITY_BINDPATH': '/installer',
+                                     'APPTAINER_CACHEDIR': '/cache'}):
+            env = pt.inner_build_environment()
+            self.assertNotIn('APPTAINER_BIND', env)
+            self.assertNotIn('SINGULARITY_BINDPATH', env)
+            self.assertEqual(env['APPTAINER_CACHEDIR'], '/cache')
+            self.assertEqual(os.environ['APPTAINER_BIND'], '/work:/work')
+
     @patch.object(pt.shutil, 'which', return_value='/bin/apptainer')
     def test_runtime_isolation(self, _):
         cmd = pt.exec_command(self.image, self.root / 'private state', ['sh', '-c', 'echo hello'])
@@ -152,6 +178,24 @@ class ContainerTests(unittest.TestCase):
         self.assertEqual([x['name'] for x in manifest['files']], ['p123.fasl', 'p124.tar.gz'])
         self.assertEqual(manifest['files'][0]['sha256'], pt.digest(self.root/'patches/files/p123.fasl'))
         self.assertTrue(all(c.args[0].startswith(manifest['source']) for c in opener.return_value.open.call_args_list))
+
+    def test_vendor_retry_is_bounded_and_does_not_retry_client_errors(self):
+        from urllib.error import HTTPError
+        from unittest.mock import Mock
+        opener = Mock()
+        opener.open.side_effect = HTTPError('https://vendor/', 503, 'unavailable', {}, None)
+        with patch.object(pt.time, 'sleep') as sleep:
+            with self.assertRaises(HTTPError):
+                pt.open_vendor_url(opener, 'https://vendor/')
+        self.assertEqual(opener.open.call_count, 3)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [5, 15])
+        opener.reset_mock()
+        opener.open.side_effect = HTTPError('https://vendor/', 403, 'forbidden', {}, None)
+        with patch.object(pt.time, 'sleep') as sleep:
+            with self.assertRaises(HTTPError):
+                pt.open_vendor_url(opener, 'https://vendor/')
+        self.assertEqual(opener.open.call_count, 1)
+        sleep.assert_not_called()
 
     def test_failed_patch_download_does_not_build_or_publish(self):
         self.download_patches.side_effect = RuntimeError('official feed unavailable')

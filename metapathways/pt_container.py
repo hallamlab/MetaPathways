@@ -17,6 +17,7 @@ import time
 from collections import deque
 import uuid
 from urllib.request import build_opener, HTTPRedirectHandler
+from urllib.error import HTTPError, URLError
 
 from metapathways import nextflow
 
@@ -76,6 +77,32 @@ From: ubuntu:22.04
 '''
 
 
+PREPARED_BASE = Path('/opt/metapathways/ptools-base')
+
+
+def build_recipe():
+    """Use the bundled unlicensed rootfs when running the release container."""
+    if not PREPARED_BASE.is_dir():
+        return RECIPE, None
+    manifest = PREPARED_BASE / 'opt/mp-base-packages.tsv'
+    if not manifest.is_file():
+        raise RuntimeError('Bundled Pathway Tools dependency base lacks provenance')
+    recipe = RECIPE.replace('Bootstrap: docker\nFrom: ubuntu:22.04',
+                            'Bootstrap: localimage\nFrom: ' + str(PREPARED_BASE))
+    recipe = recipe.replace('    apt-get update\n', '')
+    recipe = recipe.replace('    apt-get install -y --no-install-recommends ca-certificates xterm openssl libxml2 xvfb xauth libxm4 libssl-dev procps bzip2 ncbi-blast+\n', '')
+    return recipe, dict(kind='bundled-rootfs', packages_sha256=digest(manifest))
+
+
+def inner_build_environment():
+    """Outer binds must not become mounts inside the writable installation root."""
+    env = os.environ.copy()
+    for name in ('APPTAINER_BIND', 'APPTAINER_BINDPATH',
+                 'SINGULARITY_BIND', 'SINGULARITY_BINDPATH'):
+        env.pop(name, None)
+    return env
+
+
 def digest(path):
     h = hashlib.sha256()
     with Path(path).open('rb') as f:
@@ -112,6 +139,21 @@ def installer_version(installer, explicit=None):
     return version
 
 
+def open_vendor_url(opener, url):
+    """Retry transient vendor errors without accepting redirects or partial files."""
+    for attempt in range(3):
+        try:
+            return opener.open(url, timeout=60)
+        except (HTTPError, URLError) as exc:
+            if isinstance(exc, HTTPError) and exc.code not in (429, 500, 502, 503, 504):
+                raise
+            if attempt == 2:
+                raise
+            delay = (5, 15)[attempt]
+            print(f'Official patch download temporarily unavailable; retrying in {delay}s', flush=True)
+            time.sleep(delay)
+
+
 def download_patches(version, destination):
     """Snapshot SRI's official release feed; never silently use partial downloads."""
     if not re.fullmatch(r'\d+\.\d+', version):
@@ -122,7 +164,7 @@ def download_patches(version, destination):
     files.mkdir(parents=True)
     opener = build_opener(_NoRedirect())
     try:
-        with opener.open(url, timeout=60) as response:
+        with open_vendor_url(opener, url) as response:
             listing = response.read()
         links = _PatchLinks()
         links.feed(listing.decode('utf-8'))
@@ -133,7 +175,7 @@ def download_patches(version, destination):
         for name in sorted(links.names):
             print('Downloading official Pathway Tools patch: ' + name, flush=True)
             target = files / name
-            with opener.open(url + name, timeout=60) as response, target.open('wb') as stream:
+            with open_vendor_url(opener, url + name) as response, target.open('wb') as stream:
                 shutil.copyfileobj(response, stream)
             if target.stat().st_size == 0:
                 raise ValueError('Empty patch: ' + name)
@@ -360,18 +402,19 @@ def build(installer, image, installer_sha256, threads, version=None):
         (work / 'installer').symlink_to(installer)
         patches = download_patches(installer_version(installer, version), work / 'official-patches')
         definition = work / 'pathway-tools.def'
-        definition.write_text(RECIPE)
+        recipe, base = build_recipe()
+        definition.write_text(recipe)
         partial = work / 'pathway-tools.sif'
         subprocess.run([executable, 'build', '--fakeroot', '--mksquashfs-args',
                         f'-processors {threads}', str(partial), str(definition)],
-                       cwd=work, check=True)
+                       cwd=work, check=True, env=inner_build_environment())
         validation_log = validate(partial, work / 'validation')
         metadata = dict(installer_sha256=installer_sha256, image=str(image),
-                        image_sha256=digest(partial), recipe_sha256=hashlib.sha256(RECIPE.encode()).hexdigest(),
-                        official_patches=patches, validation_log=validation_log)
+                        image_sha256=digest(partial), recipe_sha256=hashlib.sha256(recipe.encode()).hexdigest(),
+                        dependency_base=base, official_patches=patches, validation_log=validation_log)
         partial.replace(image)
         save_json(str(image) + '.json', metadata)
-        image.with_suffix('.def').write_text(RECIPE)
+        image.with_suffix('.def').write_text(recipe)
 
 
 def parser():
@@ -403,7 +446,8 @@ def main(argv=None):
             if not shutil.which(executable):
                 p.error(f'{executable} must be installed and on PATH')
     checksum = digest(installer)
-    recipe_hash = hashlib.sha256(RECIPE.encode()).hexdigest()
+    recipe, _ = build_recipe()
+    recipe_hash = hashlib.sha256(recipe.encode()).hexdigest()
     try:
         version = installer_version(installer, args.ptools_version)
     except ValueError as exc:

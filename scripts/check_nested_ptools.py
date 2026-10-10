@@ -21,6 +21,8 @@ def main():
     p.add_argument('--output', required=True, type=Path, help='new diagnostic directory')
     p.add_argument('--apptainer', default=shutil.which('apptainer'))
     p.add_argument('--timeout', type=int, default=900, help='seconds allowed per check [900]')
+    p.add_argument('--unsquash', action='store_true',
+                   help='extract the outer MP image before execution to avoid FUSE mounts')
     a = p.parse_args()
     if a.timeout <= 0:
         p.error('--timeout must be positive')
@@ -38,9 +40,12 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     command = [a.apptainer, 'exec', '--cleanenv', '--bind', f'{output}:{output}',
                '--pwd', str(output)]
+    if a.unsquash:
+        command += ['--unsquash']
     for path in images[1:]:
         command += ['--bind', f'{path}:{path}:ro']
-    for name, value in [('XDG_DATA_HOME', output / 'config'),
+    for name, value in [('XDG_CONFIG_HOME', output / 'config'),
+                        ('XDG_DATA_HOME', output / 'data'),
                         ('NXF_HOME', output / 'nextflow'),
                         ('APPTAINER_CACHEDIR', output / 'cache'),
                         ('APPTAINER_TMPDIR', output / 'tmp')]:

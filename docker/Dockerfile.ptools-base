@@ -1,0 +1,20 @@
+# Public system dependencies only. No Pathway Tools installer, software,
+# MetaCyc data, credentials, or vendor patches belong in this image.
+# Keep this package list aligned with metapathways/pt_container.py until the
+# prepared-base build path has passed licensed integration testing.
+FROM ubuntu:22.04
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        ca-certificates xterm openssl libxml2 xvfb xauth libxm4 libssl-dev \
+        procps bzip2 ncbi-blast+ \
+    && mkdir -p /data /opt/bin \
+    && printf '[ncbi]\nData=/usr/share/ncbi/data\n' > /opt/mp-ncbirc \
+    && test -d /usr/share/ncbi/data \
+    && blastp -version \
+    && makeblastdb -version \
+    && dpkg-query -W ncbi-blast+ > /opt/mp-blast-version.txt \
+    && dpkg-query -W > /opt/mp-base-packages.tsv \
+    && rm -rf /var/lib/apt/lists/*
+
+LABEL org.metapathways.purpose="Pathway Tools system dependencies only"
