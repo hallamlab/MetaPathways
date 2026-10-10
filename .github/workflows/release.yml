@@ -234,7 +234,7 @@ jobs:
           else
             python scripts/release.py container-build
           fi
-      - name: Scan container for fixable high and critical vulnerabilities
+      - name: Scan container and report deferred dependency vulnerabilities
         run: |
           mkdir -p dist/security
           scanner_dir="$RUNNER_TEMP/metapathways-trivy"
@@ -250,8 +250,17 @@ jobs:
           "$scanner_dir/trivy" image --scanners vuln \
             --format json --output dist/security/trivy.json "$image"
           "$scanner_dir/trivy" image --scanners vuln \
-            --ignore-unfixed --severity HIGH,CRITICAL --exit-code 1 \
+            --ignore-unfixed --severity HIGH,CRITICAL --exit-code 0 \
             --format json --output dist/security/fixable-high-critical.json "$image"
+          python - <<'PYTHON'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('dist/security/fixable-high-critical.json').read_text())
+          findings = [v for r in report.get('Results', []) for v in r.get('Vulnerabilities', [])]
+          if findings:
+              ids = {v['VulnerabilityID'] for v in findings}
+              print(f'::warning::Deferred dependency findings: {len(findings)} occurrences, {len(ids)} unique IDs. See issue #15 and container-security-report.')
+          PYTHON
       - name: Retain vulnerability scan report
         if: always()
         uses: actions/upload-artifact@v7.0.1

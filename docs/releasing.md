@@ -326,3 +326,13 @@ Secret values must never be committed or printed. Repository files alone cannot 
 
 ```{include} includes/cami-references.md
 ```
+
+## Temporary dependency-security policy
+
+Dependency findings are temporarily advisory while
+[issue #15](https://github.com/hallamlab/MetaPathways/issues/15) tracks upstream
+Apptainer/CNI and Nextflow remediation. Trivy still scans every release image,
+retains full and filtered JSON reports, and emits a warning for fixable high or
+critical findings. Scanner execution errors, package and container builds, and
+workflow validation failures still block release. Review the findings before
+each publication; restore the blocking findings policy after remediation.

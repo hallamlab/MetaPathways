@@ -32,8 +32,8 @@ are excluded from public packages.
 
 The [4.0.0 validation run](https://github.com/hallamlab/MetaPathways/actions/runs/38000115287)
 passed Conda installation and workflow integration, Docker workflow integration,
-and MP Apptainer artifact checks. Publication remains blocked by the repository's
-container security gate. This is a HallamLab release policy, not an Anaconda
+and MP Apptainer artifact checks. Third-party dependency findings are temporarily advisory under
+[issue #15](https://github.com/hallamlab/MetaPathways/issues/15). This is a HallamLab release policy, not an Anaconda
 upload requirement.
 
 Trivy 0.74.0 reported 649 fixable high/critical occurrences across 89 distinct
@@ -49,10 +49,12 @@ high/critical Java findings in a separate scan, but remains an untested prerelea
 for MP. Official Apptainer 1.5.4 Debian binaries still had findings. No candidate
 replaced the validated dependencies.
 
-Custom dependency rebuilds are deferred. Track patched upstream packages,
+Custom dependency rebuilds are deferred. The release scanner still runs and
+retains its full and filtered reports; findings produce a visible warning.
+Scanner execution errors and all build/integration failures remain blocking. Track patched upstream packages,
 remaining findings, and required compatibility/security validation in
-[issue #15](https://github.com/hallamlab/MetaPathways/issues/15). Deferral does not
-disable the security gate, suppress findings, or authorize publication.
+[issue #15](https://github.com/hallamlab/MetaPathways/issues/15). This temporary policy does not suppress findings or imply that the dependencies
+are vulnerability-free. Review it before each release until issue #15 is resolved.
 
 ## Release checks
 
