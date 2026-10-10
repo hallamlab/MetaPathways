@@ -69,3 +69,35 @@ The public MP image does not include Pathway Tools or MetaCyc. Licensed users sh
 
 ```{include} includes/cami-references.md
 ```
+
+## Nested Pathway Tools containers
+
+Running MP inside a SIF and asking it to build or execute a second Pathway Tools
+SIF is not currently validated as a supported installation route. Use the Mamba
+installation of MP with host Apptainer for licensed Pathway Tools workflows.
+
+A local check of the 4.0.0 release SIF found that nested BLAST creation/search
+worked, but Pathway Tools startup timed out. A direct-host comparison also timed
+out; nested runtime support therefore remains inconclusive. A separate nested
+build probe failed because inherited outer bind mounts targeted paths absent
+from the writable build root. Nextflow startup inside the MP SIF also stalled
+on a FUSE filesystem request on this host. These results are host-specific and
+do not establish that nesting is impossible on every installation.
+
+Maintainers can repeat the licensed checks on a target host from a source checkout:
+
+```bash
+python scripts/check_nested_ptools.py \
+  --mp-image /absolute/path/metapathways.sif \
+  --pt-image /absolute/path/pathway-tools.sif \
+  --installer /absolute/path/pathway-tools-29.5-linux-64-tier1-install \
+  --output /absolute/path/new-nested-test
+```
+
+Activate the host Apptainer environment first so its helper tools are on `PATH`.
+Omit `--installer` to check only execution of an existing licensed image. The
+output directory must be new; it contains private logs and a machine-readable
+result. Each check has a configurable timeout (`--timeout`, default 900 seconds).
+The test does not upload licensed files or change the normal MP image registry.
+A passed startup check verifies Pathway Tools readiness and BLAST integration;
+it does not replace a complete PGDB inference test.
