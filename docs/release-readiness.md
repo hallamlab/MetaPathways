@@ -28,6 +28,34 @@ are excluded from public packages.
 - Installed-wheel assets, version, bundled test preparation, MAGSplitter CLI and Camelot import passed outside the source checkout.
 - Final Conda integration and Docker/Apptainer validation remain release-build checks.
 
+## Deferred dependency security remediation (2026-10-09)
+
+The [4.0.0 validation run](https://github.com/hallamlab/MetaPathways/actions/runs/38000115287)
+passed Conda installation and workflow integration, Docker workflow integration,
+and MP Apptainer artifact checks. Third-party dependency findings are temporarily advisory under
+[issue #15](https://github.com/hallamlab/MetaPathways/issues/15). This is a HallamLab release policy, not an Anaconda
+upload requirement.
+
+Trivy 0.74.0 reported 649 fixable high/critical occurrences across 89 distinct
+vulnerability IDs, primarily in Apptainer and its CNI networking dependencies,
+plus Java libraries bundled with Nextflow. Repeated occurrences across binaries
+are not independent vulnerabilities. Individual applicability to MP has not
+been established. The retained `container-security-report` artifact contains the
+full and filtered JSON reports. The licensed Pathway Tools SIF was not scanned.
+
+The tested packages were Apptainer 1.5.4, CNI 1.0.1, CNI plugins 1.3.0 and
+Nextflow 26.04.7. An upstream Nextflow 26.09.2-edge candidate had no fixable
+high/critical Java findings in a separate scan, but remains an untested prerelease
+for MP. Official Apptainer 1.5.4 Debian binaries still had findings. No candidate
+replaced the validated dependencies.
+
+Custom dependency rebuilds are deferred. The release scanner still runs and
+retains its full and filtered reports; findings produce a visible warning.
+Scanner execution errors and all build/integration failures remain blocking. Track patched upstream packages,
+remaining findings, and required compatibility/security validation in
+[issue #15](https://github.com/hallamlab/MetaPathways/issues/15). This temporary policy does not suppress findings or imply that the dependencies
+are vulnerability-free. Review it before each release until issue #15 is resolved.
+
 ## Release checks
 
 1. Pass unit, release-control, documentation, source and wheel checks.
