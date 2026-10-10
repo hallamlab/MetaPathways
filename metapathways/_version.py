@@ -1,5 +1,5 @@
 __author__ = "Ryan J. McLaughlin, Tony X. Liu, Tomer Altman, Aditi N. Nallan, Aria S. Hahn, Julia Anstett, Connor Morgan-Lang, Kishori M. Konwar, Steven J. Hallam"
-__version__ = "4.0.0"
+__version__ = "4.0.1"
 __maintainer__ = "Ryan J. McLaughlin"
 __contact__ = "mcglock@student.ubc.ca"
 __status__ = "Release"

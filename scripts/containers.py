@@ -52,7 +52,10 @@ def build(args):
         work = Path(temp)
         context = work / "context"
         (context / "package").mkdir(parents=True)
-        shutil.copy2(release.ROOT / "docker/Dockerfile.release", context / "Dockerfile")
+        base = (release.ROOT / "docker/Dockerfile.ptools-base").read_text()
+        base = base.replace('FROM ubuntu:22.04', 'FROM ubuntu:22.04 AS ptools-base', 1)
+        runtime = (release.ROOT / "docker/Dockerfile.release").read_text()
+        (context / "Dockerfile").write_text(base + "\n" + runtime)
         shutil.copy2(source / package, context / "package" / package)
         (context / "package/explicit.txt").write_text(
             explicit_lock((source / "conda-explicit.txt").read_text(), package))

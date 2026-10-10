@@ -17,6 +17,7 @@ include tests/test_read_mapping.py
 include tests/test_pt_container.py
 include tests/test_nextflow.py
 include docker/Dockerfile.release
+include docker/Dockerfile.ptools-base
 include docker/README.quay.md
 
 recursive-include metapathways/report_assets *.html *.js *.css
