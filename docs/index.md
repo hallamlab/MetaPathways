@@ -5,10 +5,12 @@ Annotate metagenomes, measure read abundance, infer community and genome pathway
 **New users:** start with [installation and the three-sample test](installation.md). The small input dataset and workflow helpers are included. **Want PGDBs? Follow the [Pathway Tools installation guide](pathway-tools.md) before running the complete workflow.**
 
 ```{container} mp-primary-workflow
-[![MetaPathways workflow: six conceptual modules for preprocessing, feature prediction, annotation, optional pathways and read abundance, and integrated reports and explorer, orchestrated by Nextflow locally or on Slurm.](assets/workflow-main.svg)](assets/workflow-main.svg)
+[![MetaPathways workflow: a main preprocessing, feature extraction, annotation and community pathway chain, with optional read-abundance and population-pathway branches, orchestrated by Nextflow locally or on Slurm.](assets/workflow-brief-nodal.svg)](assets/workflow-brief-nodal.svg)
 ```
 
-Arrows between numbered modules trace the conceptual flow of results; independent tasks and optional branches follow the dependencies in the detailed workflow. Optional reads add abundance; genome maps add genome-specific analysis. The report and explorer connect available results for searching, subsetting and CSV export. [View the SVG](assets/workflow-main.svg) · [Detailed nodal workflow and citations](detailed-workflow.md).
+Follow the heavy main path through preprocessing, feature extraction, annotation and optional community pathway inference. Side branches add read abundance and population ePGDBs. Blue circles are inputs, green circles are outputs, and diamonds are processes or choices; black dots mark connected junctions. Dashed lines supply licensed Pathway Tools. All available results feed the report and explorer. [View the SVG](assets/workflow-brief-nodal.svg) · [Download PDF](assets/workflow-brief-nodal.pdf) · [Workflow diagrams and tool citations](detailed-workflow.md).
+
+Tool labels are abbreviated in this overview: Prodigal runs through pProdigal, and RNA scanning uses the ptRNAscan-SE wrapper around tRNAscan-SE. See the detailed workflow for the full software descriptions.
 
 ## Start simple
 

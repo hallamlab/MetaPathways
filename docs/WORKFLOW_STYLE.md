@@ -85,3 +85,50 @@ The automated check rejects loss of the nodal grammar, serif font or palette.
 It complements visual review; it cannot certify layout quality or scientific
 correctness. The canonical visual reference is MetaPathways
 `docs/assets/workflow-main.svg` (the appnote module-and-node layout).
+
+## MetaPathways primary-figure override — 21 October 2026
+
+The user explicitly requested standard computational flowchart shapes for the
+brief and detailed primary workflows, retaining their scientific content and the
+MP blue / gray / green palette. This supersedes the earlier nodal and circuit
+layouts for these two figures only. Use rectangles for processes, parallelograms
+for inputs / outputs, diamonds only for decisions, cylinders for databases, and
+a rounded terminal for the final exploration step. Keep Trebuchet MS, the approved
+Myriad Pro substitute. Put labels inside shapes, omit stage numbers in the main
+process boxes, and route black arrows around labels with generous whitespace.
+Dashed arrows supply the licensed runtime. Supporting diagrams retain their
+existing style. Build SVGs and PDFs with `scripts/render_detailed_workflow.py`.
+
+Primary legends separate color (input / processing / output role) from neutral
+shape symbols (data I/O, process, decision, database, terminal). A database may
+therefore be blue for an input or green for an output.
+
+Prefer aligned centers and straight horizontal or vertical arrows whenever
+shapes can line up cleanly. Keep orthogonal bends only where routing around
+other shapes or joining / splitting branches requires them.
+
+Primary figures emphasize the main analysis with heavier connectors, including
+the Yes route through community inference. Optional branches and bypasses remain
+lighter; arrowheads retain a consistent size.
+
+
+## Approved ASPIRE V1 nodal brief
+
+The user requested that `workflow-brief-nodal.svg` match the approved ASPIRE V1
+brief artwork. This alternative uses small white process diamonds on continuous
+vertical paths, external Trebuchet MS labels without guide lines, blue input and
+green output circles, and thin black arrows. It has no numbered module spine.
+Generate its SVG and PDF with `scripts/render_nodal_brief.py`. It is the primary figure in the README and documentation home page. The
+`workflow-main.svg` brief flowchart and detailed flowchart remain in the workflow
+section.
+
+The nodal brief derives node centers, branch order, joins, bypasses and
+connector bends from the approved brief. Horizontal and vertical compression are
+allowed for the requested tighter nodal variant; preserve symbol sizes and text
+legibility. Community and population labels sit between their branches, use
+ePGDB terminology, and omit dotted text-to-node leaders. Do not independently
+reorganize this alternative.
+
+In the compact nodal alternative, preprocessing, feature extraction and
+annotation labels sit to the right of the main path. Keep node symbols and text
+at full size while reducing the spacing between them.

@@ -42,7 +42,19 @@ python scripts/render_workflow_diagrams.py
 
 Chromium requires its usual Linux system libraries. Rendering downloads the pinned Mermaid bundle; ordinary Sphinx builds need neither Chromium nor network access for diagrams. `docs/diagrams/figures.json` records the source mapping and shared canvas size. If a future diagram needs a wider canvas, update both projects together. Do not hand-edit generated files in `docs/assets/diagrams/`.
 
-The expanded nodal figure at the top of `detailed-workflow.md` is generated from
-`docs/diagrams/detailed-nodal-workflow.json` by `scripts/render_detailed_workflow.py`.
-The standard rebuild command above regenerates its SVG, PDF and shared-scale
-preview alongside the three supporting diagrams.
+The README and documentation home page use the approved nodal brief,
+`docs/assets/workflow-brief-nodal.svg`. The workflow section retains the brief
+flowchart (`workflow-main.svg`) and detailed flowchart (`workflow-detailed.svg`).
+Their generators share the graph while retaining the approved presentation of
+each figure. Rebuild all three SVG/PDF pairs with:
+
+```bash
+python scripts/render_detailed_workflow.py --pdf
+python scripts/render_nodal_brief.py
+python scripts/check_workflow_style.py
+```
+
+These commands require CairoSVG and the installed Trebuchet MS font. Do not
+hand-edit generated SVGs. The nodal generator preserves branch organization,
+adds junction markers and applies the compact spacing used by the landing-page
+figure.

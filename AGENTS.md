@@ -14,3 +14,11 @@ Rebuild source-linked SVG / PDF / preview artifacts together, run
 `python3 scripts/check_workflow_style.py`, and visually inspect the result.
 This governs workflow figures; preserve the separately configured study palettes
 for scientific plots. Apply this convention to new workflow figures too.
+
+MetaPathways-specific user override (2026-10-21): the primary brief and detailed
+workflows use standard computational flowchart shapes with the existing palette
+and Trebuchet MS typography. See docs/WORKFLOW_STYLE.md for the scope.
+
+The approved nodal brief is now the README and RTD landing-page figure; the
+standard flowcharts remain in the workflow section. Follow the nodal-specific
+layout and styling rules in docs/WORKFLOW_STYLE.md when editing that figure.
