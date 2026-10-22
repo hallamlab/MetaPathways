@@ -4,7 +4,7 @@ Annotate metagenomes, measure read abundance, infer community and genome pathway
 
 **New users:** start with [installation and the three-sample test](installation.md). The small input dataset and workflow helpers are included. **Want PGDBs? Follow the [Pathway Tools installation guide](pathway-tools.md) before running the complete workflow.**
 
-```{container} mp-primary-workflow
+```{container} mp-primary-workflow mp-workflow-overview
 [![MetaPathways workflow: a main preprocessing, feature extraction, annotation and community pathway chain, with optional read-abundance and population-pathway branches, orchestrated by Nextflow locally or on Slurm.](assets/workflow-brief-nodal.svg)](assets/workflow-brief-nodal.svg)
 ```
 

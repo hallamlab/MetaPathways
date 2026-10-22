@@ -9,3 +9,7 @@
 /* Keep the primary workflow readable with modest responsive side margins. */
 .wy-nav-content:has(.mp-primary-workflow) { max-width: none; padding-inline: clamp(20px, 3vw, 56px); }
 .mp-primary-workflow img { display: block; width: 100%; max-width: 100%; height: auto; margin: 1.5rem auto; }
+
+/* The tall nodal overview should not expand with a wide desktop viewport. */
+.wy-nav-content:has(.mp-workflow-overview) { max-width: 1150px; }
+.mp-workflow-overview img { width: 100%; max-width: 620px; }

@@ -47,7 +47,11 @@ metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 
 ## Workflow
 
-[![MetaPathways workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.](docs/assets/workflow-brief-nodal.svg?v=mp-nodal-20261021)](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html)
+<p align="center">
+  <a href="https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html">
+    <img src="docs/assets/workflow-brief-nodal.svg?v=mp-nodal-20261021" width="620" alt="MetaPathways workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.">
+  </a>
+</p>
 
 The **[full user guide](https://hallamlab-metapathways.readthedocs.io/)** covers inputs, databases, Pathway Tools, local and Slurm resources, all commands, reporting and troubleshooting. [Detailed workflow and tool citations](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html).
 
