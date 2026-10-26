@@ -90,6 +90,8 @@ def createParser():
         action="store_true", default=False,
         help=""
         )
+    parser.add_option('--long_read_preset', type='choice', choices=['map-hifi', 'map-pb', 'map-ont'],
+                      help='Use minimap2 via CoverM for unpaired long reads and featureCounts long-read mode')
     #parser.add_option(
     #    "-r", "--readsdir", dest="readsdir",
     #    default=None, help="the directory that should have the read files"
@@ -271,6 +273,8 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     options, args = parser.parse_args(argv)
     try:
         read_arguments = coverm_read_arguments(options.fwd_fastq, options.rev_fastq, options.interleaved)
+        if options.long_read_preset and read_arguments[0] != '--single':
+            raise ValueError('Long reads require one unpaired reads file')
     except ValueError as error:
         parser.error(str(error))
     if not (options.contigs != None and path.exists(options.contigs)):
@@ -289,7 +293,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
         errormod.insert_error(10)
         return 1
 
-    if not (options.bwaExec != None and cmd_exists(options.bwaExec)):
+    if options.long_read_preset and not cmd_exists('minimap2'):
+        parser.error('minimap2 is required for long-read mapping')
+    if not options.long_read_preset and not (options.bwaExec != None and cmd_exists(options.bwaExec)):
         parser.error("ERROR\tThe BWA executable is missing")
         errormod.insert_error(10)
         return 1
@@ -338,8 +344,12 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
     command.append(str(options.num_threads))
     command.append('--bam-file-cache-directory')
     command.append(options.bwaFolder)
-    command.append('--min-read-percent-identity 97')
-    command.append('--min-read-aligned-percent 97')
+    if options.long_read_preset:
+        command.extend(['--mapper', 'minimap2-' + options.long_read_preset.removeprefix('map-')])
+        # Use CoverM defaults for noisy long reads instead of short-read 97% filters.
+    else:
+        command.append('--min-read-percent-identity 97')
+        command.append('--min-read-aligned-percent 97')
     command.append('--exclude-supplementary')
 
     gff_in = options.orfgff
@@ -385,6 +395,9 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
 
         featcmd = ['featureCounts', '-t', 'CDS,rRNA,tRNA,pseudogene', '-O', '-T', str(options.num_threads),
                    '-a', gtf_out, '-o', feat, sort_out]
+        if options.long_read_preset:
+            featcmd.insert(1, '-L')
+            featcmd[featcmd.index('-T') + 1] = '1'
         if read_arguments[0] != '--single':
             featcmd.insert(1, '-p')
         run_logged(featcmd, stat_out)
@@ -537,4 +550,4 @@ def MetaPathways_tpm(argv, extra_command=None, errorlogger=None, runstatslogger=
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        main(sys.argv[1:])
+        sys.exit(main(sys.argv[1:]))

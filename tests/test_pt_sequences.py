@@ -88,6 +88,22 @@ class SequenceInputTests(unittest.TestCase):
             self.assertEqual([line for line in handle.getvalue().splitlines() if line.startswith('EC\t')],
                              ['EC\t1.2.3.4', 'EC\t2.3.4.5'])
 
+    def test_taxonomic_evidence_uses_comment_and_legacy_staging_preserves_source(self):
+        from io import StringIO
+        from metapathways.MetaPathways_create_genbank_ptinput import write_to_pf_file
+        handle = StringIO()
+        attrs = dict(strand='+', start=1, end=9, feature='CDS', taxon='562', **{'gene-comment':'existing'})
+        write_to_pf_file(str(self.inputs), 'A-G1', attrs, handle, True)
+        self.assertNotIn('TAXONOMIC-ANNOT', handle.getvalue())
+        self.assertIn('GENE-COMMENT\texisting; MetaPathways taxonomic annotation: TAX-562', handle.getvalue())
+        legacy = self.records[0].replace('//', 'GENE-COMMENT\texisting\nTAXONOMIC-ANNOT\tTAX-562\n//')
+        (self.inputs/'0.pf').write_text(legacy)
+        attach_sequences(self.inputs, self.base)
+        staged = (self.inputs/'contig_1.pf').read_text()
+        self.assertNotIn('TAXONOMIC-ANNOT', staged)
+        self.assertIn('existing; MetaPathways taxonomic annotation: TAX-562', staged)
+        self.assertEqual((self.inputs/'0.pf').read_text(), legacy)
+
     def test_legacy_ec_lists_are_split_without_losing_provisional_values(self):
         import json
         text = self.records[0].replace('//', 'EC\t1.2.3.4, 2.3.4.5\nEC\t1.2.3.4|3.6.5.n1\n//')

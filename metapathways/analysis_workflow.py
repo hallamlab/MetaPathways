@@ -21,6 +21,7 @@ GUIDE = ('https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html#
 FASTA = re.compile(r'(.+)\.(?:fasta|fna|fa)(?:\.gz)?$')
 READS = re.compile(r'(.+)_(R1|R2|interleaved|single)\.(?:fastq|fq)(?:\.gz)?$')
 SAFE = re.compile(r'[A-Za-z][A-Za-z0-9_]*\Z')
+LONG_READS = {'long_hifi': 'map-hifi', 'long_pb': 'map-pb', 'long_ont': 'map-ont'}
 RESERVED = {'logs', 'reports', 'inputs', 'assemblies', 'reads', 'mag_maps'}
 
 
@@ -34,8 +35,10 @@ def parser():
     sub = next(a for a in p._actions if isinstance(a, argparse._SubParsersAction)).choices['analysis_wf']
     sub.description = 'Annotate multiple metagenomes, split MAGs, build PGDBs and generate a combined report.'
     for action in sub._actions:
-        if action.dest in ('fwd_fastq', 'rev_fastq', 'interleaved', 'samples', 'test'):
+        if action.dest in ('fwd_fastq', 'rev_fastq', 'interleaved', 'test'):
             action.help = argparse.SUPPRESS
+        elif action.dest == 'samples':
+            action.help = 'run only these sample IDs from the full unchanged input manifest (space-separated)'
         elif action.dest == 'input_file':
             action.help = 'dataset root, or assemblies directory with --reads_dir/--mag_maps_dir; alternative: --manifest'
 
@@ -47,6 +50,7 @@ def parser():
     sub.add_argument('--skip_ptools', action='store_true', help='Omit community and MAG PGDB construction')
     sub.add_argument('--compact_results', action='store_true',
                      help='Use task scratch, archive PGDBs/diagnostics, and remove completed sample intermediates')
+    sub.add_argument('--file_quota', type=nextflow.positive, help='remaining file quota for an advisory PGDB estimate; no automatic cleanup changes')
     sub.add_argument('--scratch_dir', help='Worker-local scratch directory for compact mode [Slurm: SLURM_TMPDIR; local: system temporary directory]')
     sub.add_argument('--image', help='Pathway Tools SIF [registered by build_pt]')
     from metapathways.pt_taxonomy import add_taxonomy_options
@@ -173,11 +177,12 @@ def validate(rows):
             fail(f'Invalid, reserved, or duplicate sample ID: {sample!r}; use letters, digits and underscores, starting with a letter')
         ids.add(sample)
         mode, r1, r2 = row['read_layout'], row['reads_1'], row['reads_2']
-        if mode not in ('paired', 'single', 'interleaved', 'none') or \
+        if mode not in ('paired', 'single', 'interleaved', 'none', *LONG_READS) or \
            (mode == 'paired' and not (r1 and r2)) or \
-           (mode in ('single', 'interleaved') and (not r1 or r2)) or \
+           (mode in ('single', 'interleaved', *LONG_READS) and (not r1 or r2)) or \
            (mode == 'none' and (r1 or r2)):
             fail(f'{sample}: read_layout and read paths disagree')
+        sample_reads = set()
         for key in ('assembly', 'reads_1', 'reads_2', 'mag_map'):
             if not row[key]:
                 if key == 'assembly':
@@ -188,9 +193,13 @@ def validate(rows):
                 fail(f'{sample}: missing, empty or unreadable {key}: {p}')
             stat = p.stat()
             identity = (stat.st_dev, stat.st_ino)
-            if identity in used:
-                fail(f'{sample}: {key} reuses the same file as {used[identity]}')
-            used[identity] = f'{sample}/{key}'
+            is_read = key in ('reads_1', 'reads_2')
+            previous = used.get(identity)
+            if identity in sample_reads or (previous and not (is_read and previous[1])):
+                fail(f'{sample}: {key} reuses the same file as {previous[0] if previous else sample}')
+            if is_read:
+                sample_reads.add(identity)
+            used[identity] = (f'{sample}/{key}', is_read)
             row[key] = str(p)
         if not FASTA.fullmatch(Path(row['assembly']).name):
             fail(f'{sample}: assembly must end in .fa, .fna or .fasta, optionally .gz')
@@ -213,6 +222,7 @@ def validate(rows):
             for text in handle:
                 if text.startswith('>'):
                     header(text)
+        row['contig_count'] = len(found)
         unknown = mapped - found
         if unknown:
             fail(f'{sample}: MAG map contigs absent from assembly: {", ".join(sorted(unknown)[:5])}')
@@ -311,7 +321,7 @@ def downstream(row, output, annotations, args, image):
             [str(results / (tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
             [parent if community else f'{sample}:mag_split'], cpus=1, memory=args.ptools_memory or args.memory,
             sample=sample, entity=entity, allow_failure=not community, adopt_existing=False,
-            cache_version='sequence-backed-pgdb-compatibility-v5',
+            cache_version='sequence-backed-pgdb-taxonomy-comment-v6',
             skip_if_missing=None if community else str(inputs / '0.pf')))
         from metapathways.pt_reactions import BLACKLIST
         tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(base / f'orf_prediction/{sample}.cds.gff')]
@@ -335,8 +345,8 @@ def main(argv=None):
         fail('Provide -o OUTPUT, -d MPDB and either -i INPUTS or --manifest FILE')
     if args.manifest and any((args.input_file, args.reads_dir, args.mag_maps_dir, args.no_reads, args.no_mags)):
         fail('--manifest cannot be combined with discovery flags')
-    if args.fwd_fastq or args.rev_fastq or args.interleaved or args.test or args.samples:
-        fail('Use per-sample reads and IDs from discovery/manifest, not -1/-2/--interleaved/--test/--samples')
+    if args.fwd_fastq or args.rev_fastq or args.interleaved or args.test:
+        fail('Use per-sample reads and IDs from discovery/manifest, not -1/-2/--interleaved/--test')
     if args.input_format != 'fasta':
         fail('analysis_wf requires nucleotide FASTA assemblies')
     if any(getattr(args, key) == 'skip' for key in ('PREPROCESS_INPUT', 'ORF_PREDICTION', 'FILTER_AMINOS',
@@ -351,6 +361,10 @@ def main(argv=None):
     print(f'Output directory: {output}', flush=True)
     print('Validating sample inputs, read layouts and genome maps...', flush=True)
     rows = validate(read_manifest(args.manifest) if args.manifest else discover(args))
+    selected = {sample for group in args.samples for sample in group}
+    unknown = selected - {row['sample_id'] for row in rows}
+    if unknown:
+        fail('Unknown --samples IDs: ' + ', '.join(sorted(unknown)))
     from metapathways.compact_results import MARKER, resume_key, marker_state
     for row in rows:
         base = output/row['sample_id']
@@ -391,6 +405,8 @@ def main(argv=None):
         tasks = []
         for index, (original, row) in enumerate(zip(rows, staged), 1):
             sample = row['sample_id']
+            if selected and sample not in selected:
+                continue
             prefix = f'Planning [{index}/{len(rows)}] {sample}'
             pgdbs = 'skipped' if args.skip_ptools else str(1 + len(row['entities']))
             print(f'{prefix}: reads={row["read_layout"]}; genome bins={len(row["entities"])}; '
@@ -407,6 +423,7 @@ def main(argv=None):
                 continue
             sample_args = copy.copy(args)
             sample_args._analysis_planning = True
+            sample_args.samples = []
             sample_args.input_file = row['assembly']
             sample_args.output_dir, sample_args.refdb_dir = str(output), str(refdb)
             sample_args.fwd_fastq = row['reads_1'] or None
@@ -416,6 +433,12 @@ def main(argv=None):
             # A combined analysis only reuses outputs whose receipts prove provenance.
             for task in annotation:
                 task['adopt_existing'] = False
+                if task.get('context', {}).get('name') == 'COMPUTE_TPM' and row['read_layout'] in LONG_READS:
+                    commands = [cmd + ' --long_read_preset ' + LONG_READS[row['read_layout']]
+                                for cmd in task['commands']]
+                    task['commands'] = commands
+                    task['context']['commands'] = commands
+                    task['cache_version'] = 'long-read-counts-v1'
             tasks.extend(annotation)
             tasks.extend(downstream(row, output, annotation, args, image))
             if args.compact_results:
@@ -427,12 +450,19 @@ def main(argv=None):
                 if task['status'] != 'skip':
                     task['status'] = 'redo'
         print(f'Validated {len(rows)} samples. Resolved inputs: {output / "inputs.resolved.tsv"}', flush=True)
-        print(f'Planning complete: {len(tasks)} tasks.', flush=True)
+        args._analysis_manifest_samples = [r['sample_id'] for r in rows]
+        args._analysis_selected_samples = [r['sample_id'] for r in rows if not selected or r['sample_id'] in selected]
+        print(f'Planning complete: {len(tasks)} tasks for {len(args._analysis_selected_samples)} selected samples.', flush=True)
+        if not args.skip_ptools:
+            from metapathways.controller_preflight import report
+            report(tasks, [r for r in rows if not selected or r['sample_id'] in selected],
+                   args.compact_results, args.file_quota)
         if tasks:
             nextflow.launch(tasks, output, args, 'analysis_wf', dryrun=args.dryrun)
-        if args.compact_results and not args.dryrun:
+        if args.compact_results and not args.dryrun and not selected:
             # No sample needs staged input links or MP task receipts once complete.
-            for name in ('inputs', 'receipts', 'tmp'):
+            # launch removes this invocation's scratch; preserve earlier failed runs.
+            for name in ('inputs', 'receipts'):
                 shutil.rmtree(control/name, ignore_errors=True)
 
 

@@ -28,7 +28,7 @@ Independent reference searches may run together, and Nextflow schedules as many 
 
 MP explicitly requests one node (`--nodes=1`) for every Slurm task. Threaded tools use their allocated CPUs on that node; concurrency across nodes comes from separate jobs. No node-count flag is needed in the MP command.
 
-Run from an authenticated login/head node where `sbatch`, `squeue` and `scancel` are available:
+Run from an authenticated Slurm submission host where `sbatch`, `squeue` and `scancel` are available:
 
 ```bash
 metapathways run -i /shared/sample.fasta -o /shared/results -d /shared/MPDB \
@@ -43,3 +43,23 @@ Slurm defaults to at most four submitted jobs, six submissions per minute and 24
 The basic interface is the same locally and on HPC: `--threads 8 --memory '64 GB' --max_tasks 100`. Serial tasks still request one CPU. In `analysis_wf`, the memory request also applies to PGDBs unless overridden with `--ptools_memory`. Locally, detected available CPUs and memory automatically limit execution; on Slurm, the scheduler determines capacity. Aggregate maxima are optional additional controls, not numbers the user must calculate.
 
 Live Slurm execution still needs validation at your site. Configuration and synthetic local scheduling tests do not establish compatibility with every cluster's authentication, filesystem or resource policies.
+
+## Controller resources and large workflows
+
+Use a compute allocation for large controllers when your site permits nested
+Slurm submissions. The {download}`controller sbatch template <../examples/slurm/analysis-controller.sbatch>`
+requests 4 CPUs, 32 GB and seven days; adapt these requests to your cluster.
+`--max_tasks` limits jobs, not JVM threads or memory. MP prints the available
+RLIMIT_NPROC and cgroup PID/memory limits, including readable ancestor limits.
+These can be shared across your processes; reported headroom is advisory.
+
+On Slurm, MP defaults `NXF_OPTS` to `-Xmx4g` when the variable is absent. An
+explicit `NXF_OPTS` is preserved. The heap cap excludes native memory and thread
+stacks; choose a controller allocation with additional headroom. Reusable
+channel-fed workers keep process count proportional to dependency depth instead
+of the number of MAGs. Samples retain independent dependency gates.
+
+The console shows controller output and task completion summaries. Add
+`--stream_tool_output` to mirror full tool logs, including Pathway Tools output.
+`--verbose` alone does not enable full tool streaming. Full task output is always
+retained in workflow logs, or archived after successful compact runs.

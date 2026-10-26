@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Reuse channel-fed Nextflow workers by dependency depth to reduce controller
+  operator/thread growth during large MAG fan-out; retain independent task gates.
+- Preserve failed-run work and diagnostics and report the original controller error.
+- Retain featureCounts summaries during compaction; keep compact mode opt-in.
+- Allow shared reads across assembly rows and sequential `analysis_wf --samples`
+  subsets against the unchanged full manifest.
+- Add explicit HiFi, PacBio and ONT manifest layouts with minimap2 and long-read counting.
+- Add controller limit/file-count preflights, a Slurm controller template, and a
+  Slurm Java heap default that respects explicit NXF_OPTS.
+- Make full console tool streaming explicit with `--stream_tool_output`.
+- Preserve taxonomic evidence in PathoLogic gene comments instead of the rejected
+  TAXONOMIC-ANNOT slot; remove inplace pandas dropna calls.
+- Existing compact completion markers remain implementation-specific: use fresh
+  output when upgrading an already compacted run; deleted summaries are not restored.
+
 ## 4.0.1
 
 - Bundle an unlicensed Pathway Tools dependency rootfs in release containers so nested licensed builds do not need APT user-switching privileges.

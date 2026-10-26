@@ -13,7 +13,7 @@ Copy the bundled test inputs and reference seeds into a writable workspace.
 
 options:
   -h, --help            show this help message and exit
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         workspace for cami-test/ inputs and MPDB/ reference seeds
 ```
 
@@ -30,11 +30,11 @@ options:
   --dryrun              show the execution plan without running tasks
 
 Minimum Required Arguments:
-  -i INPUT_FILE, --input_file INPUT_FILE
+  -i, --input_file INPUT_FILE
                         path to the input fasta file/input dir [REQUIRED]
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         path to the output directory [REQUIRED]
-  -d REFDB_DIR, --refdb_dir REFDB_DIR
+  -d, --refdb_dir REFDB_DIR
                         path to the reference DB [REQUIRED]
 
 Quality Controls Arguments:
@@ -87,9 +87,9 @@ rRNA Annotation Arguments:
                         Minimum bitscore for rRNA annotation [50]
 
 Read Mapping Arguments (single sample support only):
-  -1 FWD_FASTQ, --fastq FWD_FASTQ
+  -1, --fastq FWD_FASTQ
                         location of the raw fastq file, either forward or interleaved
-  -2 REV_FASTQ, --rev_fastq REV_FASTQ
+  -2, --rev_fastq REV_FASTQ
                         location of the raw reverse fastq file, if separate paired-end
   --interleaved         if paired-end is interleaved [False]
 
@@ -139,15 +139,16 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
   --keep_work           retain automatically allocated work/cache directories
 
 Miscellaneous Arguments:
-  -s SAMPLES [SAMPLES ...], --samples SAMPLES [SAMPLES ...]
+  -s, --samples SAMPLES [SAMPLES ...]
                         process only specific samples, space-separated list
-  -t THREADS, --threads THREADS
+  -t, --threads THREADS
                         threads per capable tool [8], capped by --max_cpus; serial stages use one CPU
   -v, --verbose         print more information on the stdout
   --test                use test values for all arguments
@@ -172,6 +173,8 @@ options:
   --no_mags             Explicitly omit MAG splitting during automatic discovery
   --skip_ptools         Omit community and MAG PGDB construction
   --compact_results     Use task scratch, archive PGDBs/diagnostics, and remove completed sample intermediates
+  --file_quota FILE_QUOTA
+                        remaining file quota for an advisory PGDB estimate; no automatic cleanup changes
   --scratch_dir SCRATCH_DIR
                         Worker-local scratch directory for compact mode [Slurm: SLURM_TMPDIR; local: system temporary directory]
   --image IMAGE         Pathway Tools SIF [registered by build_pt]
@@ -186,11 +189,11 @@ options:
                         Optional PGDB memory override [same as --memory]
 
 Minimum Required Arguments:
-  -i INPUT_FILE, --input_file INPUT_FILE
+  -i, --input_file INPUT_FILE
                         dataset root, or assemblies directory with --reads_dir/--mag_maps_dir; alternative: --manifest
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         path to the output directory [REQUIRED]
-  -d REFDB_DIR, --refdb_dir REFDB_DIR
+  -d, --refdb_dir REFDB_DIR
                         path to the reference DB [REQUIRED]
 
 Quality Controls Arguments:
@@ -288,13 +291,16 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
   --keep_work           retain automatically allocated work/cache directories
 
 Miscellaneous Arguments:
-  -t THREADS, --threads THREADS
+  -s, --samples SAMPLES [SAMPLES ...]
+                        run only these sample IDs from the full unchanged input manifest (space-separated)
+  -t, --threads THREADS
                         threads per capable tool [8], capped by --max_cpus; serial stages use one CPU
   -v, --verbose         print more information on the stdout
 ```
@@ -308,15 +314,14 @@ usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--sk
                     [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                     [--executor {local,slurm}] [--account ACCOUNT] [--partition PARTITION]
                     [--qos QOS] [--reservation RESERVATION] [--time_limit TIME_LIMIT]
-                    [--submit_rate SUBMIT_RATE] [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE]
-                    [--keep_work]
+                    [--submit_rate SUBMIT_RATE] [--stream_tool_output] [--work_dir WORK_DIR]
+                    [--conda_cache CONDA_CACHE] [--keep_work]
 
 automated database install
 
 options:
   -h, --help            show this help message and exit
-  -t INT, --threads INT
-                        total database-build CPU budget [available CPUs]
+  -t, --threads INT     total database-build CPU budget [available CPUs]
   --dryrun              show the database execution plan without running tasks
   --snakemake [SNAKEMAKE ...]
                         legacy compatibility flags; use the resource flags for new runs
@@ -324,12 +329,11 @@ options:
                         directory
 
 database arguments:
-  -d PATH, --refdb_dir PATH
-                        path to save the reference DB, [DEFAULT "./"]
+  -d, --refdb_dir PATH  path to save the reference DB, [DEFAULT "./"]
   --func [CATEGORICAL ...]
                         functional references, select any combination from ['swissprot', 'cazy',
                         'eggnog', 'uniref50', 'uniref90', 'metacyc'], [DEFAULT ['swissprot']]
-  -a ALIGNER, --aligner ALIGNER
+  -a, --aligner ALIGNER
                         local aligner to index for, select one of ['fast', 'blast'], [DEFAULT
                         fast]
   --skip_pt_screen      Skip default PTools reaction compatibility screening for MetaCyc
@@ -359,6 +363,8 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always
+                        retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -375,9 +381,9 @@ Metapathways mag_split -o output_dir -m contig_mag_map
 
 options:
   -h, --help            show this help message and exit
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         path where MP output was saved [REQUIRED]
-  -m MAG_MAP, --contig_mag_map MAG_MAP
+  -m, --contig_mag_map MAG_MAP
                         TSV file that contains contig-to-MAG mapping [REQUIRED]
 
 Execution Resources:
@@ -399,6 +405,7 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -415,27 +422,28 @@ usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
                              [--time_limit TIME_LIMIT] [--submit_rate SUBMIT_RATE]
-                             [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE] [--keep_work]
+                             [--stream_tool_output] [--work_dir WORK_DIR]
+                             [--conda_cache CONDA_CACHE] [--keep_work]
 
 Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.
 
 options:
   -h, --help            show this help message and exit
-  -i INSTALLER, --installer INSTALLER
+  -i, --installer INSTALLER
                         local Pathway Tools Linux x86-64 installer
   --ptools_version PTOOLS_VERSION
                         release number if the installer was renamed; otherwise inferred from its
                         filename
-  -d REFDB_DIR, --refdb_dir REFDB_DIR
+  -d, --refdb_dir REFDB_DIR
                         also export and prepare the licensed MetaCyc reference in this MPDB after
                         building the SIF
   --skip_pt_screen      Skip default reaction compatibility screening when building MetaCyc with
                         -d
-  -a {fast,blast}, --aligner {fast,blast}
+  -a, --aligner {fast,blast}
                         MetaCyc reference index format with -d [fast]
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         container directory [~/.local/share/metapathways/containers]
-  -t THREADS, --threads THREADS
+  -t, --threads THREADS
                         CPUs for image compression [2]; Pathway Tools uses one CPU
   --dryrun              write and show the build plan without building or registering
 
@@ -459,6 +467,8 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always
+                        retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -477,8 +487,8 @@ Screen explicit MPDB reaction assignments against a licensed PTools SIF
 
 options:
   -h, --help            show this help message and exit
-  -d REFDB_DIR, --refdb_dir REFDB_DIR
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -d, --refdb_dir REFDB_DIR
+  -o, --output_dir OUTPUT_DIR
   --image IMAGE         PTools SIF [registered build_pt image]
   --publish             Save a completed full screen compatibility list in the MPDB
   --reactions REACTIONS [REACTIONS ...]
@@ -502,7 +512,7 @@ Metapathways ptools -o output_dir
 
 options:
   -h, --help            show this help message and exit
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         path where MP output was saved [REQUIRED]
   --tag TAG             Custom name for ePGDB [optional]
   --container           Flag only used in containerized env [special flag]
@@ -535,6 +545,7 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -550,7 +561,7 @@ Build a navigable report from existing MP outputs; no analyses are rerun.
 
 options:
   -h, --help            show this help message and exit
-  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
+  -o, --output_dir OUTPUT_DIR
                         sample output or parent containing sample outputs
   --serve               open the local searchable portal and serve until Ctrl-C
   --no-rebuild          use an existing report snapshot

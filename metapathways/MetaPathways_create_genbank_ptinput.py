@@ -273,11 +273,11 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
     anno_df = pd.read_csv(anno_file, sep='\t', header=0, low_memory=False)
     anno_df.loc[anno_df['orf_id'] == '','orf_id'] = np.nan
     anno_df['orf_id']  = anno_df['orf_id'].ffill()
-    anno_df.dropna(subset = ['target'], inplace=True)
+    anno_df = anno_df.dropna(subset=['target'])
     
     # load funct/tax table
     ft_df = pd.read_csv(ft_file, sep='\t', header=0, low_memory=False)
-    ft_df.dropna(subset = ['target'], inplace=True)
+    ft_df = ft_df.dropna(subset=['target'])
     ft_df['orf_id'] = [x for x in ft_df['ORF_ID']]
     # build product dictionary to remove duplicate ORF annotations
     cprod_dict = {k : [] for k in set(ft_df['product'])}
@@ -317,7 +317,7 @@ def write_ptinput_files(outfiles, contig_dict, sample_name, nucleotide_seq_dict,
             ec_map_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
             ec_dfs.append(ec_map_df)
         ec_df = pd.concat(ec_dfs)
-        ec_df.dropna(subset = ['EC'], inplace=True)
+        ec_df = ec_df.dropna(subset=['EC'])
         ec_df = ec_df.copy().query('AccID in @trim_set_list')
         ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
         ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
@@ -559,8 +559,11 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
     if 'product' in attrib:
         gutils.fprintf(pfFile, "FUNCTION\t%s\n", attrib['product'])
     
-    if 'gene-comment' in attrib:
-        gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", attrib['gene-comment'])
+    comments = [str(attrib['gene-comment'])] if 'gene-comment' in attrib else []
+    if 'taxon' in attrib:
+        comments.append('MetaPathways taxonomic annotation: TAX-%s' % attrib['taxon'])
+    if comments:
+        gutils.fprintf(pfFile, "GENE-COMMENT\t%s\n", '; '.join(comments))
 
     if 'rxn' in attrib:
         rxn_list = list(set(attrib['rxn']))
@@ -570,9 +573,6 @@ def write_to_pf_file(output_dir_name, shortid, attrib, pfFile, compact_output):
     if 'ec' in attrib:
         for ec_val in normalize_ecs(attrib['ec']):
             gutils.fprintf(pfFile, "EC\t%s\n", ec_val)
-
-    if 'taxon' in attrib:
-        gutils.fprintf(pfFile, "TAXONOMIC-ANNOT\tTAX-%s\n", attrib['taxon'])
 
     if attrib['feature']=='CDS':
         gutils.fprintf(pfFile, "PRODUCT-TYPE\tP\n")
