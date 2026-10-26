@@ -55,6 +55,16 @@ class CompactTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'new output'):
             marker_state(self.base, 'key', force=True)
 
+    def test_featurecounts_summary_survives_compaction(self):
+        summary = self.base/'bwa/alpha.annot.featurecounts.txt.summary'
+        summary.write_text('Status\treads.bam\nAssigned\t42\nUnassigned_NoFeatures\t3\n')
+        expected = summary.read_bytes()
+        compact(self.base, 'key')
+        self.assertEqual(summary.read_bytes(), expected)
+        self.assertFalse((self.base/'bwa/reads.sorted.bam').exists())
+        self.assertIn(str(summary.relative_to(self.base)),
+                      json.loads((self.base/MARKER).read_text())['keep'])
+
     def test_validation_failure_does_not_delete_data(self):
         (self.base/'preprocessed/test.mapping.txt').unlink()
         with self.assertRaisesRegex(ValueError, 'Missing required'):

@@ -287,7 +287,7 @@ def map_orfs2pwys(mp_outdir, pt_outdir):
 	new_cols.extend(pwy_out_df.columns)
 	orf_exp_df = pd.DataFrame(orf_exp_list, columns=new_cols)
 	pwy2orf_df = orf_map_df.merge(orf_exp_df, on='orf_id', how='outer')
-	pwy2orf_df.dropna(subset=['SAMPLE'], inplace=True)
+	pwy2orf_df = pwy2orf_df.dropna(subset=['SAMPLE'])
 	pwy2orf_df = pwy2orf_df[['orf_id', 'SAMPLE', 'EC', 'RXN', 'PWY_COMMON_NAME', 'ref dbname',
 							 'target', 'product', 'value', 'trim_target', 'PWY_NAME', 'PWY_SCORE',
 							 'NUM_REACTIONS', 'NUM_COVERED_REACTIONS', 'ORF_COUNT', 'ORFS'

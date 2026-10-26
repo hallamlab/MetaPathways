@@ -59,7 +59,7 @@ ln -s /data/original/anonymous_reads.fq.gz my_inputs/reads/SampleA_interleaved.f
 ln -s /data/original/contig_to_genome.tsv my_inputs/mag_maps/SampleA.tsv
 ```
 
-The original files must remain readable throughout the workflow. The same assembly or read file cannot be reused under multiple manifest samples via hard/symbolic aliases; this catches accidental duplicated inputs. Independent test fixture copies are intentional and documented separately.
+The original files must remain readable throughout the workflow. Read files may be shared by distinct assembly rows, including hard/symbolic aliases. Assemblies and MAG maps cannot be reused, and paired mates cannot name the same file. Each assembly is mapped independently. Independent test fixture copies are intentional and documented separately.
 
 ## Custom manifest: keep every file where it is
 
@@ -75,7 +75,7 @@ The columns are real tabs, not the literal characters `\t`. A spreadsheet can sa
 | --- | --- |
 | `sample_id` | Your chosen stable sample name; independent of assembly basename |
 | `assembly` | Path to that sample's nucleotide FASTA |
-| `read_layout` | `paired`, `interleaved`, `single` or `none` |
+| `read_layout` | `paired`, `interleaved`, `single`, `none`, `long_hifi`, `long_pb` or `long_ont` |
 | `reads_1` | R1, the interleaved file, or the single-end file; blank for `none` |
 | `reads_2` | R2 only for `paired`; blank otherwise |
 | `mag_map` | Headerless contig-to-bin TSV, or blank to omit bins for that sample |
@@ -105,3 +105,7 @@ contig_003	GenomeB
 The first column is the original FASTA record ID: the token after `>` up to the first whitespace. Do not use MP's renamed `Sample-C123` IDs here. The second column is the bin ID. Contigs may be absent if unbinned, but every supplied contig must belong to the assembly and must occur at most once in the map. Periods in bin names become underscores; avoid names that collide after normalization. Use names beginning with a letter and consisting of letters, numbers or underscores; `community` and names containing `non_binned` are reserved.
 
 A contig removed by assembly QC cannot contribute features downstream. A mapped genome with no usable annotated features may have no generated PGDB input. Therefore the number of genome IDs in a map is an input inventory, not a promise of that many successful PGDBs.
+
+Long-read layouts take one FASTQ in `reads_1` with `reads_2` empty; see
+[long-read mapping and counting](analysis.md#long-reads). Keep your full input
+manifest when running [a selected subset](analysis.md#run-a-sample-subset).

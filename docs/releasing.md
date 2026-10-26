@@ -6,8 +6,8 @@ This chapter is for maintainers preparing and publishing packages. Every release
 must pass package and workflow validation before publication.
 
 The source version in `metapathways/_version.py` is authoritative. The current
-release series is **4.0**, with package version **4.0.1** and tag **v4.0.1**.
-Use subsequent patch versions such as **4.0.2**, or **4.0.2rc1** for a preview.
+release series is **4.0**, with package version **4.0.2** and tag **v4.0.2**.
+Use subsequent patch versions such as **4.0.3**, or **4.0.3rc1** for a preview.
 Tags have a leading `v`; package versions do not. Updating a repository does not
 upgrade an already installed environment.
 
@@ -25,10 +25,10 @@ Open feature work as a draft PR targeting `dev` while benchmarks or test checks 
 Prepare any version changes on the feature branch before final PR review:
 
 ```bash
-python scripts/release.py prepare 4.0.1
+python scripts/release.py prepare 4.0.2
 git diff
 git add README.md CITATION.cff metapathways/_version.py conda_recipe/meta_template.yaml
-git commit -m "Prepare MetaPathways 4.0.1"
+git commit -m "Prepare MetaPathways 4.0.2"
 ```
 
 Commit the release script, workflow, tests, and other implementation files as well
@@ -50,7 +50,8 @@ The tag workflow:
 2. Creates a ZIP of the committed repository and a Python source tarball.
 3. Renders a checksum-verified Linux Conda recipe and builds the package.
 4. Installs that package from a temporary local channel into a new environment.
-5. Runs database preparation and the included K12 integration test.
+5. Runs the installed Nextflow fan-out/join/resume/parser regressions and known-count
+   long-read tests, then database preparation and the included K12 integration test.
 6. Requires all 16 named stages, nonempty key outputs, and no error markers.
 7. Records logs, dependency exports, revision, and SHA-256 checksums.
 8. Retains the validated assets in GitHub Actions; tag pushes never publish.
@@ -281,7 +282,7 @@ The intended sequence is **feature branch → single-server and HPC benchmarks p
 
 Use the [PR tester checklist](pr-testing.md) for independent installation, the single- and two-sample CAMI workflows, restart behavior, optional licensed Pathway Tools, and report exports. Record the tested Git commit. Record the source commit as well as the package version when testing a candidate.
 
-The release version is **4.0.1**. Preparing this version does not publish it; branch and PR testing still happen before a release tag is pushed. Do not reuse 3.5.1 or its existing tags. Change the version with `prepare` before final release validation; it also updates the citation version and resets the Conda build number for a new version. Avoid editing runtime code/version files while a benchmark is executing from an editable checkout.
+The release version is **4.0.2**. Preparing this version does not publish it; branch and PR testing still happen before a release tag is pushed. Do not reuse 3.5.1 or its existing tags. Change the version with `prepare` before final release validation; it also updates the citation version and resets the Conda build number for a new version. Avoid editing runtime code/version files while a benchmark is executing from an editable checkout.
 
 Before merging, manually dispatch the Release workflow on the feature branch with blank publication inputs. Select `test_containers` to test the exact Conda artifact inside Docker and its SIF conversion. Download `release-assets`, `container-assets`, and the security reports from Actions for review. Core integration uses explicit 2 GB task reservations, a 4 GB memory budget, and two CPUs so the small fixture fits CI runners. These limits are not production metagenome sizing recommendations.
 

@@ -123,7 +123,7 @@ Add `--compact_results` to `analysis_wf` on either local or Slurm execution. The
 
 Each sample gets a final cleanup task that waits for **all** its annotation, read-abundance, splitting and requested PGDB tasks. Expected optional MAG failures count as finished attempts; their diagnostics and status remain available. Required failures prevent that sample's cleanup. Other successfully completed samples can already be compacted while the remaining samples run.
 
-Retained files include the source tables and identifier maps used by the explorer, final supporting result tables, pathway TSVs, MAG input gene membership, ORF groups, run statistics, compressed PGDBs and bundled diagnostics. MP validates report relationships before deleting anything. Reports and CSV exports can be rebuilt normally with `metapathways report -o OUTPUT`. Complete PGDBs remain available as `*cyc.tar.bz2` archives.
+Retained files include `bwa/*.featurecounts.txt.summary` assignment totals/reasons, the source tables and identifier maps used by the explorer, final supporting result tables, pathway TSVs, MAG input gene membership, ORF groups, run statistics, compressed PGDBs and bundled diagnostics. MP validates report relationships before deleting anything. Reports and CSV exports can be rebuilt normally with `metapathways report -o OUTPUT`. Complete PGDBs remain available as `*cyc.tar.bz2` archives.
 
 Compact tasks resolve temporary storage **on the compute node**. On Slurm, MP uses the job's `SLURM_TMPDIR`. Clusters that do not set it require `--scratch_dir /node/local/path`, using a directory available on each worker. MP deliberately does not assume an arbitrary Slurm `TMPDIR` is node-local. On a local server, MP uses the system temporary directory unless overridden. An override takes precedence and must point to an existing writable directory; do not point it at shared scratch if the goal is avoiding shared-filesystem inode pressure. No environment-variable setup is required on clusters that provide `SLURM_TMPDIR`.
 
@@ -133,7 +133,7 @@ PGDB construction, per-contig sequence/annotation staging, and archive extractio
 
 FAST search temporary files, parallel tRNA chunks, and SAMtools sorting spill files also use task scratch. Annotation products and mapping BAMs remain on shared storage until sample cleanup so downstream tasks and incomplete-sample checkpoints still have their inputs. Removed sample files include BAMs, sequence intermediates, raw alignments, intermediate GenBank/GFF files, and Pathway Tools inputs except report-required membership records. Original assemblies/reads, MPDB, and SIF are untouched and must reside outside sample output directories.
 
-At normal controller exit (success or failure), compact mode bundles worker logs and invocation receipts in `logs/analysis_wf/RUN/task_logs.tar.gz` and Nextflow task working files in `nextflow_tasks.tar.gz`. Console logs, task plans, summary JSON, trace TSV, timeline and resource reports stay directly readable. Generated Nextflow code, work and run-local Conda cache are removed. A successful workflow also removes staging links and task-reuse receipts; sample completion markers remain. An interrupted controller retains work and loose logs because scheduler jobs might still be using them. MP does not prune active Nextflow task directories behind the scheduler.
+After a successful controller exit, compact mode bundles worker logs and invocation receipts in `logs/analysis_wf/RUN/task_logs.tar.gz` and Nextflow task working files in `nextflow_tasks.tar.gz`. Console logs, task plans, summary JSON, trace TSV, timeline and resource reports stay directly readable. Generated Nextflow code, work and run-local Conda cache are removed. A successful full-dataset workflow also removes staging links and task-reuse receipts; subset runs preserve shared control state; sample completion markers remain. A failed or interrupted controller retains work and loose logs because scheduler jobs might still be using them. MP does not prune active Nextflow task directories behind the scheduler.
 
 `--compact_results` cannot be combined with `--keep_work`, `--work_dir` or `--conda_cache`. `--scratch_dir` requires compact mode and controls worker temporary storage, not Nextflow's shared work directory. Installed Mamba environments and user-wide Nextflow installations/caches are not deleted.
 
@@ -163,3 +163,10 @@ The cleanup task appears separately in the execution/resource records; distingui
 
 ```{include} includes/cami-references.md
 ```
+
+Before submission, MP prints an approximate PGDB file count based on validated
+contigs and MAG IDs. `--file_quota REMAINING_FILES` compares this estimate with a
+remaining file allowance you obtain from site tools such as `lfs quota` or
+`diskusage_report`. MP does not auto-detect user quotas or turn on compaction.
+The estimate excludes other output files and concurrent temporary builds;
+compact retained-file estimates do not predict peak node-local inode usage.

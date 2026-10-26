@@ -268,6 +268,15 @@ def build(args):
                 log=output / "cli-version.log")
             run(*runner, "python", snapshot / "scripts/check_installed_assets.py",
                 cwd=testdir, log=output / "installed-assets.log")
+            # Exercise the actual solved Nextflow version/parser and mapping tools,
+            # rather than leaving these runtime checks skipped in source-only CI.
+            run(*runner, "python", "-m", "unittest", "discover", "-s", snapshot / "tests",
+                "-p", "test_nextflow_integration.py", cwd=testdir,
+                log=output / "nextflow-integration.log",
+                env={**os.environ, "MP_TEST_NEXTFLOW": str(environment / "bin/nextflow")})
+            run(*runner, "python", "-m", "unittest", "discover", "-s", snapshot / "tests",
+                "-p", "test_long_read_integration.py", cwd=testdir,
+                log=output / "long-read-integration.log", env={**os.environ, "MP_TEST_BIO": "1"})
             run(*runner, "metapathways", "build_db", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "build-db.log")
             run(*runner, "metapathways", "run", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,

@@ -17,3 +17,19 @@ Attach the tested commit, commands, task summaries, dependency versions, and rel
 
 ```{include} includes/cami-references.md
 ```
+
+## Controller and long-read regressions
+
+With the MP environment activated, run the optional real-runtime checks:
+
+```bash
+MP_TEST_NEXTFLOW="$(command -v nextflow)" python -m unittest discover -s tests -p test_nextflow_integration.py
+MP_TEST_BIO=1 python -m unittest discover -s tests -p test_long_read_integration.py
+```
+
+These cover a 6,470-task plan, independent branches, joins, optional/required
+failures, receipt reuse and known synthetic long-read counts. Also test shared
+read paths across different assembly rows, sequential `--samples` batches against
+the full unchanged manifest, and retained assignment summaries after compaction.
+For Slurm releases, record controller live threads/RSS and cgroup events during
+MAG fan-out; a local preview does not reproduce cluster resource pressure.

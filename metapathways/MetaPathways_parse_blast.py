@@ -689,7 +689,7 @@ def load_ec_maps(ec_files):
             ec_map_df = pd.read_csv(ec_map_file, sep='\t', header=0, low_memory=False)
             ec_dfs.append(ec_map_df)
         ec_df = pd.concat(ec_dfs)
-        ec_df.dropna(subset = ['EC'], inplace=True)
+        ec_df = ec_df.dropna(subset=['EC'])
         ec_df = ec_df[~ec_df['EC'].str.contains(".-")]
         ec_df['EC'] = ec_df['EC'].str.replace('EC:', '')
         ec_dict = ec_df.groupby('AccID', group_keys=True)['EC'].apply(list).to_dict()

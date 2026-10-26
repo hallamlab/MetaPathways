@@ -139,6 +139,7 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -172,6 +173,8 @@ options:
   --no_mags             Explicitly omit MAG splitting during automatic discovery
   --skip_ptools         Omit community and MAG PGDB construction
   --compact_results     Use task scratch, archive PGDBs/diagnostics, and remove completed sample intermediates
+  --file_quota FILE_QUOTA
+                        remaining file quota for an advisory PGDB estimate; no automatic cleanup changes
   --scratch_dir SCRATCH_DIR
                         Worker-local scratch directory for compact mode [Slurm: SLURM_TMPDIR; local: system temporary directory]
   --image IMAGE         Pathway Tools SIF [registered by build_pt]
@@ -288,12 +291,15 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
   --keep_work           retain automatically allocated work/cache directories
 
 Miscellaneous Arguments:
+  -s SAMPLES [SAMPLES ...], --samples SAMPLES [SAMPLES ...]
+                        run only these sample IDs from the full unchanged input manifest (space-separated)
   -t THREADS, --threads THREADS
                         threads per capable tool [8], capped by --max_cpus; serial stages use one CPU
   -v, --verbose         print more information on the stdout
@@ -308,8 +314,8 @@ usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--sk
                     [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                     [--executor {local,slurm}] [--account ACCOUNT] [--partition PARTITION]
                     [--qos QOS] [--reservation RESERVATION] [--time_limit TIME_LIMIT]
-                    [--submit_rate SUBMIT_RATE] [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE]
-                    [--keep_work]
+                    [--submit_rate SUBMIT_RATE] [--stream_tool_output] [--work_dir WORK_DIR]
+                    [--conda_cache CONDA_CACHE] [--keep_work]
 
 automated database install
 
@@ -359,6 +365,8 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always
+                        retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -399,6 +407,7 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -415,7 +424,8 @@ usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
                              [--time_limit TIME_LIMIT] [--submit_rate SUBMIT_RATE]
-                             [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE] [--keep_work]
+                             [--stream_tool_output] [--work_dir WORK_DIR]
+                             [--conda_cache CONDA_CACHE] [--keep_work]
 
 Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.
 
@@ -459,6 +469,8 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always
+                        retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run
@@ -535,6 +547,7 @@ Execution Resources:
                         Slurm walltime per task [24h]
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
+  --stream_tool_output  stream full worker output to the console; full task logs are always retained
   --work_dir WORK_DIR   custom Nextflow work directory; retained after the run
   --conda_cache CONDA_CACHE
                         custom Conda cache directory; retained after the run

@@ -95,6 +95,12 @@ def attach_sequences(inputs, sample_output):
         # the representative's coordinates. Restore each member's actual locus.
         corrected += (fields.get('STARTBASE'), fields.get('ENDBASE')) != (str(start), str(end))
         fixed = [line for line in text.strip().splitlines() if not line.startswith(('STARTBASE\t', 'ENDBASE\t'))]
+        fixed = [('GENE-COMMENT\tMetaPathways taxonomic annotation: ' + line.split('\t', 1)[1])
+                 if line.startswith('TAXONOMIC-ANNOT\t') else line for line in fixed]
+        comments = [line.split('\t', 1)[1] for line in fixed if line.startswith('GENE-COMMENT\t')]
+        fixed = [line for line in fixed if not line.startswith('GENE-COMMENT\t')]
+        if comments:
+            fixed.append('GENE-COMMENT\t' + '; '.join(comments))
         if fields.get('PRODUCT-TYPE', '').upper() == 'TRNA':
             old_name = fields.get('NAME', '')
             new_name = normalize_trna_name(old_name)
