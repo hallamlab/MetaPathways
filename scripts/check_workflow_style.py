@@ -12,12 +12,47 @@ def check(path):
     root = ET.parse(path).getroot()
     source = path.read_text()
     errors = []
-    if 'Times New Roman' not in source or 'serif' not in source:
-        errors.append('use the shared Times serif typography')
-    if any(font in source for font in ('Arial', 'Helvetica', 'sans-serif')):
-        errors.append('workflow labels must retain serif typography')
-    if not any(n.get('fill', '').upper() == '#CCCCCC' for n in root.iter(NS+'rect')):
-        errors.append('keep the restrained gray header / legend')
+    if root.get('data-workflow-style') == 'aspire-v1-nodal':
+        if 'Trebuchet MS' not in source or list(root.iter(NS+'foreignObject')):
+            errors.append('use approved typography and native SVG text')
+        for color in ('#DAE8FC', '#D5E8D4'):
+            if sum(n.get('fill') == color for n in root.iter(NS+'circle')) < 2:
+                errors.append(f'missing input/output circles: {color}')
+        groups = {n.get('id') for n in root.iter(NS+'g')}
+        for name in ('s1_0','s2_0','s3_0','community','population','report','end'):
+            if f'node-{name}' not in groups:
+                errors.append(f'missing workflow node: {name}')
+        if not any(n.get('data-junction') == 'true' for n in root.iter(NS+'circle')):
+            errors.append('retain black junction dots')
+        if 'stroke-width="5.5"' not in source:
+            errors.append('retain the heavy main path')
+        if 'stroke-dasharray="2 4"' in source:
+            errors.append('omit dotted text guide lines')
+        return errors
+    if root.get('data-workflow-style') == 'standard-flowchart':
+        kinds = {n.get('data-node-kind') for n in root.iter()}
+        for kind in ('input', 'output', 'process', 'decision', 'db', 'end'):
+            if kind not in kinds:
+                errors.append(f'missing standard flowchart shape: {kind}')
+        for color in ('#DAE8FC', '#D5E8D4', '#F5F5F5'):
+            if color not in source:
+                errors.append(f'missing MP palette color {color}')
+        if 'Trebuchet MS' not in source or not list(root.iter(NS+'marker')):
+            errors.append('retain approved typography and directional connectors')
+        if list(root.iter(NS+'foreignObject')):
+            errors.append('labels must be native SVG text')
+        return errors
+    aspire_style = root.get('data-workflow-style') == 'aspire-v1-main-chain'
+    if aspire_style:
+        if 'Trebuchet MS' not in source:
+            errors.append('use the approved ASPIRE-v1 Trebuchet MS typography')
+    else:
+        if 'Times New Roman' not in source or 'serif' not in source:
+            errors.append('use the shared Times serif typography')
+        if any(font in source for font in ('Arial', 'Helvetica', 'sans-serif')):
+            errors.append('workflow labels must retain serif typography')
+        if not any(n.get('fill', '').upper() == '#CCCCCC' for n in root.iter(NS+'rect')):
+            errors.append('keep the restrained gray header / legend')
     circles = list(root.iter(NS + 'circle'))
     for color, role in [('#DAE8FC', 'input'), ('#D5E8D4', 'output')]:
         count = sum(n.get('fill', '').upper() == color for n in circles)
@@ -48,7 +83,7 @@ def check(path):
 
 def main():
     paths = [ROOT / 'docs/assets' / name for name in
-             ('workflow.svg', 'workflow-main.svg', 'workflow-brief.svg', 'workflow-detailed.svg')]
+             ('workflow.svg', 'workflow-main.svg', 'workflow-brief.svg', 'workflow-detailed.svg', 'workflow-brief-nodal.svg')]
     paths = [p for p in paths if p.exists()]
     if not paths:
         print('No primary workflow SVGs in this checkout; apply docs/WORKFLOW_STYLE.md to new figures.')

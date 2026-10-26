@@ -1,14 +1,29 @@
-# Detailed workflow and tool citations
+# Workflow diagrams and tool citations
+
+The [brief nodal workflow on the home page](index.md) introduces the main path. The flowcharts below show the same analysis using standard computational shapes, followed by stage diagrams and software citations.
+
+## Brief flowchart
 
 ```{container} mp-primary-workflow
-[![Detailed MetaPathways nodal workflow from reference setup through annotation, abundance, pathway inference and reporting](assets/workflow-detailed.svg)](assets/workflow-detailed.svg)
+[![Brief MetaPathways flowchart with optional read abundance and population pathway branches](assets/workflow-main.svg)](assets/workflow-main.svg)
+```
+
+[Full-size SVG](assets/workflow-main.svg) · [Download PDF](assets/workflow-main.pdf)
+
+## Detailed flowchart
+
+```{container} mp-primary-workflow
+[![Detailed MetaPathways workflow from reference setup through annotation, abundance, pathway inference and reporting](assets/workflow-detailed.svg)](assets/workflow-detailed.svg)
 ```
 
 [Open full-size SVG](assets/workflow-detailed.svg) · [Download PDF](assets/workflow-detailed.pdf) · [Brief overview](index.md)
 
-Process names appear above the diamonds; tools and major libraries appear below.
-The numbered modules group related work. Reference/image setup is reusable;
-read abundance and community/genome PGDB tasks follow their own dependencies.
+Follow the central processing path from top to bottom. Side branches add read abundance and population analysis. Standard flowchart shapes distinguish processes, inputs / outputs, decisions and databases. Population PGDBs require a contig-to-genome map and a licensed Pathway Tools SIF. Dashed arrows supply that runtime; annotations remain reportable when pathway inference is skipped.
+Optional reads feed mapping and feature abundance; contig-to-genome maps split
+existing annotations into population inputs. The licensed Pathway Tools image
+supports both community and population inference. Annotation results still reach
+the report and explorer when pathway inference is skipped. Reference/image setup
+is reusable; branches show data requirements, not a serial Nextflow job schedule.
 The three diagrams below expand those dependencies and their inputs.
 
 This page follows a nucleotide assembly through MetaPathways, from reference preparation to connected annotation, abundance and pathway tables. It identifies the software responsible for each calculation and explains how Nextflow schedules it. For a shorter introduction, see the [conceptual overview](overview.md), [local/HPC architecture](architecture.md) and [data-flow overview](data-flow.md).

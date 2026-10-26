@@ -48,7 +48,7 @@ class ReadMappingTests(unittest.TestCase):
     def test_main_dispatches_layout_and_stops_after_mapping_failure(self):
         # Include the archived '-2 None --interleaved' invocation, and a stale
         # BAM that must not be processed when CoverM fails.
-        for mode in ('paired', 'interleaved', 'single'):
+        for mode in ('paired', 'interleaved', 'single', 'hifi', 'pb', 'ont'):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 for name in ['contigs.fa', 'annotation.gff', 'forward reads.fq', 'reverse reads.fq', 'stale.bam']:
@@ -62,6 +62,8 @@ class ReadMappingTests(unittest.TestCase):
                     args += ['-2', reverse]
                 elif mode == 'interleaved':
                     args += ['-2', 'None', '--interleaved']
+                elif mode in ('hifi', 'pb', 'ont'):
+                    args += ['--long_read_preset', 'map-' + mode]
                 with patch.object(tpm.shutil, 'which', return_value='/mock/tool'), \
                      patch.object(tpm, 'runRPKMCommand', return_value=(1, 'mapping failed')) as run, \
                      patch.object(tpm, 'run_logged') as downstream, \
@@ -78,11 +80,16 @@ class ReadMappingTests(unittest.TestCase):
                     flag = '--interleaved' if mode == 'interleaved' else '--single'
                     self.assertEqual(cmd[cmd.index(flag)+1], forward)
                     self.assertNotIn('-2', cmd)
+                if mode in ('hifi', 'pb', 'ont'):
+                    self.assertEqual(cmd[cmd.index('--mapper')+1], 'minimap2-' + mode)
+                    self.assertNotIn('--min-read-percent-identity', cmd)
                 self.assertIn('mapping failed', (root/'mapping.log').read_text())
 
     def test_counting_layout_and_sort_threads(self):
-        for paired in (False, True):
-            with self.subTest(paired=paired), tempfile.TemporaryDirectory() as tmp:
+        for mode in ('single', 'paired', 'hifi', 'pb', 'ont'):
+            paired = mode == 'paired'
+            long_reads = mode in ('hifi', 'pb', 'ont')
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 for name in ('contigs.fa', 'annotation.gff', 'reads.fq', 'contigs.fa.reads.fq.bam',
                              'sample.sorted.bam', 'sample.old.bam'):
@@ -93,6 +100,8 @@ class ReadMappingTests(unittest.TestCase):
                     '--bwaExec', 'bwa', '-1', str(root/'reads.fq'), '--num_threads', '8']
                 if paired:
                     args += ['--interleaved']
+                if long_reads:
+                    args += ['--long_read_preset', 'map-' + mode]
                 with patch.object(tpm.shutil, 'which', return_value='/mock/tool'), \
                      patch.object(tpm, 'runRPKMCommand', return_value=(0, '')), \
                      patch.object(tpm, 'run_logged') as run:
@@ -103,7 +112,8 @@ class ReadMappingTests(unittest.TestCase):
                 self.assertEqual(sort[sort.index('-@')+1], '7')
                 self.assertEqual(sort[-1], str(root/'contigs.fa.reads.fq.bam'))
                 self.assertEqual(sort[sort.index('-o')+1], str(root/'sample.sorted.bam'))
-                self.assertEqual(counts[counts.index('-T')+1], '8')
+                self.assertEqual(counts[counts.index('-T')+1], '1' if long_reads else '8')
+                self.assertEqual('-L' in counts, long_reads)
                 self.assertEqual('-p' in counts, paired)
                 # Existing sorted/stale BAMs cannot substitute for missing CoverM output.
                 (root/'contigs.fa.reads.fq.bam').unlink()

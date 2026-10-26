@@ -57,6 +57,8 @@ def add_resources(parser, task_memory='16 GB'):
     group.add_argument('--reservation', type=slurm_token, help='Slurm reservation')
     group.add_argument('--time_limit', type=duration, default='24h', help='Slurm walltime per task [24h]')
     group.add_argument('--submit_rate', type=positive, default=6, help='maximum Slurm submissions per minute [6]')
+    group.add_argument('--stream_tool_output', action='store_true',
+                       help='stream full worker output to the console; full task logs are always retained')
     group.add_argument('--work_dir', help='custom Nextflow work directory; retained after the run')
     group.add_argument('--conda_cache', help='custom Conda cache directory; retained after the run')
     group.add_argument('--keep_work', action='store_true', help='retain automatically allocated work/cache directories')
@@ -113,95 +115,67 @@ def groovy(value):
     return "'" + str(value).replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n') + "'"
 
 
-def process_definition(t, name, manifest):
-    package_root = str(Path(__file__).resolve().parent.parent)
-    command = shlex.join([sys.executable, '-m', 'metapathways.nf_worker', str(manifest), t['id']])
-    body = f'export PYTHONPATH={shlex.quote(package_root)}${{PYTHONPATH:+:$PYTHONPATH}}\n{command}\n'
-    count = len(t['dependencies'])
-    inputs = '\n'.join(f'    val dependency_{i}' for i in range(1 if count > 64 else max(1, count)))
-    return f'''process {name} {{
-    tag {groovy(t['label'])}
-    cpus {t['cpus']}
-    memory {groovy(t['memory'])}
-    cache false
-    input:
-{inputs}
-    output:
-    path 'receipt.json'
-    script:
-    {groovy(body)}
-}}'''
-
-
 def render_modules(tasks, manifest, batch_size=64):
-    """Bound compiled script size without adding scheduling barriers.
+    """Stream tasks through reusable workers, retaining per-task dependency gates.
 
-    Each module exposes individual task completion channels. A consumer waits
-    only for its own dependencies, even when their producers share a module
-    with other tasks. All processes still use the same Nextflow executor.
+    Process/operator count depends on DAG depth rather than sample/MAG count.
+    groupKey releases each consumer as soon as its own prerequisites complete;
+    no stage-wide or sample-wide barrier is introduced.
     """
-    if batch_size < 1 or batch_size > 64:
+    if not 1 <= batch_size <= 64:
         raise ValueError('Workflow module size must be between 1 and 64')
     tasks = ordered(tasks)
-    # Sample completion/cleanup has a large fan-in. Flattening every sample's
-    # channels into main.nf can exceed the JVM's 64 KiB method limit even though
-    # process definitions are batched. Keep independent sample DAGs in named
-    # subworkflows so both process code AND channel wiring stay bounded.
-    samples = list(dict.fromkeys(t.get('sample') for t in tasks))
-    by_id = {t['id']: t for t in tasks}
-    if len(samples) > 1 and None not in samples and all(
-            by_id[dep].get('sample') == t['sample'] for t in tasks for dep in t['dependencies']):
-        files, includes, calls = {}, [], []
-        for i, sample in enumerate(samples):
-            name = f'SAMPLE_{i:04d}'
-            subset = [t for t in tasks if t['sample'] == sample]
-            for relative, content in render_modules(subset, manifest, batch_size).items():
-                if relative == 'main.nf':
-                    content = content.replace('\nworkflow {\n', f'\nworkflow {name} {{\n')
-                files[f'samples/{name}/{relative}'] = content
-            includes.append(f"include {{ {name} }} from './samples/{name}/main'")
-            calls.append(f'    {name}()')
-        files['main.nf'] = 'nextflow.enable.dsl=2\n\n' + '\n'.join(includes) + '\n\nworkflow {\n' + '\n'.join(calls) + '\n}\n'
-        return files
-    names = {t['id']: f'TASK_{i:04d}' for i, t in enumerate(tasks)}
-    batches = [tasks[i:i + batch_size] for i in range(0, len(tasks), batch_size)]
-    owner = {t['id']: i for i, batch in enumerate(batches) for t in batch}
-    exports = {dep for t in tasks for dep in t['dependencies'] if owner[dep] != owner[t['id']]}
-    files, includes, calls = {}, [], []
-    for i, batch in enumerate(batches):
-        workflow = f'BATCH_{i:04d}'
-        external = list(dict.fromkeys(dep for t in batch for dep in t['dependencies'] if owner[dep] != i))
-        bundled = len(external) > 64
-        ports = {dep: ('upstream.' if bundled else '') + f'upstream_{j}' for j, dep in enumerate(external)}
-        blocks = [process_definition(t, names[t['id']], manifest) for t in batch]
-        lines = [f'workflow {workflow} {{']
-        if external:
-            lines += ['    take:'] + (['    upstream'] if bundled else [f'    {ports[dep]}' for dep in external])
-        lines.append('    main:')
-        for t in batch:
-            channels = [ports[dep] if owner[dep] != i else names[dep] + '.out' for dep in t['dependencies']]
-            args = ', '.join(channels)
-            if len(channels) > 64:
-                # One completion gate, with bounded operator argument counts.
-                # collect emits only after every prerequisite channel closes.
-                args = 'Channel.empty()'
-                for start in range(0, len(channels), 32):
-                    args += '.mix(' + ', '.join(channels[start:start+32]) + ')'
-                args += '.collect()'
-            lines.append(f"    {names[t['id']]}({args or 'Channel.value(true)'})")
-        emitted = [t['id'] for t in batch if t['id'] in exports]
-        if emitted:
-            lines += ['    emit:'] + [f'    done_{names[dep]} = {names[dep]}.out' for dep in emitted]
-        lines.append('}')
-        files[f'modules/{workflow}.nf'] = '\n\n'.join(blocks) + '\n\n' + '\n'.join(lines) + '\n'
-        includes.append(f"include {{ {workflow} }} from './modules/{workflow}'")
-        args = ', '.join(f'BATCH_{owner[dep]:04d}.out.done_{names[dep]}' for dep in external)
-        if bundled:
-            args = '[' + ', '.join(f'upstream_{j}: BATCH_{owner[dep]:04d}.out.done_{names[dep]}'
-                                  for j, dep in enumerate(external)) + ']'
-        calls.append(f'    {workflow}({args})')
-    files['main.nf'] = 'nextflow.enable.dsl=2\n\n' + '\n'.join(includes) + '\n\nworkflow {\n' + '\n'.join(calls) + '\n}\n'
-    return files
+    depths, specs, routes = {}, {}, {}
+    package_root = str(Path(__file__).resolve().parent.parent)
+    for original in tasks:
+        t = dict(original)
+        t['dependencies'] = list(dict.fromkeys(t['dependencies']))
+        depth = max((depths[d] + 1 for d in t['dependencies']), default=0)
+        depths[t['id']] = depth
+        command = shlex.join([sys.executable, '-m', 'metapathways.nf_worker', str(manifest), t['id']])
+        t['worker_command'] = ('export PYTHONPATH=' + shlex.quote(package_root) +
+                               '${PYTHONPATH:+:$PYTHONPATH}\n' + command + '\n')
+        specs[t['id']] = t
+        for dep in t['dependencies']:
+            routes.setdefault(str(depth), {}).setdefault(dep, []).append(t['id'])
+    schedule = dict(tasks=specs, roots=[t['id'] for t in tasks if not t['dependencies']], routes=routes)
+    includes, calls = [], []
+    for depth in sorted(set(depths.values())):
+        name = f'RUN_{depth:04d}'
+        includes.append(f"include {{ RUN_TASK as {name} }} from './modules/worker'")
+        if depth == 0:
+            ready = 'Channel.fromList(schedule.roots).map { id -> schedule.tasks[id] }'
+        else:
+            parents = sorted({depths[d] for t in tasks if depths[t['id']] == depth for d in t['dependencies']})
+            upstream = 'Channel.empty()'
+            for offset in range(0, len(parents), 32):
+                upstream += '.mix(' + ', '.join(f'RUN_{i:04d}.out' for i in parents[offset:offset+32]) + ')'
+            ready = (upstream + '\n        .flatMap { id, receipt ->\n' +
+                     f"            (schedule.routes['{depth}'][id] ?: []).collect {{ target ->\n" +
+                     '                tuple(groupKey(target, schedule.tasks[target].dependencies.size()), id)\n' +
+                     '            }\n        }\n        .groupTuple()\n' +
+                     '        .map { key, completed -> schedule.tasks[key.getGroupTarget()] }')
+        calls.append(f'    ready_{depth} = {ready}\n    {name}(ready_{depth})')
+    worker = """process RUN_TASK {
+    tag { spec.label }
+    cpus { spec.cpus }
+    memory { spec.memory }
+    cache false
+    input:
+    val spec
+    output:
+    tuple val(spec.id), path('receipt.json')
+    script:
+    spec.worker_command
+}
+"""
+    main = ('nextflow.enable.dsl=2\n\n' +
+            '\n'.join(includes) + '\n\n' +
+            'workflow {\n' +
+            "    def schedule = new groovy.json.JsonSlurperClassic().parseText(file(" + groovy(str(Path(manifest).parent/'schedule.json')) + ").text)\n" +
+            '\n'.join(calls) + '\n}\n')
+    return {'main.nf': main, 'modules/worker.nf': worker,
+            'schedule.json': json.dumps(schedule, indent=2) + '\n'}
 
 
 def local_capacity():
@@ -283,6 +257,7 @@ def stream_run(command, cwd, env, tasks, console):
     reader = threading.Thread(target=read_controller, daemon=True)
     reader.start()
     offsets = {t['id']: 0 for t in tasks}
+    finished = set()
     def emit(line):
         print(line, end='', flush=True)
         console.write(line)
@@ -294,6 +269,16 @@ def stream_run(command, cwd, env, tasks, console):
             except queue.Empty:
                 break
         for t in tasks:
+            if not t.get('stream_tool_output', False):
+                receipt = Path(t['invocation_receipt'])
+                if t['id'] not in finished and receipt.exists():
+                    try:
+                        record = json.loads(receipt.read_text())
+                    except (OSError, ValueError):
+                        continue
+                    finished.add(t['id'])
+                    emit(f"[{t['label']}] {record['status']}\n")
+                continue
             path = Path(t['log'])
             if path.exists():
                 with path.open(errors='replace') as f:
@@ -342,6 +327,7 @@ def launch(tasks, output_dir, args, name, dryrun=False):
         cache = Path(cache_override).expanduser().resolve() if cache_override else scratch / 'conda'
         config_text, resources = configuration(tasks, args, cache)
         for t in tasks:
+            t['stream_tool_output'] = bool(getattr(args, 'stream_tool_output', False))
             t['compact_results'] = bool(getattr(args, 'compact_results', False))
             t['scratch_dir'] = getattr(args, 'scratch_dir', None)
             key = hashlib.sha256(t['id'].encode()).hexdigest()
@@ -359,6 +345,9 @@ def launch(tasks, output_dir, args, name, dryrun=False):
         config.write_text(config_text)
         from metapathways._version import __version__
         summary = dict(mp_version=__version__, resources=resources, work_dir=str(work), conda_cache=str(cache), status='PLANNED')
+        if hasattr(args, '_analysis_manifest_samples'):
+            summary['manifest_samples'] = args._analysis_manifest_samples
+            summary['selected_samples'] = args._analysis_selected_samples
         summary_path = run_dir / 'summary.json'
         summary_path.write_text(json.dumps(summary, indent=2) + '\n')
         if dryrun:
@@ -372,14 +361,18 @@ def launch(tasks, output_dir, args, name, dryrun=False):
         if not executable:
             raise RuntimeError('Nextflow is required; activate the MetaPathways environment.')
         if resources['executor'] == 'slurm':
+            from metapathways.controller_preflight import report
+            report(tasks)
             missing = [c for c in ('sbatch', 'squeue', 'scancel') if not shutil.which(c)]
             if missing:
-                raise RuntimeError('Run from your Slurm login node; missing commands: ' + ', '.join(missing))
+                raise RuntimeError('Run from a Slurm submission host (login or compute node); missing commands: ' + ', '.join(missing))
         session = scratch / 'session'
         session.mkdir(parents=True)
         work.mkdir(parents=True, exist_ok=True)
         cache.mkdir(parents=True, exist_ok=True)
         env = os.environ.copy()
+        if resources['executor'] == 'slurm':
+            env.setdefault('NXF_OPTS', '-Xmx4g')
         env.update(NXF_ANSI_LOG='false', PYTHONUNBUFFERED='1',
                    NXF_CONDA_CACHEDIR=str(cache / 'envs'), CONDA_PKGS_DIRS=str(cache / 'packages'))
         # Isolate resource limits from ambient ~/.nextflow/config overrides.
@@ -399,48 +392,82 @@ def launch(tasks, output_dir, args, name, dryrun=False):
             interrupted = isinstance(exc, (KeyboardInterrupt, SystemExit))
             summary['status'] = 'INTERRUPTED' if interrupted else 'FAILED'
             summary['error'] = str(exc)
+            print(f'MetaPathways: {name} {summary["status"]}: {exc}', file=sys.stderr, flush=True)
+            log = run_dir / 'nextflow.log'
+            try:
+                with log.open(errors='replace') as handle:
+                    for line in handle:
+                        if 'ERROR' in line:
+                            print(line.rstrip(), file=sys.stderr, flush=True)
+                            break
+            except OSError:
+                pass
+            print(f'Nextflow log: {log}', file=sys.stderr, flush=True)
             raise
         finally:
-            records = []
-            for t in tasks:
-                receipt = Path(t['invocation_receipt'])
-                if receipt.exists():
-                    record = json.loads(receipt.read_text())
-                    record['label'] = t['label']
-                    records.append(record)
+            try:
+                records = []
+                for t in tasks:
+                    receipt = Path(t['invocation_receipt'])
+                    if receipt.exists():
+                        record = json.loads(receipt.read_text())
+                        record['label'] = t['label']
+                        records.append(record)
+                    else:
+                        records.append(dict(task=t['id'], label=t['label'], status='NOT_STARTED'))
+                for t, record in zip(tasks, records):
+                    for key in ('sample', 'entity'):
+                        if key in t:
+                            record[key] = t[key]
+                summary['tasks'] = records
+                summary_path.write_text(json.dumps(summary, indent=2) + '\n')
+                if summary['status'] != 'SUCCESS':
+                    candidates = []
+                    for t, record in zip(tasks, records):
+                        if not t.get('entity') or record.get('status') in ('SUCCESS', 'ALREADY_COMPUTED', 'SKIPPED'):
+                            continue
+                        directories = sorted({str(Path(p).parent) for p in t['outputs'] if Path(p).parent.is_dir()})
+                        if directories:
+                            candidates.append(dict(task=t['id'], status=record.get('status'), directories=directories))
+                    if candidates:
+                        recovery = run_dir/'partial_pgdb_candidates.json'
+                        recovery.write_text(json.dumps(candidates, indent=2) + '\n')
+                        print(f'Partial PGDB directories to inspect after jobs stop: {recovery}', file=sys.stderr, flush=True)
+                succeeded = summary['status'] == 'SUCCESS'
+                compact_exit = getattr(args, 'compact_results', False) and succeeded
+                # Preserve wrapper diagnostics even for scheduler/bootstrap failures
+                # before a worker could open its own log.
+                if compact_exit:
+                    from metapathways.compact_storage import archive_directory
+                    archive_directory(work, run_dir/'nextflow_tasks.tar.gz')
+                    if (run_dir/'tasks').is_dir():
+                        archive_directory(run_dir/'tasks', run_dir/'task_logs.tar.gz')
+                        shutil.rmtree(run_dir/'tasks')
+                elif succeeded:
+                    for path in work.rglob('.command.*'):
+                        if path.is_file():
+                            target = run_dir / 'nextflow_tasks' / path.relative_to(work)
+                            target.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(path, target)
+                if compact_exit:
+                    # Keep trace, task plans and diagnostics; discard generated NF code.
+                    nf.unlink(missing_ok=True)
+                    config.unlink(missing_ok=True)
+                    shutil.rmtree(run_dir / 'modules', ignore_errors=True)
+                    shutil.rmtree(run_dir / 'samples', ignore_errors=True)
+                if not getattr(args, 'keep_work', False) and succeeded:
+                    shutil.rmtree(scratch)
                 else:
-                    records.append(dict(task=t['id'], label=t['label'], status='NOT_STARTED'))
-            for t, record in zip(tasks, records):
-                for key in ('sample', 'entity'):
-                    if key in t:
-                        record[key] = t[key]
-            summary['tasks'] = records
-            summary_path.write_text(json.dumps(summary, indent=2) + '\n')
-            compact_exit = getattr(args, 'compact_results', False) and not interrupted
-            # Preserve wrapper diagnostics even for scheduler/bootstrap failures
-            # before a worker could open its own log.
-            if compact_exit:
-                from metapathways.compact_storage import archive_directory
-                archive_directory(work, run_dir/'nextflow_tasks.tar.gz')
-                if (run_dir/'tasks').is_dir():
-                    archive_directory(run_dir/'tasks', run_dir/'task_logs.tar.gz')
-                    shutil.rmtree(run_dir/'tasks')
-            else:
-                for path in work.rglob('.command.*'):
-                    if path.is_file():
-                        target = run_dir / 'nextflow_tasks' / path.relative_to(work)
-                        target.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(path, target)
-            if compact_exit:
-                # Keep trace, task plans and diagnostics; discard generated NF code.
-                nf.unlink(missing_ok=True)
-                config.unlink(missing_ok=True)
-                shutil.rmtree(run_dir / 'modules', ignore_errors=True)
-                shutil.rmtree(run_dir / 'samples', ignore_errors=True)
-            if not getattr(args, 'keep_work', False) and not interrupted:
-                shutil.rmtree(scratch)
-            else:
-                print(f'Work/cache retained: {scratch}', flush=True)
+                    print(f'Work/cache retained: {scratch}', flush=True)
+            except Exception as finalization_error:
+                if summary['status'] == 'SUCCESS':
+                    raise
+                try:
+                    summary_path.write_text(json.dumps(summary, indent=2) + '\n')
+                except OSError:
+                    pass
+                print(f'Diagnostic finalization failed: {finalization_error}; original error: '
+                      f"{summary.get('error')}; work retained: {scratch}", file=sys.stderr, flush=True)
         failed = [r['label'] for r in records if r.get('status') == 'FAILED']
         if failed:
             print(f'Completed with {len(failed)} optional PGDB failures: ' + ', '.join(failed))
@@ -475,7 +502,7 @@ def annotation_tasks(samples, params, configs, memory_value):
                     t['cache_version'] = 'private-fast-scratch-v1'
                     t['adopt_existing'] = False
                 if c.name == 'PATHOLOGIC_INPUT':
-                    t['cache_version'] = 'normalized-ec-input-v1'
+                    t['cache_version'] = 'pathologic-taxonomy-comment-v2'
                     t['adopt_existing'] = False
                 if c.name == 'COMPUTE_TPM':
                     # bwaFolder is a destination for this task's intermediate
@@ -504,7 +531,9 @@ def annotation_tasks(samples, params, configs, memory_value):
                     t['status'] = 'skip'
                 if c.name == 'COMPUTE_TPM':
                     t['outputs'] += [str(Path(s.output_dir) / 'results/rpkm' / f'{s.sample_name}.contig_counts.tsv'),
-                                     str(Path(s.output_dir) / 'results/rpkm' / f'{s.sample_name}.orf_counts.tsv')]
+                                     str(Path(s.output_dir) / 'results/rpkm' / f'{s.sample_name}.orf_counts.tsv'),
+                                     str(Path(c.inputs.get('bwaFolder', Path(s.output_dir)/'bwa')) /
+                                         f'{s.sample_name}.annot.featurecounts.txt.summary')]
                 tasks.append(t)
                 group_ids.append(identifier)
     # Some legacy stages intentionally update an earlier stage's output (GBK).

@@ -97,30 +97,30 @@ class SchedulingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Cyclic'):
             nf.ordered([a,b])
 
-    def test_large_workflow_is_split_into_bounded_modules(self):
+    def test_large_workflow_reuses_one_process_for_fan_out(self):
         tasks = [nf.task(str(i), f'task {i}', ['true']) for i in range(6470)]
         files = nf.render_modules(tasks, self.root / 'tasks.json')
-        modules = [text for name, text in files.items() if name != 'main.nf']
-        self.assertEqual(len(modules), 102)
-        self.assertEqual(sum(text.count('process TASK_') for text in modules), 6470)
-        self.assertTrue(all(text.count('process TASK_') <= 64 for text in modules))
-        self.assertNotIn('process TASK_', files['main.nf'])
+        self.assertEqual(files['main.nf'].count('include { RUN_TASK as'), 1)
+        self.assertEqual(files['modules/worker.nf'].count('process RUN_TASK'), 1)
+        schedule = json.loads(files['schedule.json'])
+        self.assertEqual(len(schedule['roots']), 6470)
+        self.assertLess(len(files['main.nf']), 1000)
 
-    def test_module_boundaries_preserve_individual_dependencies(self):
+    def test_streaming_routes_preserve_individual_dependencies(self):
         tasks = [nf.task('a', 'a', []), nf.task('b', 'b', []),
                  nf.task('c', 'c', [], dependencies=['a']),
                  nf.task('d', 'd', [], dependencies=['c', 'b'])]
-        files = nf.render_modules(tasks, self.root / 'tasks.json', batch_size=2)
-        self.assertIn('BATCH_0001(BATCH_0000.out.done_TASK_0000, BATCH_0000.out.done_TASK_0001)', files['main.nf'])
-        module = files['modules/BATCH_0001.nf']
-        self.assertIn('TASK_0002(upstream_0)', module)
-        self.assertIn('TASK_0003(TASK_0002.out, upstream_1)', module)
-        self.assertNotIn('collect', module)
+        files = nf.render_modules(tasks, self.root / 'tasks.json')
+        schedule = json.loads(files['schedule.json'])
+        self.assertEqual(schedule['routes'], {'1': {'a': ['c']}, '2': {'c': ['d'], 'b': ['d']}})
+        self.assertIn('groupKey(target, schedule.tasks[target].dependencies.size())', files['main.nf'])
+        self.assertIn('.groupTuple()', files['main.nf'])
+        self.assertNotIn('.collect()', files['main.nf'])
         tasks[2]['dependencies'] = ['missing']
         with self.assertRaisesRegex(ValueError, 'Unknown dependency'):
             nf.render_modules(tasks, self.root / 'tasks.json')
 
-    def test_compact_sample_fan_in_is_wired_inside_sample_modules(self):
+    def test_compact_sample_fan_in_is_bounded_and_sample_specific(self):
         tasks = []
         for sample in range(49):
             ids = [f'{sample}:pgdb:{i}' for i in range(132)]
@@ -128,23 +128,14 @@ class SchedulingTests(unittest.TestCase):
             tasks.append(nf.task(f'{sample}:compact', 'compact', ['true'],
                                  sample=str(sample), dependencies=ids))
         files = nf.render_modules(tasks, self.root/'tasks.json')
-        self.assertLess(len(files['main.nf']), 10000)
-        self.assertNotIn('.out.', files['main.nf'])
-        self.assertEqual(files['main.nf'].count('include { SAMPLE_'), 49)
-        for i in range(49):
-            module = files[f'samples/SAMPLE_{i:04d}/main.nf']
-            self.assertIn(f'workflow SAMPLE_{i:04d}', module)
-            self.assertIn('BATCH_0000.out.done_TASK_0000', module)
-            self.assertIn('BATCH_0002([upstream_0:', module)
-            cleanup = files[f'samples/SAMPLE_{i:04d}/modules/BATCH_0002.nf']
-            self.assertIn('Channel.empty().mix(', cleanup)
-            self.assertIn('.collect()', cleanup)
-            self.assertNotIn('val dependency_1', cleanup)
-            self.assertIn('    take:\n    upstream\n', cleanup)
-        # Never hide a cross-sample dependency behind independent workflows.
+        self.assertLess(len(files['main.nf']), 2000)
+        self.assertEqual(files['main.nf'].count('include { RUN_TASK as'), 2)
+        schedule = json.loads(files['schedule.json'])
+        self.assertEqual(schedule['routes']['1']['0:pgdb:0'], ['0:compact'])
+        self.assertEqual(len(schedule['tasks']['0:compact']['dependencies']), 132)
         tasks[-1]['dependencies'].append('0:pgdb:0')
-        files = nf.render_modules(tasks, self.root/'tasks.json')
-        self.assertNotIn('samples/SAMPLE_0000/main.nf', files)
+        schedule = json.loads(nf.render_modules(tasks, self.root/'tasks.json')['schedule.json'])
+        self.assertEqual(schedule['routes']['1']['0:pgdb:0'], ['0:compact', '48:compact'])
 
     def test_database_restart_restores_directories_without_invalidating_downloads(self):
         from metapathways.nf_databases import plan
@@ -321,6 +312,11 @@ class SchedulingTests(unittest.TestCase):
                 log = next((root/'logs/test').iterdir())
                 summary = json.loads((log/'summary.json').read_text())
                 self.assertEqual(summary['tasks'][0]['status'], 'SUCCESS')
+                if failure:
+                    self.assertTrue(Path(summary['work_dir']).exists())
+                    self.assertTrue((log/'tasks').exists())
+                    self.assertTrue((log/'main.nf').exists())
+                    continue
                 self.assertFalse((log/'tasks').exists())
                 self.assertFalse(Path(summary['work_dir']).exists())
                 with tarfile.open(log/'nextflow_tasks.tar.gz') as archive:
@@ -328,6 +324,25 @@ class SchedulingTests(unittest.TestCase):
                                      b'scheduler and tool output\n')
                 with tarfile.open(log/'task_logs.tar.gz') as archive:
                     self.assertTrue(any(n.endswith('.json') for n in archive.getnames()))
+
+    def test_console_streaming_is_explicit_but_status_is_always_shown(self):
+        import sys
+        for streaming in (False, True):
+            with self.subTest(streaming=streaming):
+                log = self.root/'tool.log'
+                receipt = self.root/'invocation.json'
+                log.write_text('large Pathway Tools output\n')
+                receipt.write_text(json.dumps(dict(status='SUCCESS')))
+                task = dict(self.task, log=str(log), invocation_receipt=str(receipt), stream_tool_output=streaming)
+                console, terminal = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(terminal):
+                    nf.stream_run([sys.executable, '-c', 'print("controller progress")'],
+                                  self.root, os.environ.copy(), [task], console)
+                self.assertIn('controller progress', console.getvalue())
+                self.assertEqual('large Pathway Tools output' in console.getvalue(), streaming)
+                if not streaming:
+                    self.assertIn('SUCCESS', console.getvalue())
+                self.assertEqual(log.read_text(), 'large Pathway Tools output\n')
 
     @patch.object(nf.shutil, 'which', return_value='/bin/nextflow')
     def test_explicit_directories_preserved(self, _):
@@ -339,16 +354,37 @@ class SchedulingTests(unittest.TestCase):
         self.assertTrue(Path(summary['conda_cache']).exists())
 
     @patch.object(nf.shutil, 'which', return_value='/bin/nextflow')
-    def test_failed_run_keeps_diagnostics_before_cleanup(self, _):
+    def test_invalid_final_receipt_does_not_replace_controller_exception(self, _):
         def fail(*args):
             self.fake_run(*args)
+            Path(args[3][0]['invocation_receipt']).write_text('{invalid')
+            raise subprocess.CalledProcessError(7, ['nextflow'])
+        stderr = io.StringIO()
+        with patch.object(nf,'stream_run',side_effect=fail), contextlib.redirect_stderr(stderr):
+            with self.assertRaises(subprocess.CalledProcessError) as error:
+                nf.launch([self.task],self.root,self.args(max_cpus=8,max_memory='64 GB'),'test')
+        self.assertEqual(error.exception.returncode,7)
+        self.assertIn('Diagnostic finalization failed',stderr.getvalue())
+        run = next((self.root/'logs/test').iterdir())
+        self.assertEqual(json.loads((run/'summary.json').read_text())['status'],'FAILED')
+
+    @patch.object(nf.shutil, 'which', return_value='/bin/nextflow')
+    def test_failed_run_retains_work_and_reports_original_error(self, _):
+        def fail(*args):
+            self.fake_run(*args)
+            log = Path(args[0][args[0].index('-log') + 1])
+            log.write_text('DEBUG starting\nERROR unable to create native thread\n')
             raise subprocess.CalledProcessError(1, ['nextflow'])
-        with patch.object(nf, 'stream_run', side_effect=fail):
+        stderr = io.StringIO()
+        with patch.object(nf, 'stream_run', side_effect=fail), contextlib.redirect_stderr(stderr), \
+                patch.object(nf.shutil, 'rmtree', side_effect=OSError('Directory not empty')):
             with self.assertRaises(subprocess.CalledProcessError):
                 nf.launch([self.task], self.root, self.args(max_cpus=8, max_memory='64 GB'), 'test')
+        self.assertIn('ERROR unable to create native thread', stderr.getvalue())
         run = next((self.root/'logs/test').iterdir())
         self.assertEqual(json.loads((run/'summary.json').read_text())['status'], 'FAILED')
-        self.assertEqual(len(list((run/'nextflow_tasks').rglob('.command.log'))), 1)
+        summary = json.loads((run/'summary.json').read_text())
+        self.assertTrue((Path(summary['work_dir'])/'fixture/.command.log').exists())
 
 
 if __name__ == '__main__':

@@ -290,3 +290,12 @@ retry delay. Compact mode preserves these diagnostics in its existing archives.
 Task resource/runtime measurements include all attempts and delays; retain these
 records when separating successful execution from infrastructure retry overhead.
 No SIF rebuild or additional command-line flag is required.
+
+## Taxonomic comments in PathoLogic input
+
+MP writes per-feature taxonomic evidence as a `GENE-COMMENT`, preserving existing
+comments. It no longer emits the `TAXONOMIC-ANNOT` input slot rejected by the
+alpha tester's PathoLogic loader. Older inputs are converted in private staging;
+original files and MP's taxonomic annotation tables remain intact. These comments
+are evidence text, not a substitute for the organism taxonomic scope above.
+The comment field is documented in [SRI's PathoLogic input example](https://brg.ai.sri.com/ptools-image-07/Curating.pdf).

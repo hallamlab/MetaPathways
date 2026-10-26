@@ -14,7 +14,7 @@ On Linux x86-64, install MetaPathways and its workflow dependencies with Mamba:
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.1
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.2
 conda activate metapathways
 ```
 
@@ -47,7 +47,11 @@ metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 
 ## Workflow
 
-[![MetaPathways appnote-style workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.](docs/assets/workflow-main.svg?v=mp-tools-20261008)](https://hallamlab-metapathways.readthedocs.io/en/latest/workflow.html)
+<p align="center">
+  <a href="https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html">
+    <img src="docs/assets/workflow-brief-nodal.svg?v=mp-nodal-20261021" width="620" alt="MetaPathways workflow: sequence processing, annotation, optional pathways and abundance, reports and explorer.">
+  </a>
+</p>
 
 The **[full user guide](https://hallamlab-metapathways.readthedocs.io/)** covers inputs, databases, Pathway Tools, local and Slurm resources, all commands, reporting and troubleshooting. [Detailed workflow and tool citations](https://hallamlab-metapathways.readthedocs.io/en/latest/detailed-workflow.html).
 

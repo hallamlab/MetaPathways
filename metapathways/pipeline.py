@@ -780,7 +780,7 @@ def ptools():
                 str(output / 'preprocessed' / (output.name + '.fasta'))],
             [str(results / (entity_tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
             cpus=1, memory=args.memory, allow_failure=entity != 'community', adopt_existing=False,
-            cache_version='sequence-backed-pgdb-compatibility-v5', host_serial=not bool(image)))
+            cache_version='sequence-backed-pgdb-taxonomy-comment-v6', host_serial=not bool(image)))
         from metapathways.pt_reactions import BLACKLIST
         tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(output / 'orf_prediction' / (output.name + '.cds.gff'))]
         from metapathways.pt_reactions import compatibility_path

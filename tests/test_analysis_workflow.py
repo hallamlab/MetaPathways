@@ -66,6 +66,23 @@ class AnalysisTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'same file'):
             self.rows()
 
+    def test_different_assemblies_can_share_reads_but_not_read_roles(self):
+        rows = self.rows()
+        rows[1].update(read_layout='paired', reads_1=rows[0]['reads_1'], reads_2=rows[0]['reads_2'])
+        self.assertEqual(len(wf.validate(rows)), 2)
+        rows[1]['assembly'] = rows[0]['reads_1']
+        with self.assertRaisesRegex(ValueError, 'same file'):
+            wf.validate(rows)
+
+    def test_explicit_long_read_layouts(self):
+        for mode in wf.LONG_READS:
+            rows = self.rows()
+            rows[0].update(read_layout=mode, reads_2='')
+            self.assertEqual(wf.validate(rows)[0]['read_layout'], mode)
+            rows[0]['reads_2'] = rows[0]['reads_1']
+            with self.assertRaisesRegex(ValueError, 'disagree'):
+                wf.validate(rows)
+
     def test_bad_maps_fail_before_jobs(self):
         for text in ('ctg_missing\tMAG1\n', 'ctg1\tcommunity\n',
                      'ctg1\tmb2.1\nctg2\tmb2_1\n', 'ctg1\tMAG1\nctg1\tMAG2\n'):
@@ -168,6 +185,38 @@ class AnalysisTests(unittest.TestCase):
         self.assertTrue(planned[1].interleaved)
         self.assertTrue(launch.call_args.kwargs['dryrun'])
 
+    def test_sample_selection_preserves_full_manifest_and_other_receipts(self):
+        def prepare(args, parser):
+            self.assertEqual(args.samples, [])
+            name = Path(args.input_file).stem
+            return [nf.task(name+':path',name,[],sample=name,context={'name':'PATHOLOGIC_INPUT'})], args.output_dir
+        command = ['-i',str(self.inputs),'-o',str(self.root/'out'),'-d','/fake/db','--skip_ptools','--dryrun']
+        with patch.object(pipeline,'prepare_annotation',side_effect=prepare), \
+             patch.object(wf.shutil,'which',return_value='/mock/tool'), patch.object(nf,'launch') as launch:
+            wf.main(command)
+            manifest = (self.root/'out/inputs.resolved.tsv').read_bytes()
+            wf.main([*command,'--samples','Beta'])
+            self.assertTrue(all(t['sample']=='Beta' for t in launch.call_args.args[0]))
+            self.assertEqual((self.root/'out/inputs.resolved.tsv').read_bytes(), manifest)
+            with self.assertRaisesRegex(ValueError, 'Unknown --samples'):
+                wf.main([*command,'--samples','missing'])
+
+    def test_long_read_manifest_wires_preset_into_worker_context(self):
+        rows = self.rows()
+        rows[0].update(read_layout='long_ont', reads_2='')
+        def prepare(args, parser):
+            name = Path(args.input_file).stem
+            return [nf.task(name+':path',name,[],sample=name,context={'name':'PATHOLOGIC_INPUT'}),
+                    nf.task(name+':tpm',name,['count'],sample=name,
+                            context={'name':'COMPUTE_TPM','commands':['count']})], args.output_dir
+        with patch.object(wf,'discover',return_value=rows), \
+             patch.object(pipeline,'prepare_annotation',side_effect=prepare), \
+             patch.object(wf.shutil,'which',return_value='/mock/tool'), patch.object(nf,'launch') as launch:
+            wf.main(['-i',str(self.inputs),'-o',str(self.root/'out'),'-d','/fake/db','--skip_ptools','--dryrun'])
+        mapping = next(t for t in launch.call_args.args[0] if t['id']=='Alpha:tpm')
+        self.assertEqual(mapping['commands'], ['count --long_read_preset map-ont'])
+        self.assertEqual(mapping['context']['commands'], mapping['commands'])
+
     def test_invalid_input_never_launches(self):
         (self.inputs / 'reads/Alpha_R2.fq').unlink()
         with patch.object(nf, 'launch') as launch, self.assertRaises(ValueError):
@@ -192,6 +241,16 @@ class AnalysisTests(unittest.TestCase):
             with patch('metapathways.compact_results.marker_state', side_effect=['complete', None]):
                 wf.main(command)
             self.assertTrue(all(t['sample']=='Beta' for t in launch.call_args.args[0]))
+
+    def test_successful_compact_resume_retains_earlier_failed_work(self):
+        old = self.root/'out/.metapathways/analysis_wf/tmp/failed/work'
+        old.mkdir(parents=True)
+        (old/'diagnostic').write_text('retain')
+        with patch.object(wf.shutil,'which',return_value='/mock/tool'), \
+             patch('metapathways.compact_results.marker_state', return_value='complete'):
+            wf.main(['-i',str(self.inputs),'-o',str(self.root/'out'),'-d','/fake/db',
+                     '--skip_ptools','--compact_results'])
+        self.assertEqual((old/'diagnostic').read_text(), 'retain')
 
     def test_compact_rejects_shared_cache_and_retained_work(self):
         for flags in (['--keep_work'], ['--work_dir','/tmp/work'], ['--conda_cache','/tmp/cache']):

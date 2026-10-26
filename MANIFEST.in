@@ -45,3 +45,5 @@ recursive-include docs/assets *.bib
 recursive-include docs/assets *.svg
 
 recursive-include docs/diagrams *.mmd *.json
+
+recursive-include examples *.sbatch

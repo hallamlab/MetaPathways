@@ -84,6 +84,7 @@ class StorageTests(unittest.TestCase):
         key = resume_key(args, row)
         args.max_tasks = 1; args.max_cpus = 16; args.max_memory = '64 GB'
         args.partition = 'b'; args.scratch_dir = '/local'
+        args.samples = [['Alpha']]; args.stream_tool_output = True; args.file_quota = 100000
         self.assertEqual(key, resume_key(args, row))
         args.threads = 4
         self.assertNotEqual(key, resume_key(args, row))
