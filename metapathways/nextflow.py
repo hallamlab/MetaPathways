@@ -169,10 +169,11 @@ def render_modules(tasks, manifest, batch_size=64):
     spec.worker_command
 }
 """
-    main = ('nextflow.enable.dsl=2\nimport groovy.json.JsonSlurperClassic\n\n' +
+    main = ('nextflow.enable.dsl=2\n\n' +
             '\n'.join(includes) + '\n\n' +
-            "def schedule = new JsonSlurperClassic().parseText(file(" + groovy(str(Path(manifest).parent/'schedule.json')) + ").text)\n\n" +
-            'workflow {\n' + '\n'.join(calls) + '\n}\n')
+            'workflow {\n' +
+            "    def schedule = new groovy.json.JsonSlurperClassic().parseText(file(" + groovy(str(Path(manifest).parent/'schedule.json')) + ").text)\n" +
+            '\n'.join(calls) + '\n}\n')
     return {'main.nf': main, 'modules/worker.nf': worker,
             'schedule.json': json.dumps(schedule, indent=2) + '\n'}
 

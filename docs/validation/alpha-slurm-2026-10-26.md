@@ -31,7 +31,7 @@ SRI documents GENE-COMMENT in its [PathoLogic input example](https://brg.ai.sri.
   Release-control suite: **23 tests passed**. Both used the installed MetaPathways Python environment.
   The report-server test requires localhost socket access, unavailable in the default
   sandbox; the successful full run used local socket access.
-- Real Nextflow 25.10.4 / Java 25: 6,470-task preview compilation with a single worker
+- Real Nextflow 25.10.4 and 26.10.3 / Java 25: 6,470-task preview compilation with a single worker
   process; real fan-out/fan-in, optional entity failure, receipt reuse, required
   failure retention, and independent fast-branch progress while another root waits.
   The 6,470-task check is a plan compilation, not 6,470 executed biological jobs.
@@ -43,6 +43,12 @@ SRI documents GENE-COMMENT in its [PathoLogic input example](https://brg.ai.sri.
   failure tests preserve the original exception even if deletion would fail.
 - Strict Sphinx HTML build, generated CLI reference, local links/anchors, shell
   syntax and whitespace checks.
+
+The package build now runs these runtime tests against the installed Conda
+environment automatically. Nextflow 26 strict syntax uses a fully-qualified JSON
+parser name and initializes schedule data inside the workflow; no legacy parser
+setting is needed. CLI reference generation is also normalized across Python
+3.11 and 3.13 after the first smoke build exposed argparse formatting differences.
 
 Reproduce optional runtime checks from an activated MP environment:
 

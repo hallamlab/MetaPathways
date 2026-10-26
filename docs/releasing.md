@@ -50,7 +50,8 @@ The tag workflow:
 2. Creates a ZIP of the committed repository and a Python source tarball.
 3. Renders a checksum-verified Linux Conda recipe and builds the package.
 4. Installs that package from a temporary local channel into a new environment.
-5. Runs database preparation and the included K12 integration test.
+5. Runs the installed Nextflow fan-out/join/resume/parser regressions and known-count
+   long-read tests, then database preparation and the included K12 integration test.
 6. Requires all 16 named stages, nonempty key outputs, and no error markers.
 7. Records logs, dependency exports, revision, and SHA-256 checksums.
 8. Retains the validated assets in GitHub Actions; tag pushes never publish.
