@@ -13,7 +13,7 @@ Copy the bundled test inputs and reference seeds into a writable workspace.
 
 options:
   -h, --help            show this help message and exit
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         workspace for cami-test/ inputs and MPDB/ reference seeds
 ```
 
@@ -30,11 +30,11 @@ options:
   --dryrun              show the execution plan without running tasks
 
 Minimum Required Arguments:
-  -i, --input_file INPUT_FILE
+  -i INPUT_FILE, --input_file INPUT_FILE
                         path to the input fasta file/input dir [REQUIRED]
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         path to the output directory [REQUIRED]
-  -d, --refdb_dir REFDB_DIR
+  -d REFDB_DIR, --refdb_dir REFDB_DIR
                         path to the reference DB [REQUIRED]
 
 Quality Controls Arguments:
@@ -87,9 +87,9 @@ rRNA Annotation Arguments:
                         Minimum bitscore for rRNA annotation [50]
 
 Read Mapping Arguments (single sample support only):
-  -1, --fastq FWD_FASTQ
+  -1 FWD_FASTQ, --fastq FWD_FASTQ
                         location of the raw fastq file, either forward or interleaved
-  -2, --rev_fastq REV_FASTQ
+  -2 REV_FASTQ, --rev_fastq REV_FASTQ
                         location of the raw reverse fastq file, if separate paired-end
   --interleaved         if paired-end is interleaved [False]
 
@@ -146,9 +146,9 @@ Execution Resources:
   --keep_work           retain automatically allocated work/cache directories
 
 Miscellaneous Arguments:
-  -s, --samples SAMPLES [SAMPLES ...]
+  -s SAMPLES [SAMPLES ...], --samples SAMPLES [SAMPLES ...]
                         process only specific samples, space-separated list
-  -t, --threads THREADS
+  -t THREADS, --threads THREADS
                         threads per capable tool [8], capped by --max_cpus; serial stages use one CPU
   -v, --verbose         print more information on the stdout
   --test                use test values for all arguments
@@ -189,11 +189,11 @@ options:
                         Optional PGDB memory override [same as --memory]
 
 Minimum Required Arguments:
-  -i, --input_file INPUT_FILE
+  -i INPUT_FILE, --input_file INPUT_FILE
                         dataset root, or assemblies directory with --reads_dir/--mag_maps_dir; alternative: --manifest
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         path to the output directory [REQUIRED]
-  -d, --refdb_dir REFDB_DIR
+  -d REFDB_DIR, --refdb_dir REFDB_DIR
                         path to the reference DB [REQUIRED]
 
 Quality Controls Arguments:
@@ -298,9 +298,9 @@ Execution Resources:
   --keep_work           retain automatically allocated work/cache directories
 
 Miscellaneous Arguments:
-  -s, --samples SAMPLES [SAMPLES ...]
+  -s SAMPLES [SAMPLES ...], --samples SAMPLES [SAMPLES ...]
                         run only these sample IDs from the full unchanged input manifest (space-separated)
-  -t, --threads THREADS
+  -t THREADS, --threads THREADS
                         threads per capable tool [8], capped by --max_cpus; serial stages use one CPU
   -v, --verbose         print more information on the stdout
 ```
@@ -321,7 +321,8 @@ automated database install
 
 options:
   -h, --help            show this help message and exit
-  -t, --threads INT     total database-build CPU budget [available CPUs]
+  -t INT, --threads INT
+                        total database-build CPU budget [available CPUs]
   --dryrun              show the database execution plan without running tasks
   --snakemake [SNAKEMAKE ...]
                         legacy compatibility flags; use the resource flags for new runs
@@ -329,11 +330,12 @@ options:
                         directory
 
 database arguments:
-  -d, --refdb_dir PATH  path to save the reference DB, [DEFAULT "./"]
+  -d PATH, --refdb_dir PATH
+                        path to save the reference DB, [DEFAULT "./"]
   --func [CATEGORICAL ...]
                         functional references, select any combination from ['swissprot', 'cazy',
                         'eggnog', 'uniref50', 'uniref90', 'metacyc'], [DEFAULT ['swissprot']]
-  -a, --aligner ALIGNER
+  -a ALIGNER, --aligner ALIGNER
                         local aligner to index for, select one of ['fast', 'blast'], [DEFAULT
                         fast]
   --skip_pt_screen      Skip default PTools reaction compatibility screening for MetaCyc
@@ -381,9 +383,9 @@ Metapathways mag_split -o output_dir -m contig_mag_map
 
 options:
   -h, --help            show this help message and exit
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         path where MP output was saved [REQUIRED]
-  -m, --contig_mag_map MAG_MAP
+  -m MAG_MAP, --contig_mag_map MAG_MAP
                         TSV file that contains contig-to-MAG mapping [REQUIRED]
 
 Execution Resources:
@@ -429,21 +431,21 @@ Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptai
 
 options:
   -h, --help            show this help message and exit
-  -i, --installer INSTALLER
+  -i INSTALLER, --installer INSTALLER
                         local Pathway Tools Linux x86-64 installer
   --ptools_version PTOOLS_VERSION
                         release number if the installer was renamed; otherwise inferred from its
                         filename
-  -d, --refdb_dir REFDB_DIR
+  -d REFDB_DIR, --refdb_dir REFDB_DIR
                         also export and prepare the licensed MetaCyc reference in this MPDB after
                         building the SIF
   --skip_pt_screen      Skip default reaction compatibility screening when building MetaCyc with
                         -d
-  -a, --aligner {fast,blast}
+  -a {fast,blast}, --aligner {fast,blast}
                         MetaCyc reference index format with -d [fast]
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         container directory [~/.local/share/metapathways/containers]
-  -t, --threads THREADS
+  -t THREADS, --threads THREADS
                         CPUs for image compression [2]; Pathway Tools uses one CPU
   --dryrun              write and show the build plan without building or registering
 
@@ -487,8 +489,8 @@ Screen explicit MPDB reaction assignments against a licensed PTools SIF
 
 options:
   -h, --help            show this help message and exit
-  -d, --refdb_dir REFDB_DIR
-  -o, --output_dir OUTPUT_DIR
+  -d REFDB_DIR, --refdb_dir REFDB_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
   --image IMAGE         PTools SIF [registered build_pt image]
   --publish             Save a completed full screen compatibility list in the MPDB
   --reactions REACTIONS [REACTIONS ...]
@@ -512,7 +514,7 @@ Metapathways ptools -o output_dir
 
 options:
   -h, --help            show this help message and exit
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         path where MP output was saved [REQUIRED]
   --tag TAG             Custom name for ePGDB [optional]
   --container           Flag only used in containerized env [special flag]
@@ -561,7 +563,7 @@ Build a navigable report from existing MP outputs; no analyses are rerun.
 
 options:
   -h, --help            show this help message and exit
-  -o, --output_dir OUTPUT_DIR
+  -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         sample output or parent containing sample outputs
   --serve               open the local searchable portal and serve until Ctrl-C
   --no-rebuild          use an existing report snapshot
