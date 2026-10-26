@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 4.0.2 — 2026-10-26
 
+- Support Nextflow 26 strict syntax and verify installed runtimes during package builds.
+- Normalize generated CLI documentation across Python 3.11 and 3.13.
 - Reuse channel-fed Nextflow workers by dependency depth to reduce controller
   operator/thread growth during large MAG fan-out; retain independent task gates.
 - Preserve failed-run work and diagnostics and report the original controller error.
