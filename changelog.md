@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add opt-in worker-local FAST index staging and a separate Slurm functional-search time limit.
+- Propagate standalone and workflow functional-search failures; remove a hidden FAST retry after errors.
+- Document why externally produced FAST outputs do not establish a workflow success receipt.
+
 ## 4.0.2 — 2026-10-26
 
 - Support Nextflow 26 strict syntax and verify installed runtimes during package builds.

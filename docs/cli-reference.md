@@ -137,6 +137,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always retained
@@ -289,6 +292,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always retained
@@ -314,6 +320,7 @@ usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--sk
                     [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                     [--executor {local,slurm}] [--account ACCOUNT] [--partition PARTITION]
                     [--qos QOS] [--reservation RESERVATION] [--time_limit TIME_LIMIT]
+                    [--fast_local_db] [--func_search_time_limit FUNC_SEARCH_TIME_LIMIT]
                     [--submit_rate SUBMIT_RATE] [--stream_tool_output] [--work_dir WORK_DIR]
                     [--conda_cache CONDA_CACHE] [--keep_work]
 
@@ -363,6 +370,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always
@@ -405,6 +415,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always retained
@@ -423,9 +436,10 @@ usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION]
                              [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
-                             [--time_limit TIME_LIMIT] [--submit_rate SUBMIT_RATE]
-                             [--stream_tool_output] [--work_dir WORK_DIR]
-                             [--conda_cache CONDA_CACHE] [--keep_work]
+                             [--time_limit TIME_LIMIT] [--fast_local_db]
+                             [--func_search_time_limit FUNC_SEARCH_TIME_LIMIT]
+                             [--submit_rate SUBMIT_RATE] [--stream_tool_output]
+                             [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE] [--keep_work]
 
 Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.
 
@@ -467,6 +481,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always
@@ -545,6 +562,9 @@ Execution Resources:
                         Slurm reservation
   --time_limit TIME_LIMIT
                         Slurm walltime per task [24h]
+  --fast_local_db       stage FAST database indexes on worker-local disk, one volume at a time
+  --func_search_time_limit FUNC_SEARCH_TIME_LIMIT
+                        Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit
   --submit_rate SUBMIT_RATE
                         maximum Slurm submissions per minute [6]
   --stream_tool_output  stream full worker output to the console; full task logs are always retained

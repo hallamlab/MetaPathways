@@ -29,6 +29,16 @@ class SchedulingTests(unittest.TestCase):
             setattr(a, k, v)
         return a
 
+    def test_search_resources_are_serialized_without_changing_other_tasks(self):
+        search = nf.task('search', 'sample:FUNC_SEARCH:uniref90', ['true'])
+        other = nf.task('pgdb', 'sample:PGDB', ['true'])
+        args = self.args(executor='slurm', account='lab', fast_local_db=True,
+                         func_search_time_limit='2h', time_limit='48h')
+        run = nf.launch([search, other], self.root, args, 'test', dryrun=True)
+        tasks = json.loads((run/'tasks.json').read_text())
+        self.assertEqual([t['time_limit'] for t in tasks], ['2h', '48h'])
+        self.assertTrue(all(t['fast_local_db'] for t in tasks))
+
     def test_local_uses_available_cpus(self):
         with patch.object(nf, 'local_capacity', return_value=(48, '128 GB')):
             text, limits = nf.configuration([self.task], self.args(), self.root)

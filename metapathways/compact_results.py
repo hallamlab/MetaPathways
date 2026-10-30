@@ -27,7 +27,7 @@ def resume_key(args, row):
     options['implementation_sha256'] = code.hexdigest()
     for key in ('dryrun', 'force_redo', 'max_tasks', 'max_cpus', 'max_memory',
                 'executor', 'account', 'partition', 'qos', 'reservation',
-                'time_limit', 'submit_rate', 'scratch_dir', 'samples', 'stream_tool_output', 'file_quota'):
+                'time_limit', 'func_search_time_limit', 'fast_local_db', 'submit_rate', 'scratch_dir', 'samples', 'stream_tool_output', 'file_quota'):
         options.pop(key, None)
     paths = [Path(row[k]) for k in ('assembly', 'reads_1', 'reads_2', 'mag_map') if row[k]]
     from metapathways.pt_container import registered_image

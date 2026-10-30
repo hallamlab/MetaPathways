@@ -147,6 +147,8 @@ def main(argv=None):
     tasks = json.loads(Path(manifest).read_text())
     t = next(t for t in tasks if t['id'] == identifier)
     if direct:
+        if t.get('fast_local_db'):
+            os.environ['METAPATHWAYS_FAST_LOCAL_DB'] = '1'
         with ExitStack() as contexts:
             if t.get('compact_results') and not t['id'].endswith(':compact_results'):
                 from metapathways.compact_storage import task_scratch

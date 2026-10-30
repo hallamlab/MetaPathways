@@ -15,6 +15,8 @@ try:
     import pandas as pd
     import tempfile
     import shlex
+    import shutil
+    from pathlib import Path
 
     from os import path, _exit, rename
     from optparse import OptionParser, OptionGroup
@@ -163,6 +165,8 @@ def createParser():
         help="Run large DBs normally (default) or per volume [pervol]",
     )
 
+    last_group.add_option("--stage_db", action="store_true", default=False,
+                          help="Stage FAST indexes in worker-local scratch, one volume at a time")
     parser.add_option_group(last_group)
 
     return parser
@@ -189,18 +193,7 @@ def main(argv, errorlogger=None, runcommand=None, runstatslogger=None):
             options.algorithm
         )
         b = "ERROR\t%s\n" % (message)
-        c = "INFO\tDatabase you are searching against may not be formatted correctly (if it was formatted for an earlier version) \n"
-        code = -1
-        d = "INFO\tTry removing the files for that database in 'formatted' subfolder for MetaPathways to trigger reformatting \n"
-        if options.algorithm == "BLAST":
-            e = "INFO\tYou can remove as 'rm %s.*','\n" % (options.blast_db)
-        if options.algorithm == "FAST":
-            e = "INFO\tYou can remove as 'rm %s.*','\n" % (options.last_db)
-
-        (code, message) = _execute_FAST(options, logger=errorlogger)
-        f = "INFO\tIf removing the files did not work then format it manually (see manual)"
-        outputStr = a + b + c + d + e + f
-
+        outputStr = a + b
         gutils.eprintf(outputStr + "\n")
 
         if errorlogger:
@@ -220,11 +213,33 @@ def _execute_FAST(options, logger=None):
                 for line in stream:
                     if line.startswith('volumes='):
                         volumes = int(line.split('=', 1)[1])
-        with tempfile.TemporaryDirectory(prefix='.fast-', dir=os.environ.get('METAPATHWAYS_COMPACT_SCRATCH') or os.path.dirname(output)) as work:
+        staging = getattr(options, 'stage_db', False) or os.environ.get('METAPATHWAYS_FAST_LOCAL_DB') == '1'
+        root = os.environ.get('METAPATHWAYS_COMPACT_SCRATCH') or os.path.dirname(output)
+        if staging:
+            from metapathways.compact_storage import scratch_root
+            root = scratch_root(os.environ.get('METAPATHWAYS_FAST_SCRATCH'))
+        with tempfile.TemporaryDirectory(prefix='.fast-', dir=root) as work:
             parts = []
             for v in range(volumes or 1):
                 part = os.path.join(work, f'hits-{v}.tsv')
                 db = options.last_db + str(v) if volumes else options.last_db
+                staged = Path(work)/'database'
+                if staging:
+                    # A dot boundary prevents volume 1 from matching volumes 10-15.
+                    files = sorted(Path(db).parent.glob(Path(db).name + '.*'))
+                    if not files or not Path(db + '.prj').is_file():
+                        raise RuntimeError(f'Missing FAST index files for {db}')
+                    if options.run_mode != 'pervol':
+                        files += [f for f in Path(db).parent.glob(Path(db).name + '*.*')
+                                  if re.fullmatch(re.escape(Path(db).name) + r'\d+\..+', f.name)]
+                    required = sum(f.stat().st_size for f in files)
+                    if shutil.disk_usage(work).free < required + 1024**3:
+                        raise RuntimeError(f'Insufficient local space to stage {db} ({required} bytes plus 1 GiB required)')
+                    staged.mkdir()
+                    for source in files:
+                        shutil.copyfile(source, staged/source.name)
+                    db = str(staged/Path(db).name)
+                print(f'FAST volume {v + 1}/{volumes or 1}: {db}', flush=True)
                 args = [options.last_executable, '-f', str(options.last_f), '-o', part,
                         '-P', str(options.num_threads), '-K', str(options.num_hits),
                         '-X', work, db, options.last_query]
@@ -234,6 +249,8 @@ def _execute_FAST(options, logger=None):
                 if not os.path.isfile(part):
                     raise RuntimeError('FAST returned success without producing its output')
                 parts.append(part)
+                if staging:
+                    shutil.rmtree(staged)
             if len(parts) == 1:
                 from metapathways.compact_storage import publish_file
                 publish_file(parts[0], output)
@@ -295,7 +312,7 @@ def MetaPathways_func_search(
     if errorlogger != None:
         errorlogger.write("#STEP\tFUNC_SEARCH\n")
     try:
-         main(
+         code = main(
              argv,
              errorlogger = errorlogger,
              runcommand = extra_command,
@@ -305,8 +322,7 @@ def MetaPathways_func_search(
         errormod.insert_error(4)
         return (1, traceback.print_exc(10))
 
-    return (0, "")
+    return (code, "" if code == 0 else "Functional search failed; see task log")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        main(sys.argv[1:])
+    sys.exit(main(sys.argv[1:]))

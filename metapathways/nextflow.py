@@ -56,6 +56,10 @@ def add_resources(parser, task_memory='16 GB'):
     group.add_argument('--qos', type=slurm_token, help='Slurm quality of service')
     group.add_argument('--reservation', type=slurm_token, help='Slurm reservation')
     group.add_argument('--time_limit', type=duration, default='24h', help='Slurm walltime per task [24h]')
+    group.add_argument('--fast_local_db', action='store_true',
+                       help='stage FAST database indexes on worker-local disk, one volume at a time')
+    group.add_argument('--func_search_time_limit', type=duration,
+                       help='Slurm walltime for FUNC_SEARCH tasks; overrides --time_limit')
     group.add_argument('--submit_rate', type=positive, default=6, help='maximum Slurm submissions per minute [6]')
     group.add_argument('--stream_tool_output', action='store_true',
                        help='stream full worker output to the console; full task logs are always retained')
@@ -160,6 +164,7 @@ def render_modules(tasks, manifest, batch_size=64):
     tag { spec.label }
     cpus { spec.cpus }
     memory { spec.memory }
+    time { spec.time_limit ?: null }
     cache false
     input:
     val spec
@@ -327,6 +332,12 @@ def launch(tasks, output_dir, args, name, dryrun=False):
         cache = Path(cache_override).expanduser().resolve() if cache_override else scratch / 'conda'
         config_text, resources = configuration(tasks, args, cache)
         for t in tasks:
+            t['fast_local_db'] = bool(getattr(args, 'fast_local_db', False))
+            t['time_limit'] = None
+            if getattr(args, 'executor', 'local') == 'slurm':
+                t['time_limit'] = getattr(args, 'time_limit', '24h')
+                if ':FUNC_SEARCH:' in t['label']:
+                    t['time_limit'] = getattr(args, 'func_search_time_limit', None) or t['time_limit']
             t['stream_tool_output'] = bool(getattr(args, 'stream_tool_output', False))
             t['compact_results'] = bool(getattr(args, 'compact_results', False))
             t['scratch_dir'] = getattr(args, 'scratch_dir', None)
