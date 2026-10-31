@@ -100,8 +100,22 @@ pooling their abundance estimates.
 
 ### Run a sample subset
 
-Keep the full original manifest or discovery dataset and add `--samples` with a
-space-separated list:
+To run a single sample, keep the full manifest and select its `sample_id`:
+
+```bash
+metapathways analysis_wf --manifest /path/to/samples.tsv \
+  -o /path/to/analysis -d /path/to/MPDB --samples SampleA
+```
+
+Use the same resource, reference and optional-branch settings as your full
+workflow. Sample selection controls which samples receive tasks; it does not
+force recomputation or bypass receipt/compact-marker validation on restart.
+If an upgrade requires fresh output for compacted results, select only the
+samples you need and use a new output directory. Their workflows run anew;
+other samples are not scheduled.
+
+For several samples, keep the full original manifest or discovery dataset and
+supply a space-separated list:
 
 ```bash
 metapathways analysis_wf --manifest /path/to/samples.tsv \
