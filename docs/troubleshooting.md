@@ -68,3 +68,70 @@ not a workflow success receipt: copying it into `blast_results` does not guarant
 search. Prefer staging within the managed workflow; do not edit receipts to mark
 unverified outputs successful. Existing compacted results remain subject to the
 upgrade restrictions described in the release notes.
+
+
+### Test only affected samples after upgrading from 4.0.1
+
+`--samples` selects rows from the original full manifest; keep that manifest
+unchanged. The remaining samples are validated but no computational tasks are
+scheduled for them. Use sample IDs exactly as written in the `sample_id` column.
+
+Previously compacted 4.0.1 samples cannot resume under 4.0.3 because completion
+markers are implementation-specific and intermediates have been removed. Use
+new output directories to test just the failed sample/assembler combinations.
+This reruns the selected samples' workflows, including other annotation databases
+and downstream steps; it does not rerun the other samples or merge the test
+results back into their original reports. Do not delete old outputs or receipts.
+Noncompacted results can be reused where success receipts still match, but an
+upgrade may invalidate some tasks; reuse is not guaranteed.
+
+For the reported SPAdes `S245_S55` and MEGAHIT `S567_S65` failures, stop old
+controllers/jobs before updating the software environment, then use the commands
+below. Replace paths, retain any custom reference/Pathway Tools settings from
+the original invocation, and ensure the Pathway Tools SIF is registered in the
+updated environment (or supply the original `--image /absolute/path/to/ptools.sif`).
+
+```bash
+# Stop the old controllers/jobs before upgrading their environment.
+mamba install -n metapathways --override-channels --strict-channel-priority \
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.3
+conda activate metapathways
+metapathways version
+
+# Replace these paths. Keep the ORIGINAL full manifests unchanged.
+DB=/absolute/path/to/MPDB
+SPADES_MANIFEST=/absolute/path/to/manifest_spades.tsv
+MEGAHIT_MANIFEST=/absolute/path/to/manifest_megahit.tsv
+TEST_OUT=/absolute/path/to/new/fast-local-test-4.0.3
+
+# Run one controller at a time, from a host permitted to submit Slurm jobs.
+metapathways analysis_wf \
+  --manifest "$SPADES_MANIFEST" --samples S245_S55 \
+  -o "$TEST_OUT/spades" -d "$DB" \
+  --annotation_dbs cazy swissprot uniref50 uniref90 metacyc \
+  --threads 32 --executor slurm --account def-shallam \
+  --memory 128GB --ptools_memory 16GB --max_tasks 4 \
+  --fast_local_db --func_search_time_limit 2h --time_limit 48h \
+  --compact_results --keep_work
+
+# After the SPAdes invocation finishes, run the MEGAHIT case.
+metapathways analysis_wf \
+  --manifest "$MEGAHIT_MANIFEST" --samples S567_S65 \
+  -o "$TEST_OUT/megahit" -d "$DB" \
+  --annotation_dbs cazy swissprot uniref50 uniref90 metacyc \
+  --threads 32 --executor slurm --account def-shallam \
+  --memory 128GB --ptools_memory 16GB --max_tasks 4 \
+  --fast_local_db --func_search_time_limit 2h --time_limit 48h \
+  --compact_results --keep_work
+```
+
+Fir provides `SLURM_TMPDIR` to each compute job; do not substitute the controller's
+scratch path. `--max_tasks 4` conservatively limits concurrent scratch consumers
+for this test. The two-hour search limit is a starting point, not a guarantee for
+all databases. `--keep_work` retains Nextflow diagnostics after success and uses
+additional storage; `--compact_results` still removes selected sample
+intermediates at completion. Full worker logs remain retained or archived.
+
+If the run fails, share the printed error, invocation `summary.json`, `trace.tsv`
+and the affected task log under `OUTPUT/logs/analysis_wf/RUN_ID/`. Those records
+can distinguish staging, search, scheduler and downstream failures.
