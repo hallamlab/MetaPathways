@@ -63,3 +63,40 @@ The console shows controller output and task completion summaries. Add
 `--stream_tool_output` to mirror full tool logs, including Pathway Tools output.
 `--verbose` alone does not enable full tool streaming. Full task output is always
 retained in workflow logs, or archived after successful compact runs.
+
+
+## FAST databases on shared storage
+
+Available in **4.0.3**, `--fast_local_db` copies FAST database indexes to worker-local
+scratch before searching. This avoids random reads directly from Lustre or another
+shared filesystem. It is opt-in because local scratch capacity varies by cluster.
+With the default `--annotation_run_mode pervol`, only one database volume is staged
+at a time. In `default` mode, the entire database must fit. Concurrent searches use
+separate copies; allow space for their indexes, hit files and merged output.
+
+```bash
+metapathways analysis_wf --manifest manifest.tsv -o analysis -d /shared/MPDB \
+  --annotation_dbs swissprot uniref90 --threads 32 \
+  --executor slurm --account my_project --memory '128 GB' --max_tasks 4 \
+  --fast_local_db --func_search_time_limit 2h --time_limit 48h
+```
+
+`--func_search_time_limit 2h` limits FUNC_SEARCH tasks to two hours while other
+tasks retain the general 48-hour limit. Choose limits for your data and cluster;
+these are examples, not measured requirements. A timeout fails the task without
+automatic retries. A shorter search limit prevents a stalled search from holding
+its CPUs for the full PGDB walltime; staging addresses the shared-storage reads.
+
+The scratch location is resolved on each worker using `SLURM_TMPDIR`. If your
+cluster does not provide it, export `METAPATHWAYS_FAST_SCRATCH` to an existing
+node-local path available on every worker. Do not expand a controller allocation's
+`SLURM_TMPDIR` into this override: child jobs may run on different nodes. FAST
+scratch selection is independent of `--scratch_dir` for compact-result tasks.
+Insufficient space or missing indexes causes a failure, without falling back to
+shared-storage searching. Staging requires no database reformatting.
+
+For standalone `python -m metapathways.MetaPathways_func_search` invocations,
+`--stage_db` enables the same behavior. Workflow users use `--fast_local_db`.
+Prefer staging within the workflow so success receipts are recorded and checked
+on restart. See [search troubleshooting](troubleshooting.md#fast-searches-stall-on-a-shared-filesystem)
+for the limitations of copying externally produced outputs into a failed run.

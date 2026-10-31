@@ -31,7 +31,7 @@ Default Nextflow work, session cache and Conda package/environment caches live u
 
 Use `--keep_work` to retain the defaults. Explicit `--work_dir` and `--conda_cache` paths are retained automatically; MP does not delete a user-provided shared cache. Nextflow's installed runtime and MP's Conda environment are not per-run caches and are retained.
 
-Durable receipts remain under `OUTPUT/.metapathways/COMMAND/receipts`. Repeating a command checks tracked inputs, outputs and command signatures, permitting reuse even after temporary cleanup. Never remove final outputs expecting receipts alone to recover them. To force one annotation stage, use its `redo` flag; `--force_redo` reruns all annotation stages. Old read-mapping output without a current receipt is deliberately recomputed once.
+Durable receipts remain under `OUTPUT/.metapathways/COMMAND/receipts`. Repeating a command checks tracked inputs, outputs and command signatures, permitting reuse even after temporary cleanup. Never remove final outputs expecting receipts alone to recover them. To force one annotation stage, use its `redo` flag; `--force_redo` reruns all annotation stages. Old read-mapping output without a current receipt is deliberately recomputed once. FAST searches also require a matching success receipt: a standalone output file does not establish workflow completion. Use `--fast_local_db` within the workflow to preserve normal receipt-based reuse.
 
 ## Large Slurm runs
 

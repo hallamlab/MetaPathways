@@ -42,6 +42,15 @@ Discovery does not recurse, merge sequencing lanes, or guess unmarked FASTQ layo
 
 Append `--dryrun` to validate inputs and write the combined task plan without running biological tools. This still creates output directories, logs, staged symlinks and `inputs.resolved.tsv`. Remove `--dryrun` from the same command to execute. Input paths may contain spaces because MP stages symlinks; the output and MPDB paths must currently use letters, digits, underscores, hyphens, periods and slashes for compatibility with legacy tool commands.
 
+## FAST searches on cluster storage
+
+With MetaPathways 4.0.3 or newer, add `--fast_local_db` to stage FAST indexes
+on compute-node scratch when shared-filesystem reads stall. Add, for example,
+`--func_search_time_limit 2h --time_limit 48h` to give searches a shorter Slurm
+limit than PGDB tasks. Neither option enables automatic retries. See the
+[scratch and resource guide](resources.md#fast-databases-on-shared-storage)
+for disk requirements, worker path selection and a complete command.
+
 ## Custom analysis manifest
 
 Use a tab-separated file with this **exact header and column order**:

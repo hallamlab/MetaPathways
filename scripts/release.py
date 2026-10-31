@@ -279,7 +279,7 @@ def build(args):
                 log=output / "long-read-integration.log", env={**os.environ, "MP_TEST_BIO": "1"})
             run(*runner, "metapathways", "build_db", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "build-db.log")
-            run(*runner, "metapathways", "run", "--test", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
+            run(*runner, "metapathways", "run", "--test", "--fast_local_db", "--memory", "2 GB", "--max_memory", "4 GB", "--max_cpus", "2", cwd=testdir,
                 log=output / "pipeline.log")
             validation.update(validate_run(testdir), scope="core-integration")
             for name in ["metapathways_steps_log.txt", "errors_warnings_log.txt"]:

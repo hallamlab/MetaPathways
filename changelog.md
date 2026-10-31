@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.3 — 2026-10-30
 
 - Add opt-in worker-local FAST index staging and a separate Slurm functional-search time limit.
 - Propagate standalone and workflow functional-search failures; remove a hidden FAST retry after errors.
