@@ -80,8 +80,15 @@ From: ubuntu:22.04
 PREPARED_BASE = Path('/opt/metapathways/ptools-base')
 
 
-def build_recipe():
+def build_recipe(dependency_base=None):
     """Use the bundled unlicensed rootfs when running the release container."""
+    if dependency_base is not None:
+        recipe = RECIPE.replace('Bootstrap: docker\nFrom: ubuntu:22.04',
+                                'Bootstrap: localimage\nFrom: dependency-base.sif')
+        recipe = recipe.replace('    apt-get update\n', '')
+        recipe = recipe.replace('    apt-get install -y --no-install-recommends ca-certificates xterm openssl libxml2 xvfb xauth libxm4 libssl-dev procps bzip2 ncbi-blast+\n', '')
+        return recipe, dict(kind='public-dependency-sif', source=str(dependency_base),
+                            sha256=digest(dependency_base))
     if not PREPARED_BASE.is_dir():
         return RECIPE, None
     manifest = PREPARED_BASE / 'opt/mp-base-packages.tsv'
@@ -387,7 +394,7 @@ xvfb-run -a -e /data/build-xvfb.log -s '-screen 0 1280x1024x24 -nolisten local' 
             print(f'Pathway Tools {status["status"]} during {status["stage"]}; diagnostics: {diagnostics}', flush=True)
 
 
-def build(installer, image, installer_sha256, threads, version=None):
+def build(installer, image, installer_sha256, threads, version=None, dependency_base=None):
     """Worker entry point: never publish or register a failed build."""
     installer, image = Path(installer).resolve(), Path(image).resolve()
     if digest(installer) != installer_sha256:
@@ -395,14 +402,25 @@ def build(installer, image, installer_sha256, threads, version=None):
     executable = shutil.which('apptainer')
     if not executable:
         raise RuntimeError('Apptainer is required and must be on PATH')
+    from metapathways.pt_setup import host_check, prepared_base, validate_base
+    host_check(executable, image.parent / 'logs/readiness')
+    base_image = None
+    if dependency_base or not PREPARED_BASE.is_dir():
+        base_image = prepared_base(executable, dependency_base)
+        validate_base(executable, base_image)
     image.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.pt-build-', dir=image.parent) as work:
         work = Path(work)
         # A fixed relative name avoids definition-file quoting of arbitrary paths.
         (work / 'installer').symlink_to(installer)
+        if base_image:
+            (work / 'dependency-base.sif').symlink_to(base_image)
         patches = download_patches(installer_version(installer, version), work / 'official-patches')
         definition = work / 'pathway-tools.def'
-        recipe, base = build_recipe()
+        recipe, base = build_recipe(base_image)
+        if base_image and not dependency_base:
+            base['image'] = json.loads(
+                Path(__file__).with_name('resources').joinpath('ptools_base.json').read_text())['image']
         definition.write_text(recipe)
         partial = work / 'pathway-tools.sif'
         subprocess.run([executable, 'build', '--fakeroot', '--mksquashfs-args',
@@ -420,7 +438,9 @@ def build(installer, image, installer_sha256, threads, version=None):
 def parser():
     p = argparse.ArgumentParser(prog='metapathways build_pt',
                                 description='Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.')
-    p.add_argument('-i', '--installer', required=True, help='local Pathway Tools Linux x86-64 installer')
+    p.add_argument('-i', '--installer', help='local Pathway Tools Linux x86-64 installer')
+    p.add_argument('--check', action='store_true', help='check local rootless build/execution readiness without an installer or downloads')
+    p.add_argument('--dependency_base', help='existing public dependency SIF to skip the base download [download and cache the pinned public base]')
     p.add_argument('--ptools_version', help='release number if the installer was renamed; otherwise inferred from its filename')
     p.add_argument('-d', '--refdb_dir', help=argparse.SUPPRESS)
     p.add_argument('--skip_pt_screen', action='store_true', help=argparse.SUPPRESS)
@@ -442,6 +462,17 @@ def main(argv=None):
                 + ' (use --add for an existing MPDB).')
     if args.aligner or args.skip_pt_screen:
         p.error('-a and --skip_pt_screen belong to build_db; build_pt only builds the SIF.')
+    if args.check:
+        from metapathways.pt_setup import host_check
+        executable = shutil.which('apptainer')
+        if not executable:
+            p.error('Apptainer is missing from the activated environment')
+        host_check(executable, Path(args.output_dir).expanduser() / 'logs/readiness')
+        return
+    if not args.installer:
+        p.error('Provide -i INSTALLER to build, or --check to test readiness')
+    if args.dependency_base and not Path(args.dependency_base).expanduser().is_file():
+        p.error('--dependency_base must be an existing public dependency SIF')
     installer = Path(args.installer).expanduser().resolve()
     if not installer.is_file():
         p.error(f'Installer does not exist: {installer}')
@@ -451,6 +482,9 @@ def main(argv=None):
         for executable in ('apptainer', 'nextflow'):
             if not shutil.which(executable):
                 p.error(f'{executable} must be installed and on PATH')
+    if not args.dryrun and args.executor == 'local':
+        from metapathways.pt_setup import host_check
+        host_check(shutil.which('apptainer'), Path(args.output_dir).expanduser() / 'logs/readiness')
     checksum = digest(installer)
     recipe, _ = build_recipe()
     recipe_hash = hashlib.sha256(recipe.encode()).hexdigest()
@@ -465,6 +499,8 @@ def main(argv=None):
     image = output / f'pathway-tools-{version}-{checksum[:12]}-{recipe_hash[:8]}-{build_id[:12]}.sif'
     command = shlex.join([sys.executable, '-m', 'metapathways.pt_container', '--worker',
                           str(installer), str(image), checksum, str(args.threads), version])
+    if args.dependency_base:
+        command += ' ' + shlex.quote(str(Path(args.dependency_base).expanduser().resolve()))
     t = nextflow.task('build-pt-' + checksum + recipe_hash + build_id, 'Build Pathway Tools ' + version,
                      [command], [str(installer)], [str(image), str(image) + '.json'],
                      cpus=args.threads, memory=args.memory, adopt_existing=False)
@@ -480,6 +516,6 @@ def main(argv=None):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--worker':
-        build(*sys.argv[2:5], int(sys.argv[5]), sys.argv[6])
+        build(*sys.argv[2:5], int(sys.argv[5]), sys.argv[6], sys.argv[7] if len(sys.argv) > 7 else None)
     else:
         main()

@@ -436,8 +436,9 @@ Execution Resources:
 ## build_pt
 
 ```text
-usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION] [-o OUTPUT_DIR]
-                             [-t THREADS] [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
+usage: metapathways build_pt [-h] [-i INSTALLER] [--check] [--dependency_base DEPENDENCY_BASE]
+                             [--ptools_version PTOOLS_VERSION] [-o OUTPUT_DIR] [-t THREADS]
+                             [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
                              [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
@@ -452,6 +453,11 @@ options:
   -h, --help            show this help message and exit
   -i INSTALLER, --installer INSTALLER
                         local Pathway Tools Linux x86-64 installer
+  --check               check local rootless build/execution readiness without an installer or
+                        downloads
+  --dependency_base DEPENDENCY_BASE
+                        existing public dependency SIF to skip the base download [download and
+                        cache the pinned public base]
   --ptools_version PTOOLS_VERSION
                         release number if the installer was renamed; otherwise inferred from its
                         filename

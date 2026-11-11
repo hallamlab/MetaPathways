@@ -72,9 +72,39 @@ Create the destination directory on the server first if needed. Do not unpack or
 
 ## Host prerequisites
 
-Activate the MP environment and check `apptainer --version` and `nextflow -version`. Building requires network access for the container base, operating-system packages and official patches, plus writable space for the installer, temporary build and finished SIF. A build can temporarily use substantially more disk than the final image. Use `df -h` to inspect free space.
+With the Mamba environment active, run this once on the machine where you will
+build the image. No installer, network download or sudo is needed for this check:
 
-The host must permit Apptainer's unprivileged/fakeroot build path. Administrators may need to configure subordinate UID/GID ranges and the `newuidmap`/`newgidmap` helpers (`uidmap` on Ubuntu). Installing a Conda executable cannot override a host security policy. Ask your administrator if a user-namespace or fakeroot error appears. Docker is not required.
+```bash
+metapathways build_pt --check -o ~/mp-containers
+```
+
+MP tests a small local container build and execution, and saves a diagnostic log.
+The normal `build_pt` command also checks automatically before downloading licensed
+patches. Slurm builds check on the allocated compute node; a login-node check
+cannot certify other nodes.
+
+For the actual build, MP automatically downloads and caches a verified public
+Ubuntu dependency image. It contains no Pathway Tools or MetaCyc. You do not need
+to run APT, Docker, or install OS packages yourself. Network access is needed for
+that first download and the official patches; allow disk space for the installer,
+cached base, temporary build and finished SIF. The cache is under
+`~/.cache/metapathways/ptools-base` (or `$XDG_CACHE_HOME`). An existing copy can be
+supplied with `--dependency_base /path/to/base.sif`; official patch downloads
+still require network access.
+
+**If the check reports host permissions:** Mamba installed the runtime, but the
+host must allow it to create containers. Ubuntu 24.04 and later can restrict
+unprivileged user namespaces through AppArmor. An administrator must resolve
+that restriction; MP does not change host security settings. Send them the printed
+diagnostic log and the [Apptainer host requirements](https://apptainer.org/docs/admin/latest/user_namespace.html).
+Fakeroot UID mappings/helpers may also need site configuration, depending on the
+mode available. No-sudo users can build on hosts where this is already permitted.
+
+If your site permits running containers but not building them, build the licensed
+SIF on a compatible machine and transfer it, then select it with `--image`.
+A transferred SIF still needs a host that permits Apptainer execution.
+Public annotation and the bundled installation test do not require Pathway Tools.
 
 Use shared storage for a finished image that compute nodes need to read. Local scratch can accelerate building on slow network filesystems. `APPTAINER_TMPDIR` is an optional Apptainer troubleshooting setting, not required to run MP. See your site's Apptainer setup when choosing scratch; it must have enough space.
 
@@ -255,7 +285,7 @@ those containers. On Slurm they run together inside one job allocation, not
 as separate cluster jobs. Planning prints the effective concurrency and
 reservation. Failed-batch splitting proceeds sequentially within each batch.
 
-Use `--skip_pt_screen` on either build command to opt out. When importing a
+Use `--skip_pt_screen` on `build_db` to opt out. When importing a
 MetaCyc data directory instead of a SIF, provide `--screen_image /path/to/ptools.sif`
 or first register an image with `build_pt`; directory data alone cannot run the
 compatibility checks. An unresolved screen fails the screening stage while

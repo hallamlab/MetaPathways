@@ -1,0 +1,4 @@
+{
+  "image": "docker://quay.io/hallamlab/metapathways@sha256:0adda475663dec838e4466e8adbf08fc74b29a9970a4489053a631bad03b79ae",
+  "validation": "https://github.com/hallamlab/MetaPathways/actions/runs/43079764001"
+}

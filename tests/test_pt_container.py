@@ -20,6 +20,12 @@ class ContainerTests(unittest.TestCase):
         self.installer = self.root / 'pathway-tools-29.5-install'
         self.installer.write_bytes(b'fixture installer')
         self.image = self.root / 'pt.sif'
+        base = self.root/'base.sif'
+        base.write_bytes(b'public dependencies')
+        for name, value in (('host_check', None), ('prepared_base', base), ('validate_base', None)):
+            mock = patch('metapathways.pt_setup.'+name, return_value=value)
+            mock.start()
+            self.addCleanup(mock.stop)
         patch_download = patch.object(pt, 'download_patches', return_value={'files': [], 'version': '29.5'})
         self.real_download_patches = pt.download_patches
         self.download_patches = patch_download.start()

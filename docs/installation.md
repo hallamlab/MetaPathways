@@ -37,6 +37,21 @@ Run the subsequent commands from that workspace (`cd ~/mp-test` above), so
 `-d MPDB` selects its reference database. `build_db --test` also copies missing
 bundled reference seeds into its destination, preserving existing files.
 
+### Before adding licensed Pathway Tools
+
+If you want MetaCyc or pathway inference, check container readiness in the active
+Mamba environment before obtaining/running the licensed installer:
+
+```bash
+metapathways build_pt --check -o ~/mp-containers
+```
+
+This downloads nothing and needs no sudo. On a compatible host, MP handles the
+public container dependencies automatically. If host policy blocks the check,
+the log identifies what your administrator needs to investigate; Mamba cannot
+grant host permissions. Follow the [Pathway Tools setup](pathway-tools.md#host-prerequisites)
+before continuing with licensed features. The public test above is independent.
+
 ## 2. Quay: Docker or Apptainer
 
 ```bash

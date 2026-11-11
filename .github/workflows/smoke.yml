@@ -11,6 +11,38 @@ permissions:
   contents: read
 
 jobs:
+  pathway-tools-readiness:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v4.1.0
+        with:
+          activate-environment: readiness
+          python-version: '3.11'
+          channels: conda-forge
+          channel-priority: strict
+          auto-activate: false
+          conda-remove-defaults: true
+      - name: Check actual Mamba runtime and pinned public dependency image
+        shell: bash -el {0}
+        run: |
+          conda install --yes -c conda-forge apptainer
+          python - <<'PY'
+          import os, shutil
+          from pathlib import Path
+          from metapathways.pt_setup import host_check, prepared_base, validate_base
+          runtime = shutil.which('apptainer')
+          host_check(runtime, Path(os.environ['RUNNER_TEMP']) / 'readiness')
+          validate_base(runtime, prepared_base(runtime))
+          PY
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: pathway-tools-readiness
+          path: ${{ runner.temp }}/readiness/apptainer-check.log
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
