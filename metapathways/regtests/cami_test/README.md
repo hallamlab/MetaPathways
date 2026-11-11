@@ -18,17 +18,6 @@ Manifest paths are relative to the manifest file. Copy the whole bundle when mov
 
 For each sample, the preparation script ranks contigs at least 20 kb long by source read density, chooses one contig from each of three different genomes, and retains at most 50 kb per contig. It scans the first 250,000 original interleaved read pairs, aligns them to the retained regions with minimap2, and keeps at most 3,000 complete pairs with at least one primary alignment at MAPQ 20 or higher. Both original mates and qualities are retained even if only one mate maps. Every retained contig must have at least ten selected pairs aligning to it. The cap and selection deliberately bias coverage; this is interface-test data, not an accuracy or abundance benchmark. Three short genome fragments are not three complete MAGs.
 
-Maintainers can reproduce the data from an MP manifest pointing at the original local CAMI downloads:
-
-```bash
-python scripts/prepare_cami_test.py \
-  --source-manifest /path/to/full-cami-manifest.tsv \
-  --output /path/to/new-cami-test \
-  --minimap2 /path/to/minimap2
-```
-
-Run from the source checkout. The output directory must not already exist. Source assemblies must have a sibling `gsa_mapping.tsv`, and the selected sample read inputs must be the original interleaved FASTQs. Python and minimap2 are required. Temporary read subsets and alignments are cleaned up after preparation. Reproduction requires the original large CAMI files; tests use the bundled small files directly.
-
 ## Source attribution
 
 Cropping, read selection, mate separation and MP-format maps are the modifications made here. The data retain their source terms; the MP software license does not relicense third-party data. The source collection is CAMI II; the original CAMI paper credits the initiative ([Sczyrba et al., 2017](#cami-references)).

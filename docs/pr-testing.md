@@ -4,7 +4,7 @@
 
 Test the exact proposed commit before merging to `dev`. Record outstanding checks in the PR. Production promotion is a separate `dev` → `main` PR, as described in the [release process](releasing.md). Use a clean installation and a fresh output directory. Record `git rev-parse HEAD`, the platform, and the installed dependency versions. A version number alone does not identify the tested commit.
 
-1. Follow [source installation](getting-started.md). Check out the PR's exact commit after cloning; do not test an older editable installation by accident. Record the resolved dependency versions, including the pinned MAGSplitter and Camelot helpers installed with MP.
+1. Follow [source installation](development.md#install-from-source). Check out the PR's exact commit after cloning; do not test an older editable installation by accident. Record the resolved dependency versions, including the pinned MAGSplitter and Camelot helpers installed with MP.
 2. Follow the [CAMI II test walkthrough](test.md) ([Meyer et al., 2022](#cami-references)), running its single-sample and two-sample commands with `--skip_ptools`. Check required task outcomes, nonempty abundance outputs, the three genome-bin assignments per sample, and distinct paired read paths.
 3. Repeat the two-sample command unchanged. All successful workflow tasks, including `COMPUTE_TPM`, should report `ALREADY_COMPUTED`. Report rebuilding may still run. A repeat is not a fresh performance measurement.
 4. Run all three inputs through automatic discovery with a new output directory. Confirm the same sample IDs and input associations as `all.tsv`. Test an intentionally mismatched filename in a separate copy: planning must stop with an actionable input-layout error.

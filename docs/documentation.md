@@ -58,3 +58,32 @@ These commands require CairoSVG and the installed Trebuchet MS font. Do not
 hand-edit generated SVGs. The nodal generator preserves branch organization,
 adds junction markers and applies the compact spacing used by the landing-page
 figure.
+
+## Keep documentation separated by audience
+
+- **Users:** installation, required setup, default commands, results and recovery.
+  Keep prerequisites and the effect of destructive operations visible.
+- **Advanced users:** optional analysis choices and tuning. Use native expandable
+  panels using the `{advanced}` directive with a descriptive title. It renders a
+  native, keyboard-accessible disclosure with an `Advanced user options:` summary. No sudo is implied.
+- **Development:** source setup, tests, benchmark validation evidence, implementation
+  contracts, fixture generation, compatibility-list maintenance and publication.
+
+Keep existing section anchors when wrapping optional content. The documentation
+script opens panels containing a linked anchor. Do not hide required setup inside
+a collapsed panel. The user CLI reference excludes maintainer-only commands;
+`generate_cli_docs.py` generates both references together.
+
+Inside panels, use explicit labels and rubrics instead of Markdown headings so
+the rendered page keeps a valid section structure and existing links still work:
+
+`````text
+````{advanced} custom inputs
+
+(custom-inputs)=
+```{rubric} Custom inputs
+```
+
+Optional instructions go here.
+````
+`````

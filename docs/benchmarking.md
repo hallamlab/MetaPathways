@@ -38,7 +38,7 @@ Default Nextflow traces include status/exit, submit time, duration, realtime, CP
 
 Peak RSS is sampled task memory, not its requested reservation and not the peak of the whole concurrent workflow. Do not sum per-task peaks to claim a simultaneous machine peak. CPU utilization can exceed 100% for threaded work; it is not automatically normalized by the requested CPU count. Approximate CPU-seconds derived from utilization and elapsed time must be labeled as derived, not directly measured.
 
-The standard trace does **not** provide a continuous whole-server CPU/RAM/disk time series, energy usage or complete network-traffic accounting. Those require a separate host monitor started with the benchmark. For the planned stage-runtime/resource figure, task-level trace measurements are appropriate; they do not support claims about an unmeasured whole-host peak.
+The standard trace does **not** provide a continuous whole-server CPU/RAM/disk time series, energy usage or complete network-traffic accounting. Those require a separate host monitor started with the benchmark. For a stage-runtime/resource figure, task-level trace measurements are appropriate; they do not support claims about an unmeasured whole-host peak.
 
 ## Supplementary table structure
 
@@ -93,7 +93,7 @@ The final supplementary table and figure still require extraction, joining and q
 
 ## Compare one server with a Slurm cluster
 
-Test the three small test samples on the cluster before submitting the full benchmark. Install the same feature-branch revision on shared storage, and activate its environment before starting MP. Nextflow submits with the logged-in user's Slurm identity; there are no MP password flags. Confirm that `sbatch`, `squeue`, and `scancel` are available and that compute nodes can use the same software, database and input paths.
+Test the three small test samples on the cluster before submitting the full benchmark. Install the same MP release on shared storage, and activate its environment before starting MP. Nextflow submits with the logged-in user's Slurm identity; there are no MP password flags. Confirm that `sbatch`, `squeue`, and `scancel` are available and that compute nodes can use the same software, database and input paths.
 
 For a first three-sample cluster test, adapt the shared paths and allocation names:
 

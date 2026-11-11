@@ -102,7 +102,12 @@ then the registration file. MP does not scan for a native Pathway Tools installa
 The SIF must remain at its recorded path and be readable on the execution nodes.
 Public-only references such as SwissProt do not need Pathway Tools.
 
-## Already have a licensed MetaCyc source?
+````{advanced} existing licensed sources
+
+(already-have-a-licensed-metacyc-source)=
+
+```{rubric} Already have a licensed MetaCyc source?
+```
 
 You do not need to rebuild an image. Supply an existing SIF explicitly:
 
@@ -120,10 +125,19 @@ one. `--skip_pt_screen` explicitly omits that screening; see its
 [scope and limitations](pathway-tools.md#defaults-and-explicit-choices).
 Missing sources or required files stop planning before reference downloads begin.
 
-## Other reference choices
+````
+
+````{advanced} additional reference choices
+
+(other-reference-choices)=
+
+```{rubric} Other reference choices
+```
 
 UniRef databases are substantially larger than the test references. eggNOG needs
 a supplied FASTA at `MPDB/functional/eggnog`; MP does not download it. Place that
 file in an otherwise new MPDB before selecting `--func eggnog`. Public downloads
 are not all version-pinned. Preserve release records and checksums with your
 analysis, and keep licensed sources according to their vendor terms.
+
+````

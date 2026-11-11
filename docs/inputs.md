@@ -54,7 +54,12 @@ metapathways analysis_wf \
   --skip_ptools
 ```
 
-## Organize with links, without copying large reads
+````{advanced} organizing with symlinks
+
+(organize-with-links-without-copying-large-reads)=
+
+```{rubric} Organize with links, without copying large reads
+```
 
 A symbolic link gives an existing file another path without duplicating its data. Use absolute targets so moving the working directory does not change what they point to:
 
@@ -67,7 +72,14 @@ ln -s /data/original/contig_to_genome.tsv my_inputs/mag_maps/SampleA.tsv
 
 The original files must remain readable throughout the workflow. Read files may be shared by distinct assembly rows, including hard/symbolic aliases. Assemblies and MAG maps cannot be reused, and paired mates cannot name the same file. Each assembly is mapped independently. Independent test fixture copies are intentional and documented separately.
 
-## Custom manifest: keep every file where it is
+````
+
+````{advanced} custom manifests
+
+(custom-manifest-keep-every-file-where-it-is)=
+
+```{rubric} Custom manifest: keep every file where it is
+```
 
 Use a tab-separated file with this exact header:
 
@@ -97,6 +109,8 @@ metapathways analysis_wf --manifest /project/samples.tsv \
 ```
 
 Do not combine `--manifest` with discovery flags, `-1`, `-2` or `--interleaved`. The manifest carries those choices per sample. The resolved manifest and planned entities are saved in the output root as `inputs.resolved.tsv` and `inputs.entities.json`.
+
+````
 
 ## Contig-to-genome map format
 

@@ -33,7 +33,12 @@ Use `--keep_work` to retain the defaults. Explicit `--work_dir` and `--conda_cac
 
 Durable receipts remain under `OUTPUT/.metapathways/COMMAND/receipts`. Repeating a command checks tracked inputs, outputs and command signatures, permitting reuse even after temporary cleanup. Never remove final outputs expecting receipts alone to recover them. To force one annotation stage, use its `redo` flag; `--force_redo` reruns all annotation stages. Old read-mapping output without a current receipt is deliberately recomputed once. FAST searches also require a matching success receipt: a standalone output file does not establish workflow completion. Use `--fast_local_db` within the workflow to preserve normal receipt-based reuse.
 
-## Large Slurm runs
+````{advanced} large Slurm runs
+
+(large-slurm-runs)=
+
+```{rubric} Large Slurm runs
+```
 
 Run large controllers in a compute allocation where cluster policy permits job
 submission from compute nodes. `--max_tasks` bounds submitted jobs; it does not
@@ -51,3 +56,5 @@ previously deleted assignment summaries are not restored.
 
 See [cluster troubleshooting](troubleshooting.md#slurm-controller-and-file-quota-failures)
 for failure recovery.
+
+````

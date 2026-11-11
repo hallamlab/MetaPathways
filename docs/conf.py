@@ -1,7 +1,10 @@
 """Build the guides without importing MP or installing analysis tools."""
 import ast
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent / '_ext'))
 
 project = 'MetaPathways'
 author = 'Hallam Lab and MetaPathways contributors'
@@ -10,7 +13,7 @@ metadata = ast.parse((Path(__file__).parents[1] / 'metapathways/_version.py').re
 release = next(ast.literal_eval(n.value) for n in metadata.body
                if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == '__version__' for t in n.targets))
 version = release
-extensions = ['myst_parser', 'sphinxcontrib.mermaid', 'sphinx_copybutton']
+extensions = ['audience', 'myst_parser', 'sphinxcontrib.mermaid', 'sphinx_copybutton']
 # Keep multiline commands intact; omit highlighted console prompts/output.
 copybutton_exclude = '.linenos, .gp, .go'
 source_suffix = {'.md': 'markdown', '.rst': 'restructuredtext'}
@@ -24,6 +27,7 @@ html_title = f'MetaPathways {release}'
 html_baseurl = os.environ.get('READTHEDOCS_CANONICAL_URL', 'https://hallamlab-metapathways.readthedocs.io/en/latest/')
 html_static_path = ['assets']
 html_css_files = ['docs.css']
+html_js_files = ['docs-audience.js']
 mermaid_version = '11.12.1'
 mermaid_init_config = {'startOnLoad': False, 'theme': 'neutral', 'flowchart': {'htmlLabels': False}}
 mermaid_fullscreen = True

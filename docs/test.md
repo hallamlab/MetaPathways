@@ -130,13 +130,9 @@ Tiny genome fragments and sparse annotation references may yield few or no pathw
 
 ## Provenance and validation
 
-The bundle's [README](test-bundle.md), {download}`provenance.json <../metapathways/regtests/cami_test/provenance.json>`, and {download}`validation.json <../metapathways/regtests/cami_test/validation.json>` describe selection, original sample paths, retained contig regions, matching read counts, hashes, and checks performed. The preparation script is {download}`scripts/prepare_cami_test.py <../scripts/prepare_cami_test.py>`. No Pathway Tools software or MetaCyc sequence/database material is included.
+The bundle's [README](test-bundle.md), {download}`provenance.json <../metapathways/regtests/cami_test/provenance.json>`, and {download}`validation.json <../metapathways/regtests/cami_test/validation.json>` describe selection, original sample paths, retained contig regions, matching read counts, hashes, and checks performed. No Pathway Tools software or MetaCyc sequence/database material is included.
 
 Input validation covers all manifests, automatic discovery, intact mate pairing, complete contig-to-genome maps and gene prediction on every retained contig. It does not substitute for the test executing the full workflow above. See [benchmarking](benchmarking.md) before collecting publication statistics from the complete CAMI samples.
-
-## Recorded three-sample validation
-
-The 2026-10-02 local SwissProt test run completed all 51 tasks successfully. The [audit record](validation/reviewer-2026-10-02.json) confirms all 393 CDS records were retained, paired read identifiers matched, all 421 gene/RNA abundance records and 9 contig records matched their source measurements, and taxonomy remained tied to each reference database and target. Each sample produced three CAMI genome bins. The 28 report placeholders were RNA features, not missing CDS annotations. Skin_28 had no rRNA queries, explaining its two BLAST empty-query warnings. This run used `--skip_ptools`; it does not establish successful PGDB construction or validate full-scale/HPC performance.
 
 ```{include} includes/cami-references.md
 ```

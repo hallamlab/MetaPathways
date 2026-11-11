@@ -2,7 +2,7 @@
 
 [Home](index.md) · [Complete CLI reference](cli-reference.md) · [Stage/output reference](workflow.md)
 
-Use `metapathways COMMAND --help` for your installed revision. `metapathways version` reports the package version; also record the source Git revision. These examples assume an activated environment and writable output paths. Replace `/path/to/MPDB` and input filenames before running them.
+Use `metapathways COMMAND --help` for your installed revision. `metapathways version` reports the package version. These examples assume an activated environment and writable output paths. Replace `/path/to/MPDB` and input filenames before running them.
 
 ## Choose a command
 
@@ -38,7 +38,7 @@ The first command plans; the second downloads/formats. `--func` selects function
 
 `-a fast` and `-a blast` choose the annotation index format. Match them with `run/analysis_wf --annotation_algorithm FAST` or `BLAST`. Build into a new directory when changing reference versions during an ongoing experiment. Database download/build time is separate from sample-analysis runtime.
 
-On this command `-t` is the legacy aggregate CPU limit, unlike per-tool `run --threads`. Prefer explicit `--max_cpus` when communicating a shared resource budget. `--dryrun` performs no downloading/indexing. Historical Snakefiles are not the supported execution path.
+On this command `-t` is the aggregate CPU limit, unlike per-tool `run --threads`. Prefer explicit `--max_cpus` when communicating a shared resource budget. `--dryrun` performs no downloading/indexing.
 
 ## run: annotations and optional abundance
 
@@ -49,7 +49,7 @@ metapathways run -i SampleA.fasta -o results -d /path/to/MPDB \
   --threads 8 --max_cpus 16 --max_memory '64 GB'
 ```
 
-This writes `results/SampleA/`. For interleaved pairs replace the two read arguments with `-1 SampleA_interleaved.fastq.gz --interleaved`. Single-end uses `-1` alone. No reads means no read abundance. MP passes the actual R2 to CoverM and uses the exact expected CoverM BAM for counting; a leftover sorted BAM is not a replacement for missing mapping output.
+This writes `results/SampleA/`. For interleaved pairs replace the two read arguments with `-1 SampleA_interleaved.fastq.gz --interleaved`. Single-end uses `-1` alone. No reads means no read abundance.
 
 The command prepares Pathway Tools inputs but does not run Pathway Tools. For protein FASTA, standalone `run --input_format fasta-amino` uses compatible annotation stages; the complete nucleotide workflow and DNA/read/genome-splitting examples do not apply unchanged.
 

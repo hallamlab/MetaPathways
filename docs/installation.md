@@ -68,15 +68,7 @@ The image includes the same workflow dependencies and test data. Follow the [Doc
 
 ## 3. Local installation from GitHub
 
-```bash
-git clone https://github.com/hallamlab/MetaPathways.git
-cd MetaPathways
-mamba env create -f docker/conda_base.yml
-mamba run -n metapathways python -m pip install .
-conda activate metapathways
-```
-
-Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-test`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
+Source installation instructions are in [Development](development.md#install-from-source). For normal use, choose Mamba or a release container above.
 
 ## Upgrade to 4.0.8
 

@@ -17,3 +17,13 @@
 /* Keep copy controls discoverable on touch screens and by keyboard. */
 button.copybtn { opacity: 1; }
 button.copybtn:focus-visible { outline: 2px solid #2980b9; outline-offset: 2px; }
+
+/* Optional user settings remain keyboard-accessible native disclosures. */
+.mp-advanced { border: 1px solid #c8d6e5; border-radius: 4px; margin: 1.25rem 0; padding: .8rem 1rem; }
+.mp-advanced > summary { cursor: pointer; color: #24577c; font-weight: 600; }
+.mp-advanced > summary:focus-visible { outline: 2px solid #2980b9; outline-offset: 4px; }
+.mp-advanced[open] > summary { margin-bottom: 1rem; }
+@media print {
+  .mp-advanced { border: 0; padding: 0; }
+  .mp-advanced > * { display: block !important; }
+}

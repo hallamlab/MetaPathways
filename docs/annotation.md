@@ -58,7 +58,12 @@ taxonomic hit.
 
 Pass a directory of FASTA files to `-i`; each file becomes a sample with its own output directory. Use unique, simple filenames and `--samples` to select a subset. Read mapping arguments apply to one sample only: run separate commands for samples with different FASTQs. CPU/memory budgets are per invocation, so independent MP commands do not share a global resource limit.
 
-## Stage controls
+````{advanced} stage controls and targeted reruns
+
+(stage-controls)=
+
+```{rubric} Stage controls
+```
 
 Stage flags accept `yes`, `skip` or `redo`. For example:
 
@@ -68,3 +73,5 @@ metapathways run -i sample.fasta -o results -d /data/MPDB \
 ```
 
 `yes` reuses valid outputs, `redo` executes the stage again, and `skip` requires any needed downstream inputs to already exist. `--force_redo` forces all annotation stages. Changes to tracked inputs or outputs invalidate task receipts. See the [workflow guide](workflow.md) before skipping dependencies.
+
+````

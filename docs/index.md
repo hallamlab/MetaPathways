@@ -42,7 +42,6 @@ analysis
 annotation
 pgdb-workflow
 commands
-resources
 execution
 troubleshooting
 ```
@@ -55,26 +54,30 @@ troubleshooting
 
 reports-tutorial
 reports-reference
-results-schema
-architecture
 data-flow
 detailed-workflow
 workflow
-cli-reference
-benchmarking
 reproducibility
 ```
 
-## Maintain and contribute
+## Go further when you need to
+
+The guides keep the normal workflow visible. Expand **Advanced user options**
+for non-default settings; these sections do not imply administrator or sudo
+access. Contributor and maintainer procedures live in **Development**.
+
+```{toctree}
+:maxdepth: 1
+:caption: Advanced users
+
+advanced
+```
 
 ```{toctree}
 :maxdepth: 1
 :caption: Development
 
-pr-testing
-releasing
-release-readiness
-documentation
+development
 ```
 
 Source code and documentation: [GitHub](https://github.com/hallamlab/MetaPathways). Questions, bugs and feature requests: [GitHub issues](https://github.com/hallamlab/MetaPathways/issues). See the [README](https://github.com/hallamlab/MetaPathways#team-support-and-citation) for contributors and citation.

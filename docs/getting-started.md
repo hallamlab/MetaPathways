@@ -28,11 +28,9 @@ Choose one route, in this order:
 
 1. **[Conda package with Mamba](installation.md#1-conda-package-with-mamba-preferred)** — preferred for local servers and HPC. Install the package and activate the environment before each session. Workflow helpers are included.
 2. **[Quay Docker or Apptainer](containers.md)** — use a versioned image and the container-specific three-sample instructions. References and outputs must be writable; the public MP image does not contain licensed Pathway Tools.
-3. **[Local installation from GitHub](installation.md#3-local-installation-from-github)** — build the supporting Mamba environment, then install MP with pip from your checkout. Use this route to install from a local checkout or make changes to MP.
 
 Windows and macOS users can connect to a Linux server. These instructions do not claim a tested native Windows, Apple Silicon, or WSL installation. If Mamba is not installed, follow the official [Miniforge instructions](https://github.com/conda-forge/miniforge) or your HPC's software setup instructions. No MP-specific environment variable is required.
 
-The source installation makes a fixed copy of the checked-out code. After updating the checkout, reinstall with `python -m pip install .`. Record `git rev-parse HEAD` alongside `metapathways version`. Developers may explicitly choose an editable installation with `-e .`. Do not update an installation while it is running an analysis.
 
 Confirm the installation:
 
@@ -53,7 +51,6 @@ magsplitter --help
 
 Follow the **[three-sample test walkthrough](test.md)**. It uses the same `analysis_wf` command as a real analysis, with small bundled references, assemblies, paired reads and genome maps. It exercises annotation, read abundance, genome splitting and the reports without requiring Pathway Tools. Database preparation downloads enzyme and taxonomy support records, so internet access is required.
 
-The older `run --test` K12 example remains available for compatibility, but it does not exercise the complete workflow and is not the complete workflow test.
 
 ## Your first real assembly
 

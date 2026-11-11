@@ -48,16 +48,28 @@ Discovery does not recurse, merge sequencing lanes, or guess unmarked FASTQ layo
 
 Append `--dryrun` to validate inputs and write the combined task plan without running biological tools. This still creates output directories, logs, staged symlinks and `inputs.resolved.tsv`. Remove `--dryrun` from the same command to execute. Input paths may contain spaces because MP stages symlinks; the output and MPDB paths must currently use letters, digits, underscores, hyphens, periods and slashes for compatibility with legacy tool commands.
 
-## FAST searches on cluster storage
+````{advanced} FAST on cluster storage
 
-With MetaPathways 4.0.3 or newer, add `--fast_local_db` to stage FAST indexes
+(fast-searches-on-cluster-storage)=
+
+```{rubric} FAST searches on cluster storage
+```
+
+Add `--fast_local_db` to stage FAST indexes
 on compute-node scratch when shared-filesystem reads stall. Add, for example,
 `--func_search_time_limit 2h --time_limit 48h` to give searches a shorter Slurm
 limit than PGDB tasks. Neither option enables automatic retries. See the
 [scratch and resource guide](resources.md#fast-databases-on-shared-storage)
 for disk requirements, worker path selection and a complete command.
 
-## Custom analysis manifest
+````
+
+````{advanced} custom manifests, long reads and sample subsets
+
+(custom-analysis-manifest)=
+
+```{rubric} Custom analysis manifest
+```
 
 Use a tab-separated file with this **exact header and column order**:
 
@@ -79,7 +91,10 @@ metapathways analysis_wf \
 
 Do not combine `--manifest` with `-i`, discovery-directory flags, `--no_reads` or `--no_mags`. The single-sample `-1`, `-2`, `--interleaved` and `--test` options are not used by `analysis_wf`; each row declares its own reads and sample ID. Required annotation stages cannot be skipped; successful tasks are reused through receipts.
 
-### Several assemblies of the same reads
+(several-assemblies-of-the-same-reads)=
+
+```{rubric} Several assemblies of the same reads
+```
 
 Give each assembly a distinct sample ID, for example `S1_SPAdes` and
 `S1_MEGAHIT`, and point their manifest rows at the same read files. Reads may be
@@ -87,7 +102,10 @@ shared across rows, including symlinks and hardlinks. Assemblies and MAG maps
 must remain distinct, and paired mates must be different files. Each assembly
 gets its own alignment and counts because its coordinates differ.
 
-### Long reads
+(long-reads)=
+
+```{rubric} Long reads
+```
 
 Use `long_hifi`, `long_pb` or `long_ont` in the manifest, with one FASTQ in
 `reads_1` and an empty `reads_2`. These select CoverM's `minimap2-hifi`,
@@ -104,7 +122,10 @@ read library; combined short/long libraries in the same row are not supported.
 Use separate assembly rows/workflows for separate library analyses, without
 pooling their abundance estimates.
 
-### Run a sample subset
+(run-a-sample-subset)=
+
+```{rubric} Run a sample subset
+```
 
 To run a single sample, keep the full manifest and select its `sample_id`:
 
@@ -136,6 +157,8 @@ may have no report data yet. Do not run subsets concurrently in one output.
 Unknown IDs are rejected. Appending/removing manifest rows still requires a new
 output directory; do not edit `inputs.resolved.tsv` to bypass this guard.
 
+````
+
 ## Outputs, restarting and exploration
 
 By default MP keeps all sample outputs. Add `--compact_results` to `analysis_wf` to remove large intermediates after each sample finishes while retaining rebuildable reports, final tables, logs and benchmark traces. PGDB archives and `bwa/*.featurecounts.txt.summary` assignment totals are retained; builds and extraction use worker scratch, and diagnostics are bundled. See [compact results and restart behavior](benchmarking.md#compact-results-on-limited-storage).
@@ -155,9 +178,7 @@ metapathways report -o /path/to/analysis --serve --no-rebuild
 The portal combines samples and keeps sample IDs on all related records so identically named MAGs and ORFs in different samples remain distinct.
 
 For large Slurm datasets, use the [controller job guidance](execution.md#large-slurm-runs).
-MP now streams tasks through reusable Nextflow processes, so adding MAGs does not
-add a process operator for every MAG. This reduces controller overhead but does
-not reserve resources on a login node. File-count estimates are advisory; pass
+File-count estimates are advisory; pass
 `--file_quota REMAINING_FILES` to warn when estimated PGDB products approach your
 remaining allowance. Check actual quotas with your cluster tools.
 

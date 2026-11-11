@@ -19,7 +19,12 @@ If you already have a working SIF or complete MetaCyc export, see
 [existing sources](databases.md#already-have-a-licensed-metacyc-source).
 Do not rerun the image build merely to add a database.
 
-## Defaults and explicit choices
+````{advanced} inference settings and defaults
+
+(defaults-and-explicit-choices)=
+
+```{rubric} Defaults and explicit choices
+```
 
 | Setting | MP default | Your alternative |
 | --- | --- | --- |
@@ -35,7 +40,14 @@ The compatibility list removes only unsafe **explicit reaction assignments**,
 not genes, annotations or sequences; the same reaction may still be inferred
 later. The sections below explain the evidence, limits and diagnostic records.
 
-## Building from the MP Apptainer container
+````
+
+````{advanced} building inside the MP container
+
+(building-from-the-mp-apptainer-container)=
+
+```{rubric} Building from the MP Apptainer container
+```
 
 The release container includes an unlicensed Ubuntu dependency base. `build_pt`
 selects it automatically, avoiding package installation inside the restricted
@@ -43,6 +55,8 @@ nested build. Your licensed installer and official patches are still required
 and remain private. See [nested containers](containers.md#nested-pathway-tools-containers)
 for tested behavior and host limitations. On hosts affected by Java/FUSE stalls,
 launch the outer MP SIF with `--unsquash`; this needs temporary extraction space.
+
+````
 
 ## Understand the three different databases
 
@@ -202,7 +216,12 @@ Every PGDB task uses one CPU. Concurrency comes from multiple independent PGDB t
 
 SIF tasks receive private home, data and temporary state. MP also isolates X-display sockets; independent PGDBs can run together without the native installation's shared state. Both `ptools` and `analysis_wf` use the registered SIF or an explicit `--image`. A missing SIF stops planning with setup instructions; MP does not silently fall back to a native installation.
 
-## Choose a taxonomic scope
+````{advanced} taxonomic scope
+
+(choose-a-taxonomic-scope)=
+
+```{rubric} Choose a taxonomic scope
+```
 
 `--taxprune` enables taxonomic pruning. `--taxonomic_scope` selects the organism taxon assigned to the staged PGDB inputs:
 
@@ -221,6 +240,8 @@ The scope applies to all selected entities in that invocation. It guides pathway
 
 See the vendor User Guide's batch PathoLogic discussion and [MP's diagnostic detail](workflow.md#pathway-tools-failure-diagnostics). The installed PDF is authoritative for the installed version.
 
+````
+
 ## Explicit reaction blacklist
 
 Before pathway inference, MP automatically filters explicit reaction assignments
@@ -232,15 +253,20 @@ infer the same reactions later through other evidence.
 Removed assignments and their reasons are recorded in `ptools-reaction-filter.json`
 with the run diagnostics, including the diagnostic archive for compact runs.
 
-## Transport inference and sequence-backed inputs
+````{advanced} transport inference
+
+(transport-inference-and-sequence-backed-inputs)=
+
+```{rubric} Transport inference and sequence-backed inputs
+```
 
 Transport inference (TIP) is enabled by default for SIF runs. It uses annotations to identify probable transport proteins and associate or create transport reactions. High- and low-confidence predictions are reported separately. Low-confidence or ambiguous annotations are not equivalent to experimentally demonstrated transport.
 
 `--no_transport_inference` disables TIP for a controlled comparison. It is accepted by `ptools` and `analysis_wf`. Record it when comparing pathway/reaction totals; TIP can change reactions without changing the number of base pathways.
 
-MP stages real per-contig DNA sequences, feature coordinates, strands and available Prodigal genetic codes before invoking Pathway Tools. This allows Pathway Tools to derive its protein BLAST database. The BLAST tools **inside the SIF** serve that function; they are separate from FAST/BLAST annotation indexes **in MPDB**.
 
-Annotations with multiple EC assignments are written as separate EC entries. Provisional EC identifiers are retained and may be rejected by Pathway Tools. Recognized tRNA display names separate amino-acid labels from anticodons, while stable feature IDs are preserved. Some ID-parsing warnings can remain. Neither formatting step invents biological assignments.
+
+````
 
 ## Outputs, warnings and failures
 
@@ -263,82 +289,30 @@ Community failures fail the workflow. MAG failures may be optional, allowing oth
 
 Failed on-disk PGDBs are retained under `diagnostics/ATTEMPT/failed-pgdbs/`. MP does not automatically certify or publish partial recovery. Retry with the same parameters after fixing the cause, and inspect the new execution record. [Restart guidance](execution.md#logs-temporary-files-and-restarting) explains reuse and targeted reruns.
 
-## Screen reaction compatibility (maintainers)
+## Automatic compatibility screening during MetaCyc builds
 
-After building a licensed Pathway Tools image, maintainers can screen the explicit
-reaction IDs in an MPDB against that image:
+`build_db --func metacyc` automatically checks reaction compatibility with the
+selected licensed SIF. This adds time to database setup and helps prevent known
+inference failures. No separate screening command is needed. If screening fails,
+keep the diagnostic logs and repeat the same database command after resolving
+the cause; prepared references are retained.
 
-```bash
-metapathways screen_pt -d MPDB -o reaction-screen --max_tasks 1
+````{advanced} screening resources and alternative sources
+
+Screening honors `--max_tasks`, `--max_cpus` and `--max_memory`; each container
+uses one CPU and the requested `--memory`. On Slurm, screening containers run
+inside one job allocation. MP prints the effective reservation before execution.
+When importing a MetaCyc data directory, provide `--screen_image` or register a
+SIF first. `--skip_pt_screen` on `build_db` explicitly skips compatibility testing.
+
+````
+
+````{advanced} container retry diagnostics
+
+(intermittent-container-startup-failures)=
+
+```{rubric} Intermittent container startup failures
 ```
-
-The command uses the image registered by `build_pt`; use `--image /path/to/ptools.sif`
-to select another image. Each container has a private home and temporary PGDB.
-Publication downloads are disabled. `--scratch_dir /path/to/local/scratch` places
-these temporary builds on local storage; only inputs, diagnostic logs and receipts
-are retained in the output. This is a local maintainer command, not a Slurm workflow.
-
-The screen first builds a no-reaction baseline, then tests batches of 100 reaction
-IDs. Failed batches are split until individual triggers are isolated. A candidate
-requires two isolated failures and a successful no-reaction control. Timeouts and
-uncertain results are recorded as inconclusive. Batch failures whose two halves
-pass are recorded separately as possible interactions.
-
-For a targeted check:
-
-```bash
-metapathways screen_pt -d MPDB -o reaction-check \
-  --reactions TRANS-RXN8J2-121
-```
-
-Repeat the same command to reuse completed attempts and retry interrupted or
-inconclusive attempts; earlier diagnostics are preserved. The image, mapping table and
-screen settings must match the saved checkpoint; use a new output directory when
-changing them. `--max_tasks` can be changed on resume. Each build defaults to a
-30-minute timeout (`--timeout`, in seconds).
-
-Review `summary.json`, `blacklist-candidates.json` and each attempt's logs before
-adding any entry to the shipped blacklist. Standalone candidates are not activated unless you explicitly use `--publish`.
-Publication requires a full screen with no inconclusive or interaction failures. Synthetic explicit-ID screening does not certify all enzyme names,
-taxonomic contexts or combinations of reactions.
-
-### Automatic compatibility screening during MetaCyc builds
-
-`build_db -d MPDB --func metacyc`
-now screen reactions **by default**, after preparing MetaCyc. No additional user
-command is needed. The screen tests the licensed SIF and database together, bisects
-failed batches, and requires repeated isolated failures plus successful controls.
-It adds time to the build and retains screen evidence under
-`MPDB/.metapathways/ptools-screens/`. Screening honors `--max_tasks`, capped by the CPU and memory budgets. Each
-PTools container uses one CPU; `--memory` is its memory reservation. For example,
-`--max_tasks 32 --memory '8 GB'` can screen 32 batches concurrently when 32 CPUs
-and 256 GB of memory are available. Local runs default to available resources;
-Slurm defaults to four screening containers if `--max_tasks` is omitted.
-The outer Nextflow screening task reserves the aggregate CPU and memory for
-those containers. On Slurm they run together inside one job allocation, not
-as separate cluster jobs. Planning prints the effective concurrency and
-reservation. Failed-batch splitting proceeds sequentially within each batch.
-
-Use `--skip_pt_screen` on `build_db` to opt out. When importing a
-MetaCyc data directory instead of a SIF, provide `--screen_image /path/to/ptools.sif`
-or first register an image with `build_pt`; directory data alone cannot run the
-compatibility checks. An unresolved screen fails the screening stage while
-retaining the prepared database and diagnostic checkpoints.
-
-A completed default screen publishes
-`MPDB/functional_categories/ptools_reaction_compatibility.json`. MP finds it using
-the reference database recorded in the sample run log and checks its mapping and
-SIF fingerprints before using it for PGDB builds. It records the selected list in
-`ptools-reaction-filter.json`. A mismatch uses only fallback entries confirmed for the selected SIF, rather
-than applying an unrelated database-specific list. If neither matches, MP does
-not assume other versions share the same defects; rebuild MetaCyc with screening
-for the selected image. Compatibility-list changes
-invalidate PGDB checkpoints.
-
-To publish an already completed standalone full screen, repeat its command with
-`--publish`; completed attempts are reused.
-
-## Intermittent container startup failures
 
 PGDB builds automatically retry an explicit Apptainer container-creation mount
 failure up to two times (three attempts total), waiting 5 seconds and then 15
@@ -354,11 +328,4 @@ Task resource/runtime measurements include all attempts and delays; retain these
 records when separating successful execution from infrastructure retry overhead.
 No SIF rebuild or additional command-line flag is required.
 
-## Taxonomic comments in PathoLogic input
-
-MP writes per-feature taxonomic evidence as a `GENE-COMMENT`, preserving existing
-comments. It no longer emits the `TAXONOMIC-ANNOT` input slot rejected by the
-alpha tester's PathoLogic loader. Older inputs are converted in private staging;
-original files and MP's taxonomic annotation tables remain intact. These comments
-are evidence text, not a substitute for the organism taxonomic scope above.
-The comment field is documented in [SRI's PathoLogic input example](https://brg.ai.sri.com/ptools-image-07/Curating.pdf).
+````

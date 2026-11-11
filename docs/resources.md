@@ -12,7 +12,7 @@
 | `analysis_wf --ptools_memory` | Optional PGDB-only override; otherwise inherits `--memory` |
 | `--max_memory` | Currently available host memory, bounded by cgroups |
 | `--max_tasks` | Additional concurrency cap; CPU/memory reservations still apply |
-| `build_db -t` | Legacy total CPU budget; omitted means available CPUs |
+| `build_db -t` | Total CPU budget; omitted means available CPUs |
 | `build_pt -t` | Image-compression CPUs |
 
 For example, permit a total of 16 CPUs while allowing eight threads per capable tool:
@@ -44,7 +44,12 @@ The basic interface is the same locally and on HPC: `--threads 8 --memory '64 GB
 
 Live Slurm execution still needs validation at your site. Configuration and synthetic local scheduling tests do not establish compatibility with every cluster's authentication, filesystem or resource policies.
 
-## Controller resources and large workflows
+````{advanced} large controllers
+
+(controller-resources-and-large-workflows)=
+
+```{rubric} Controller resources and large workflows
+```
 
 Use a compute allocation for large controllers when your site permits nested
 Slurm submissions. The {download}`controller sbatch template <../examples/slurm/analysis-controller.sbatch>`
@@ -64,8 +69,14 @@ The console shows controller output and task completion summaries. Add
 `--verbose` alone does not enable full tool streaming. Full task output is always
 retained in workflow logs, or archived after successful compact runs.
 
+````
 
-## FAST databases on shared storage
+````{advanced} worker-local FAST indexes
+
+(fast-databases-on-shared-storage)=
+
+```{rubric} FAST databases on shared storage
+```
 
 Available in **4.0.3**, `--fast_local_db` copies FAST database indexes to worker-local
 scratch before searching. This avoids random reads directly from Lustre or another
@@ -100,3 +111,5 @@ For standalone `python -m metapathways.MetaPathways_func_search` invocations,
 Prefer staging within the workflow so success receipts are recorded and checked
 on restart. See [search troubleshooting](troubleshooting.md#fast-searches-stall-on-a-shared-filesystem)
 for the limitations of copying externally produced outputs into a failed run.
+
+````
