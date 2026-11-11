@@ -153,7 +153,8 @@ class SetupTests(unittest.TestCase):
                 db.execute(self.root, self.args, [], 'build', launch)
             launch.assert_not_called()
 
-    def test_registered_sif_and_exported_directory_routes(self):
+    @patch('metapathways.nextflow.local_capacity', return_value=(4, '32 GB'))
+    def test_registered_sif_and_exported_directory_routes(self, _):
         from metapathways.metacyc_db import REQUIRED
         image = Path(self.temp.name)/'pt.sif'
         image.write_text('fixture')
