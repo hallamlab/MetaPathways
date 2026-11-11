@@ -1,0 +1,53 @@
+name: Pathway Tools public dependency base
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  base:
+    runs-on: ubuntu-22.04
+    environment: release
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v4.1.0
+        with:
+          activate-environment: base-validation
+          python-version: '3.11'
+          channels: conda-forge
+          channel-priority: strict
+          auto-activate: false
+          conda-remove-defaults: true
+      - name: Install validation runtime
+        shell: bash -el {0}
+        run: conda install --yes -c conda-forge apptainer
+      - name: Build public dependencies and verify rootless use
+        shell: bash -el {0}
+        run: |
+          docker build --pull -f docker/Dockerfile.ptools-base -t mp-ptools-base .
+          docker save mp-ptools-base -o "$RUNNER_TEMP/base.tar"
+          apptainer build "$RUNNER_TEMP/base.sif" "docker-archive://$RUNNER_TEMP/base.tar"
+          apptainer exec --cleanenv "$RUNNER_TEMP/base.sif" sh -ec 'test -s /opt/mp-base-packages.tsv; test ! -e /opt/pathway-tools; blastp -version; makeblastdb -version; command -v xvfb-run'
+          cat > "$RUNNER_TEMP/probe.def" <<EOF
+          Bootstrap: localimage
+          From: $RUNNER_TEMP/base.sif
+          %post
+              /bin/sh -ec 'echo MP-BASE-READY > /opt/mp-base-ready'
+          EOF
+          apptainer build --fakeroot "$RUNNER_TEMP/probe.sif" "$RUNNER_TEMP/probe.def"
+          apptainer exec --containall "$RUNNER_TEMP/probe.sif" grep -qx MP-BASE-READY /opt/mp-base-ready
+      - name: Publish verified public dependency image
+        env:
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+        run: |
+          export DOCKER_CONFIG="$RUNNER_TEMP/base-docker-auth"
+          mkdir -p "$DOCKER_CONFIG"
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          printf '%s' "$QUAY_PASSWORD" | docker login quay.io --username "$QUAY_USERNAME" --password-stdin
+          target="quay.io/hallamlab/metapathways:ptools-base-${GITHUB_SHA}"
+          docker tag mp-ptools-base "$target"
+          docker push "$target"
+          docker inspect --format '{{json .RepoDigests}}' "$target"
