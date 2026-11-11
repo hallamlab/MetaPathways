@@ -22,7 +22,7 @@ class ContainerTests(unittest.TestCase):
         self.image = self.root / 'pt.sif'
         base = self.root/'base.sif'
         base.write_bytes(b'public dependencies')
-        for name, value in (('host_check', None), ('prepared_base', base), ('validate_base', None)):
+        for name, value in (('select_runtime', '/bin/apptainer'), ('host_check', None), ('prepared_base', base), ('validate_base', None)):
             mock = patch('metapathways.pt_setup.'+name, return_value=value)
             mock.start()
             self.addCleanup(mock.stop)

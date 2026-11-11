@@ -6,7 +6,9 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import subprocess
+import sys
 import tempfile
 
 
@@ -136,3 +138,135 @@ def validate_base(executable, image):
                     'test -s /opt/mp-base-packages.tsv; test ! -e /opt/pathway-tools; '
                     'test -x /usr/bin/xvfb-run; test -x /usr/bin/makeblastdb; test -x /usr/bin/blastp'],
                    check=True, env=environment(), timeout=120)
+
+
+# A saved preference is always probed in a new process. Login-node success must
+# never certify a compute node, or a different outer container.
+_SELECTED = {}
+
+
+def runtime_context():
+    return dict(host=socket.gethostname(), outer=os.environ.get('APPTAINER_CONTAINER',
+                os.environ.get('SINGULARITY_CONTAINER', '')),
+                environment=str(Path(sys.executable).parent))
+
+
+def runtime_record():
+    context = runtime_context()
+    key = hashlib.sha256(json.dumps(context, sort_keys=True).encode()).hexdigest()[:24]
+    return Path(os.environ.get('XDG_CONFIG_HOME', Path.home()/'.config'))/'metapathways/runtimes'/(key+'.json')
+
+
+def runtime_candidates():
+    """Prefer this Python/Mamba environment, then PATH and standard site paths."""
+    override = os.environ.get('METAPATHWAYS_APPTAINER')
+    if override:
+        value = shutil.which(os.path.expanduser(override))
+        if not value:
+            raise RuntimeError(f'METAPATHWAYS_APPTAINER is not executable: {override}')
+        return [str(Path(value).absolute())]
+    paths = [Path(sys.executable).parent/'apptainer']
+    paths += [Path(directory)/'apptainer' for directory in os.get_exec_path() if directory]
+    paths += [Path(directory)/'apptainer' for directory in ('/usr/local/bin', '/usr/bin', '/bin')]
+    result, seen = [], set()
+    for path in paths:
+        if not path.is_file() or not os.access(path, os.X_OK):
+            continue
+        identity = path.resolve()
+        if identity not in seen:
+            seen.add(identity)
+            # Retain the installation path rather than replacing it with a
+            # symlink target; runtime launchers may depend on their location.
+            result.append(str(path.absolute()))
+    return result
+
+
+def execution_check(executable, image, output):
+    """Check an existing SIF without requiring permission to build one."""
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    log = output/'apptainer-check.log'
+    with tempfile.TemporaryDirectory(prefix='.pt-exec-', dir=output) as directory:
+        state = Path(directory).resolve()
+        scratch = state/'scratch'
+        scratch.mkdir()
+        with log.open('w') as stream:
+            stream.write(f'Apptainer: {executable}\nImage: {image}\n')
+            stream.flush()
+            subprocess.run([executable, 'exec', '--containall', '--cleanenv',
+                            '--workdir', str(scratch), '--home', f'{state}:/data',
+                            '--pwd', '/data', str(image), '/bin/sh', '-ec',
+                            'test -w /data; test -w /tmp; test -w /var/tmp'],
+                           env=environment(), check=True, stdout=stream,
+                           stderr=subprocess.STDOUT, timeout=120)
+
+
+def select_runtime(output, image=None):
+    """Select a proven build or execution runtime on the current worker host."""
+    from metapathways.nf_worker import atomic_json
+    output = Path(output).expanduser().resolve()
+    capability = 'execute' if image is not None else 'build'
+    image_key = None
+    if image is not None:
+        image = Path(image).expanduser().resolve()
+        st = image.stat()
+        image_key = (str(image), st.st_size, st.st_mtime_ns)
+    candidates = runtime_candidates()
+    context = runtime_context()
+    fingerprints = []
+    for candidate in candidates:
+        st = Path(candidate).stat()
+        fingerprints.append((candidate, st.st_size, st.st_mtime_ns))
+    key = (os.getpid(), json.dumps(context, sort_keys=True), capability,
+           image_key, tuple(fingerprints), os.environ.get('METAPATHWAYS_APPTAINER'))
+    if key in _SELECTED:
+        return _SELECTED[key]
+    record = runtime_record()
+    try:
+        saved = json.loads(record.read_text())
+        if not isinstance(saved, dict):
+            saved = {}
+    except (OSError, ValueError):
+        saved = {}
+    preferred = saved.get(capability) or (saved.get('build') if image is not None else None)
+    if preferred in candidates:
+        candidates.remove(preferred)
+        candidates.insert(0, preferred)
+    output.mkdir(parents=True, exist_ok=True)
+    attempts = []
+    for index, executable in enumerate(candidates, 1):
+        directory = output/f'candidate-{index}'
+        print(f'Checking Apptainer {capability} support: {executable}', flush=True)
+        try:
+            if image is None:
+                host_check(executable, directory)
+            else:
+                execution_check(executable, image, directory)
+        except (RuntimeError, subprocess.SubprocessError, OSError) as error:
+            attempts.append(dict(executable=executable, status='failed', error=str(error),
+                                 log=str(directory/'apptainer-check.log')))
+            continue
+        attempts.append(dict(executable=executable, status='passed',
+                             log=str(directory/'apptainer-check.log')))
+        report = dict(context=context, capability=capability, selected=executable, attempts=attempts)
+        atomic_json(output/'runtime-selection.json', report)
+        saved[capability] = executable
+        saved['context'] = context
+        try:
+            atomic_json(record, saved)
+        except OSError as error:
+            print(f'Runtime works; preference could not be saved: {error}', flush=True)
+        _SELECTED[key] = executable
+        print(f'Using Apptainer: {executable}', flush=True)
+        return executable
+    atomic_json(output/'runtime-selection.json',
+                dict(context=context, capability=capability, selected=None, attempts=attempts))
+    advice = ('An existing licensed SIF may still run here: test it with '
+              'metapathways build_pt --check --image /path/to/pathway-tools.sif. '
+              if image is None else '')
+    raise RuntimeError(f'No usable Apptainer found for {capability} on {context["host"]}. '
+                       f'Tested {len(candidates)} runtime(s). '
+                       f'Diagnostics: {output / "runtime-selection.json"}. '
+                       + advice + 'Load your site Apptainer module if one is provided, or send '
+                       'the diagnostics and candidate logs to your administrator. '
+                       'No host settings were changed.')

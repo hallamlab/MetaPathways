@@ -34,16 +34,16 @@ class SetupTests(unittest.TestCase):
 
     def test_check_needs_neither_installer_nor_nextflow(self):
         with patch.object(pt.shutil, 'which', return_value='/env/bin/apptainer'), \
-             patch.object(setup, 'host_check') as check, patch.object(pt.nextflow, 'launch') as run:
+             patch.object(setup, 'select_runtime') as check, patch.object(pt.nextflow, 'launch') as run:
             pt.main(['--check', '-o', str(self.root)])
-        check.assert_called_once_with('/env/bin/apptainer', self.root/'logs/readiness')
+        check.assert_called_once_with(self.root/'logs/readiness', image=None)
         run.assert_not_called()
 
     def test_denied_host_stops_before_base_and_licensed_downloads(self):
         installer = self.root/'installer'
         installer.write_bytes(b'installer')
         with patch.object(pt.shutil, 'which', return_value='/env/bin/apptainer'), \
-             patch.object(setup, 'host_check', side_effect=RuntimeError('host denied')), \
+             patch.object(setup, 'select_runtime', side_effect=RuntimeError('host denied')), \
              patch.object(setup, 'prepared_base') as base, patch.object(pt, 'download_patches') as patches:
             with self.assertRaisesRegex(RuntimeError, 'host denied'):
                 pt.build(installer, self.root/'image.sif', pt.digest(installer), 1)

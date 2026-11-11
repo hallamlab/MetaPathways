@@ -79,13 +79,39 @@ build the image. No installer, network download or sudo is needed for this check
 metapathways build_pt --check -o ~/mp-containers
 ```
 
-MP tests a small local container build and execution, and saves a diagnostic log.
-MP checks supported build options before using compression flags. Older Apptainer
-installations without `--mksquashfs-args` use their site-configured compression CPU
-settings instead of the `-t` compression limit.
+MP first tries Apptainer from the active Mamba environment, then other installations
+on `PATH` and standard system paths. It tests a small local container build and
+execution before selecting a runtime. A working choice is saved per host and MP
+environment and checked again in each new process. No PATH edits are needed.
+Subsequent checks try that saved choice first and fall back if it no longer works.
+
 The normal `build_pt` command also checks automatically before downloading licensed
-patches. Slurm builds check on the allocated compute node; a login-node check
-cannot certify other nodes.
+patches. Slurm workers select and test their own runtime on the allocated node;
+a login-node check cannot certify other nodes. Load your site's Apptainer module
+before submitting if it is not available in the standard paths. MP does not install
+global software or change host permissions.
+
+Diagnostics are under the requested output's `logs/readiness/`: `runtime-selection.json`
+records every attempted executable, and each candidate has its own log. If all
+candidates fail, send that report and the candidate logs to your administrator.
+For an explicit site requirement, set `METAPATHWAYS_APPTAINER` to its executable;
+MP then tests only that choice, without silently switching to another runtime.
+
+Older Apptainer installations without `--mksquashfs-args` use their site-configured
+compression CPU settings instead of the `-t` compression limit.
+
+**Already have a licensed SIF, or your HPC permits running but not building?**
+Test execution alone, without an installer or build permissions:
+
+```bash
+metapathways build_pt --check --image /path/to/pathway-tools.sif -o ~/mp-containers
+```
+
+A successful check selects a runtime; it does not register the image. Supply
+`--image /path/to/pathway-tools.sif` to `ptools` or `analysis_wf`, or
+`--metacyc_source /path/to/pathway-tools.sif` to `build_db`.
+Analyses also select a runtime automatically and test execution of the supplied SIF,
+without requiring that the host can build images.
 
 For the actual build, MP automatically downloads and caches a verified public
 Ubuntu dependency image. It contains no Pathway Tools or MetaCyc. You do not need

@@ -226,15 +226,14 @@ def save_json(path, data):
         temp.unlink(missing_ok=True)
 
 
-def exec_command(image, state, command):
+def exec_command(image, state, command, executable=None):
     """Use a task-private data directory, PID namespace, home and /tmp."""
     state = Path(state).resolve()
     state.mkdir(parents=True, exist_ok=True)
     if any(c in str(state) for c in ':,\n'):
         raise ValueError('Apptainer state path cannot contain a colon, comma or newline')
-    executable = shutil.which('apptainer')
-    if not executable:
-        raise RuntimeError('Apptainer is required and must be on PATH')
+    from metapathways.pt_setup import select_runtime
+    executable = executable or select_runtime(state / 'runtime-check', image=image)
     # --containall otherwise puts /tmp and /var/tmp in the small session
     # filesystem, not on the disk backing our task-private home directory.
     # Keep scratch private per invocation, including Xvfb filesystem sockets.
@@ -245,7 +244,7 @@ def exec_command(image, state, command):
             '--home', f'{state}:/data', '--pwd', '/data', str(image), *command]
 
 
-def validate(image, directory):
+def validate(image, directory, executable=None):
     script = ('cp -a /opt/ptools-local-template /data/ptools-local; '
               'cp /opt/mp-ncbirc /data/.ncbirc; '
               'blastp -version; makeblastdb -version; '
@@ -255,7 +254,7 @@ def validate(image, directory):
               'test -s /data/check.tsv; '
               'exec xvfb-run -a /opt/pathway-tools/pathway-tools '
               '-no-patch-download -lisp -eval \'(progn (format t "~%MP-PT-READY~%") (exit))\'')
-    result = subprocess.run(exec_command(image, directory, ['sh', '-ec', script]),
+    result = subprocess.run(exec_command(image, directory, ['sh', '-ec', script], executable=executable),
                             check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             text=True, timeout=300)
     if result.returncode:
@@ -399,11 +398,8 @@ def build(installer, image, installer_sha256, threads, version=None, dependency_
     installer, image = Path(installer).resolve(), Path(image).resolve()
     if digest(installer) != installer_sha256:
         raise ValueError('Installer changed after the build was planned')
-    executable = shutil.which('apptainer')
-    if not executable:
-        raise RuntimeError('Apptainer is required and must be on PATH')
-    from metapathways.pt_setup import host_check, prepared_base, validate_base, build_command
-    host_check(executable, image.parent / 'logs/readiness')
+    from metapathways.pt_setup import select_runtime, prepared_base, validate_base, build_command
+    executable = select_runtime(image.parent / 'logs/readiness')
     base_image = None
     if dependency_base or not PREPARED_BASE.is_dir():
         base_image = prepared_base(executable, dependency_base)
@@ -425,8 +421,8 @@ def build(installer, image, installer_sha256, threads, version=None, dependency_
         partial = work / 'pathway-tools.sif'
         subprocess.run(build_command(executable, partial, definition, threads),
                        cwd=work, check=True, env=inner_build_environment())
-        validation_log = validate(partial, work / 'validation')
-        metadata = dict(installer_sha256=installer_sha256, image=str(image),
+        validation_log = validate(partial, work / 'validation', executable=executable)
+        metadata = dict(installer_sha256=installer_sha256, image=str(image), runtime=executable,
                         image_sha256=digest(partial), recipe_sha256=hashlib.sha256(recipe.encode()).hexdigest(),
                         dependency_base=base, official_patches=patches, validation_log=validation_log)
         partial.replace(image)
@@ -439,6 +435,7 @@ def parser():
                                 description='Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.')
     p.add_argument('-i', '--installer', help='local Pathway Tools Linux x86-64 installer')
     p.add_argument('--check', action='store_true', help='check local rootless build/execution readiness without an installer or downloads')
+    p.add_argument('--image', help='with --check, test execution of an existing SIF without building')
     p.add_argument('--dependency_base', help='existing public dependency SIF to skip the base download [download and cache the pinned public base]')
     p.add_argument('--ptools_version', help='release number if the installer was renamed; otherwise inferred from its filename')
     p.add_argument('-d', '--refdb_dir', help=argparse.SUPPRESS)
@@ -462,12 +459,13 @@ def main(argv=None):
     if args.aligner or args.skip_pt_screen:
         p.error('-a and --skip_pt_screen belong to build_db; build_pt only builds the SIF.')
     if args.check:
-        from metapathways.pt_setup import host_check
-        executable = shutil.which('apptainer')
-        if not executable:
-            p.error('Apptainer is missing from the activated environment')
-        host_check(executable, Path(args.output_dir).expanduser() / 'logs/readiness')
+        from metapathways.pt_setup import select_runtime
+        if args.image and not Path(args.image).expanduser().is_file():
+            p.error('--image must be an existing SIF')
+        select_runtime(Path(args.output_dir).expanduser() / 'logs/readiness', image=args.image)
         return
+    if args.image:
+        p.error('--image is only used with --check; use -i to build a new image')
     if not args.installer:
         p.error('Provide -i INSTALLER to build, or --check to test readiness')
     if args.dependency_base and not Path(args.dependency_base).expanduser().is_file():
@@ -478,12 +476,12 @@ def main(argv=None):
     if platform.system() != 'Linux' or platform.machine() not in ('x86_64', 'AMD64'):
         p.error('Building this Pathway Tools image requires Linux x86-64')
     if not args.dryrun:
-        for executable in ('apptainer', 'nextflow'):
+        for executable in ('nextflow',):
             if not shutil.which(executable):
                 p.error(f'{executable} must be installed and on PATH')
     if not args.dryrun and args.executor == 'local':
-        from metapathways.pt_setup import host_check
-        host_check(shutil.which('apptainer'), Path(args.output_dir).expanduser() / 'logs/readiness')
+        from metapathways.pt_setup import select_runtime
+        select_runtime(Path(args.output_dir).expanduser() / 'logs/readiness')
     checksum = digest(installer)
     recipe, _ = build_recipe()
     recipe_hash = hashlib.sha256(recipe.encode()).hexdigest()

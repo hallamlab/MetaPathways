@@ -388,8 +388,11 @@ def main(argv=None):
         image = str(Path(image).expanduser().resolve())
         if args.compact_results and any((output/r['sample_id']) in Path(image).parents for r in rows):
             fail('Compact mode requires the SIF outside sample output directories')
-        if not shutil.which('apptainer'):
-            fail('Apptainer is required for Pathway Tools')
+        if not args.dryrun and args.executor == 'local':
+            from metapathways.pt_setup import select_runtime
+            select_runtime(output / 'logs/ptools-readiness', image=image)
+        # Slurm workers check their own host. A login node need not provide
+        # the compute node's Apptainer installation.
     if any(row['mag_map'] for row in rows) and not shutil.which('magsplitter'):
         fail('MAGSplitter is required when MAG maps are supplied; see README installation instructions')
     output.mkdir(parents=True, exist_ok=True)

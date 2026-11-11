@@ -436,10 +436,10 @@ Execution Resources:
 ## build_pt
 
 ```text
-usage: metapathways build_pt [-h] [-i INSTALLER] [--check] [--dependency_base DEPENDENCY_BASE]
-                             [--ptools_version PTOOLS_VERSION] [-o OUTPUT_DIR] [-t THREADS]
-                             [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
-                             [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
+usage: metapathways build_pt [-h] [-i INSTALLER] [--check] [--image IMAGE]
+                             [--dependency_base DEPENDENCY_BASE] [--ptools_version PTOOLS_VERSION]
+                             [-o OUTPUT_DIR] [-t THREADS] [--dryrun] [--max_cpus MAX_CPUS]
+                             [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
                              [--time_limit TIME_LIMIT] [--fast_local_db]
@@ -455,6 +455,7 @@ options:
                         local Pathway Tools Linux x86-64 installer
   --check               check local rootless build/execution readiness without an installer or
                         downloads
+  --image IMAGE         with --check, test execution of an existing SIF without building
   --dependency_base DEPENDENCY_BASE
                         existing public dependency SIF to skip the base download [download and
                         cache the pinned public base]

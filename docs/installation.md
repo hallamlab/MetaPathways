@@ -12,7 +12,7 @@ You need a Linux x86-64 host and an internet connection. If Mamba is not install
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.7
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.8
 conda activate metapathways
 ```
 
@@ -46,7 +46,9 @@ Mamba environment before obtaining/running the licensed installer:
 metapathways build_pt --check -o ~/mp-containers
 ```
 
-This downloads nothing and needs no sudo. On a compatible host, MP handles the
+This downloads nothing and needs no sudo. MP automatically tests the Mamba
+Apptainer and available system/site installations, then remembers a working choice
+for this host. On a compatible host, MP handles the
 public container dependencies automatically. If host policy blocks the check,
 the log identifies what your administrator needs to investigate; Mamba cannot
 grant host permissions. Follow the [Pathway Tools setup](pathway-tools.md#host-prerequisites)
@@ -56,10 +58,10 @@ before continuing with licensed features. The public test above is independent.
 
 ```bash
 # Docker
-docker pull quay.io/hallamlab/metapathways:4.0.7
+docker pull quay.io/hallamlab/metapathways:4.0.8
 
 # Or Apptainer
-apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.7
+apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.8
 ```
 
 The image includes the same workflow dependencies and test data. Follow the [Docker three-sample test](containers.md#docker-three-sample-test) or [Apptainer three-sample test](containers.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
@@ -76,10 +78,11 @@ conda activate metapathways
 
 Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-test`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
 
-## Upgrade to 4.0.7
+## Upgrade to 4.0.8
 
-This update adds an automatic Pathway Tools host check and a cached public
-dependency image, avoiding APT during licensed builds. Run `build_pt --check`
+This update automatically selects a working Mamba or site Apptainer, checks
+building and execution separately, and supports older build options. The cached
+public dependency image avoids APT during licensed builds. Run `build_pt --check`
 after updating if you plan to use licensed features. Existing working SIFs do
 not need rebuilding for this change.
 
@@ -92,7 +95,7 @@ For an existing Conda installation, update the environment before submitting job
 
 ```bash
 mamba install -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.7
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.8
 conda activate metapathways
 metapathways version
 ```
