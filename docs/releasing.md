@@ -87,7 +87,9 @@ ignored and can be removed.
 Each registry has its own publishing job. Use **Re-run failed jobs** to retry
 a failed upload with the original tested artifacts while they remain available,
 without rebuilding or repeating a successful upload to the other registry.
-Do not use **Re-run all jobs** for an upload retry. No force-overwrite is used
+Do not use **Re-run all jobs** for an upload retry. Transient network errors during Anaconda upload and Apptainer installation receive
+up to three attempts, with 15- and 30-second delays. Authentication failures and
+existing-package conflicts stop immediately. No force-overwrite is used
 for Conda packages. If an upload actually succeeded before its job failed,
 inspect the registry before retrying.
 

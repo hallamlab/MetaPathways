@@ -461,7 +461,9 @@ def upload_conda(args):
         raise ValueError("Expected exactly one validated Conda package.")
     label = "rc" if "rc" in manifest["version"] else "main"
     # anaconda-client reads BINSTAR_API_TOKEN; never put credentials on the command line.
-    run("anaconda", "upload", "--user", os.environ.get("ANACONDA_OWNER", "hallamlab"), "--label", label, packages[0])
+    from retry_network import run as retry_network
+    retry_network(["anaconda", "upload", "--user", os.environ.get("ANACONDA_OWNER", "hallamlab"),
+                   "--label", label, str(packages[0])])
 
 
 def container_command(args):
