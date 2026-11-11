@@ -46,7 +46,7 @@ These are setup commands, run before sample analysis. An existing compatible MPD
 
 `build_db` prepares selected public references and the supporting MPDB structure. FAST uses `fastdb`; BLAST+ uses `makeblastdb`. rRNA searches require nucleotide BLAST indexes. MP's own preparation scripts build the lookup tables consumed by annotation and reporting. Database options and custom references are described in [database construction](databases.md).
 
-`build_pt` builds and validates a private Apptainer image from the licensed installer. With its optional MPDB destination, MP extracts the matching MetaCyc protein FASTA **and companion flat files**, builds the selected search index, and derives the EC/reaction/pathway mappings. This licensed preparation is separate from the public-reference build. See [MetaCyc preparation](pgdb-workflow.md#metacyc-from-pathway-tools).
+`build_pt` builds and validates a private Apptainer image from the licensed installer. A subsequent `build_db --func metacyc` command extracts the matching MetaCyc protein FASTA **and companion flat files**, builds the selected search index, and derives the EC/reaction/pathway mappings. This licensed preparation is separate from the public-reference build. See [MetaCyc preparation](pgdb-workflow.md#metacyc-from-pathway-tools).
 
 The BLAST+ installation inside the Pathway Tools image supports Pathway Tools' own sequence databases. It is distinct from the FAST/BLAST choice for MP's functional annotation searches. Docker is an alternative way to run the MP application image; it is not required to build the Pathway Tools SIF.
 

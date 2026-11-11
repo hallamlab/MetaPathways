@@ -4,31 +4,26 @@
 
 ## Choose your setup before running commands
 
-**Choose one setup route. If you want MetaCyc protein annotations as well as
-pathway inference, use the combined build below as your first `build_pt` command.**
+`build_pt` builds and registers the licensed SIF. `build_db` prepares MPDB
+references. Use them separately, in that order when starting with a licensed
+installer.
 
-| What you want | Setup route |
+| What you want | Setup |
 | --- | --- |
-| Pathway inference plus MetaCyc protein searches | Prepare a production MPDB, then [build the SIF and MetaCyc reference together](#build-the-mpdb-metacyc-annotation-reference-at-the-same-time) with `build_pt -d MPDB` |
-| Pathway inference from existing annotations, including the bundled SwissProt test | [Build only the SIF](#build-and-register-once), without `-d` |
-| Add MetaCyc when a working SIF is already registered | Use `build_db --func metacyc -d MPDB`; no new image build is needed |
-| Annotation and abundance without pathway inference | Skip this setup and use `--skip_ptools` |
+| MetaCyc protein annotation | Build/register the SIF below, then [build an MPDB with MetaCyc](databases.md) |
+| Pathway inference from existing annotations | Build/register the SIF; adding MetaCyc protein references is optional |
+| Add MetaCyc to an existing MPDB | Prepare a licensed source, then use `build_db --add --func metacyc` |
+| Public annotation without pathway inference | Skip this page; use public references and `--skip_ptools` |
 
-Obtain your licensed installer and check the host prerequisites below before
-starting either build. The combined route includes MetaCyc export, indexing and
-reaction compatibility screening; allow those tasks to finish before analysis.
-It does not replace the public-reference setup that supplies SILVA and taxonomy.
-
-Adding MetaCyc to MPDB does not select it automatically for annotation. Include
-`--annotation_dbs swissprot metacyc` on your subsequent `run` or `analysis_wf`
-command if you built both references. Make this choice before annotating samples;
-adding a reference later does not change existing annotations by itself.
+If you already have a working SIF or complete MetaCyc export, see
+[existing sources](databases.md#already-have-a-licensed-metacyc-source).
+Do not rerun the image build merely to add a database.
 
 ## Defaults and explicit choices
 
 | Setting | MP default | Your alternative |
 | --- | --- | --- |
-| Reaction compatibility screening when building MetaCyc | Enabled; successful full screens automatically publish an MPDB compatibility list | `--skip_pt_screen` on `build_pt` or `build_db` |
+| Reaction compatibility screening when building MetaCyc | Enabled; successful full screens automatically publish an MPDB compatibility list | `--skip_pt_screen` on `build_db` |
 | Taxonomic pruning for PGDB inference | Enabled; avoids the unpruned rescoring pass | `--no_taxprune` |
 | Organism taxonomic scope | `all`: NCBI 131567, cellular life; broad enough for mixed-domain inputs | `--taxonomic_scope bacteria`, `archaea`, `eukaryotes`, or `--taxon_id ID` |
 | Transport inference in SIF runs | Enabled | `--no_transport_inference` |
@@ -83,46 +78,10 @@ The host must permit Apptainer's unprivileged/fakeroot build path. Administrator
 
 Use shared storage for a finished image that compute nodes need to read. Local scratch can accelerate building on slow network filesystems. `APPTAINER_TMPDIR` is an optional Apptainer troubleshooting setting, not required to run MP. See your site's Apptainer setup when choosing scratch; it must have enough space.
 
-## Build the MPDB MetaCyc annotation reference at the same time
-
-**Recommended when you want both MetaCyc annotation and pathway inference.**
-Run this instead of the image-only build. Prepare public references first (skip
-the first command if this production MPDB is already ready), then build the
-licensed image and add its MetaCyc reference:
-
-```bash
-metapathways build_db -d ~/MPDB --func swissprot -a fast
-metapathways build_pt \
-  -i ~/Downloads/pathway-tools-29.5-linux-64-tier1-install \
-  -o ~/mp-containers -d ~/MPDB -a fast
-```
-
-The second command exports the bundled MetaCyc protein sequences and biochemical flat files from the SIF, constructs protein-to-reaction mappings and pathway/compound/ontology tables, and indexes the proteins for FAST. It does not refresh SwissProt or the other existing references. The [installed-file table](pgdb-workflow.md#metacyc-from-pathway-tools) lists the exact MPDB destinations.
-
-To add or rebuild MetaCyc later using the registered image:
-
-```bash
-metapathways build_db -d ~/MPDB --func metacyc -a fast
-```
-
-To choose a different licensed source:
-
-```bash
-metapathways build_db -d ~/MPDB --func metacyc -a fast \
-  --metacyc_source /path/to/pathway-tools.sif
-```
-
-`--metacyc_source` also accepts a local complete exported MetaCyc `data/` directory. It needs `protseq.fsa`, `proteins.dat`, `enzrxns.dat`, `reactions.dat`, `pathways.dat`, `compounds.dat`, and `classes.dat`. A `protseq.fsa` alone is insufficient even if its sequence statistics match another FASTA. Some native installs keep most knowledge-base data in the executable; the SIF export obtains the missing flat files.
-
-Use `-a blast` if subsequent annotation will use `--annotation_algorithm BLAST`. MetaCyc rebuilding replaces its existing reference and removes obsolete index files, including the other aligner's indexes. **Do not rebuild a reference directory while analyses are reading it.** Use a separate MPDB for a concurrent reference-version comparison.
-
-The ordinary public-reference build does not acquire licensed MetaCyc. You supply the authorized installer or data. MP does not grant permission to redistribute the installer, SIF, patches or reference files; preserve them according to the applicable vendor terms.
-
 ## Build and register once
 
-**Alternative: image only.** Choose this when you want inference from existing
-annotations and do not need MetaCyc protein searches. If you completed the
-combined build above, skip this command: it would build another image.
+**Skip this step if your working SIF is already registered.** Obtain the installer
+and check the host prerequisites above before running this command.
 
 Run on the server, with the environment active:
 
@@ -145,6 +104,17 @@ Subsequent `ptools` and `analysis_wf` commands use the registered SIF automatica
 ```
 
 Explicit `--image` takes precedence over the environment override and registration. Do not delete a SIF referenced by a running task. Rebuilding an image or changing the selected path can invalidate PGDB task reuse. On Slurm the selected path must be readable at the same location on all compute nodes.
+
+## Prepare MetaCyc annotation references
+
+After the image build succeeds, follow [database setup](databases.md). That guide
+covers MetaCyc-only, mixed references, and additions to an existing MPDB.
+`build_pt` does not create or modify MPDB. The retired `build_pt -d` option stops
+with a migration message; use `build_db` for all reference selections.
+
+Building MetaCyc is optional for inference from existing SwissProt annotations.
+To search MetaCyc proteins, select `--annotation_dbs metacyc` (or
+`--annotation_dbs swissprot metacyc` for both) when annotating your samples.
 
 ## Run pathway inference
 
@@ -270,7 +240,7 @@ taxonomic contexts or combinations of reactions.
 
 ### Automatic compatibility screening during MetaCyc builds
 
-`build_pt -i INSTALLER -d MPDB` and `build_db -d MPDB --func metacyc`
+`build_db -d MPDB --func metacyc`
 now screen reactions **by default**, after preparing MetaCyc. No additional user
 command is needed. The screen tests the licensed SIF and database together, bisects
 failed batches, and requires repeated isolated failures plus successful controls.

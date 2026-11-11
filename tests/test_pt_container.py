@@ -157,16 +157,13 @@ class ContainerTests(unittest.TestCase):
         self.assertEqual(record['status'], 'FAILED')
         self.assertFalse(list(self.root.glob('.pt-run-*')))
 
-    @patch('metapathways.nextflow.local_capacity', return_value=(4, '32 GB'))
-    def test_build_with_mpdb_plans_export_after_image_without_running_it(self, _):
-        with patch.object(pt.nextflow, 'launch') as launch:
-            pt.main(['-i', str(self.installer), '-o', str(self.root/'images'), '-d', str(self.root/'MPDB'), '-a', 'blast', '--dryrun'])
-        tasks = launch.call_args.args[0]
-        self.assertEqual(len(tasks), 3)
-        self.assertEqual(tasks[2]['id'], 'screen_metacyc')
-        self.assertEqual(tasks[1]['dependencies'], [tasks[0]['id']])
-        self.assertEqual(tasks[1]['inputs'], [tasks[0]['outputs'][0]])
-        self.assertIn(str(self.root/'MPDB/functional/formatted/metacyc.pdb'), tasks[1]['outputs'])
+    def test_build_with_mpdb_stops_before_any_work(self):
+        with patch.object(pt.nextflow, 'launch') as launch, contextlib.redirect_stderr(io.StringIO()) as error:
+            with self.assertRaises(SystemExit):
+                pt.main(['-i', str(self.installer), '-d', str(self.root/'MPDB'), '--dryrun'])
+        self.assertIn('build_pt now builds only the SIF', error.getvalue())
+        self.assertIn('build_db', error.getvalue())
+        launch.assert_not_called()
         self.download_patches.assert_not_called()
 
     def test_patch_snapshot_only_accepts_official_listing_filenames(self):

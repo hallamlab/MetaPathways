@@ -242,6 +242,9 @@ def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
                     help=f"functional references, select any combination from {DBS_FUNC}, [DEFAULT {DBS_FUNC_DEFAULT}]")
     db.add_argument("-a", "--aligner", required=False, default="fast",
                     help=f"local aligner to index for, select one of {ALIGNERS}, [DEFAULT fast]")
+    operation = db.add_mutually_exclusive_group()
+    operation.add_argument('--add', action='store_true', help='add new functional references to an existing complete MPDB')
+    operation.add_argument('--update', action='store_true', help='explicitly rebuild selected existing functional references; stop analyses using this MPDB first')
     db.add_argument('--skip_pt_screen', action='store_true', help='Skip default PTools reaction compatibility screening for MetaCyc')
     db.add_argument('--screen_image', help='PTools SIF for screening a MetaCyc directory [registered SIF]')
     db.add_argument('--metacyc_source', help='licensed MetaCyc data directory or Pathway Tools SIF [registered SIF when --func includes metacyc]')
@@ -638,7 +641,7 @@ def build_db():
         if missing_required:
             parser.error(f"The following arguments are required: {', '.join(missing_required)}")
 
-    args.refdb_dir = args.refdb_dir or "./"
+    args.refdb_dir = str(pathlib.Path(args.refdb_dir or "./").expanduser().resolve())
     input_error = False
     help_printed = False
 
@@ -679,14 +682,15 @@ def build_db():
         elif key not in ('keep-going', 'rerun-incomplete', 'printshellcmds', 'latency-wait'):
             parser.error(f'Legacy --snakemake option {key!r} has no supported Nextflow equivalent; use resource flags')
     try:
-        if args.metacyc_source and 'metacyc' not in args.func:
-            parser.error('--metacyc_source requires --func metacyc (optionally alongside other databases)')
+        if (args.metacyc_source or args.screen_image or args.skip_pt_screen) and 'metacyc' not in args.func:
+            parser.error('MetaCyc source and screening options require --func metacyc')
+        if len(set(args.func)) != len(args.func):
+            parser.error('Select each functional reference only once')
         tasks = plan(args.refdb_dir, args.func, args.aligner, test=args.test, memory=args.memory,
-                     metacyc_source=args.metacyc_source, skip_pt_screen=args.skip_pt_screen, screen_image=args.screen_image, resources=args)
-        if force:
-            for t in tasks:
-                t['status'] = 'redo'
-        nextflow.launch(tasks, args.refdb_dir, args, 'build_db', dryrun=args.dryrun)
+                     metacyc_source=args.metacyc_source, skip_pt_screen=args.skip_pt_screen, screen_image=args.screen_image, resources=args, include_support=not (args.add or args.update))
+        from metapathways.db_setup import execute
+        import shlex
+        execute(args.refdb_dir, args, tasks, shlex.join(['metapathways', *argv[1:]]), nextflow.launch, force)
     except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
         parser.exit(1, f'build_db: {exc}\n')
 

@@ -82,10 +82,10 @@ class MetaCycTests(unittest.TestCase):
     def test_metacyc_screen_default_and_opt_out(self, _):
         image = self.root/'pt.sif'
         image.write_bytes(b'licensed-image-fixture')
-        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, screen_image=image)
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, screen_image=image, include_support=False)
         self.assertEqual([t['id'] for t in tasks], ['directories', 'prepare_metacyc', 'screen_metacyc'])
         self.assertIn('--publish', tasks[-1]['commands'][0])
-        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True, include_support=False)
         self.assertEqual(len(tasks), 2)
 
     def test_screen_rejects_insufficient_memory(self):
@@ -95,7 +95,7 @@ class MetaCycTests(unittest.TestCase):
                 screen_resources(None, '16 GB')
 
     def test_metacyc_only_plan_does_not_download_unrelated_references(self):
-        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True)
+        tasks = plan(self.root/'db', ['metacyc'], 'fast', metacyc_source=self.source, skip_pt_screen=True, include_support=False)
         self.assertEqual([t['id'] for t in tasks], ['directories', 'prepare_metacyc'])
         self.assertFalse(tasks[-1]['adopt_existing'])
         self.assertTrue(all(any(n in o for o in tasks[-1]['outputs']) for n in mc.TABLES))

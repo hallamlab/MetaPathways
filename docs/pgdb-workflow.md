@@ -7,22 +7,9 @@ analysis settings.
 
 ## Build Pathway Tools once
 
-**Before building, [choose image-only or combined setup](pathway-tools.md#choose-your-setup-before-running-commands).**
-For MetaCyc protein searches and pathway inference, prepare your
-[production MPDB](databases.md), obtain the licensed Linux installer, and use
-this combined command as your first build:
-
-```bash
-metapathways build_pt \
-  -i ./pathway-tools-29.5-linux-64-tier1-install \
-  -o ./containers -d /path/to/MPDB -a fast
-```
-
-For inference from existing annotations only, omit `-d /path/to/MPDB -a fast`.
-If a working SIF is already registered, skip this image build and use the
-`build_db --func metacyc` command below to add the annotation reference.
-Wait for setup and screening to finish before analysis. Select
-`--annotation_dbs swissprot metacyc` when annotating with both references.
+Follow the [licensed image setup](pathway-tools.md#build-and-register-once).
+Skip that build if your working SIF is already registered. `build_pt` handles
+only the image; all MPDB reference choices belong to `build_db`.
 
 Nextflow runs the Apptainer build, validates Pathway Tools startup, and registers the finished SIF in `~/.config/metapathways/ptools.json`. Subsequent `ptools` commands use that image automatically. Without `-o`, images go under `~/.local/share/metapathways/containers`; the XDG equivalents are honored. `--image` on `ptools` or `METAPATHWAYS_PTOOLS_IMAGE` overrides registration.
 
@@ -36,10 +23,10 @@ New images include NCBI BLAST+ and its configuration. Before registration, valid
 
 ## MetaCyc from Pathway Tools
 
-The combined setup command above also prepares the MetaCyc annotation reference.
-Do not repeat the image build if it has already completed.
-
-Use `-a blast` for BLAST annotation indexes instead. Nextflow first builds and validates the SIF, then exports its bundled MetaCyc flat files alongside `protseq.fsa` in private staging. It runs the repository's `metacyc_mapping_build.py` and `metacyc_build_ont.py`, checks the reference files and tables, indexes the proteins, and installs:
+After the SIF is ready, follow [database setup](databases.md) to create, add or
+update MetaCyc references. Use `-a blast` for BLAST indexes instead of FAST.
+The database builder exports the SIF's MetaCyc flat files alongside `protseq.fsa`.
+It runs the repository's `metacyc_mapping_build.py` and `metacyc_build_ont.py`, checks the reference files and tables, indexes the proteins, and installs:
 
 | Location relative to MPDB | Contents |
 | --- | --- |
@@ -56,7 +43,7 @@ The MetaCyc preparation task uses one CPU. Other MPDB references are not refresh
 To add MetaCyc later using the registered SIF:
 
 ```bash
-metapathways build_db -d /path/to/MPDB --func metacyc -a fast
+metapathways build_db -d /path/to/MPDB --add --func metacyc -a fast
 ```
 
 Select a particular SIF with `--metacyc_source /path/to/pathway-tools.sif`, or provide a complete licensed flat-file `data/` directory. That directory must contain `protseq.fsa`, `proteins.dat`, `enzrxns.dat`, `reactions.dat`, `pathways.dat`, `compounds.dat`, and `classes.dat`. A FASTA alone cannot supply the reaction and pathway mappings. Native installations may contain only sequence files in `data/` because their remaining reference data are built into the executable; the SIF export handles this. Files supplied over SFTP must first be copied locally.

@@ -1,9 +1,8 @@
 # Getting started: from a terminal to your first result
 
-For licensed pathway inference, [choose your Pathway Tools setup](pathway-tools.md#choose-your-setup-before-running-commands)
-before building an image. If you also want MetaCyc protein annotations, use the
-combined image-and-reference build after preparing public references, then select
-MetaCyc when annotating. The bundled installation test skips this licensed setup.
+For MetaCyc references or pathway inference, [build/register the licensed SIF](pathway-tools.md#build-and-register-once)
+first. Then use [database setup](databases.md) to select your references.
+The bundled installation test skips this licensed setup.
 
 [Home and reading order](index.md) · Next: [test walkthrough](test.md)
 

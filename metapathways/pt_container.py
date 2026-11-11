@@ -422,9 +422,9 @@ def parser():
                                 description='Build a Pathway Tools SIF from a local Linux installer using Nextflow and Apptainer.')
     p.add_argument('-i', '--installer', required=True, help='local Pathway Tools Linux x86-64 installer')
     p.add_argument('--ptools_version', help='release number if the installer was renamed; otherwise inferred from its filename')
-    p.add_argument('-d', '--refdb_dir', help='also export and prepare the licensed MetaCyc reference in this MPDB after building the SIF')
-    p.add_argument('--skip_pt_screen', action='store_true', help='Skip default reaction compatibility screening when building MetaCyc with -d')
-    p.add_argument('-a', '--aligner', choices=('fast', 'blast'), default='fast', help='MetaCyc reference index format with -d [fast]')
+    p.add_argument('-d', '--refdb_dir', help=argparse.SUPPRESS)
+    p.add_argument('--skip_pt_screen', action='store_true', help=argparse.SUPPRESS)
+    p.add_argument('-a', '--aligner', choices=('fast', 'blast'), default=None, help=argparse.SUPPRESS)
     default = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'metapathways/containers'
     p.add_argument('-o', '--output_dir', default=str(default), help='container directory [~/.local/share/metapathways/containers]')
     p.add_argument('-t', '--threads', type=nextflow.positive, default=2, help='CPUs for image compression [2]; Pathway Tools uses one CPU')
@@ -436,6 +436,12 @@ def parser():
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
+    if args.refdb_dir:
+        p.error('build_pt now builds only the SIF. Remove -d and finish the image build, then run: '
+                + shlex.join(['metapathways', 'build_db', '-d', args.refdb_dir, '--func', 'metacyc', '-a', args.aligner or 'fast'])
+                + ' (use --add for an existing MPDB).')
+    if args.aligner or args.skip_pt_screen:
+        p.error('-a and --skip_pt_screen belong to build_db; build_pt only builds the SIF.')
     installer = Path(args.installer).expanduser().resolve()
     if not installer.is_file():
         p.error(f'Installer does not exist: {installer}')
@@ -463,11 +469,6 @@ def main(argv=None):
                      [command], [str(installer)], [str(image), str(image) + '.json'],
                      cpus=args.threads, memory=args.memory, adopt_existing=False)
     tasks = [t]
-    if args.refdb_dir:
-        from metapathways.nf_databases import metacyc_task, screen_task
-        tasks.append(metacyc_task(args.refdb_dir, image, args.aligner, args.memory, [t['id']]))
-        if not args.skip_pt_screen:
-            tasks.append(screen_task(args.refdb_dir, image, args.memory, resources=args))
     nextflow.launch(tasks, output, args, 'build_pt', dryrun=args.dryrun)
     if not args.dryrun:
         metadata = json.loads(Path(str(image) + '.json').read_text())

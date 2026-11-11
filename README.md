@@ -14,7 +14,7 @@ On Linux x86-64, install MetaPathways and its workflow dependencies with Mamba:
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.5
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.6
 conda activate metapathways
 ```
 
@@ -38,7 +38,7 @@ Open the report server's printed URL; for remote runs, follow the [SSH viewing g
 
 ## Run your own data
 
-**Before building Pathway Tools, [choose image-only or combined MetaCyc setup](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html#choose-your-setup-before-running-commands).** If you want MetaCyc protein annotations, complete the combined build and select `--annotation_dbs swissprot metacyc` before running your own annotation. Then follow the [complete workflow guide](https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html) to include reads and genome maps. Test references are for testing only.
+**For MetaCyc or pathway inference, [build/register your licensed SIF](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html#build-and-register-once) first.** Then [choose your MPDB references](https://hallamlab-metapathways.readthedocs.io/en/latest/databases.html): MetaCyc only, public references, or both. `build_pt` builds the image; `build_db` handles references. Select those references when annotating. Test references are for testing only.
 
 ```bash
 metapathways build_db -d ~/MPDB --func swissprot -a fast

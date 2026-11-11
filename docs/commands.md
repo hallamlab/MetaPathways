@@ -84,29 +84,20 @@ Changing assignments can change per-genome pathway inference even if the communi
 
 ## build_pt and ptools: licensed setup, then inference
 
-**Choose the setup before copying commands:** the first command below builds
-both the image and MetaCyc annotation references in an existing production MPDB.
-For image-only setup, omit `-d /path/to/MPDB -a fast`. If your SIF is already
-registered, use `build_db --func metacyc -d /path/to/MPDB -a fast` instead of
-building another image. See the [setup choices](pathway-tools.md#choose-your-setup-before-running-commands).
+First follow the [licensed image setup](pathway-tools.md#build-and-register-once).
+If you want MetaCyc protein annotation, next use [build_db](databases.md) to
+create or extend your MPDB. These are separate steps; `build_pt` builds only the SIF.
 
-Finish setup, then annotate your samples with the intended references before
-running `ptools`. The `ptools` example requires existing `results/SampleA`
-annotations; it cannot follow setup directly on a fresh installation.
-
-```bash
-metapathways build_pt -i /path/to/pathway-tools-29.5-linux-64-tier1-install \
-  -o ~/mp-containers -d /path/to/MPDB -a fast
-```
-
-After setup and sample annotation have completed, infer pathways:
+After setup and sample annotation have completed, infer pathways from the
+existing `results/SampleA` annotations:
 
 ```bash
 metapathways ptools -o results/SampleA \
   --taxprune --taxonomic_scope all --max_cpus 8 --max_memory '32 GB'
 ```
 
-The first builds/registers the image and prepares MetaCyc annotation references. The second uses existing sample annotations to infer community and available MAG pathways. Use `--entity community` or `--entity MAG_001` to select a single entity. The [Pathway Tools chapter](pathway-tools.md) covers installer acquisition, image selection, patches, licensing, taxonomy, TIP, errors and outputs in detail.
+Use `--entity community` or `--entity MAG_001` to select a single entity.
+The [Pathway Tools chapter](pathway-tools.md) explains setup, inference and outputs.
 
 ## report: inspect and export without reanalysis
 

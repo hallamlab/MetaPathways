@@ -316,15 +316,16 @@ Miscellaneous Arguments:
 ## build_db
 
 ```text
-usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--skip_pt_screen]
-                    [--screen_image SCREEN_IMAGE] [--metacyc_source METACYC_SOURCE] [-t INT]
-                    [--dryrun] [--snakemake [SNAKEMAKE ...]] [--test] [--max_cpus MAX_CPUS]
-                    [--memory MEMORY] [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
-                    [--executor {local,slurm}] [--account ACCOUNT] [--partition PARTITION]
-                    [--qos QOS] [--reservation RESERVATION] [--time_limit TIME_LIMIT]
-                    [--fast_local_db] [--func_search_time_limit FUNC_SEARCH_TIME_LIMIT]
-                    [--submit_rate SUBMIT_RATE] [--stream_tool_output] [--work_dir WORK_DIR]
-                    [--conda_cache CONDA_CACHE] [--keep_work]
+usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--add | --update]
+                    [--skip_pt_screen] [--screen_image SCREEN_IMAGE]
+                    [--metacyc_source METACYC_SOURCE] [-t INT] [--dryrun]
+                    [--snakemake [SNAKEMAKE ...]] [--test] [--max_cpus MAX_CPUS] [--memory MEMORY]
+                    [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS] [--executor {local,slurm}]
+                    [--account ACCOUNT] [--partition PARTITION] [--qos QOS]
+                    [--reservation RESERVATION] [--time_limit TIME_LIMIT] [--fast_local_db]
+                    [--func_search_time_limit FUNC_SEARCH_TIME_LIMIT] [--submit_rate SUBMIT_RATE]
+                    [--stream_tool_output] [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE]
+                    [--keep_work]
 
 automated database install
 
@@ -347,6 +348,9 @@ database arguments:
   -a ALIGNER, --aligner ALIGNER
                         local aligner to index for, select one of ['fast', 'blast'], [DEFAULT
                         fast]
+  --add                 add new functional references to an existing complete MPDB
+  --update              explicitly rebuild selected existing functional references; stop analyses
+                        using this MPDB first
   --skip_pt_screen      Skip default PTools reaction compatibility screening for MetaCyc
   --screen_image SCREEN_IMAGE
                         PTools SIF for screening a MetaCyc directory [registered SIF]
@@ -432,9 +436,8 @@ Execution Resources:
 ## build_pt
 
 ```text
-usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION] [-d REFDB_DIR]
-                             [--skip_pt_screen] [-a {fast,blast}] [-o OUTPUT_DIR] [-t THREADS]
-                             [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
+usage: metapathways build_pt [-h] -i INSTALLER [--ptools_version PTOOLS_VERSION] [-o OUTPUT_DIR]
+                             [-t THREADS] [--dryrun] [--max_cpus MAX_CPUS] [--memory MEMORY]
                              [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS]
                              [--executor {local,slurm}] [--account ACCOUNT]
                              [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
@@ -452,13 +455,6 @@ options:
   --ptools_version PTOOLS_VERSION
                         release number if the installer was renamed; otherwise inferred from its
                         filename
-  -d REFDB_DIR, --refdb_dir REFDB_DIR
-                        also export and prepare the licensed MetaCyc reference in this MPDB after
-                        building the SIF
-  --skip_pt_screen      Skip default reaction compatibility screening when building MetaCyc with
-                        -d
-  -a {fast,blast}, --aligner {fast,blast}
-                        MetaCyc reference index format with -d [fast]
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         container directory [~/.local/share/metapathways/containers]
   -t THREADS, --threads THREADS

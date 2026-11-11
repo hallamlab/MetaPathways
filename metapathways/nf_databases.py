@@ -21,8 +21,8 @@ def metacyc_task(root, source, aligner, memory='16 GB', dependencies=()):
                 cache_outputs=[str(root/'functional/formatted/metacyc.*')])
 
 
-def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=None, skip_pt_screen=False, screen_image=None, resources=None):
-    root = Path(root).resolve()
+def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=None, skip_pt_screen=False, screen_image=None, resources=None, include_support=True):
+    root = Path(root).expanduser().resolve()
     scripts = Path(__file__).parent / 'build_DBs'
     q = lambda p: shlex.quote(str(p))
     python = q(sys.executable)
@@ -65,11 +65,11 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
             image = screen_image or (str(source) if source.is_file() else registered_image())
             if not image:
                 raise ValueError('MetaCyc screening requires a PTools SIF: run build_pt, provide --screen_image, or explicitly use --skip_pt_screen')
+            image = Path(image).expanduser().resolve()
+            if not image.is_file() or image.suffix.lower() != '.sif':
+                raise ValueError(f'Screening image must be an existing SIF: {image}')
             tasks.append(screen_task(root, image, memory, resources=resources))
         databases = [db for db in databases if db != 'metacyc']
-        if not databases:
-            # Adding MetaCyc to an existing MPDB must not refresh unrelated references.
-            return tasks
 
     seed_deps = ['directories']
     if test:
@@ -79,32 +79,34 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
             [f'{python} -m metapathways.test_data --reference-db {q(root)}'],
             [seeds / name for name in SEEDS], [root / name for name in SEEDS], ['directories'])]
 
-    silvas = ['SILVA_LSU_test', 'SILVA_SSU_test'] if test else [
-        'SILVA_138.1_LSURef_NR99_tax_silva_trunc', 'SILVA_138.1_SSURef_NR99_tax_silva_trunc']
-    for db in silvas:
-        fasta, prefix = root/'taxonomic'/db, root/'taxonomic/formatted'/db
-        deps = seed_deps
-        if not test:
-            deps = [fetch('fetch_'+db, f'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/{db}.fasta.gz', fasta, True)]
-        add('index_'+db, [f'makeblastdb -in {q(fasta)} -dbtype nucl -parse_seqids -out {q(prefix)}'],
-            [fasta], [str(prefix)+'.ndb'], deps)
-        add('names_'+db, [f"grep '^>' {q(fasta)} > {q(str(prefix)+'-names.txt')}"], [fasta], [str(prefix)+'-names.txt'], deps)
-
-    if not test:
-        note = root/'functional_categories/SILVA_reldate.txt'
-        add('release_silva', [f'date -u > {q(note)}\nprintf "Release: 138.1\\n" >> {q(note)}'],
-            [], [note], ['fetch_'+db for db in silvas])
-
     ec = root/'functional_categories/enzyme.dat'
-    ec_dep = fetch('fetch_enzyme', 'https://ftp.expasy.org/databases/enzyme/enzyme.dat', ec)
-    ec_note = root/'functional_categories/Expasy_reldate.txt'
-    add('enzyme_release', [f'wget -O {q(str(ec_note)+".tmp")} https://ftp.expasy.org/databases/enzyme/enzclass.txt\n'
-        f'date -u > {q(ec_note)}\ngrep "^Release:" {q(str(ec_note)+".tmp")} >> {q(ec_note)}\nrm {q(str(ec_note)+".tmp")}'],
-        [ec], [ec_note], [ec_dep])
-    tax_archive = root/'ncbi_tree/new_taxdump.tar.gz'
-    tax_dep = fetch('fetch_taxonomy', 'https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz', tax_archive)
-    add('taxonomy_tree', [f'tar xzf {q(tax_archive)} -C {q(root/"ncbi_tree")}\n{python} {q(scripts/"taxmap_build.py")} {q(root/"ncbi_tree")}'],
-        [tax_archive], [root/'ncbi_tree/ncbi_taxonomy_tree.txt'], [tax_dep])
+    ec_dep = 'directories'
+    if include_support:
+        silvas = ['SILVA_LSU_test', 'SILVA_SSU_test'] if test else [
+            'SILVA_138.1_LSURef_NR99_tax_silva_trunc', 'SILVA_138.1_SSURef_NR99_tax_silva_trunc']
+        for db in silvas:
+            fasta, prefix = root/'taxonomic'/db, root/'taxonomic/formatted'/db
+            deps = seed_deps
+            if not test:
+                deps = [fetch('fetch_'+db, f'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/{db}.fasta.gz', fasta, True)]
+            add('index_'+db, [f'makeblastdb -in {q(fasta)} -dbtype nucl -parse_seqids -out {q(prefix)}'],
+                [fasta], [str(prefix)+'.ndb'], deps)
+            add('names_'+db, [f"grep '^>' {q(fasta)} > {q(str(prefix)+'-names.txt')}"], [fasta], [str(prefix)+'-names.txt'], deps)
+
+        if not test:
+            note = root/'functional_categories/SILVA_reldate.txt'
+            add('release_silva', [f'date -u > {q(note)}\nprintf "Release: 138.1\\n" >> {q(note)}'],
+                [], [note], ['fetch_'+db for db in silvas])
+
+        ec_dep = fetch('fetch_enzyme', 'https://ftp.expasy.org/databases/enzyme/enzyme.dat', ec)
+        ec_note = root/'functional_categories/Expasy_reldate.txt'
+        add('enzyme_release', [f'wget -O {q(str(ec_note)+".tmp")} https://ftp.expasy.org/databases/enzyme/enzclass.txt\n'
+            f'date -u > {q(ec_note)}\ngrep "^Release:" {q(str(ec_note)+".tmp")} >> {q(ec_note)}\nrm {q(str(ec_note)+".tmp")}'],
+            [ec], [ec_note], [ec_dep])
+        tax_archive = root/'ncbi_tree/new_taxdump.tar.gz'
+        tax_dep = fetch('fetch_taxonomy', 'https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz', tax_archive)
+        add('taxonomy_tree', [f'tar xzf {q(tax_archive)} -C {q(root/"ncbi_tree")}\n{python} {q(scripts/"taxmap_build.py")} {q(root/"ncbi_tree")}'],
+            [tax_archive], [root/'ncbi_tree/ncbi_taxonomy_tree.txt'], [tax_dep])
     unirefs = [db for db in databases if db in ('uniref50', 'uniref90')]
     if unirefs:
         idmap = root/'functional_categories/idmapping.dat.gz'

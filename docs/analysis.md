@@ -1,9 +1,8 @@
 # Complete multi-sample analysis
 
-For licensed pathway inference, [choose your Pathway Tools setup](pathway-tools.md#choose-your-setup-before-running-commands)
-before building an image. If you also want MetaCyc protein annotations, use the
-combined image-and-reference build after preparing public references, then select
-MetaCyc when annotating. The bundled installation test skips this licensed setup.
+For MetaCyc references or pathway inference, [build/register the licensed SIF](pathway-tools.md#build-and-register-once)
+first. Then use [database setup](databases.md) to select your references.
+The bundled installation test skips this licensed setup.
 
 **To build PGDBs, first complete the [Pathway Tools installation guide](pathway-tools.md)** and build/register your licensed SIF with `metapathways build_pt`. Once that setup is complete, run the workflow below. If you do not want pathway inference, add `--skip_ptools`; no Pathway Tools installation is needed.
 

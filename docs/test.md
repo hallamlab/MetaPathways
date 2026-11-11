@@ -32,7 +32,7 @@ metapathways build_db --test -d MPDB
 
 The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 original K12 test references plus 188 reference targets matched by the three CAMI samples in a full-SwissProt run. The protein FASTA is about 109 KB. This gives the test useful annotation, taxonomy and genome-splitting examples without a full protein database download. Selection and reference provenance are recorded in {download}`test_reference.json <../metapathways/regtests/test_db/test_reference.json>`. The deliberately selected reference set is for workflow testing, not annotation accuracy or biological benchmarking. SILVA fixtures remain small; empty RNA tables can be legitimate.
 
-When updating an existing installation, rerun `metapathways build_db --test -d MPDB` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the test acceptance run.
+After upgrading MP, use a new test workspace and repeat `prepare_test` and the commands above for a fresh acceptance run. An interrupted build from this version can be resumed by repeating its original command. Older test MPDBs without a restart record should be recreated in a new workspace.
 
 ## 2. Run all three samples
 
@@ -111,8 +111,8 @@ To exercise automatic discovery on all three samples, replace `--manifest cami-t
 
 **This test needs only the licensed image**, because it uses the prepared
 SwissProt test references. If you also want a production MetaCyc annotation
-reference, choose the [combined setup](pathway-tools.md#choose-your-setup-before-running-commands)
-instead, using a separate production MPDB. If your SIF is already registered,
+reference, use [database setup](databases.md) after the image is ready, with a separate
+production MPDB. If your SIF is already registered,
 skip this build.
 
 Follow [the license and installer guide](pathway-tools.md#get-the-installer),
