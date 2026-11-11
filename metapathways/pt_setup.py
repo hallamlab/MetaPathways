@@ -25,6 +25,21 @@ def environment():
     return env
 
 
+def build_command(executable, image, definition, threads):
+    """Use compression options only when the selected runtime supports them."""
+    help_text = subprocess.run(
+        [executable, 'build', '--help'], check=True, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        env=environment(), timeout=30).stdout
+    command = [executable, 'build', '--fakeroot']
+    if '--mksquashfs-args' in help_text:
+        command.extend(['--mksquashfs-args', f'-processors {threads}'])
+    else:
+        print('This Apptainer uses site-configured compression CPU limits; '
+              'the runtime does not support --mksquashfs-args.', flush=True)
+    return command + [str(image), str(definition)]
+
+
 def host_check(executable, output):
     """Build and execute a tiny local shell container, without network or sudo."""
     output = Path(output).resolve()
@@ -51,7 +66,7 @@ def host_check(executable, output):
             # Relative names avoid quoting user-selected paths inside the definition.
             (work/'probe.def').write_text('Bootstrap: localimage\nFrom: rootfs\n\n%post\n    echo MP-CHECK-READY > /mp-check-ready\n')
             commands = [
-                [executable, 'build', '--fakeroot', '--mksquashfs-args', '-processors 1', 'probe.sif', 'probe.def'],
+                build_command(executable, 'probe.sif', 'probe.def', 1),
                 [executable, 'exec', '--containall', '--cleanenv', '--workdir', str(work/'scratch'),
                  'probe.sif', '/bin/sh', '-ec', 'read value < /mp-check-ready; test "$value" = MP-CHECK-READY'],
             ]

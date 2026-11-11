@@ -80,6 +80,9 @@ metapathways build_pt --check -o ~/mp-containers
 ```
 
 MP tests a small local container build and execution, and saves a diagnostic log.
+MP checks supported build options before using compression flags. Older Apptainer
+installations without `--mksquashfs-args` use their site-configured compression CPU
+settings instead of the `-t` compression limit.
 The normal `build_pt` command also checks automatically before downloading licensed
 patches. Slurm builds check on the allocated compute node; a login-node check
 cannot certify other nodes.

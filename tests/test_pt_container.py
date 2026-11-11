@@ -32,6 +32,8 @@ class ContainerTests(unittest.TestCase):
         self.addCleanup(patch_download.stop)
 
     def fake_build(self, command, **kwargs):
+        if command[-1] == '--help':
+            return subprocess.CompletedProcess(command, 0, '--mksquashfs-args')
         self.assertIn('--fakeroot', command)
         self.assertIn('-processors 2', command)
         Path(command[-2]).write_bytes(b'fixture SIF')

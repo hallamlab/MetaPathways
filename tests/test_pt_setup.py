@@ -16,6 +16,22 @@ class SetupTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
 
+    def test_build_command_supports_modern_and_older_runtimes(self):
+        for help_text, supported in [('--fakeroot --mksquashfs-args', True), ('--fakeroot --sandbox', False)]:
+            with self.subTest(supported=supported), patch.object(
+                    setup.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, help_text)):
+                command = setup.build_command('/site/apptainer', 'output.sif', 'input.def', 2)
+            self.assertEqual('--mksquashfs-args' in command, supported)
+            self.assertEqual(command[-2:], ['output.sif', 'input.def'])
+            self.assertIn('--fakeroot', command)
+            if supported:
+                self.assertIn('-processors 2', command)
+
+    def test_runtime_help_failure_is_not_treated_as_legacy_support(self):
+        with patch.object(setup.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, ['apptainer'])):
+            with self.assertRaises(subprocess.CalledProcessError):
+                setup.build_command('/site/apptainer', 'output.sif', 'input.def', 2)
+
     def test_check_needs_neither_installer_nor_nextflow(self):
         with patch.object(pt.shutil, 'which', return_value='/env/bin/apptainer'), \
              patch.object(setup, 'host_check') as check, patch.object(pt.nextflow, 'launch') as run:
@@ -37,6 +53,8 @@ class SetupTests(unittest.TestCase):
     def test_probe_reports_permission_failure_and_cleans_temporary_files(self):
         real_run = subprocess.run
         def run(command, **kwargs):
+            if command[-1] == '--help':
+                return subprocess.CompletedProcess(command, 0, '--mksquashfs-args')
             if command[0] == 'ldd':
                 return real_run(command, **kwargs)
             kwargs['stdout'].write('Failed to create mount namespace: requires privileges\n')
@@ -52,6 +70,8 @@ class SetupTests(unittest.TestCase):
         real_run = subprocess.run
         calls = []
         def run(command, **kwargs):
+            if command[-1] == '--help':
+                return subprocess.CompletedProcess(command, 0, '--mksquashfs-args')
             if command[0] == 'ldd':
                 return real_run(command, **kwargs)
             calls.append(command)

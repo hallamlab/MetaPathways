@@ -402,7 +402,7 @@ def build(installer, image, installer_sha256, threads, version=None, dependency_
     executable = shutil.which('apptainer')
     if not executable:
         raise RuntimeError('Apptainer is required and must be on PATH')
-    from metapathways.pt_setup import host_check, prepared_base, validate_base
+    from metapathways.pt_setup import host_check, prepared_base, validate_base, build_command
     host_check(executable, image.parent / 'logs/readiness')
     base_image = None
     if dependency_base or not PREPARED_BASE.is_dir():
@@ -423,8 +423,7 @@ def build(installer, image, installer_sha256, threads, version=None, dependency_
                 Path(__file__).with_name('resources').joinpath('ptools_base.json').read_text())['image']
         definition.write_text(recipe)
         partial = work / 'pathway-tools.sif'
-        subprocess.run([executable, 'build', '--fakeroot', '--mksquashfs-args',
-                        f'-processors {threads}', str(partial), str(definition)],
+        subprocess.run(build_command(executable, partial, definition, threads),
                        cwd=work, check=True, env=inner_build_environment())
         validation_log = validate(partial, work / 'validation')
         metadata = dict(installer_sha256=installer_sha256, image=str(image),
