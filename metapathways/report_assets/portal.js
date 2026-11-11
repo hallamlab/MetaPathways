@@ -18,11 +18,14 @@ function filterRow(column=columns()[0],op='contains',value='') {
 }
 function configure(table, filters=[]) {
   if(!metadata.views[table])table='samples';
+  if(table==='abundance'&&!Array.from($('table').options).some(o=>o.value===table))
+    $('table').append(option(table,'Read abundance: raw measurements (saved query)'));
   $('table').value=table; $('description').textContent=metadata.views[table].description;
   $('filters').replaceChildren(); $('columns').replaceChildren(); $('search').value='';
   relatedKeys.forEach(k=>$('related_'+k).value='');
+  $('columnPicker').open=table==='abundance_explorer';
   $('relatedPanel').hidden=!(columns().includes('sample_id')&&columns().includes('orf_id'));
-  columns().forEach(c=>{const label=element('label');const box=element('input');box.type='checkbox';box.value=c;box.checked=true;label.append(box,document.createTextNode(c));$('columns').append(label);});
+  columns().forEach(c=>{const label=element('label');const box=element('input');box.type='checkbox';box.value=c;box.checked=true;box.onchange=()=>apply();label.append(box,document.createTextNode(c));$('columns').append(label);});
   filters.forEach(f=>filterRow(f.column,f.op,f.value)); sort='';descending=false;offset=0;
 }
 function specFromControls() {
@@ -97,7 +100,10 @@ async function init() {
   if(location.protocol==='file:'){$('offline').hidden=false;$('status').textContent='Start the local portal to search these results.';document.querySelector('.controls').hidden=true;return;}
   try {
     const response=await fetch(api('meta'));if(!response.ok)throw Error('Open the URL printed by metapathways report --serve.');metadata=await response.json();
-    Object.entries(metadata.views).forEach(([key,value])=>$('table').append(option(key,`${value.label} (${value.rows.toLocaleString()})`)));
+    Object.entries(metadata.views).filter(([key])=>key!=='abundance').forEach(([key,value])=>$('table').append(option(key,`${value.label} (${value.rows.toLocaleString()})`)));
+    // Preserve old raw-table bookmarks without listing duplicate measurements.
+    if(new URLSearchParams(location.hash.slice(1)).get('table')==='abundance')
+      history.replaceState(null,'','#table=abundance_explorer');
     const run=metadata.run_details||{};
     const details=[run.mp_version?'MP '+run.mp_version:'Report built with MP '+metadata.report_mp_version,
       metadata.sample_paths.length+' samples',run.command,run.executor,run.status].filter(Boolean);

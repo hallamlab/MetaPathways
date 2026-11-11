@@ -71,6 +71,20 @@ A primary ORF annotation is not identical to all database hits. **Functional ann
 
 The portal provides text searches and column/related-result filters, not biological plotting. Choose the columns needed for downstream work and export all matching rows as CSV. Pagination limits what is displayed, not the full filtered export. Retain the query definition or bookmarked URL and record the report snapshot used for an analysis.
 
+## Review abundance measurements side by side
+
+Select **Read abundance** for one row per sample and feature, with separate
+columns for count, length, coverage, RPKM and TPM. Use **Choose table and export
+columns** to turn measurements on or off; the table updates immediately and CSV
+exports use the same selection. Missing measurements remain blank. Filter
+`feature_type` to compare contigs or ORFs separately.
+
+The raw measurement table is retained in SQLite for provenance and older saved
+queries, but is omitted from the table menu. Source files remain available through
+the file inventory. To update an existing report after installing the new explorer,
+run `metapathways report -o /path/to/analysis --serve` without `--no-rebuild`, then
+reload the browser page. This rebuilds the report without rerunning the analysis.
+
 ## Avoid accidental double counting
 
 Always keep `sample_id`. Keep `entity_id` for pathways and genome results. The same ORF-looking identifier can occur in different samples, and the same pathway can occur in the community and many bins.
