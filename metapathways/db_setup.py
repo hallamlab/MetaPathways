@@ -101,7 +101,7 @@ def preflight(root, args, token):
     return record
 
 
-def execute(root, args, tasks, command, launch, force=False):
+def execute(root, args, tasks, command, launch):
     """Keep restart identity and a nonblocking writer lock for the whole build."""
     import fcntl
     import uuid
@@ -109,7 +109,7 @@ def execute(root, args, tasks, command, launch, force=False):
     token = signature(tasks, args)
     record = preflight(root, args, token)
     if args.dryrun:
-        prepare_tasks(tasks, args, 'preview', force)
+        prepare_tasks(tasks, args, 'preview')
         return launch(tasks, root, args, 'build_db', dryrun=True)
     record.parent.mkdir(parents=True, exist_ok=True)
     with (record.parent / 'database-build.lock').open('a') as lock:
@@ -122,14 +122,14 @@ def execute(root, args, tasks, command, launch, force=False):
         generation = (previous.get('generation') if previous.get('status') == 'running'
                       and previous.get('signature') == token else None) or uuid.uuid4().hex
         state = dict(signature=token, status='running', command=command, generation=generation)
-        prepare_tasks(tasks, args, generation, force)
+        prepare_tasks(tasks, args, generation)
         atomic_json(record, state)
         launch(tasks, root, args, 'build_db', dryrun=False)
         state['status'] = 'complete'
         atomic_json(record, state)
 
 
-def prepare_tasks(tasks, args, generation, force):
+def prepare_tasks(tasks, args, generation):
     if args.update:
         print('Updating selected references. Stop analyses reading this MPDB until the build finishes.')
         for task in tasks:
@@ -139,6 +139,3 @@ def prepare_tasks(tasks, args, generation, force):
                 if task['id'].startswith('index_'):
                     prefix = str(task['outputs'][0]).rsplit('.', 1)[0]
                     task['commands'].insert(0, 'rm -f ' + shlex.quote(prefix) + '.*')
-    if force:
-        for task in tasks:
-            task['status'] = 'redo'

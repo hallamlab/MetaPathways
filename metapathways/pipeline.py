@@ -219,8 +219,6 @@ def ptParser():
                         help='path where MP output was saved [REQUIRED]')
     ptools_parser.add_argument("--tag", dest="tag",
                         help="Custom name for ePGDB [optional]")
-    ptools_parser.add_argument("--container", action="store_true", dest="container", default=False,
-                        help="Flag only used in containerized env [special flag]")
     from metapathways.pt_taxonomy import add_pruning_options
     add_pruning_options(ptools_parser)
     from metapathways.pt_taxonomy import add_taxonomy_options
@@ -254,8 +252,6 @@ def blParser(DBS_FUNC, DBS_FUNC_DEFAULT, ALIGNERS):
                         help="total database-build CPU budget [available CPUs]")
     parser.add_argument("--dryrun", action="store_true", default=False, required=False,
                         help="show the database execution plan without running tasks")
-    parser.add_argument("--snakemake", nargs='*', required=False, default=[],
-                        help="legacy compatibility flags; use the resource flags for new runs")
 
     parser.add_argument("--test", action="store_true", help="build test SwissProt/SILVA references; use -d for the prepared MPDB directory")
 
@@ -670,17 +666,6 @@ def build_db():
     # Preserve the old build_db -t total-core limit, while run -t controls searches.
     if args.max_cpus is None and args.threads is not None:
         args.max_cpus = args.threads
-    force = False
-    for item in args.snakemake:
-        key, _, value = item.partition('=')
-        if key in ('cores', 'jobs') and value:
-            args.max_cpus = nextflow.positive(value)
-        elif key in ('dryrun', 'dry-run'):
-            args.dryrun = True
-        elif key == 'forceall':
-            force = True
-        elif key not in ('keep-going', 'rerun-incomplete', 'printshellcmds', 'latency-wait'):
-            parser.error(f'Legacy --snakemake option {key!r} has no supported Nextflow equivalent; use resource flags')
     try:
         if (args.metacyc_source or args.screen_image or args.skip_pt_screen) and 'metacyc' not in args.func:
             parser.error('MetaCyc source and screening options require --func metacyc')
@@ -690,7 +675,7 @@ def build_db():
                      metacyc_source=args.metacyc_source, skip_pt_screen=args.skip_pt_screen, screen_image=args.screen_image, resources=args, include_support=not (args.add or args.update))
         from metapathways.db_setup import execute
         import shlex
-        execute(args.refdb_dir, args, tasks, shlex.join(['metapathways', *argv[1:]]), nextflow.launch, force)
+        execute(args.refdb_dir, args, tasks, shlex.join(['metapathways', *argv[1:]]), nextflow.launch)
     except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:
         parser.exit(1, f'build_db: {exc}\n')
 
@@ -738,9 +723,9 @@ def ptools():
     args = parser.parse_args()
     from metapathways.pt_container import registered_image
     from metapathways import nextflow
-    image = args.image or (None if args.container else registered_image())
-    if args.executor == 'slurm' and not image:
-        parser.error('Slurm Pathway Tools tasks require a SIF; run build_pt or pass --image')
+    image = args.image or registered_image()
+    if not image:
+        parser.error('Pathway Tools requires a registered SIF; run build_pt or pass --image /path/to/pathway-tools.sif')
     if image:
         image = str(pathlib.Path(image).expanduser().resolve())
     if image and not pathlib.Path(image).is_file():
@@ -759,8 +744,6 @@ def ptools():
     entities += [(p.name, p.name, p, output / 'results/pgdb/MAGs' / p.name)
                  for p in sorted((output / 'magsplitter/results').glob('*'))
                  if p.is_dir() and 'non_binned' not in p.name]
-    if args.no_transport_inference and not image:
-        parser.error('--no_transport_inference requires a Pathway Tools SIF')
     if args.entity:
         entities = [entry for entry in entities if entry[0] == args.entity]
         if not entities:
@@ -768,10 +751,7 @@ def ptools():
     for entity, entity_tag, inputs, results in entities:
         cmd = [sys.executable, script, '--mp_out', str(output), '--tag', tag,
                '--entity', entity]
-        if image:
-            cmd += ['--image', image]
-        elif args.container:
-            cmd.append('--container')
+        cmd += ['--image', image]
         cmd.append('--taxprune' if args.taxprune else '--no_taxprune')
         if args.no_transport_inference:
             cmd.append('--no_transport_inference')
@@ -780,20 +760,17 @@ def ptools():
         if taxon_id is not None:
             cmd += ['--taxon_id', str(taxon_id)]
         tasks.append(nextflow.task('pgdb-' + entity, entity, [shlex.join(cmd)],
-            ([image] if image else []) + [str(inputs), str(output / 'results/annotation_table'),
+            [image, str(inputs), str(output / 'results/annotation_table'),
                 str(output / 'preprocessed' / (output.name + '.fasta'))],
             [str(results / (entity_tag + suffix)) for suffix in ('cyc.tar.bz2', '_pwy.tsv', '_pwy2orf.tsv')],
             cpus=1, memory=args.memory, allow_failure=entity != 'community', adopt_existing=False,
-            cache_version='sequence-backed-pgdb-taxonomy-comment-v6', host_serial=not bool(image)))
+            cache_version='sequence-backed-pgdb-taxonomy-comment-v6'))
         from metapathways.pt_reactions import BLACKLIST
         tasks[-1]['fingerprint_inputs'] = tasks[-1]['inputs'] + [str(BLACKLIST)] + [str(output / 'orf_prediction' / (output.name + '.cds.gff'))]
         from metapathways.pt_reactions import compatibility_path
         compatibility = compatibility_path(output)
         if compatibility and compatibility.is_file():
             tasks[-1]['fingerprint_inputs'].append(str(compatibility))
-    if not image:
-        args.max_tasks = 1
-        print('Native Pathway Tools tasks are serialized; build_pt enables isolated parallel runs.')
     try:
         nextflow.launch(tasks, output, args, 'ptools')
     except (ValueError, RuntimeError, OSError, subprocess.CalledProcessError) as exc:

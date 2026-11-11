@@ -58,7 +58,7 @@ metapathways ptools -o results/sample --taxprune --taxonomic_scope all
 
 These examples use broad cellular-life taxonomic pruning. Choose the scope to match your analysis and record it in your methods; see [scope choices](pathway-tools.md#choose-a-taxonomic-scope).
 
-Each SIF task gets private Pathway Tools data, home and temporary state, allowing concurrent isolated instances. Pathway Tools uses one CPU per PGDB. A community PGDB failure fails the command. Native Pathway Tools is still supported when no image is selected, but serialized to protect shared state. The legacy `--container` flag retains its original meaning and bypasses automatic SIF selection.
+Each SIF task gets private Pathway Tools data, home and temporary state, allowing concurrent isolated instances. Pathway Tools uses one CPU per PGDB. A community PGDB failure fails the command. Use the registered SIF or pass `--image /path/to/pathway-tools.sif`. If neither is available, MP stops with setup instructions before submitting tasks.
 
 ## Add MAG pathways without reannotating
 

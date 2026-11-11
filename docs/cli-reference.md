@@ -318,11 +318,11 @@ Miscellaneous Arguments:
 ```text
 usage: metapathways [-h] [-d PATH] [--func [CATEGORICAL ...]] [-a ALIGNER] [--add | --update]
                     [--skip_pt_screen] [--screen_image SCREEN_IMAGE]
-                    [--metacyc_source METACYC_SOURCE] [-t INT] [--dryrun]
-                    [--snakemake [SNAKEMAKE ...]] [--test] [--max_cpus MAX_CPUS] [--memory MEMORY]
-                    [--max_memory MAX_MEMORY] [--max_tasks MAX_TASKS] [--executor {local,slurm}]
-                    [--account ACCOUNT] [--partition PARTITION] [--qos QOS]
-                    [--reservation RESERVATION] [--time_limit TIME_LIMIT] [--fast_local_db]
+                    [--metacyc_source METACYC_SOURCE] [-t INT] [--dryrun] [--test]
+                    [--max_cpus MAX_CPUS] [--memory MEMORY] [--max_memory MAX_MEMORY]
+                    [--max_tasks MAX_TASKS] [--executor {local,slurm}] [--account ACCOUNT]
+                    [--partition PARTITION] [--qos QOS] [--reservation RESERVATION]
+                    [--time_limit TIME_LIMIT] [--fast_local_db]
                     [--func_search_time_limit FUNC_SEARCH_TIME_LIMIT] [--submit_rate SUBMIT_RATE]
                     [--stream_tool_output] [--work_dir WORK_DIR] [--conda_cache CONDA_CACHE]
                     [--keep_work]
@@ -334,8 +334,6 @@ options:
   -t INT, --threads INT
                         total database-build CPU budget [available CPUs]
   --dryrun              show the database execution plan without running tasks
-  --snakemake [SNAKEMAKE ...]
-                        legacy compatibility flags; use the resource flags for new runs
   --test                build test SwissProt/SILVA references; use -d for the prepared MPDB
                         directory
 
@@ -539,7 +537,6 @@ options:
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         path where MP output was saved [REQUIRED]
   --tag TAG             Custom name for ePGDB [optional]
-  --container           Flag only used in containerized env [special flag]
   --taxprune            Enable taxonomic pruning [default]
   --no_taxprune         Disable taxonomic pruning and perform unpruned rescoring
   --taxon_id TAXON_ID   Override PGDB NCBI taxon in private inputs; applies to every selected entity

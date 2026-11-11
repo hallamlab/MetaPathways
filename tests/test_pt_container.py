@@ -313,6 +313,18 @@ class ContainerTests(unittest.TestCase):
         self.assertEqual([t['allow_failure'] for t in tasks], [False, True])
         self.assertTrue(all('--image' in t['commands'][0] for t in tasks))
 
+    def test_missing_registered_image_stops_before_task_submission(self):
+        from metapathways import pipeline
+        errors = io.StringIO()
+        with patch.object(pipeline.sys, 'argv', ['metapathways', 'ptools', '-o', str(self.root)]), \
+             patch.object(pt, 'registered_image', return_value=None), \
+             patch.object(pt.nextflow, 'launch') as launch, contextlib.redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as failure:
+                pipeline.ptools()
+        self.assertEqual(failure.exception.code, 2)
+        self.assertIn('requires a registered SIF', errors.getvalue())
+        launch.assert_not_called()
+
     def test_no_transport_and_single_entity_are_forwarded(self):
         from metapathways import pipeline
         self.image.touch()

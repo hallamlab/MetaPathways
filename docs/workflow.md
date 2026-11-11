@@ -20,7 +20,7 @@ For guided usage, start with the [command cookbook](commands.md) or [Pathway Too
 | `ptools` | Build/extract community and optional MAG PGDBs | Pathway Tools inputs, SIF/native installation, Camelot extraction dependency |
 | `report` | Index existing outputs; optionally open a local search/export portal | Existing MP output; no biological tools needed for indexing |
 
-Nextflow schedules tasks; existing MP scripts still perform the biological calculations and write the established sample paths. Public database construction uses the new Nextflow planner. The historical Snakefiles and old `bin/metapathways-data-install.sh` helper remain legacy artifacts; use `metapathways build_db` for supported construction. `--snakemake` on that command accepts only explicitly supported compatibility options (`cores`, `jobs`, `dryrun`, `dry-run`, `forceall`, `keep-going`, `rerun-incomplete`, `printshellcmds`, `latency-wait`); unsupported options fail rather than being interpreted as arbitrary Nextflow settings. Prefer the named resource flags.
+Nextflow schedules tasks; existing MP scripts still perform the biological calculations and write the established sample paths. Public database construction uses the new Nextflow planner. The historical Snakefiles and old `bin/metapathways-data-install.sh` helper remain legacy artifacts; use `metapathways build_db` for supported construction. Use the named Nextflow resource flags (`--max_cpus`, `--max_tasks`, `--executor`) and `--dryrun`; use `build_db --update` to replace selected references in an existing MPDB.
 
 ## Annotation stages
 

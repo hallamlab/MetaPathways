@@ -90,6 +90,18 @@ before starting a different one. MP permits only one database builder per MPDB.
 An incomplete older MPDB without a restart record should be rebuilt in a new
 directory; arbitrary nonempty directories are rejected.
 
+## How MP finds Pathway Tools
+
+After `build_pt` finishes successfully, it records the licensed SIF path in
+`~/.config/metapathways/ptools.json` (or `$XDG_CONFIG_HOME/metapathways/ptools.json`).
+`build_db --func metacyc` uses that registered image automatically. A readiness
+check alone does not register an image; wait for the full image build to finish.
+
+Selection order is `--metacyc_source`, then `METAPATHWAYS_PTOOLS_IMAGE` if set,
+then the registration file. MP does not scan for a native Pathway Tools installation.
+The SIF must remain at its recorded path and be readable on the execution nodes.
+Public-only references such as SwissProt do not need Pathway Tools.
+
 ## Already have a licensed MetaCyc source?
 
 You do not need to rebuild an image. Supply an existing SIF explicitly:
