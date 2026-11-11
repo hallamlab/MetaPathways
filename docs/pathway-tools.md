@@ -223,9 +223,14 @@ See the vendor User Guide's batch PathoLogic discussion and [MP's diagnostic det
 
 ## Explicit reaction blacklist
 
-For SIF runs, MP applies a matching MPDB compatibility list to private staged community and MAG PGDB inputs. Its bundled fallback, `metapathways/resources/ptools_reaction_blacklist.json`, is restricted to the exact SIF tested for those entries. Legacy native runs use the bundled known-trigger list because they have no SIF fingerprint. It removes only listed `METACYC` reaction assignments; original annotation tables, feature IDs, sequences, EC assignments and function names are retained. Each attempt records removed assignments and reasons in `ptools-reaction-filter.json` alongside its input diagnostics (native runs save the audit in the entity output directory). Compact SIF runs include this audit in the diagnostic archive.
+Before pathway inference, MP automatically filters explicit reaction assignments
+known to cause problems with the selected Pathway Tools image. It applies the
+filter to private copies of community and MAG inputs, preserving your original
+annotations, sequences, EC assignments and function names. Pathway Tools can still
+infer the same reactions later through other evidence.
 
-The bundled known triggers are `TRANS-RXN8J2-121` and `RXN8J2-204`. For `TRANS-RXN8J2-121` in Pathway Tools 29.5, supplying it explicitly imports sublancin precursor proteins before name matching; an imported protein has no input raw-gene record, causing a NIL structure error. A one-ORF reproducer confirmed the failure. Omitting the explicit assignment allowed the build to finish and name matching recovered the same reaction later. This filter prevents the known early-import failure; it does not forbid later inference of the reaction or certify all Pathway Tools inputs. Changes to the blacklist invalidate affected PGDB checkpoints.
+Removed assignments and their reasons are recorded in `ptools-reaction-filter.json`
+with the run diagnostics, including the diagnostic archive for compact runs.
 
 ## Transport inference and sequence-backed inputs
 
