@@ -1,10 +1,6 @@
 # What MetaPathways does
 
-For the tool-by-tool diagrams and citations, see the [detailed workflow](detailed-workflow.md).
-
-The [main workflow figure](index.md) uses blue input circles, green output circles, and process or decision diamonds. Its heavy main path connects the core stages; side branches show where reads, genome maps and licensed Pathway Tools enter. The [workflow diagrams](detailed-workflow.md) provide brief and detailed flowchart alternatives. Supporting diagrams below retain the shared serif style; the schema diagram retains its relationship notation.
-
-MetaPathways connects assembly annotations, read abundance and optional pathway inference in a shared set of sample and genome results. It accepts one sample or a collection and runs locally or through Slurm.
+MetaPathways connects assembly annotations, read abundance and optional pathway inference in a shared set of sample and genome results. It accepts one sample or a collection and runs locally or through Slurm. For the stages, tools and citations, see the [detailed workflow](detailed-workflow.md).
 
 [![Overview](assets/diagrams/overview.svg)](assets/diagrams/overview.svg)
 

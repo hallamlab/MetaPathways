@@ -18,11 +18,11 @@ Tool labels are abbreviated in this overview: Prodigal runs through pProdigal, a
 :maxdepth: 1
 :caption: Getting started
 
-overview
 installation
 getting-started
-containers
 test
+containers
+overview
 test-bundle
 cami-references
 ```
@@ -33,8 +33,8 @@ cami-references
 :maxdepth: 1
 :caption: Analysis guides
 
-inputs
 databases
+inputs
 pathway-tools
 analysis
 annotation

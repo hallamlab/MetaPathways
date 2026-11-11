@@ -1,10 +1,36 @@
 import tempfile
 from pathlib import Path
 import unittest
+import subprocess
 from metapathways.test_data import prepare, SEEDS
 
 
 class TestTests(unittest.TestCase):
+    def test_build_db_seeds_fresh_destination_before_consumers(self):
+        from metapathways.nf_databases import plan
+        from metapathways.nextflow import ordered
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'fresh MPDB'
+            tasks = plan(root, ['swissprot_test'], 'fast', test=True)
+            ordered(tasks)
+            seeds = next(t for t in tasks if t['id'] == 'test_references')
+            self.assertFalse(root.exists())
+            for task in (tasks[0], seeds):
+                for command in task['commands']:
+                    subprocess.run(['bash', '-ec', command], check=True)
+            self.assertTrue(all((root/name).is_file() for name in SEEDS))
+            for task in tasks:
+                if task['id'].startswith(('index_', 'names_', 'ec_')):
+                    self.assertIn('test_references', task['dependencies'])
+            fasta = root / 'functional/swissprot_test'
+            fasta.write_text('existing reference\n')
+            stamp = fasta.stat().st_mtime_ns
+            (root / 'taxonomic/SILVA_LSU_test').unlink()
+            subprocess.run(['bash', '-ec', seeds['commands'][0]], check=True)
+            self.assertTrue((root/'taxonomic/SILVA_LSU_test').is_file())
+            self.assertEqual(fasta.read_text(), 'existing reference\n')
+            self.assertEqual(fasta.stat().st_mtime_ns, stamp)
+
     def test_bundled_data_copies_idempotently_without_indexes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = prepare(directory)

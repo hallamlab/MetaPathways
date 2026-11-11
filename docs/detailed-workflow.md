@@ -1,6 +1,6 @@
 # Workflow diagrams and tool citations
 
-The [brief nodal workflow on the home page](index.md) introduces the main path. The flowcharts below show the same analysis using standard computational shapes, followed by stage diagrams and software citations.
+The [workflow overview](index.md) introduces the main stages. This page expands each stage and identifies its tools, reference databases and citations.
 
 ## Brief flowchart
 
@@ -18,13 +18,13 @@ The [brief nodal workflow on the home page](index.md) introduces the main path. 
 
 [Open full-size SVG](assets/workflow-detailed.svg) · [Download PDF](assets/workflow-detailed.pdf) · [Brief overview](index.md)
 
-Follow the central processing path from top to bottom. Side branches add read abundance and population analysis. Standard flowchart shapes distinguish processes, inputs / outputs, decisions and databases. Population PGDBs require a contig-to-genome map and a licensed Pathway Tools SIF. Dashed arrows supply that runtime; annotations remain reportable when pathway inference is skipped.
-Optional reads feed mapping and feature abundance; contig-to-genome maps split
-existing annotations into population inputs. The licensed Pathway Tools image
-supports both community and population inference. Annotation results still reach
-the report and explorer when pathway inference is skipped. Reference/image setup
-is reusable; branches show data requirements, not a serial Nextflow job schedule.
-The three diagrams below expand those dependencies and their inputs.
+The central path covers preprocessing, feature extraction, annotation and optional
+community pathway inference. Reads add abundance measurements; contig-to-genome
+maps split existing annotations into population inputs. Community and population
+PGDBs require a licensed Pathway Tools SIF, supplied by the dashed arrows.
+Annotation results remain available in the report and explorer when pathway
+inference is skipped. Reference and image setup can be reused across samples;
+the arrows show dependencies rather than a serial execution schedule.
 
 This page follows a nucleotide assembly through MetaPathways, from reference preparation to connected annotation, abundance and pathway tables. It identifies the software responsible for each calculation and explains how Nextflow schedules it. For a shorter introduction, see the [conceptual overview](overview.md), [local/HPC architecture](architecture.md) and [data-flow overview](data-flow.md).
 

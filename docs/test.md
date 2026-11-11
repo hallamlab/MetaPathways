@@ -34,7 +34,7 @@ The bundled `swissprot_test` contains 227 genuine SwissProt proteins: the 39 ori
 
 When updating an existing installation, rerun `metapathways build_db --test -d MPDB` after reinstalling MP to rebuild the reference indexes and mappings, and use a fresh output directory for the test acceptance run.
 
-## Run all three samples first
+## 2. Run all three samples
 
 The fixture is included in both the repository and installed package; no separate input download is needed. Keep the prepared folder structure intact so manifest paths resolve correctly.
 
@@ -55,7 +55,26 @@ The analysis uses the references in your workspace’s `MPDB` directory. It requ
 
 The explorer starts at **Samples**. On a remote machine, use the [SSH tunnel instructions](reports-tutorial.md#view-a-remote-report-through-ssh) and open the token-bearing URL printed by the report command. The single- and two-sample commands below are additional checks; they are not prerequisites for the three-sample run.
 
-## 2. Run the single-sample workflow
+## 3. Check outputs and explore tables
+
+| Check | Three-sample location |
+| --- | --- |
+| Resolved sample ID and paired read paths | `all/inputs.resolved.tsv` |
+| Functional/taxonomic annotation tables | `all/Urogenital_22/results/annotation_table/` |
+| Contig and ORF abundance | `all/Urogenital_22/results/rpkm/` |
+| Genome assignments and split inputs | `all/Urogenital_22/magsplitter/` |
+| Task outcomes and resource records | `all/logs/analysis_wf/RUN_ID/` |
+| Report and explorer | `all/reports/` |
+
+`RUN_ID` means the generated invocation directory, not a literal directory name. Inspect `summary.json` and the linked logs. Required tasks must succeed; a report existing alone does not prove success. Both paired-read paths must be distinct, all three genome bins should have split inputs, and the report should contain all three sample IDs. Pathway tables are absent by design with `--skip_ptools`.
+
+```bash
+metapathways report -o all --serve --no-rebuild
+```
+
+In `EDA_portal.html`, select a sample, search an annotation, follow an ORF to its related records, and export a filtered CSV. Check that sample/entity identifiers remain in the export. Stop the server with Ctrl-C before continuing with the optional checks below. Follow [the report tutorial](reports-tutorial.md) for remote SSH access and table relationships.
+
+## Optional: run one sample
 
 ```bash
 cd ~/mp-test
@@ -70,7 +89,7 @@ metapathways analysis_wf \
 
 This uses `Urogenital_22`. These explicit resource settings suit a small interface test; use resources actually available on your machine. They are not recommended memory estimates for full metagenomes. Append `--dryrun` first if you want to inspect the plan, then repeat without that flag to execute it. Do not add `--test` to `analysis_wf`: that mode belongs to the separate bundled installation check and selects its own inputs.
 
-## 3. Run two distinct samples together
+## Optional: run two samples together
 
 ```bash
 metapathways analysis_wf \
@@ -88,26 +107,7 @@ This uses `Gastrointestinal_5` and `Skin_28`. Ready tasks can overlap within the
 
 To exercise automatic discovery on all three samples, replace `--manifest cami-test/pair.tsv` with `-i cami-test/inputs`, and choose a new output such as `-o all-auto`. The discovery root contains only `assemblies/`, `reads/`, and `mag_maps/`. Manifests and provenance live outside it so strict discovery does not reject extra files.
 
-## 4. Check outputs and explore tables
-
-| Check | Single-sample location |
-| --- | --- |
-| Resolved sample ID and paired read paths | `single/inputs.resolved.tsv` |
-| Functional/taxonomic annotation tables | `single/Urogenital_22/results/annotation_table/` |
-| Contig and ORF abundance | `single/Urogenital_22/results/rpkm/` |
-| Genome assignments and split inputs | `single/Urogenital_22/magsplitter/` |
-| Task outcomes and resource records | `single/logs/analysis_wf/RUN_ID/` |
-| Report and explorer | `single/reports/` |
-
-`RUN_ID` means the generated invocation directory, not a literal directory name. Inspect `summary.json` and the linked logs. Required tasks must succeed; a report existing alone does not prove success. Both paired-read paths must be distinct, all three genome bins should have split inputs, and the pair report should contain both sample IDs. Pathway tables are absent by design with `--skip_ptools`.
-
-```bash
-metapathways report -o single --serve --no-rebuild
-```
-
-In `EDA_portal.html`, select a sample, search an annotation, follow an ORF to its related records, and export a filtered CSV. Check that sample/entity identifiers remain in the export. Stop the server with Ctrl-C and use `-o pair` to inspect the two-sample output. Follow [the report tutorial](reports-tutorial.md) for remote SSH access and table relationships.
-
-## 5. Optional: include licensed Pathway Tools
+## Optional: include licensed Pathway Tools
 
 Follow [the license and installer guide](pathway-tools.md#get-the-installer). Build and register your own image:
 

@@ -4,6 +4,8 @@
 
 `analysis_wf` runs annotation, optional read mapping, optional MAG splitting, community/MAG pathway inference, and a combined report. It accepts one or many metagenomes. All computational tasks share **one Nextflow DAG and one resource budget**; samples do not wait for other samples to finish. Community PGDB construction, read mapping, and MAG splitting can proceed together once their annotation inputs are ready. MAG PGDB jobs follow splitting.
 
+Before starting, [prepare production references](databases.md) and [organize your inputs](inputs.md). The small test MPDB is only for the bundled example. Replace all `/path/to/` values below with your actual paths.
+
 ## Analysis wf input layout
 
 Use this exact layout for automatic discovery (directory and sample names are case-sensitive):

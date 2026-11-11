@@ -7,6 +7,25 @@ SEEDS = ('functional/swissprot_test', 'taxonomic/SILVA_SSU_test',
          'taxonomic/SILVA_LSU_test', 'test_reference.json')
 
 
+def prepare_references(output):
+    """Seed a test database without replacing existing reference files."""
+    root = Path(output).expanduser().resolve()
+    source = Path(__file__).parent / 'regtests/test_db'
+    for name in SEEDS:
+        if not (source / name).is_file():
+            raise ValueError(f'Missing bundled test file: {source / name}')
+    for name in SEEDS:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with target.open('xb') as dst, (source / name).open('rb') as src:
+                shutil.copyfileobj(src, dst)
+        except FileExistsError:
+            if not target.is_file():
+                raise ValueError(f'Test reference is not a file: {target}')
+    return root
+
+
 def prepare(output, fixtures=None):
     fixtures = Path(fixtures) if fixtures else Path(__file__).parent / 'regtests'
     root = Path(output).expanduser().resolve()
@@ -41,9 +60,14 @@ def prepare(output, fixtures=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-o', '--output_dir', required=True,
+    destinations = parser.add_mutually_exclusive_group(required=True)
+    destinations.add_argument('--reference-db', help='seed only a test reference database')
+    destinations.add_argument('-o', '--output_dir',
                         help='workspace for cami-test/ inputs and MPDB/ reference seeds')
     args = parser.parse_args(argv)
+    if args.reference_db:
+        prepare_references(args.reference_db)
+        return
     root = prepare(args.output_dir)
     print(f'Test workspace: {root}')
     print('Inputs: cami-test/all.tsv (three samples), single.tsv, pair.tsv')

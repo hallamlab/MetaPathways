@@ -12,6 +12,8 @@ Choose sample IDs that begin with a letter and contain only letters, digits and 
 
 `run -i ASSEMBLY_DIRECTORY` annotates multiple files, but it is not the automatic per-sample read/map matcher. Use `analysis_wf` for that complete workflow. It requires nucleotide FASTA; standalone `run` also has a protein-input mode.
 
+Before running these examples, [install MP](installation.md) and [build a production MPDB](databases.md). Replace example paths with your own files. These commands skip pathway inference; add it after completing the [Pathway Tools setup](pathway-tools.md).
+
 ## Automatic discovery
 
 ```text
@@ -32,8 +34,8 @@ Use `.fa`, `.fna` or `.fasta` for assemblies, optionally `.gz`. For reads use `.
 
 ```bash
 metapathways analysis_wf -i my_inputs -o analysis -d /path/to/MPDB \
-  --annotation_dbs swissprot metacyc \
-  --taxprune --taxonomic_scope all \
+  --annotation_dbs swissprot \
+  --skip_ptools \
   --threads 8 --max_cpus 32 --max_memory '64 GB'
 ```
 
@@ -45,7 +47,7 @@ If your directories are already separate:
 metapathways analysis_wf \
   -i /project/assemblies --reads_dir /project/reads --mag_maps_dir /project/maps \
   -o /project/analysis -d /project/MPDB \
-  --taxprune --taxonomic_scope all
+  --skip_ptools
 ```
 
 ## Organize with links, without copying large reads
@@ -85,8 +87,8 @@ Relative paths are resolved against the manifest's directory. Absolute paths mak
 ```bash
 metapathways analysis_wf --manifest /project/samples.tsv \
   -o /project/analysis -d /project/MPDB \
-  --annotation_dbs swissprot metacyc \
-  --taxprune --taxonomic_scope all \
+  --annotation_dbs swissprot \
+  --skip_ptools \
   --threads 8 --max_cpus 32 --max_memory '64 GB'
 ```
 

@@ -71,11 +71,19 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
             # Adding MetaCyc to an existing MPDB must not refresh unrelated references.
             return tasks
 
+    seed_deps = ['directories']
+    if test:
+        from metapathways.test_data import SEEDS
+        seeds = Path(__file__).parent / 'regtests/test_db'
+        seed_deps = [add('test_references',
+            [f'{python} -m metapathways.test_data --reference-db {q(root)}'],
+            [seeds / name for name in SEEDS], [root / name for name in SEEDS], ['directories'])]
+
     silvas = ['SILVA_LSU_test', 'SILVA_SSU_test'] if test else [
         'SILVA_138.1_LSURef_NR99_tax_silva_trunc', 'SILVA_138.1_SSURef_NR99_tax_silva_trunc']
     for db in silvas:
         fasta, prefix = root/'taxonomic'/db, root/'taxonomic/formatted'/db
-        deps = ['directories']
+        deps = seed_deps
         if not test:
             deps = [fetch('fetch_'+db, f'https://www.arb-silva.de/fileadmin/silva_databases/release_138_1/Exports/{db}.fasta.gz', fasta, True)]
         add('index_'+db, [f'makeblastdb -in {q(fasta)} -dbtype nucl -parse_seqids -out {q(prefix)}'],
@@ -103,7 +111,7 @@ def plan(root, databases, aligner, test=False, memory='16 GB', metacyc_source=No
         idmap_dep = fetch('fetch_idmapping', 'https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz', idmap)
     for db in databases:
         fasta, prefix = root/'functional'/db, root/'functional/formatted'/db
-        deps = ['directories']
+        deps = seed_deps
         if not test:
             if db == 'swissprot':
                 url = 'https://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz'

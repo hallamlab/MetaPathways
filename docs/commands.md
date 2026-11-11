@@ -25,7 +25,7 @@ cd ~/mp-test
 metapathways build_db --test -d MPDB
 ```
 
-The first command copies the bundled three-sample inputs and reference FASTAs into a writable workspace. The second builds the reference indexes and supporting tables there. Existing identical inputs are retained; changed inputs are never overwritten. Continue with the [test workflow](test.md).
+The first command copies the bundled three-sample inputs and reference FASTAs into a writable workspace. After changing into the workspace, `build_db` builds the reference indexes and supporting tables there. Existing identical inputs are retained; changed inputs are never overwritten. Continue with the [test workflow](test.md).
 
 ## build_db: references before analysis
 

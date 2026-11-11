@@ -31,7 +31,7 @@ On **your local computer**, in a second terminal, replacing `user@server` with t
 ssh -N -L 8765:127.0.0.1:8765 user@server
 ```
 
-The tunnel command may appear idle; that is normal. Leave both terminals running. Open these addresses in your local browser:
+The tunnel command may appear idle; that is normal. Leave both terminals running. Open the token-bearing URL printed by MP in your local browser, preserving its query string. The report paths are:
 
 - Explorer: <http://localhost:8765/reports/EDA_portal.html>
 - Run report: <http://localhost:8765/reports/MP_run_report.html>

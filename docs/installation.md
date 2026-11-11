@@ -2,11 +2,13 @@
 
 Install MetaPathways, try the included three-sample dataset, then use your own data. Linux x86-64 is supported. Choose one installation method below; **Mamba is recommended**.
 
+You need a Linux x86-64 host and an internet connection. If Mamba is not installed, follow the [Miniforge installation instructions](https://github.com/conda-forge/miniforge) or your site’s environment setup. Choose one installation route; the other routes below are alternatives.
+
 ## 1. Conda package with Mamba (preferred)
 
 ```bash
 mamba create -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.3
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.4
 conda activate metapathways
 ```
 
@@ -26,14 +28,19 @@ metapathways report -o all --serve --no-browser --port 8765
 
 Open the URL printed by the report server. On a remote server, use an [SSH tunnel](reports-tutorial.md#view-a-remote-report-through-ssh). The **2.4 MiB input dataset is included** in the package and is derived from CAMI II ([Meyer et al., 2022](#cami-references)); database preparation downloads enzyme and taxonomy support records. The test covers annotation, paired-read abundance, genome splitting, reports and exploration. Pathway inference is skipped because it requires your own Pathway Tools license.
 
+`prepare_test` creates `cami-test/` and `MPDB/` inside the requested workspace.
+Run the subsequent commands from that workspace (`cd ~/mp-test` above), so
+`-d MPDB` selects its reference database. `build_db --test` also copies missing
+bundled reference seeds into its destination, preserving existing files.
+
 ## 2. Quay: Docker or Apptainer
 
 ```bash
 # Docker
-docker pull quay.io/hallamlab/metapathways:4.0.3
+docker pull quay.io/hallamlab/metapathways:4.0.4
 
 # Or Apptainer
-apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.3
+apptainer pull metapathways.sif docker://quay.io/hallamlab/metapathways:4.0.4
 ```
 
 The image includes the same workflow dependencies and test data. Follow the [Docker three-sample test](containers.md#docker-three-sample-test) or [Apptainer three-sample test](containers.md#apptainer-three-sample-test) to run the commands with your working directory mounted for persistent results. Licensed Pathway Tools is a separate image.
@@ -50,13 +57,13 @@ conda activate metapathways
 
 Then run the **same three-sample commands under option 1**, starting with `metapathways prepare_test -o ~/mp-test`. MP installs its Python workflow helpers automatically. The data comes from the installed package; the test does not depend on your checkout location.
 
-## Upgrade to 4.0.3
+## Upgrade to 4.0.4
 
 For an existing Conda installation, update the environment before submitting jobs:
 
 ```bash
 mamba install -n metapathways --override-channels --strict-channel-priority \
-  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.3
+  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.4
 conda activate metapathways
 metapathways version
 ```
@@ -71,6 +78,8 @@ Previously compacted outputs use implementation-specific completion markers and
 require a new output directory when upgrading. Noncompacted runs may recompute
 tasks whose tracked command or input/output evidence differs. Externally generated
 FAST results are not automatically accepted as workflow successes.
+
+After the test finishes, use the [test walkthrough](test.md#3-check-outputs-and-explore-tables) to check its outputs. Stop the report server with Ctrl-C before entering more commands in the same terminal.
 
 ## Try your own data
 
