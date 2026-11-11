@@ -10,7 +10,9 @@ metadata = ast.parse((Path(__file__).parents[1] / 'metapathways/_version.py').re
 release = next(ast.literal_eval(n.value) for n in metadata.body
                if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == '__version__' for t in n.targets))
 version = release
-extensions = ['myst_parser', 'sphinxcontrib.mermaid']
+extensions = ['myst_parser', 'sphinxcontrib.mermaid', 'sphinx_copybutton']
+# Keep multiline commands intact; omit highlighted console prompts/output.
+copybutton_exclude = '.linenos, .gp, .go'
 source_suffix = {'.md': 'markdown', '.rst': 'restructuredtext'}
 root_doc = 'index'
 exclude_patterns = ['_build', 'build', 'src', 'validation', 'requirements.txt', 'includes']
