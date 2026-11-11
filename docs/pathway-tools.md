@@ -2,6 +2,28 @@
 
 [Home](index.md) · [Test walkthrough](test.md) · [Complete flags](cli-reference.md)
 
+## Choose your setup before running commands
+
+**Choose one setup route. If you want MetaCyc protein annotations as well as
+pathway inference, use the combined build below as your first `build_pt` command.**
+
+| What you want | Setup route |
+| --- | --- |
+| Pathway inference plus MetaCyc protein searches | Prepare a production MPDB, then [build the SIF and MetaCyc reference together](#build-the-mpdb-metacyc-annotation-reference-at-the-same-time) with `build_pt -d MPDB` |
+| Pathway inference from existing annotations, including the bundled SwissProt test | [Build only the SIF](#build-and-register-once), without `-d` |
+| Add MetaCyc when a working SIF is already registered | Use `build_db --func metacyc -d MPDB`; no new image build is needed |
+| Annotation and abundance without pathway inference | Skip this setup and use `--skip_ptools` |
+
+Obtain your licensed installer and check the host prerequisites below before
+starting either build. The combined route includes MetaCyc export, indexing and
+reaction compatibility screening; allow those tasks to finish before analysis.
+It does not replace the public-reference setup that supplies SILVA and taxonomy.
+
+Adding MetaCyc to MPDB does not select it automatically for annotation. Include
+`--annotation_dbs swissprot metacyc` on your subsequent `run` or `analysis_wf`
+command if you built both references. Make this choice before annotating samples;
+adding a reference later does not change existing annotations by itself.
+
 ## Defaults and explicit choices
 
 | Setting | MP default | Your alternative |
@@ -61,33 +83,12 @@ The host must permit Apptainer's unprivileged/fakeroot build path. Administrator
 
 Use shared storage for a finished image that compute nodes need to read. Local scratch can accelerate building on slow network filesystems. `APPTAINER_TMPDIR` is an optional Apptainer troubleshooting setting, not required to run MP. See your site's Apptainer setup when choosing scratch; it must have enough space.
 
-## Build and register once
-
-Run on the server, with the environment active:
-
-```bash
-metapathways build_pt \
-  -i ~/Downloads/pathway-tools-29.5-linux-64-tier1-install \
-  -o ~/mp-containers
-```
-
-MP uses Nextflow to build the image, download official release-specific SRI patches, validate the installation, and register the resulting SIF. Validation checks Pathway Tools startup and a small BLAST database/search. Wait for the build command to complete successfully before launching dependent analyses.
-
-`-o` is the image directory. Without it, the default is `~/.local/share/metapathways/containers` (or its XDG equivalent). Registration is stored at `~/.config/metapathways/ptools.json` (or its XDG equivalent). The adjacent `.sif.json` records provenance, including hashes and patch records. `--ptools_version 29.5` supplies a version when MP cannot recognize a renamed installer. `-t 2` controls compression CPUs, not the number of CPUs used by later PGDB tasks.
-
-An explicit new build creates a new image and preserves older images. Automatic patch downloads are disabled during analyses, so runs use the patch snapshot built into that image. There are no MP-authored edits to licensed Pathway Tools code or MetaCyc frames. A successful image validation does not prove that every possible genome will infer successfully.
-
-Subsequent `ptools` and `analysis_wf` commands use the registered SIF automatically. No image environment variable is necessary. To pin a particular image for a comparison, add:
-
-```text
---image /absolute/path/to/pathway-tools-VERSION-HASH.sif
-```
-
-Explicit `--image` takes precedence over the environment override and registration. Do not delete a SIF referenced by a running task. Rebuilding an image or changing the selected path can invalidate PGDB task reuse. On Slurm the selected path must be readable at the same location on all compute nodes.
-
 ## Build the MPDB MetaCyc annotation reference at the same time
 
-Prepare public references first, then build the licensed image and add its MetaCyc reference:
+**Recommended when you want both MetaCyc annotation and pathway inference.**
+Run this instead of the image-only build. Prepare public references first (skip
+the first command if this production MPDB is already ready), then build the
+licensed image and add its MetaCyc reference:
 
 ```bash
 metapathways build_db -d ~/MPDB --func swissprot -a fast
@@ -116,6 +117,34 @@ metapathways build_db -d ~/MPDB --func metacyc -a fast \
 Use `-a blast` if subsequent annotation will use `--annotation_algorithm BLAST`. MetaCyc rebuilding replaces its existing reference and removes obsolete index files, including the other aligner's indexes. **Do not rebuild a reference directory while analyses are reading it.** Use a separate MPDB for a concurrent reference-version comparison.
 
 The ordinary public-reference build does not acquire licensed MetaCyc. You supply the authorized installer or data. MP does not grant permission to redistribute the installer, SIF, patches or reference files; preserve them according to the applicable vendor terms.
+
+## Build and register once
+
+**Alternative: image only.** Choose this when you want inference from existing
+annotations and do not need MetaCyc protein searches. If you completed the
+combined build above, skip this command: it would build another image.
+
+Run on the server, with the environment active:
+
+```bash
+metapathways build_pt \
+  -i ~/Downloads/pathway-tools-29.5-linux-64-tier1-install \
+  -o ~/mp-containers
+```
+
+MP uses Nextflow to build the image, download official release-specific SRI patches, validate the installation, and register the resulting SIF. Validation checks Pathway Tools startup and a small BLAST database/search. Wait for the build command to complete successfully before launching dependent analyses.
+
+`-o` is the image directory. Without it, the default is `~/.local/share/metapathways/containers` (or its XDG equivalent). Registration is stored at `~/.config/metapathways/ptools.json` (or its XDG equivalent). The adjacent `.sif.json` records provenance, including hashes and patch records. `--ptools_version 29.5` supplies a version when MP cannot recognize a renamed installer. `-t 2` controls compression CPUs, not the number of CPUs used by later PGDB tasks.
+
+An explicit new build creates a new image and preserves older images. Automatic patch downloads are disabled during analyses, so runs use the patch snapshot built into that image. There are no MP-authored edits to licensed Pathway Tools code or MetaCyc frames. A successful image validation does not prove that every possible genome will infer successfully.
+
+Subsequent `ptools` and `analysis_wf` commands use the registered SIF automatically. No image environment variable is necessary. To pin a particular image for a comparison, add:
+
+```text
+--image /absolute/path/to/pathway-tools-VERSION-HASH.sif
+```
+
+Explicit `--image` takes precedence over the environment override and registration. Do not delete a SIF referenced by a running task. Rebuilding an image or changing the selected path can invalidate PGDB task reuse. On Slurm the selected path must be readable at the same location on all compute nodes.
 
 ## Run pathway inference
 

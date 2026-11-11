@@ -38,12 +38,13 @@ Open the report server's printed URL; for remote runs, follow the [SSH viewing g
 
 ## Run your own data
 
+**Before building Pathway Tools, [choose image-only or combined MetaCyc setup](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html#choose-your-setup-before-running-commands).** If you want MetaCyc protein annotations, complete the combined build and select `--annotation_dbs swissprot metacyc` before running your own annotation. Then follow the [complete workflow guide](https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html) to include reads and genome maps. Test references are for testing only.
+
 ```bash
 metapathways build_db -d ~/MPDB --func swissprot -a fast
 metapathways run -i /path/to/assembly.fasta -o results -d ~/MPDB --threads 8
 ```
 
-**For PGDBs, follow the [Pathway Tools installation guide](https://hallamlab-metapathways.readthedocs.io/en/latest/pathway-tools.html) first.** Then follow the [complete workflow guide](https://hallamlab-metapathways.readthedocs.io/en/latest/analysis.html) to include reads and genome maps. Test references are for testing only.
 
 ## Workflow
 

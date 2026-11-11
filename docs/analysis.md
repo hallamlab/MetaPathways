@@ -1,5 +1,10 @@
 # Complete multi-sample analysis
 
+For licensed pathway inference, [choose your Pathway Tools setup](pathway-tools.md#choose-your-setup-before-running-commands)
+before building an image. If you also want MetaCyc protein annotations, use the
+combined image-and-reference build after preparing public references, then select
+MetaCyc when annotating. The bundled installation test skips this licensed setup.
+
 **To build PGDBs, first complete the [Pathway Tools installation guide](pathway-tools.md)** and build/register your licensed SIF with `metapathways build_pt`. Once that setup is complete, run the workflow below. If you do not want pathway inference, add `--skip_ptools`; no Pathway Tools installation is needed.
 
 `analysis_wf` runs annotation, optional read mapping, optional MAG splitting, community/MAG pathway inference, and a combined report. It accepts one or many metagenomes. All computational tasks share **one Nextflow DAG and one resource budget**; samples do not wait for other samples to finish. Community PGDB construction, read mapping, and MAG splitting can proceed together once their annotation inputs are ready. MAG PGDB jobs follow splitting.

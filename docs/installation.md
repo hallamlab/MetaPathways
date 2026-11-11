@@ -1,5 +1,10 @@
 # Installation and first run
 
+For licensed pathway inference, [choose your Pathway Tools setup](pathway-tools.md#choose-your-setup-before-running-commands)
+before building an image. If you also want MetaCyc protein annotations, use the
+combined image-and-reference build after preparing public references, then select
+MetaCyc when annotating. The bundled installation test skips this licensed setup.
+
 Install MetaPathways, try the included three-sample dataset, then use your own data. Linux x86-64 is supported. Choose one installation method below; **Mamba is recommended**.
 
 You need a Linux x86-64 host and an internet connection. If Mamba is not installed, follow the [Miniforge installation instructions](https://github.com/conda-forge/miniforge) or your site’s environment setup. Choose one installation route; the other routes below are alternatives.

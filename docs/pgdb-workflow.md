@@ -7,13 +7,22 @@ analysis settings.
 
 ## Build Pathway Tools once
 
-Follow the [Pathway Tools licensing and installer guide](pathway-tools.md#get-the-installer) to obtain your licensed Linux x86-64 installer, then provide it to MP:
+**Before building, [choose image-only or combined setup](pathway-tools.md#choose-your-setup-before-running-commands).**
+For MetaCyc protein searches and pathway inference, prepare your
+[production MPDB](databases.md), obtain the licensed Linux installer, and use
+this combined command as your first build:
 
 ```bash
 metapathways build_pt \
   -i ./pathway-tools-29.5-linux-64-tier1-install \
-  -o ./containers
+  -o ./containers -d /path/to/MPDB -a fast
 ```
+
+For inference from existing annotations only, omit `-d /path/to/MPDB -a fast`.
+If a working SIF is already registered, skip this image build and use the
+`build_db --func metacyc` command below to add the annotation reference.
+Wait for setup and screening to finish before analysis. Select
+`--annotation_dbs swissprot metacyc` when annotating with both references.
 
 Nextflow runs the Apptainer build, validates Pathway Tools startup, and registers the finished SIF in `~/.config/metapathways/ptools.json`. Subsequent `ptools` commands use that image automatically. Without `-o`, images go under `~/.local/share/metapathways/containers`; the XDG equivalents are honored. `--image` on `ptools` or `METAPATHWAYS_PTOOLS_IMAGE` overrides registration.
 
@@ -27,13 +36,8 @@ New images include NCBI BLAST+ and its configuration. Before registration, valid
 
 ## MetaCyc from Pathway Tools
 
-To build the SIF and prepare its bundled MetaCyc reference in an existing MPDB with one command:
-
-```bash
-metapathways build_pt \
-  -i ./pathway-tools-29.5-linux-64-tier1-install \
-  -o ./containers -d /path/to/MPDB -a fast
-```
+The combined setup command above also prepares the MetaCyc annotation reference.
+Do not repeat the image build if it has already completed.
 
 Use `-a blast` for BLAST annotation indexes instead. Nextflow first builds and validates the SIF, then exports its bundled MetaCyc flat files alongside `protseq.fsa` in private staging. It runs the repository's `metacyc_mapping_build.py` and `metacyc_build_ont.py`, checks the reference files and tables, indexes the proteins, and installs:
 

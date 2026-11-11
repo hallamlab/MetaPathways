@@ -1,5 +1,10 @@
 # Organize assemblies, reads and genome assignments
 
+For licensed pathway inference, [choose your Pathway Tools setup](pathway-tools.md#choose-your-setup-before-running-commands)
+before building an image. If you also want MetaCyc protein annotations, use the
+combined image-and-reference build after preparing public references, then select
+MetaCyc when annotating. The bundled installation test skips this licensed setup.
+
 [Home](index.md) · [Command cookbook](commands.md) · [Manifest reference](analysis.md#custom-analysis-manifest)
 
 **Want PGDBs? Complete the [Pathway Tools installation guide](pathway-tools.md) first**, including building and registering your licensed SIF with `metapathways build_pt`. Then prepare your inputs and run `analysis_wf`. To run without pathway inference, add `--skip_ptools`.

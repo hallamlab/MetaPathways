@@ -109,7 +109,14 @@ To exercise automatic discovery on all three samples, replace `--manifest cami-t
 
 ## Optional: include licensed Pathway Tools
 
-Follow [the license and installer guide](pathway-tools.md#get-the-installer). Build and register your own image:
+**This test needs only the licensed image**, because it uses the prepared
+SwissProt test references. If you also want a production MetaCyc annotation
+reference, choose the [combined setup](pathway-tools.md#choose-your-setup-before-running-commands)
+instead, using a separate production MPDB. If your SIF is already registered,
+skip this build.
+
+Follow [the license and installer guide](pathway-tools.md#get-the-installer),
+then build and register your own image:
 
 ```bash
 metapathways build_pt \
