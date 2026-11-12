@@ -23,6 +23,7 @@ Tool labels are abbreviated in this overview: Prodigal runs through pProdigal, a
 installation
 getting-started
 test
+vitamin-b5-vignette
 containers
 overview
 test-bundle

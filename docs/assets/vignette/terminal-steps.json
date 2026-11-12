@@ -1,0 +1,52 @@
+[
+  {
+    "id": "terminal-install",
+    "label": "Command reference \u2014 run in your terminal; installation output varies",
+    "text": "mamba create -n mp-vignette --override-channels --strict-channel-priority \\\n  -c hallamlab -c conda-forge -c bioconda metapathways=4.0.13\nconda activate mp-vignette\nmetapathways version"
+  },
+  {
+    "id": "terminal-example",
+    "label": "Command reference \u2014 downloaded example route",
+    "text": "mkdir -p ~/mp-vignette\ncd ~/mp-vignette\ncurl -fL -O https://github.com/hallamlab/MetaPathways/releases/download/v4.0.13/mp-vignette-v1.tar.gz\ncurl -fL -O https://github.com/hallamlab/MetaPathways/releases/download/v4.0.13/mp-vignette-v1.tar.gz.sha256\nsha256sum -c mp-vignette-v1.tar.gz.sha256\ntar -xzf mp-vignette-v1.tar.gz\ncd mp-vignette-v1\nmetapathways report -o all --serve"
+  },
+  {
+    "id": "terminal-check",
+    "label": "Command reference \u2014 check the host before building",
+    "text": "mkdir -p ~/mp-vignette-run\ncd ~/mp-vignette-run\nmetapathways build_pt --check -o containers"
+  },
+  {
+    "id": "terminal-pt",
+    "label": "Command reference \u2014 obtain your own licensed installer first",
+    "text": "metapathways build_pt \\\n  -i ~/Downloads/pathway-tools-29.5-linux-64-tier1-install \\\n  -o containers"
+  },
+  {
+    "id": "terminal-db",
+    "label": "Command reference \u2014 wait for image registration before starting",
+    "text": "metapathways build_db -d MPDB --func swissprot metacyc -a fast \\\n  --max_cpus 8 --max_memory '32 GB'"
+  },
+  {
+    "id": "terminal-inputs",
+    "label": "Command reference \u2014 prepare the three small input samples",
+    "text": "metapathways prepare_test -o inputs\ncat inputs/cami-test/all.tsv"
+  },
+  {
+    "id": "terminal-analysis",
+    "label": "Command reference \u2014 full reference analysis with pathway inference",
+    "text": "metapathways analysis_wf \\\n  --manifest inputs/cami-test/all.tsv -o all -d MPDB \\\n  --annotation_dbs swissprot metacyc \\\n  --threads 4 --memory '4 GB' --max_tasks 2 \\\n  --max_cpus 8 --max_memory '32 GB'"
+  },
+  {
+    "id": "terminal-verified",
+    "label": "Verified historical run summary \u2014 MP 4.0.8, not a new analysis",
+    "text": "Run: a6ed138e64294ad5876fb2eab85f283c\nStatus: SUCCESS\nSamples: Gastrointestinal_5, Skin_28, Urogenital_22\nTasks: 40 SUCCESS, 29 ALREADY_COMPUTED\n\nVerified results:\nPanC C2-G10: 2 annotation records (SwissProt and MetaCyc)\nPANTO-PWY: 2 / 4 reactions; C2-G9 and C2-G10\nPWY-5155: 1 / 1 reaction; C2-G11"
+  },
+  {
+    "id": "terminal-report",
+    "label": "Command reference \u2014 rebuild the index and open the explorer",
+    "text": "metapathways report -o all --serve\n\n# Remote server instead:\nmetapathways report -o all --serve --no-browser --port 8765\n\n# Separate terminal on your laptop (replace user@server):\nssh -N -L 8765:127.0.0.1:8765 user@server"
+  },
+  {
+    "id": "terminal-export",
+    "label": "Executed downstream example \u2014 captured CSV output",
+    "text": "$ python summarize_evidence.py\n$ cat panto-evidence.csv\nsample_id,entity_id,pathway_id,orf_id,product,databases_in_panc_export\nGastrointestinal_5,CAMI_OTU_97_68_0,PANTO-PWY,C2-G10,Pantothenate synthetase,metacyc;swissprot\nGastrointestinal_5,CAMI_OTU_97_68_0,PANTO-PWY,C2-G9,3-methyl-2-oxobutanoate hydroxymethyltransferase,\n"
+  }
+]

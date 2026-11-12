@@ -87,3 +87,10 @@ the rendered page keeps a valid section structure and existing links still work:
 Optional instructions go here.
 ````
 `````
+
+## Biological vignette assets
+
+The vitamin B5 vignette has a versioned results bundle and reproducible browser
+captures. See [the capture and packaging instructions](https://github.com/hallamlab/MetaPathways/tree/main/scripts/vignette)
+before refreshing screenshots or publishing a new example snapshot. Keep
+historical analysis provenance separate from the report-builder version.

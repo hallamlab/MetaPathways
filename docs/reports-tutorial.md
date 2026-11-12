@@ -2,6 +2,9 @@
 
 [Home](index.md) · [Exact schema and SQL](results-schema.md) · [Benchmark statistics](benchmarking.md)
 
+For a complete biological example with screenshots and downloadable results, follow
+the [vitamin B5 vignette](vitamin-b5-vignette.md).
+
 ## Open the report or start the explorer
 
 The report and explorer serve different purposes. `MP_run_report.html` provides accounting and navigation to results/logs. `EDA_portal.html` queries the SQLite index so you can search, filter, follow related records and export CSVs. The explorer requires its local Python server; double-clicking the explorer HTML alone does not start that server.
