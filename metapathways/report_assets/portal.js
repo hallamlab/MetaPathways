@@ -25,7 +25,8 @@ function updateMags(value='') {
 function selectedScope() {
   const sample=$('scopeSample').value, mag=$('scopeMag').value;
   const supported=mag ? (metadata.mag_scope_tables||[]).includes($('table').value) : columns().includes('sample_id')||$('table').value==='annotation_terms';
-  $('scopeNote').textContent=sample&&!supported ? 'This is run-wide metadata; the Sample / MAG selection does not filter this table.' : mag ? 'Showing biological records for '+sample+' / '+mag+'.' : sample ? 'Showing records for sample '+sample+'.' : 'Choose a sample and MAG to subset biological tables.';
+  $('scopeNote').hidden=!(sample&&!supported);
+  $('scopeNote').textContent='This is run-wide metadata; the Sample / MAG selection does not filter this table.';
   return sample&&supported ? {sample_id:sample,...(mag?{entity_id:mag}:{})} : {};
 }
 function configure(table, filters=[]) {

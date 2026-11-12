@@ -166,6 +166,9 @@ exact identifier or RNA coordinate matches link them to MAGs. Unlinked records
 and FASTQ reads remain available in sample downloads, without guessing MAG
 membership.
 
+Use the **Sample** and **MAG** selectors beside the explorer filter controls to
+restrict browsing. Bulk downloads remain on the separate **Downloads** page.
+
 The table selector groups results by samples, features, annotations, MAGs,
 pathways, abundance and provenance. The report indexes retained FASTA and FASTQ
 files, including gzip-compressed files. Sequences inside PGDB archives remain
