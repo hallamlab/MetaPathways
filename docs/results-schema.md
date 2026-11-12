@@ -133,3 +133,24 @@ The server binds only to `127.0.0.1`, uses a random URL prefix, checks Host/Orig
 The explorer's **Read abundance** table and its CSV export show measurements side by side, one row per sample and feature (`feature_type` is `orf` or `contig`). Filename prefixes are removed from known CoverM metric names. `count` copies ORF `Count` or contig `Read Count`; the counting conventions and normalization remain those of featureCounts and CoverM respectively, so these are not interchangeable units. `length_bp` copies the abundance file's length, rather than the annotation table's length. Coverage statistics unavailable for ORFs are blank, not zero. No measurements are recalculated. The separate **Read abundance: raw measurements** table retains original column names and values, including unrecognized measurements. Source links identify the original TSVs. Rebuild the report to update an existing explorer; mapping and annotation do not need rerunning.
 
 Known tRNA/rRNA abundance features are retained as linked gene records without a missing-protein-annotation warning. Missing CDS or unidentified referenced features still produce an import note. Routine abundance imports do not produce a warning.
+
+## RNA loci and reference evidence
+
+`rna_features` identifies each locus by `(sample_id, rna_id)` and links it to
+`contigs`. Coordinates are one-based inclusive. The importer prefers
+`genbank/*.annot.gff` to preserve downstream feature IDs, with raw rRNA/tRNA GFF
+fallback when the annotated GFF is absent. Source IDs record file provenance.
+
+`rna_taxonomy` retains each reference hit separately, including the original
+query ID, reference name, similarity, E-value, bit score and taxonomy. Hit start/end
+are offsets within the extracted RNA, not assembly coordinates. Bedtools query
+coordinates link to the exact RNA locus and strand. Ambiguous or unmatched rows
+retain their evidence with a null `rna_id` and an import note.
+
+The explorer provides `rna_explorer`, `rna_taxonomy_explorer`,
+`mag_rna_explorer`, `orf_rna_explorer` and `rna_abundance_explorer`.
+MAG joins use the explicit contig map; gene context uses sample and contig.
+Gene/RNA pairs can contain multiple rows per gene and must not be used to sum
+gene abundance. RNA abundance joins exact sample/feature IDs, without estimating
+missing measurements. tRNA isotype and anticodon are separate from rRNA taxonomy;
+none of these joins overwrites protein-hit taxonomy.

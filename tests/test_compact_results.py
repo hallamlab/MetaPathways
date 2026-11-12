@@ -35,11 +35,13 @@ class CompactTests(unittest.TestCase):
             return {t:db.execute(f'select * from {t} order by 1,2').fetchall() for t in (
                 'contigs','orfs','annotations','annotation_taxonomy','entities',
                 'contig_mags','entity_orfs','orf_groups','pathways','pathway_orfs',
-                'abundance','abundance_explorer')}
+                'abundance','abundance_explorer','rna_features','rna_taxonomy')}
 
     def test_report_rebuild_equivalence_and_external_symlink_safety(self):
         outside = self.root/'external'; outside.mkdir(); (outside/'important').write_text('keep')
         (self.base/'external_link').symlink_to(outside, target_is_directory=True)
+        (self.base/'genbank').mkdir(exist_ok=True)
+        (self.base/'genbank/alpha.annot.gff').write_text('C1\tbarrnap\trRNA\t11\t100\t.\t+\t.\tID=RNA1;product=16S ribosomal RNA\n')
         before = self.tables()
         compact(self.base, 'key')
         self.assertEqual(before, self.tables())

@@ -13,7 +13,7 @@ import tempfile
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 SCHEMA = '''
 PRAGMA foreign_keys=ON;
 CREATE TABLE samples(sample_id TEXT PRIMARY KEY, output_path TEXT NOT NULL);
@@ -60,6 +60,29 @@ CREATE TABLE abundance_explorer(sample_id TEXT, feature_type TEXT, feature_id TE
  coverage_variance REAL, trimmed_mean_coverage REAL, rpkm REAL, tpm REAL, source_id INTEGER,
  PRIMARY KEY(sample_id,feature_type,feature_id),
  FOREIGN KEY(sample_id) REFERENCES samples, FOREIGN KEY(source_id) REFERENCES sources);
+CREATE TABLE rna_features(sample_id TEXT, rna_id TEXT, contig_id TEXT, feature_type TEXT,
+ subunit TEXT, start INTEGER, end INTEGER, strand TEXT, product TEXT, isotype TEXT,
+ anticodon TEXT, score REAL, source_id INTEGER,
+ PRIMARY KEY(sample_id,rna_id), FOREIGN KEY(sample_id,contig_id) REFERENCES contigs,
+ FOREIGN KEY(source_id) REFERENCES sources);
+CREATE INDEX rna_contig ON rna_features(sample_id,contig_id);
+CREATE TABLE rna_taxonomy(evidence_id INTEGER PRIMARY KEY, sample_id TEXT, rna_id TEXT,
+ query_id TEXT, reference_db TEXT, hit_start INTEGER, hit_end INTEGER, similarity REAL,
+ evalue REAL, bitscore REAL, taxonomy TEXT, source_id INTEGER,
+ FOREIGN KEY(sample_id,rna_id) REFERENCES rna_features, FOREIGN KEY(source_id) REFERENCES sources);
+CREATE VIEW rna_explorer AS
+ SELECT r.*,c.original_id AS original_contig_id FROM rna_features r JOIN contigs c USING(sample_id,contig_id);
+CREATE VIEW rna_taxonomy_explorer AS
+ SELECT t.*,r.contig_id,r.subunit,r.start,r.end,r.strand FROM rna_taxonomy t
+ LEFT JOIN rna_features r USING(sample_id,rna_id);
+CREATE VIEW mag_rna_explorer AS
+ SELECT r.*,m.entity_id FROM rna_explorer r JOIN contig_mags m USING(sample_id,contig_id);
+CREATE VIEW orf_rna_explorer AS
+ SELECT r.*,o.orf_id FROM rna_explorer r JOIN orfs o USING(sample_id,contig_id)
+ WHERE o.orf_id NOT IN (SELECT rna_id FROM rna_features WHERE sample_id=o.sample_id);
+CREATE VIEW rna_abundance_explorer AS
+ SELECT a.*,r.rna_id,r.feature_type AS rna_type FROM abundance_explorer a
+ JOIN rna_features r ON a.sample_id=r.sample_id AND a.feature_id=r.rna_id WHERE a.feature_type='orf';
 CREATE TABLE issues(issue_id INTEGER PRIMARY KEY, sample_id TEXT, source TEXT, message TEXT);
 CREATE TABLE files(path TEXT PRIMARY KEY, bytes INTEGER, modified_utc TEXT);
 CREATE TABLE execution(run_id TEXT, command TEXT, task TEXT, label TEXT, status TEXT,
@@ -100,6 +123,11 @@ CREATE VIEW mag_gene_explorer AS
  FROM entity_orfs m JOIN entities e USING(sample_id,entity_id) JOIN orfs o USING(sample_id,orf_id);
 '''
 VIEWS = {
+ 'rna_explorer': ('RNA features', 'rRNA and tRNA loci, including tRNA pseudogenes; coordinates are one-based inclusive.'),
+ 'rna_taxonomy_explorer': ('rRNA taxonomy', 'Reference-hit evidence for RNA loci; hit coordinates are relative to the extracted RNA, not the contig.'),
+ 'mag_rna_explorer': ('MAG RNA features', 'RNA loci on explicitly assigned MAG contigs; no inferred MAG taxonomy.'),
+ 'orf_rna_explorer': ('Genes sharing RNA contigs', 'Gene/RNA pairs on the same contig; contextual evidence, not a gene taxonomic assignment.'),
+ 'rna_abundance_explorer': ('RNA abundance', 'Reported measurements matched by sample and RNA feature identifier.'),
  'samples': ('Samples', 'One row per sample output directory.'),
  'contigs': ('Contigs', 'One row per sample and contig; original identifiers come from the mapping file.'),
  'orf_explorer': ('ORFs and taxonomy', 'One row per sample and ORF; the primary annotation and reported taxonomy are preserved.'),
@@ -211,6 +239,8 @@ class Importer:
                         if len(r) != 3:
                             raise ValueError(f'Expected three contig mapping columns: {mapping}')
                         self.db.execute('INSERT INTO contigs VALUES(?,?,?,?)', (s, r[0], r[1], number(r[2], True)))
+        from metapathways.report_rna import import_rna
+        import_rna(self, s, directory)
         annotation_dir = directory/'results/annotation_table'
         primary = self.one(s, annotation_dir, '*.functional_and_taxonomic_table.txt', 'primary ORF annotations', True)
         if primary:
@@ -314,7 +344,7 @@ class Importer:
                     self.db.execute('INSERT INTO pathway_orfs VALUES(?,?,?,?)', (s, entity, r['PWY_NAME'], identifier))
                 if number(r['ORF_COUNT'], True) != len(identifiers):
                     self.issue(s, path.relative_to(self.root), f"{entity}/{r['PWY_NAME']}: reported ORF count differs from unique listed ORFs.")
-        known_rna_features = set()
+        known_rna_features = {r[0] for r in self.db.execute('SELECT rna_id FROM rna_features WHERE sample_id=?', (s,))}
         for path in sorted((directory/'results/rpkm').glob('*.contig_counts.tsv')) + sorted((directory/'results/rpkm').glob('*.orf_counts.tsv')):
             feature = 'contig' if path.name.endswith('.contig_counts.tsv') else 'orf'
             source_id = self.source(path, 'read abundance')

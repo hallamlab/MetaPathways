@@ -62,13 +62,16 @@ function actions(row) {
   if(row.orf_id){
     cell.append(button('ORF annotations',()=>drill('annotation_explorer',{...scope,orf_id:row.orf_id})),button('Pathway links',()=>drill('pathway_gene_explorer',{...scope,orf_id:row.orf_id})),button('ORF abundance',()=>drill('abundance_explorer',{...scope,feature_type:'orf',feature_id:row.orf_id})));
   }
+  if(row.rna_id)cell.append(button('Genes on RNA contig',()=>drill('orf_rna_explorer',{...scope,rna_id:row.rna_id})),button('RNA taxonomy',()=>drill('rna_taxonomy_explorer',{...scope,rna_id:row.rna_id})),button('RNA abundance',()=>drill('rna_abundance_explorer',{...scope,rna_id:row.rna_id})));
+  if(row.contig_id)cell.append(button('Contig RNA',()=>drill('rna_explorer',{...scope,contig_id:row.contig_id})),button('Contig rRNA taxonomy',()=>drill('rna_taxonomy_explorer',{...scope,contig_id:row.contig_id})),button('Contig MAGs',()=>drill('contig_mags',{...scope,contig_id:row.contig_id})));
+  if(row.entity_id)cell.append(button('MAG RNA',()=>drill('mag_rna_explorer',{...scope,entity_id:row.entity_id})));
   if(row.pathway_id)cell.append(button('Pathway genes',()=>drill('pathway_gene_explorer',{...scope,entity_id:row.entity_id,pathway_id:row.pathway_id})));
   if(row.contig_id)cell.append(button('Contig ORFs',()=>drill('orf_explorer',{...scope,contig_id:row.contig_id})));
   if(row.entity_id)cell.append(button('All mapped MAG ORFs',()=>drill('mag_orf_explorer',{...scope,entity_id:row.entity_id})),button('Entity pathways',()=>drill('pathway_explorer',{...scope,entity_id:row.entity_id})),button('MAG input genes',()=>drill('mag_gene_explorer',{...scope,entity_id:row.entity_id})));
   if(row.representative_orf_id)cell.append(button('Group members',()=>drill('orf_groups',{...scope,representative_orf_id:row.representative_orf_id})));
   if(row.annotation_id!==undefined)cell.append(button('EC / reaction terms',()=>drill('annotation_terms',{annotation_id:row.annotation_id})));
   if(row.source_id!==undefined)cell.append(button('Source record',()=>drill('sources',{source_id:row.source_id})));
-  if(row.sample_id&&!row.orf_id&&!row.contig_id&&!row.pathway_id&&!row.entity_id)cell.append(button('Sample ORFs',()=>drill('orf_explorer',scope)));
+  if(row.sample_id&&!row.orf_id&&!row.contig_id&&!row.pathway_id&&!row.entity_id)cell.append(button('Sample ORFs',()=>drill('orf_explorer',scope)),button('Sample RNA',()=>drill('rna_explorer',scope)));
   if(row.path||row.source){
     const path=row.path||row.source;
     if(typeof path==='string'&&!path.startsWith('/')&&!path.split('/').includes('..')) {

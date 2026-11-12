@@ -100,3 +100,26 @@ Not every raw product becomes a relational table: the inventory links additional
 ### Starting at the sample level
 
 A fresh explorer URL opens **Samples**. Use a sample row's related-results buttons to inspect its ORFs, then follow annotations, pathways and abundance. Saved query URLs retain their selected table and filters. The footer shows the recorded run version, sample count, command, executor and status when available, plus the report update time and a GitHub link for bug reports and feature requests. For older outputs without a recorded run version, the footer labels the report-builder version instead. Diagnostic details remain available in the Import notes and Execution history tables.
+
+## Follow RNA features to contigs and MAGs
+
+Choose **RNA features** to browse 16S/23S rRNA and tRNA loci. Filter `subunit`
+for a particular rRNA, or `feature_type` for tRNAs. tRNA rows retain their
+reported isotype and anticodon; tRNAs do not receive a SILVA taxonomy assignment.
+
+Use **RNA taxonomy** for an rRNA locus's reference hits. **Contig ORFs** opens
+other genes on that contig; **Contig MAGs** shows its recorded bin membership.
+From a gene, annotation or pathway-gene row, **Contig RNA** and **Contig rRNA
+taxonomy** show the same context. From a MAG, use **MAG RNA**. **RNA abundance**
+shows measurements when matching feature IDs are present in the read-count table.
+
+RNA taxonomy is evidence on a locus and its contig, not an automatic taxonomic
+assignment to every gene or the entire MAG. Different loci or references can
+report different taxonomy; MP preserves these separately. Missing evidence is
+not a negative result. Unmatched taxonomy records remain visible with an
+explanation in **Import notes**.
+
+After updating MP, rebuild an older explorer with `metapathways report -o OUTPUT`
+(or add `--serve` to browse immediately). This reads retained output files without
+rerunning analysis. Older compact outputs may lack the RNA source files; rebuilding
+cannot recover files that were already removed.
