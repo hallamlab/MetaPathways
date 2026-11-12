@@ -23,7 +23,6 @@ Tool labels are abbreviated in this overview: Prodigal runs through pProdigal, a
 installation
 getting-started
 test
-vitamin-b5-vignette
 containers
 overview
 test-bundle
@@ -59,6 +58,17 @@ data-flow
 detailed-workflow
 workflow
 reproducibility
+```
+
+## Vignettes
+
+Follow complete worked examples, from setup to biological interpretation and exports.
+
+```{toctree}
+:maxdepth: 1
+:caption: Vignettes
+
+vitamin-b5-vignette
 ```
 
 ## Go further when you need to

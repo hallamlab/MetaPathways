@@ -1,4 +1,4 @@
-# From installation to evidence: who carries vitamin B5 machinery?
+# Vitamin B5: from setup to results
 
 This worked example starts with a function rather than an organism name. You will
 search for a candidate enzyme, find its contig and genome bin, inspect ribosomal
