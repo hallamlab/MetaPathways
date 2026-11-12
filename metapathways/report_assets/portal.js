@@ -131,6 +131,7 @@ async function init() {
     (metadata.scope_samples||[]).forEach(s=>$('scopeSample').append(option(s)));
     $('scopeSample').onchange=()=>{updateMags();configure($('table').value);apply();};
     $('scopeMag').onchange=()=>{configure($('table').value);apply();};
+    $('resetScope').onclick=()=>{$('scopeSample').value='';updateMags();apply();};
     // Preserve old raw-table bookmarks without listing duplicate measurements.
     if(new URLSearchParams(location.hash.slice(1)).get('table')==='abundance')
       history.replaceState(null,'','#table=abundance_explorer');
