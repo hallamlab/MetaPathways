@@ -5,6 +5,9 @@ import csv
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
+import tempfile
+import zipfile
+import shutil
 from pathlib import Path
 import secrets
 import sqlite3
@@ -14,6 +17,7 @@ from urllib.parse import parse_qs, unquote, urlsplit, quote
 import webbrowser
 
 from metapathways.reporting import VIEWS, build_report
+from metapathways.report_scope import MAG_TABLES, BUNDLE_TABLES, scope_clause
 
 
 def identifier(value):
@@ -102,6 +106,9 @@ def query(db, spec, export=False):
                     expression += ' AND EXISTS(SELECT 1 FROM annotation_terms x WHERE x.annotation_id=a.annotation_id AND x.term_type=? AND x.term=?)'
                     values.extend(['EC' if kind == 'ec' else 'reaction', related[kind]])
             where.append(expression + ')')
+    scope_sql, scope_values = scope_clause(db, table, columns, spec.get('scope') or {})
+    if scope_sql:
+        where.append(scope_sql); values.extend(scope_values)
     base = ' FROM ' + identifier(table) + ' t' + (' WHERE ' + ' AND '.join(where) if where else '')
     sort = spec.get('sort') or columns[0]
     if sort not in columns:
@@ -126,6 +133,40 @@ def csv_value(value):
     if isinstance(value, str) and value.lstrip().startswith(('=', '+', '-', '@')):
         return "'" + value
     return value
+
+
+def write_mag_bundle(db, scope, destination):
+    """Stream each table into a disk-backed ZIP, retaining relational row units."""
+    counts, source_ids = {}, set()
+    with zipfile.ZipFile(destination, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        for table in BUNDLE_TABLES:
+            columns, records = query(db, {'table':table, 'scope':scope}, export=True)
+            with archive.open(table+'.csv', 'w', force_zip64=True) as raw:
+                with io.TextIOWrapper(raw, encoding='utf-8', newline='') as stream:
+                    writer = csv.writer(stream); writer.writerow(columns)
+                    count = 0
+                    for record in records:
+                        writer.writerow([csv_value(v) for v in record]); count += 1
+                        source_ids.update(record[i] for i,c in enumerate(columns) if c in ('source_id','taxonomy_source_id') and record[i] is not None)
+                    counts[table] = count
+        with archive.open('sources.csv', 'w', force_zip64=True) as raw:
+            with io.TextIOWrapper(raw, encoding='utf-8', newline='') as stream:
+                writer=csv.writer(stream)
+                writer.writerow(['source_id','path','bytes','sha256','role'])
+                for source_id in sorted(source_ids):
+                    record=db.execute('SELECT * FROM sources WHERE source_id=?',(source_id,)).fetchone()
+                    if record: writer.writerow([csv_value(v) for v in record])
+        archive.writestr('manifest.json', json.dumps(dict(scope=scope, rows=counts), indent=2))
+        archive.writestr('README.txt',
+            'MAG results from retained MetaPathways outputs.\n'
+            'Membership uses the explicit sample-specific contig-to-MAG map.\n'
+            'Pathways are inferred for this MAG, not inherited from the community.\n'
+            'RNA taxonomy is locus evidence, not a gene or MAG classification.\n'
+            'All features includes annotated protein-coding genes and RNA loci.\n'
+            'Empty tables mean no indexed records; unavailable is not biological absence.\n'
+            'ORF groups are selected by member; representatives may lie outside this MAG.\n'
+            'Each CSV retains its own row units; do not sum across joined tables.\n'
+            'The bundle contains tables, not FASTA sequences or PGDB archives.\n')
 
 
 class ReportServer(ThreadingHTTPServer):
@@ -182,8 +223,13 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(parsed.path[len(prefix):])
         root = self.server.root
         if path == 'api/meta':
-            self.send(json.loads((root/'reports/schema.json').read_text())); return
-        if path in ('api/query','api/export'):
+            meta = json.loads((root/'reports/schema.json').read_text())
+            with closing(connect(root/'reports/results.sqlite')) as db:
+                meta['mag_scope_tables'] = sorted(MAG_TABLES)
+                meta['scope_samples'] = [r[0] for r in db.execute('SELECT sample_id FROM samples ORDER BY sample_id')]
+                meta['scope_mags'] = [dict(r) for r in db.execute("SELECT e.sample_id,e.entity_id,EXISTS(SELECT 1 FROM contig_mags m WHERE m.sample_id=e.sample_id AND m.entity_id=e.entity_id) AS has_contigs FROM entities e WHERE entity_type='MAG' ORDER BY e.sample_id,e.entity_id")]
+            self.send(meta); return
+        if path in ('api/query','api/export','api/mag-export'):
             raw = parse_qs(parsed.query).get('spec',['{}'])[0]
             if len(raw) > 20000:
                 raise ValueError('Query is too large')
@@ -194,6 +240,21 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(dict(error='Four queries are already active; try again shortly'), status=429); return
             try:
                 with closing(connect(root/'reports/results.sqlite')) as db:
+                    if path == 'api/mag-export':
+                        scope = spec.get('scope') or {}
+                        if not scope.get('sample_id') or not scope.get('entity_id'):
+                            raise ValueError('Select a sample and MAG for download')
+                        with tempfile.TemporaryFile() as archive:
+                            write_mag_bundle(db, scope, archive)
+                            size = archive.tell(); archive.seek(0)
+                            self.send_response(200)
+                            self.send_header('Content-Type', 'application/zip')
+                            self.send_header('Content-Disposition', 'attachment; filename="metapathways-mag-results.zip"')
+                            self.send_header('Content-Length', str(size))
+                            self.send_header('Cache-Control','no-store')
+                            self.end_headers()
+                            shutil.copyfileobj(archive, self.wfile)
+                        return
                     if path == 'api/query':
                         self.send(query(db, spec)); return
                     columns, cursor = query(db, spec, export=True)

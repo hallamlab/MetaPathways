@@ -154,3 +154,18 @@ Gene/RNA pairs can contain multiple rows per gene and must not be used to sum
 gene abundance. RNA abundance joins exact sample/feature IDs, without estimating
 missing measurements. tRNA isotype and anticodon are separate from rRNA taxonomy;
 none of these joins overwrites protein-hit taxonomy.
+
+## Shared MAG scope and complete table export
+
+The query specification accepts `scope: {sample_id, entity_id}`. MAG scope requires
+an explicit contig-to-MAG map. Contig-linked tables use membership through sample
+and contig; entity-specific tables use the selected sample and MAG directly.
+Annotation terms follow their annotation's ORF. Collapsed ORF groups follow the
+member's contig, so the representative may be outside the MAG. Membership uses
+`EXISTS` to avoid multiplying rows for contigs assigned to multiple MAGs.
+
+`feature_explorer` combines annotated protein-coding features with RNA loci,
+excluding RNA IDs from the protein side. A complete MAG ZIP exports each table
+separately and includes source records and row counts. Normal table filters do
+not restrict this ZIP. Run-wide files, execution history and provenance tables
+are not biological MAG tables; the interface labels them as unscoped metadata.

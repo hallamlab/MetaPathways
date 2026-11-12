@@ -16,6 +16,18 @@ function filterRow(column=columns()[0],op='contains',value='') {
   const input=element('input'); input.value=value; input.setAttribute('aria-label','Filter value');
   row.append(c,operator,input,button('Remove',()=>row.remove())); $('filters').append(row);
 }
+function updateMags(value='') {
+  $('scopeMag').replaceChildren(option('', 'All MAGs / whole sample'));
+  (metadata.scope_mags||[]).filter(m=>m.sample_id===$('scopeSample').value).forEach(m=>{const o=option(m.entity_id,m.entity_id+(m.has_contigs?'':' (membership unavailable)'));o.disabled=!m.has_contigs;$('scopeMag').append(o);});
+  $('scopeMag').value=value; $('scopeMag').disabled=!$('scopeSample').value;
+  $('downloadMag').disabled=!$('scopeMag').value;
+}
+function selectedScope() {
+  const sample=$('scopeSample').value, mag=$('scopeMag').value;
+  const supported=mag ? (metadata.mag_scope_tables||[]).includes($('table').value) : columns().includes('sample_id')||$('table').value==='annotation_terms';
+  $('scopeNote').textContent=sample&&!supported ? 'This is run-wide metadata; the Sample / MAG selection does not filter this table.' : mag ? 'Showing biological records for '+sample+' / '+mag+'.' : sample ? 'Showing records for sample '+sample+'.' : 'Choose a sample and MAG to subset biological tables.';
+  return sample&&supported ? {sample_id:sample,...(mag?{entity_id:mag}:{})} : {};
+}
 function configure(table, filters=[]) {
   if(!metadata.views[table])table='samples';
   if(table==='abundance'&&!Array.from($('table').options).some(o=>o.value===table))
@@ -33,7 +45,7 @@ function specFromControls() {
   const related={}; if(!$('relatedPanel').hidden)relatedKeys.forEach(k=>{if($('related_'+k).value)related[k]=$('related_'+k).value;});
   const selected=Array.from($('columns').querySelectorAll('input:checked')).map(i=>i.value);
   if(!selected.length)throw Error('Select at least one column.');
-  return {table:$('table').value,search:$('search').value,filters,related,columns:selected,sort,descending,limit:100};
+  return {scope:selectedScope(),table:$('table').value,search:$('search').value,filters,related,columns:selected,sort,descending,limit:100};
 }
 async function apply(reset=true) {
   const id=++serial;
@@ -94,6 +106,7 @@ function fromHash() {
   const params=new URLSearchParams(location.hash.slice(1));
   try {
     const spec=params.has('spec')?JSON.parse(params.get('spec')):null;
+    if(spec?.scope){$('scopeSample').value=spec.scope.sample_id||'';updateMags(spec.scope.entity_id||'');}
     configure(spec?.table||params.get('table')||'samples',spec?.filters||[]);
     if(spec){$('search').value=spec.search||'';relatedKeys.forEach(k=>$('related_'+k).value=spec.related?.[k]||'');sort=spec.sort||'';descending=!!spec.descending; if(spec.columns)$('columns').querySelectorAll('input').forEach(i=>i.checked=spec.columns.includes(i.value));}
     apply();
@@ -104,6 +117,10 @@ async function init() {
   try {
     const response=await fetch(api('meta'));if(!response.ok)throw Error('Open the URL printed by metapathways report --serve.');metadata=await response.json();
     Object.entries(metadata.views).filter(([key])=>key!=='abundance').forEach(([key,value])=>$('table').append(option(key,`${value.label} (${value.rows.toLocaleString()})`)));
+    (metadata.scope_samples||[]).forEach(s=>$('scopeSample').append(option(s)));
+    $('scopeSample').onchange=()=>{updateMags();configure($('table').value);apply();};
+    $('scopeMag').onchange=()=>{$('downloadMag').disabled=!$('scopeMag').value;configure($('table').value);apply();};
+    $('downloadMag').onclick=()=>{const a=element('a');a.href=queryURL('mag-export',{scope:{sample_id:$('scopeSample').value,entity_id:$('scopeMag').value}});a.click();};
     // Preserve old raw-table bookmarks without listing duplicate measurements.
     if(new URLSearchParams(location.hash.slice(1)).get('table')==='abundance')
       history.replaceState(null,'','#table=abundance_explorer');

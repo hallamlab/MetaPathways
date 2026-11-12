@@ -123,3 +123,23 @@ After updating MP, rebuild an older explorer with `metapathways report -o OUTPUT
 (or add `--serve` to browse immediately). This reads retained output files without
 rerunning analysis. Older compact outputs may lack the RNA source files; rebuilding
 cannot recover files that were already removed.
+
+## Download results for one MAG
+
+Choose **Sample**, then **MAG** at the top of the explorer. The selection stays
+active as you switch biological tables, including contigs, genes, all features,
+RNA evidence, annotations, abundance and pathways. **All features** combines
+annotated protein-coding genes with RNA loci. Run-wide metadata is clearly marked
+and is not filtered by this selection.
+
+Use **Export all matching rows as CSV** for the current table and filters.
+Use **Download MAG results (ZIP)** for the complete indexed results for that MAG,
+independent of the current table filters. The ZIP contains separate CSVs, source
+checksums, a row-count manifest and a README. It contains tables, not FASTA
+sequences or complete PGDB archives. Empty tables can indicate unavailable outputs.
+
+MAG membership comes from the preserved contig-to-MAG map. A MAG without that map
+cannot be exported as a complete subset. Pathways are the results inferred for
+that MAG; community pathways are not copied into the MAG export. The optional
+**Pathway Tools entity ID** linked filter still refers specifically to PGDB input
+genes; use the top-level MAG selector for all mapped features.

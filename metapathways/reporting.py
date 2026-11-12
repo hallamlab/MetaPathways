@@ -13,7 +13,7 @@ import tempfile
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 SCHEMA = '''
 PRAGMA foreign_keys=ON;
 CREATE TABLE samples(sample_id TEXT PRIMARY KEY, output_path TEXT NOT NULL);
@@ -93,6 +93,12 @@ CREATE INDEX terms_value ON annotation_terms(term_type,term);
 CREATE INDEX entity_orfs_orf ON entity_orfs(sample_id,orf_id);
 CREATE INDEX pathway_orfs_orf ON pathway_orfs(sample_id,orf_id);
 CREATE INDEX orfs_contig ON orfs(sample_id,contig_id);
+CREATE VIEW feature_explorer AS
+ SELECT sample_id,orf_id AS feature_id,contig_id,'CDS' AS feature_type,start,end,strand,product
+ FROM orfs o WHERE annotation_present=1 AND NOT EXISTS
+ (SELECT 1 FROM rna_features r WHERE r.sample_id=o.sample_id AND r.rna_id=o.orf_id)
+ UNION ALL
+ SELECT sample_id,rna_id,contig_id,feature_type,start,end,strand,product FROM rna_features;
 CREATE VIEW orf_explorer AS
  SELECT o.*, c.original_id AS original_contig_id, c.length AS contig_length
  FROM orfs o LEFT JOIN contigs c USING(sample_id,contig_id);
@@ -123,6 +129,7 @@ CREATE VIEW mag_gene_explorer AS
  FROM entity_orfs m JOIN entities e USING(sample_id,entity_id) JOIN orfs o USING(sample_id,orf_id);
 '''
 VIEWS = {
+ 'feature_explorer': ('All features', 'Annotated protein-coding genes and RNA loci; one row per sample and feature.'),
  'rna_explorer': ('RNA features', 'rRNA and tRNA loci, including tRNA pseudogenes; coordinates are one-based inclusive.'),
  'rna_taxonomy_explorer': ('rRNA taxonomy', 'Reference-hit evidence for RNA loci; hit coordinates are relative to the extracted RNA, not the contig.'),
  'mag_rna_explorer': ('MAG RNA features', 'RNA loci on explicitly assigned MAG contigs; no inferred MAG taxonomy.'),
