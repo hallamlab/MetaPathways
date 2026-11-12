@@ -54,23 +54,50 @@ def checked_path(root, row):
     return path
 
 
+def export_tables(db, scope):
+    from metapathways.reporting import VIEWS
+    for table in [*VIEWS, 'sequence_explorer']:
+        columns = [r[1] for r in db.execute('PRAGMA table_info("'+table+'")')]
+        if scope.get('entity_id'):
+            if table not in MAG_TABLES:
+                continue
+        elif 'sample_id' not in columns and table != 'annotation_terms':
+            continue
+        yield table
+
+
+def subset_annotation_files(db, scope):
+    base = db.execute('SELECT output_path FROM samples WHERE sample_id=?', (scope['sample_id'],)).fetchone()[0]
+    parts = Path(base).parts if base != '.' else ()
+    for row in db.execute('SELECT path,bytes,modified_utc FROM files ORDER BY path'):
+        path_parts = Path(row[0]).parts
+        relative = path_parts[len(parts):]
+        if path_parts[:len(parts)] == parts and relative and relative[0] == 'genbank' and row[0].endswith(('.gbk','.gb','.gbff','.annot.gff')):
+            yield row
+
+
 def preview(db, spec):
-    scopes=selections(db,spec)
-    return {'mode':spec['mode'],'selections':scopes,'items':[
-        {'scope':scope,'retained_files':len(files),'retained_bytes':sum(r[1] for r in files)}
-        for scope in scopes for files in [list(selected_files(db,scope))]],
-        'note':'Complete MAG downloads include scoped sequence/GFF/GenBank subsets and MAG-specific files. Shared sample files are included only with whole samples. Missing files cannot be reconstructed.'}
+    scopes = selections(db, spec)
+    items = []
+    for scope in scopes:
+        complete = spec['mode'] == 'complete'
+        mag_subsets = complete and bool(scope.get('entity_id'))
+        originals = list(selected_files(db, scope)) if complete else []
+        counts = dict(table_csv=len(list(export_tables(db, scope)))+1,
+                      sequence_fasta=4 if mag_subsets else 0,
+                      annotation_subset=len(list(subset_annotation_files(db, scope))) if mag_subsets else 0,
+                      retained_original=len(originals))
+        items.append(dict(scope=scope, file_counts=counts, total_files=sum(counts.values()),
+                          retained_files=len(originals), retained_bytes=sum(r[1] for r in originals)))
+    return dict(mode=spec['mode'], selections=scopes, items=items,
+                metadata_files=2, total_files=sum(i['total_files'] for i in items)+2,
+                note='Counts include generated CSVs, subset files and archive metadata, including empty/header-only files. Copied-file sizes exclude generated files and ZIP compression; the final archive size is determined when the download is prepared.')
 
 
 def write_tables(db, archive, prefix, scope):
-    from metapathways.reporting import VIEWS
     from metapathways.report_server import query, csv_value
     counts, sources = {}, set()
-    for table in [*VIEWS,'sequence_explorer']:
-        columns=[r[1] for r in db.execute('PRAGMA table_info("'+table+'")')]
-        if scope.get('entity_id'):
-            if table not in MAG_TABLES: continue
-        elif 'sample_id' not in columns and table != 'annotation_terms': continue
+    for table in export_tables(db, scope):
         columns, cursor=query(db,{'table':table,'scope':scope},export=True,allow_sequence_scan=True)
         count=0
         with archive.open(prefix+'/tables/'+table+'.csv','w',force_zip64=True) as raw:
@@ -112,14 +139,8 @@ def write_mag_subsets(db, root, archive, prefix, scope):
                     count+=1; seen.add(row['contig_id'] if kind=='contig' else row['feature_id'])
         counts[kind+'_sequences']=count
         seen_sequences[kind]=seen
-    base=db.execute('SELECT output_path FROM samples WHERE sample_id=?',(sample,)).fetchone()[0]
-    baseparts=Path(base).parts if base != '.' else ()
     gbk_records=0; gff_records=0; gbk_contigs=set()
-    for row in db.execute('SELECT path,bytes,modified_utc FROM files ORDER BY path'):
-        parts=Path(row[0]).parts
-        relative=parts[len(baseparts):]
-        if parts[:len(baseparts)] != baseparts or not relative or relative[0]!='genbank': continue
-        if not (row[0].endswith(('.gbk','.gb','.gbff','.annot.gff'))): continue
+    for row in subset_annotation_files(db, scope):
         path=checked_path(root,row)
         dest=prefix+'/annotations/'+quote(path.name,safe='')
         with archive.open(dest,'w',force_zip64=True) as raw, path.open() as source:

@@ -146,7 +146,9 @@ files cannot be recovered. Check `manifest.json` for empty or unavailable subset
 MAG downloads require the explicit contig-to-MAG map. They contain the MAG's
 inferred pathways, not copied community pathways.
 
-Use **Review selection**, then **Download selected results (ZIP)**. Normal
+Use **Review selection**, then **Download selected results (ZIP)**. The review
+counts generated tables/subsets, copied source files, and the shared manifest and
+README. Displayed byte sizes cover copied source files only, not the final ZIP. Normal
 explorer filters do not restrict this archive. Preparation uses temporary disk
 space on the server; large selections take longer to download.
 

@@ -69,6 +69,37 @@ class DownloadTests(unittest.TestCase):
             self.assertIn('sample-alpha/complete-sample/tables/sequence_explorer.csv',archive.namelist())
         self.assertEqual(len(preview(self.db,{'mode':'complete','all_samples':True})['items']),2)
 
+    def test_review_counts_match_zip_members_in_each_mode(self):
+        choices=[{'sample_id':'alpha'}, {'sample_id':'alpha','entity_id':'MAG1'},
+                 {'sample_id':'beta','entity_id':'MAG1'}]
+        for mode in ('tables','complete'):
+            spec={'mode':mode,'selections':choices}
+            review=preview(self.db,spec)
+            with self.bundle(choices,mode) as archive:
+                names=archive.namelist()
+                self.assertEqual(review['total_files'],len(names))
+                manifest=json.loads(archive.read('manifest.json'))
+                self.assertEqual(len(review['items']),2)
+                for item,entry in zip(review['items'],manifest['selections']):
+                    prefix=entry['directory']+'/'
+                    files=[n for n in names if n.startswith(prefix)]
+                    self.assertEqual(item['total_files'],len(files))
+                    self.assertEqual(item['file_counts']['table_csv'],sum('/tables/' in n for n in files))
+                    self.assertEqual(item['file_counts']['sequence_fasta'],sum('/sequences/' in n for n in files))
+                    self.assertEqual(item['file_counts']['annotation_subset'],sum('/annotations/' in n for n in files))
+                    copied=[n for n in files if n.startswith(prefix+'files/')]
+                    self.assertEqual(item['retained_files'],len(copied))
+                    self.assertEqual(item['retained_bytes'],sum(archive.getinfo(n).file_size for n in copied))
+                    if mode=='tables':
+                        self.assertEqual(item['retained_files'],0)
+                        self.assertEqual(item['retained_bytes'],0)
+        # Empty FASTA subsets are still ZIP members and must be counted.
+        self.db.execute("DELETE FROM sequences WHERE sample_id='beta'")
+        self.db.execute("DELETE FROM files WHERE path LIKE 'beta/genbank/%'")
+        spec={'mode':'complete','selections':[{'sample_id':'beta','entity_id':'MAG1'}]}
+        with self.bundle(spec['selections']) as archive:
+            self.assertEqual(preview(self.db,spec)['total_files'],len(archive.namelist()))
+
     def test_sequence_inspection_is_one_record_and_bulk_tables_stay_private(self):
         from metapathways.report_fasta import options,record
         for spec in ({'table':'sequence_explorer'}, {'table':'sequence_explorer','scope':{'sample_id':'alpha'}}):
