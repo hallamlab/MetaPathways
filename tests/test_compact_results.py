@@ -25,7 +25,7 @@ class CompactTests(unittest.TestCase):
                      'results/pgdb/community/alphacyc.tar.bz2', 'ptools/0.fasta'):
             path = self.base/name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text('large intermediate')
+            path.write_text('>C1\nACGT\n' if path.suffix in ('.fasta','.faa') else 'large intermediate')
 
     def tables(self):
         build_report(self.root)
@@ -35,7 +35,7 @@ class CompactTests(unittest.TestCase):
             return {t:db.execute(f'select * from {t} order by 1,2').fetchall() for t in (
                 'contigs','orfs','annotations','annotation_taxonomy','entities',
                 'contig_mags','entity_orfs','orf_groups','pathways','pathway_orfs',
-                'abundance','abundance_explorer','rna_features','rna_taxonomy')}
+                'abundance','abundance_explorer','rna_features','rna_taxonomy','sequences')}
 
     def test_report_rebuild_equivalence_and_external_symlink_safety(self):
         outside = self.root/'external'; outside.mkdir(); (outside/'important').write_text('keep')

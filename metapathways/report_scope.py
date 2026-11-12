@@ -1,12 +1,13 @@
 """Explicit sample/MAG scope for biological report tables."""
 MAG_TABLES = {
+    'sequence_explorer',
     'contigs', 'orf_explorer', 'annotation_explorer', 'annotation_terms',
     'entities', 'contig_mags', 'mag_orf_explorer', 'mag_gene_explorer',
     'orf_groups', 'pathway_explorer', 'pathway_gene_explorer',
     'abundance_explorer', 'abundance', 'rna_explorer', 'rna_taxonomy_explorer',
     'mag_rna_explorer', 'orf_rna_explorer', 'rna_abundance_explorer', 'feature_explorer',
 }
-BUNDLE_TABLES = ('contigs', 'feature_explorer', 'orf_explorer', 'annotation_explorer',
+BUNDLE_TABLES = ('sequence_explorer', 'contigs', 'feature_explorer', 'orf_explorer', 'annotation_explorer',
                  'annotation_terms', 'rna_explorer', 'rna_taxonomy_explorer',
                  'abundance_explorer', 'pathway_explorer', 'pathway_gene_explorer',
                  'contig_mags', 'orf_groups')

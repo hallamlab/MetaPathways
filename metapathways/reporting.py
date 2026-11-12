@@ -13,7 +13,7 @@ import tempfile
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 SCHEMA = '''
 PRAGMA foreign_keys=ON;
 CREATE TABLE samples(sample_id TEXT PRIMARY KEY, output_path TEXT NOT NULL);
@@ -83,6 +83,15 @@ CREATE VIEW orf_rna_explorer AS
 CREATE VIEW rna_abundance_explorer AS
  SELECT a.*,r.rna_id,r.feature_type AS rna_type FROM abundance_explorer a
  JOIN rna_features r ON a.sample_id=r.sample_id AND a.feature_id=r.rna_id WHERE a.feature_type='orf';
+CREATE TABLE sequences(sequence_record_id INTEGER PRIMARY KEY, sample_id TEXT, sequence_id TEXT,
+ record_number INTEGER, sequence_type TEXT, contig_id TEXT, feature_id TEXT, description TEXT,
+ length INTEGER, sequence TEXT, quality TEXT, source_id INTEGER,
+ FOREIGN KEY(sample_id) REFERENCES samples, FOREIGN KEY(sample_id,contig_id) REFERENCES contigs,
+ FOREIGN KEY(source_id) REFERENCES sources, UNIQUE(source_id,record_number));
+CREATE INDEX sequences_contig ON sequences(sample_id,contig_id);
+CREATE INDEX sequences_identifier ON sequences(sample_id,sequence_id);
+CREATE INDEX sequences_feature ON sequences(sample_id,feature_id);
+CREATE VIEW sequence_explorer AS SELECT * FROM sequences;
 CREATE TABLE issues(issue_id INTEGER PRIMARY KEY, sample_id TEXT, source TEXT, message TEXT);
 CREATE TABLE files(path TEXT PRIMARY KEY, bytes INTEGER, modified_utc TEXT);
 CREATE TABLE execution(run_id TEXT, command TEXT, task TEXT, label TEXT, status TEXT,
@@ -396,6 +405,11 @@ class Importer:
                       self.db.execute('SELECT orf_id FROM orfs WHERE sample_id=? AND annotation_present=0', (s,)))
         if missing:
             self.issue(s, directory.relative_to(self.root), f'{missing} referenced ORF identifiers lack primary annotations; placeholders preserve these relationships.')
+        for path in sorted((directory/'genbank').glob('*')):
+            if path.suffix.lower() in ('.gbk','.gb','.gbff') and path.is_file():
+                self.source(path, 'annotated GenBank records')
+        from metapathways.report_sequences import import_sequences
+        import_sequences(self, s, directory)
         self.db.commit()
 
     def inventory(self):
@@ -480,7 +494,7 @@ def write_report(db, root, reports, info):
     document = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>MetaPathways run report</title>
 <style>body{{font:17px system-ui,sans-serif;max-width:1100px;margin:3rem auto;padding:0 1rem;color:#203038}}a{{color:#006a80}}table{{border-collapse:collapse}}th,td{{padding:.6rem;border-bottom:1px solid #ddd;text-align:left}}li{{margin:.5rem 0}}code{{background:#eef4f5;padding:.15rem}}</style></head>
 <body><h1>MetaPathways run report</h1><p>Generated {esc(info['generated_utc'])}. An inventory of existing outputs; it does not rerun or interpret analyses.</p>
-<p><a href="EDA_portal.html">Open EDA portal</a> · <a href="results.sqlite">Relational results database</a> · <a href="schema.json">Schema and table definitions</a> · <a href="output_inventory.tsv">All output files</a></p>
+<p><a href="EDA_portal.html">Open EDA portal</a> · <a href="downloads.html">Downloads</a> · <a href="results.sqlite">Relational results database</a> · <a href="schema.json">Schema and table definitions</a> · <a href="output_inventory.tsv">All output files</a></p>
 <p>For searching and CSV export: <code>metapathways report -o OUTPUT --serve --no-rebuild</code>. The HTML report and file links also work without the server.</p>
 <h2>Samples</h2><table><tr><th>Sample</th><th>Output directory</th></tr>{samples}</table>
 <h2>Available results</h2><ul>{cards}</ul><p>Counts describe table rows, not necessarily distinct genes or pathways. Sample and entity identifiers scope every biological relationship.</p>
@@ -539,7 +553,7 @@ def build_report(output):
             database.replace(reports/'results.sqlite')
             atomic_text(reports/'schema.json', json.dumps(info, indent=2)+'\n')
             assets = Path(__file__).parent/'report_assets'
-            for name in ('EDA_portal.html','portal.js','portal.css'):
+            for name in ('EDA_portal.html','portal.js','portal.css','downloads.html','downloads.js','fasta.html','fasta.js'):
                 shutil.copyfile(assets/name, reports/name)
     print(f'Report: {reports / "MP_run_report.html"}', flush=True)
     return reports

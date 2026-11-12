@@ -33,9 +33,9 @@ def connect(database):
     return db
 
 
-def query(db, spec, export=False):
+def query(db, spec, export=False, allow_sequence_scan=False):
     table = spec.get('table', 'samples')
-    if table not in VIEWS:
+    if table not in VIEWS and not (allow_sequence_scan and table=='sequence_explorer'):
         raise ValueError('Unknown table')
     details = list(db.execute(f'PRAGMA table_info({identifier(table)})'))
     columns = [r[1] for r in details]
@@ -140,7 +140,7 @@ def write_mag_bundle(db, scope, destination):
     counts, source_ids = {}, set()
     with zipfile.ZipFile(destination, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         for table in BUNDLE_TABLES:
-            columns, records = query(db, {'table':table, 'scope':scope}, export=True)
+            columns, records = query(db, {'table':table, 'scope':scope}, export=True, allow_sequence_scan=True)
             with archive.open(table+'.csv', 'w', force_zip64=True) as raw:
                 with io.TextIOWrapper(raw, encoding='utf-8', newline='') as stream:
                     writer = csv.writer(stream); writer.writerow(columns)
@@ -226,12 +226,14 @@ class Handler(BaseHTTPRequestHandler):
             meta = json.loads((root/'reports/schema.json').read_text())
             with closing(connect(root/'reports/results.sqlite')) as db:
                 meta['mag_scope_tables'] = sorted(MAG_TABLES)
+                from metapathways.report_tables import TABLE_GROUPS
+                meta['table_groups'] = TABLE_GROUPS
                 meta['scope_samples'] = [r[0] for r in db.execute('SELECT sample_id FROM samples ORDER BY sample_id')]
                 meta['scope_mags'] = [dict(r) for r in db.execute("SELECT e.sample_id,e.entity_id,EXISTS(SELECT 1 FROM contig_mags m WHERE m.sample_id=e.sample_id AND m.entity_id=e.entity_id) AS has_contigs FROM entities e WHERE entity_type='MAG' ORDER BY e.sample_id,e.entity_id")]
             self.send(meta); return
-        if path in ('api/query','api/export','api/mag-export'):
+        if path in ('api/query','api/export','api/mag-export','api/download-preview','api/download','api/sequence-options','api/sequence-preview','api/fasta'):
             raw = parse_qs(parsed.query).get('spec',['{}'])[0]
-            if len(raw) > 20000:
+            if len(raw) > 200000:
                 raise ValueError('Query is too large')
             spec = json.loads(raw)
             if not isinstance(spec, dict):
@@ -240,6 +242,36 @@ class Handler(BaseHTTPRequestHandler):
                 self.send(dict(error='Four queries are already active; try again shortly'), status=429); return
             try:
                 with closing(connect(root/'reports/results.sqlite')) as db:
+                    if path in ('api/sequence-options','api/sequence-preview','api/fasta'):
+                        from metapathways.report_fasta import options, record
+                        if path == 'api/sequence-options':
+                            self.send(options(db, spec)); return
+                        result = record(db, spec, full=path == 'api/fasta')
+                        if path == 'api/sequence-preview':
+                            self.send(result); return
+                        raw = result['fasta'].encode()
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                        self.send_header('Content-Disposition', 'attachment; filename="metapathways-sequence.fasta"')
+                        self.send_header('Content-Length', str(len(raw)))
+                        self.send_header('Cache-Control', 'no-store')
+                        self.end_headers(); self.wfile.write(raw); return
+                    if path in ('api/download-preview','api/download'):
+                        from metapathways.report_downloads import preview, write_download
+                        if path=='api/download-preview':
+                            self.send(preview(db,spec)); return
+                        # Long exports are explicit and stream through a temporary file, not RAM.
+                        db.set_progress_handler(None,0)
+                        with tempfile.TemporaryFile() as archive:
+                            write_download(db,root,spec,archive)
+                            size=archive.tell(); archive.seek(0)
+                            self.send_response(200)
+                            self.send_header('Content-Type','application/zip')
+                            self.send_header('Content-Disposition','attachment; filename="metapathways-selected-results.zip"')
+                            self.send_header('Content-Length',str(size))
+                            self.send_header('Cache-Control','no-store')
+                            self.end_headers(); shutil.copyfileobj(archive,self.wfile)
+                        return
                     if path == 'api/mag-export':
                         scope = spec.get('scope') or {}
                         if not scope.get('sample_id') or not scope.get('entity_id'):

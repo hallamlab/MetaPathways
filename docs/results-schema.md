@@ -169,3 +169,28 @@ excluding RNA IDs from the protein side. A complete MAG ZIP exports each table
 separately and includes source records and row counts. Normal table filters do
 not restrict this ZIP. Run-wide files, execution history and provenance tables
 are not biological MAG tables; the interface labels them as unscoped metadata.
+
+
+## Sequence records and multi-selection downloads
+
+`sequences` has one row per source file and record ordinal, with a unique
+`sequence_record_id`, sample, original sequence ID/description, linked contig and
+feature when resolvable, sequence type, length, full sequence, FASTQ quality and
+source ID. It preserves duplicate records from distinct source files. RNA query
+coordinates use the same exact locus matching as the RNA evidence importer.
+FASTQ reads are never assigned to MAGs from identifier similarity.
+
+Sequence records are internal download data, not browsable explorer tables. The
+FASTA viewer resolves one exact sample/feature or sample/contig, then retrieves
+one selected record. Previews are limited to 10,000 residues; single-record FASTA
+downloads and bulk archive CSVs preserve full sequences.
+
+The Downloads page accepts multiple sample/MAG scopes, normalizes duplicates and
+lets a whole-sample scope subsume its MAG scopes. Archives separate selections
+into directories and include a manifest with table row counts, file inventory
+and missing MAG subset notes. Complete MAG archives preserve original matching
+GenBank records and GFF rows, export linked FASTA sequences, and include known
+MAG-specific files. Complete samples include their inventoried files. File size
+and modification time must still match the report snapshot; changed or missing
+files require rebuilding the report. Symlinks outside the output tree are not
+followed.

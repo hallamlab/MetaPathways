@@ -20,7 +20,7 @@ function updateMags(value='') {
   $('scopeMag').replaceChildren(option('', 'All MAGs / whole sample'));
   (metadata.scope_mags||[]).filter(m=>m.sample_id===$('scopeSample').value).forEach(m=>{const o=option(m.entity_id,m.entity_id+(m.has_contigs?'':' (membership unavailable)'));o.disabled=!m.has_contigs;$('scopeMag').append(o);});
   $('scopeMag').value=value; $('scopeMag').disabled=!$('scopeSample').value;
-  $('downloadMag').disabled=!$('scopeMag').value;
+
 }
 function selectedScope() {
   const sample=$('scopeSample').value, mag=$('scopeMag').value;
@@ -61,7 +61,7 @@ async function apply(reset=true) {
     $('previous').disabled=offset===0;$('next').disabled=offset+100>=total;
     $('export').disabled=false;$('saveQuery').disabled=false;
     history.replaceState(null,'','#spec='+encodeURIComponent(JSON.stringify(spec)));
-  } catch(error) { if(id!==serial)return;$('status').className='error';$('status').textContent=error.message;$('previous').disabled=true;$('next').disabled=true; }
+  } catch(error) { if(id!==serial)return;$('status').className=error.message.startsWith('Choose a sample and filter')?'':'error';$('status').textContent=error.message;render([],[]);$('page').textContent='';$('previous').disabled=true;$('next').disabled=true; }
 }
 function drill(table, fields) {
   const valid=metadata.views[table].columns.map(c=>c.name);
@@ -71,6 +71,11 @@ function drill(table, fields) {
 function actions(row) {
   const cell=element('td'); cell.className='actions';
   const scope={sample_id:row.sample_id};
+  const feature=row.orf_id||row.rna_id||(row.feature_type!=='contig'?row.feature_id:null);
+  if(feature||row.contig_id){
+    const lookup={...scope,...(feature?{feature_id:feature}:{contig_id:row.contig_id})};
+    cell.append(button('FASTA',()=>window.open('fasta.html#lookup='+encodeURIComponent(JSON.stringify(lookup)),'_blank','width=960,height=740,noopener')));
+  }
   if(row.orf_id){
     cell.append(button('ORF annotations',()=>drill('annotation_explorer',{...scope,orf_id:row.orf_id})),button('Pathway links',()=>drill('pathway_gene_explorer',{...scope,orf_id:row.orf_id})),button('ORF abundance',()=>drill('abundance_explorer',{...scope,feature_type:'orf',feature_id:row.orf_id})));
   }
@@ -113,14 +118,18 @@ function fromHash() {
   } catch(error){$('status').textContent='Cannot read this saved query: '+error.message;}
 }
 async function init() {
-  if(location.protocol==='file:'){$('offline').hidden=false;$('status').textContent='Start the local portal to search these results.';document.querySelector('.controls').hidden=true;return;}
+  if(location.protocol==='file:'){$('offline').hidden=false;$('status').textContent='Start the local portal to search these results.';document.querySelectorAll('.controls').forEach(c=>c.hidden=true);return;}
   try {
     const response=await fetch(api('meta'));if(!response.ok)throw Error('Open the URL printed by metapathways report --serve.');metadata=await response.json();
-    Object.entries(metadata.views).filter(([key])=>key!=='abundance').forEach(([key,value])=>$('table').append(option(key,`${value.label} (${value.rows.toLocaleString()})`)));
+    const included=new Set();
+    Object.entries(metadata.table_groups||{'Tables':Object.keys(metadata.views)}).forEach(([label,keys])=>{
+      const group=element('optgroup');group.label=label;
+      keys.filter(key=>metadata.views[key]&&key!=='abundance').forEach(key=>{const value=metadata.views[key];group.append(option(key,`${value.label} (${value.rows.toLocaleString()})`));included.add(key);});
+      if(group.children.length)$('table').append(group);
+    });
     (metadata.scope_samples||[]).forEach(s=>$('scopeSample').append(option(s)));
     $('scopeSample').onchange=()=>{updateMags();configure($('table').value);apply();};
-    $('scopeMag').onchange=()=>{$('downloadMag').disabled=!$('scopeMag').value;configure($('table').value);apply();};
-    $('downloadMag').onclick=()=>{const a=element('a');a.href=queryURL('mag-export',{scope:{sample_id:$('scopeSample').value,entity_id:$('scopeMag').value}});a.click();};
+    $('scopeMag').onchange=()=>{configure($('table').value);apply();};
     // Preserve old raw-table bookmarks without listing duplicate measurements.
     if(new URLSearchParams(location.hash.slice(1)).get('table')==='abundance')
       history.replaceState(null,'','#table=abundance_explorer');

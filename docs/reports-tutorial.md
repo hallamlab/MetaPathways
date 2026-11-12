@@ -124,22 +124,54 @@ After updating MP, rebuild an older explorer with `metapathways report -o OUTPUT
 rerunning analysis. Older compact outputs may lack the RNA source files; rebuilding
 cannot recover files that were already removed.
 
-## Download results for one MAG
+## Download samples and MAGs
 
-Choose **Sample**, then **MAG** at the top of the explorer. The selection stays
-active as you switch biological tables, including contigs, genes, all features,
-RNA evidence, annotations, abundance and pathways. **All features** combines
-annotated protein-coding genes with RNA loci. Run-wide metadata is clearly marked
-and is not filtered by this selection.
+Open **Downloads** from the run report or explorer navigation. Choose whole
+samples, individual MAGs, every MAG in a sample, or **All available MAGs** across
+samples. You can mix whole samples and MAG subsets from other samples. Selecting
+a whole sample already includes all of its MAGs, so overlapping choices are not
+exported twice.
 
-Use **Export all matching rows as CSV** for the current table and filters.
-Use **Download MAG results (ZIP)** for the complete indexed results for that MAG,
-independent of the current table filters. The ZIP contains separate CSVs, source
-checksums, a row-count manifest and a README. It contains tables, not FASTA
-sequences or complete PGDB archives. Empty tables can indicate unavailable outputs.
+Choose **EDA tables only** for separate CSVs, sequence records, provenance and a
+manifest. Choose **Complete dataset** to also include retained data files:
 
-MAG membership comes from the preserved contig-to-MAG map. A MAG without that map
-cannot be exported as a complete subset. Pathways are the results inferred for
-that MAG; community pathways are not copied into the MAG export. The optional
-**Pathway Tools entity ID** linked filter still refers specifically to PGDB input
-genes; use the top-level MAG selector for all mapped features.
+- Whole samples include every inventoried file under that sample's output directory.
+- MAGs include mapped contig, ORF and RNA sequences; complete indexed gene and
+  functional/taxonomic annotations; original GenBank records and GFF features
+  subset to their contigs; and MAG-specific outputs, including retained PGDB files.
+
+Shared sample-wide files such as BAMs and raw reads require a whole-sample
+selection. Inputs stored outside the output directory and previously deleted
+files cannot be recovered. Check `manifest.json` for empty or unavailable subsets.
+MAG downloads require the explicit contig-to-MAG map. They contain the MAG's
+inferred pathways, not copied community pathways.
+
+Use **Review selection**, then **Download selected results (ZIP)**. Normal
+explorer filters do not restrict this archive. Preparation uses temporary disk
+space on the server; large selections take longer to download.
+
+## Inspect one sequence
+
+Feature and contig rows have a **FASTA** button. It opens a separate viewer with
+choices for the retained nucleotide, amino-acid or RNA sequences associated with
+that record. Select one sequence to inspect it and use **Download full FASTA** to
+save it. The viewer displays up to 10,000 residues, clearly labels a truncated
+preview, and retains the source filename. It does not translate or infer a
+missing sequence.
+
+Sequences are not exposed as browsable EDA tables. Use **Downloads** for bulk
+sequence tables and files for selected samples or MAGs. Sequence records retain
+source-file provenance; a sequence can occur in multiple retained files. Only
+exact identifier or RNA coordinate matches link them to MAGs. Unlinked records
+and FASTQ reads remain available in sample downloads, without guessing MAG
+membership.
+
+The table selector groups results by samples, features, annotations, MAGs,
+pathways, abundance and provenance. The report indexes retained FASTA and FASTQ
+files, including gzip-compressed files. Sequences inside PGDB archives remain
+available in their original archives; BAM alignments and archive contents are not
+expanded into sequence records.
+
+After updating MP, rebuild with `metapathways report -o OUTPUT --serve`. Report
+generation reads sequence files incrementally into its disk-backed database;
+large retained sequence collections increase report generation time and disk use.

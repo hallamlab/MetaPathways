@@ -25,7 +25,7 @@ class MAGScopeTests(unittest.TestCase):
 
     def test_scoped_tables_and_no_cross_sample_or_community_rows(self):
         for table in BUNDLE_TABLES:
-            result=query(self.db,{'table':table,'scope':self.scope})
+            result=query(self.db,{'table':table,'scope':self.scope},allow_sequence_scan=True)
             for row in result['rows']:
                 if 'sample_id' in row: self.assertEqual(row['sample_id'],'alpha')
                 if 'entity_id' in row: self.assertEqual(row['entity_id'],'MAG1')
