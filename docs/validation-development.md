@@ -20,6 +20,22 @@ python scripts/check_docs.py
 
 The report HTTP tests require permission to bind a temporary loopback socket. Biological integration checks require the full Conda environment, appropriate references and an explicit decision to run them. Reports created from existing outputs perform indexing only.
 
+## Explorer browser regression
+
+For explorer filter changes, run the opt-in browser check in a development
+environment with Playwright and Chromium installed:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+python tests/browser/check_explorer_filters.py
+```
+
+It starts a temporary loopback report server with duplicate MAG IDs in two
+samples, then checks browsing/CSV scope, saved selection after reload, Enter
+submission for each input type, and reset-button dimensions. No real outputs
+are modified. Use `--browser-executable PATH` for an existing Chromium binary.
+
 ## Regenerate the CAMI test fixture
 
 Maintainers can reproduce the data from an MP manifest pointing at the original local CAMI downloads:

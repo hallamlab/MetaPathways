@@ -24,10 +24,13 @@ function updateMags(value='') {
 }
 function selectedScope() {
   const sample=$('scopeSample').value, mag=$('scopeMag').value;
-  const supported=mag ? (metadata.mag_scope_tables||[]).includes($('table').value) : columns().includes('sample_id')||$('table').value==='annotation_terms';
-  $('scopeNote').hidden=!(sample&&!supported);
-  $('scopeNote').textContent='This is run-wide metadata; the Sample / MAG selection does not filter this table.';
-  return sample&&supported ? {sample_id:sample,...(mag?{entity_id:mag}:{})} : {};
+  const sampleSupported=columns().includes('sample_id')||$('table').value==='annotation_terms';
+  const magSupported=(metadata.mag_scope_tables||[]).includes($('table').value);
+  $('scopeNote').hidden=!sample||(sampleSupported&&(!mag||magSupported));
+  $('scopeNote').textContent=sampleSupported?'Showing the selected sample; this table has no MAG-level records.':'This is run-wide metadata; the Sample / MAG selection does not filter this table.';
+  if(!sample)return {};
+  if(mag&&magSupported)return {sample_id:sample,entity_id:mag};
+  return sampleSupported?{sample_id:sample}:{};
 }
 function configure(table, filters=[]) {
   if(!metadata.views[table])table='samples';
@@ -46,7 +49,7 @@ function specFromControls() {
   const related={}; if(!$('relatedPanel').hidden)relatedKeys.forEach(k=>{if($('related_'+k).value)related[k]=$('related_'+k).value;});
   const selected=Array.from($('columns').querySelectorAll('input:checked')).map(i=>i.value);
   if(!selected.length)throw Error('Select at least one column.');
-  return {scope:selectedScope(),table:$('table').value,search:$('search').value,filters,related,columns:selected,sort,descending,limit:100};
+  return {selection:{sample_id:$('scopeSample').value,entity_id:$('scopeMag').value},scope:selectedScope(),table:$('table').value,search:$('search').value,filters,related,columns:selected,sort,descending,limit:100};
 }
 async function apply(reset=true) {
   const id=++serial;
@@ -112,7 +115,8 @@ function fromHash() {
   const params=new URLSearchParams(location.hash.slice(1));
   try {
     const spec=params.has('spec')?JSON.parse(params.get('spec')):null;
-    if(spec?.scope){$('scopeSample').value=spec.scope.sample_id||'';updateMags(spec.scope.entity_id||'');}
+    const selection=spec?.selection||spec?.scope;
+    if(selection){$('scopeSample').value=selection.sample_id||'';updateMags(selection.entity_id||'');}
     configure(spec?.table||params.get('table')||'samples',spec?.filters||[]);
     if(spec){$('search').value=spec.search||'';relatedKeys.forEach(k=>$('related_'+k).value=spec.related?.[k]||'');sort=spec.sort||'';descending=!!spec.descending; if(spec.columns)$('columns').querySelectorAll('input').forEach(i=>i.checked=spec.columns.includes(i.value));}
     apply();
@@ -141,7 +145,7 @@ async function init() {
     $('runDetails').textContent=details.join(' · ');
     $('generated').textContent='Report updated '+new Date(metadata.generated_utc).toLocaleString();
     $('table').onchange=()=>{configure($('table').value);apply();};$('addFilter').onclick=()=>filterRow();$('apply').onclick=()=>apply();$('reset').onclick=()=>{configure($('table').value);apply();};
-    $('search').onkeydown=e=>{if(e.key==='Enter')apply();};$('previous').onclick=()=>{offset=Math.max(0,offset-100);apply(false);};$('next').onclick=()=>{offset+=100;apply(false);};
+    document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&e.target.matches('.controls input:not([type=checkbox]):not([type=radio])')){e.preventDefault();apply();}});$('previous').onclick=()=>{offset=Math.max(0,offset-100);apply(false);};$('next').onclick=()=>{offset+=100;apply(false);};
     $('export').onclick=()=>{const a=element('a');a.href=queryURL('export',active);a.download='metapathways-subset.csv';a.click();};$('saveQuery').onclick=saveJSON;
     window.addEventListener('hashchange',fromHash);fromHash();
   }catch(error){$('status').className='error';$('status').textContent=error.message;}
